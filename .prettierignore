@@ -1,0 +1,20 @@
+# Dependencies & lockfiles
+node_modules
+pnpm-lock.yaml
+
+# Build outputs
+.next
+out
+build
+dist
+.turbo
+.vercel
+
+# Generated / binary
+*.woff
+*.woff2
+*.ico
+next-env.d.ts
+
+# Misc
+coverage

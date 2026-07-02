@@ -65,12 +65,22 @@
 }
 
 /* 기본 리셋 */
-* { box-sizing: border-box; }
-html, body { overscroll-behavior: none; }
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  overscroll-behavior: none;
+}
 body {
   background: var(--plk-bg);
   color: var(--plk-text);
   font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
 }
-::-webkit-scrollbar { display: none; }
-button, a { -webkit-tap-highlight-color: transparent; }
+::-webkit-scrollbar {
+  display: none;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
