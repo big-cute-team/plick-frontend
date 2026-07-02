@@ -36,6 +36,9 @@ importers:
       '@plick/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@plick/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
       '@plick/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -82,6 +85,9 @@ importers:
       '@plick/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@plick/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
       '@plick/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -145,6 +151,8 @@ importers:
       typescript-eslint:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1(jiti@2.7.0))(typescript@5.9.2)
+
+  packages/tokens: {}
 
   packages/typescript-config: {}
 
