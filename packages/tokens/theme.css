@@ -1,0 +1,76 @@
+/*
+ * PLick 디자인 토큰 — 테마 t27 (네이비 + 레드). 색은 이 :root 하나로 관리.
+ */
+:root {
+  /* surfaces */
+  --plk-bg: #0f1a2e;
+  --plk-surface: #17243f;
+  --plk-nav-bg: #0c1626;
+  --plk-elevate: rgba(255, 255, 255, 0.1);
+  --plk-elevate-2: rgba(255, 255, 255, 0.06);
+  --plk-border: rgba(255, 255, 255, 0.12);
+  --plk-border-soft: rgba(255, 255, 255, 0.06);
+
+  /* text */
+  --plk-text: #f4f5f7;
+  --plk-text-2: #c5cad1;
+  --plk-text-3: #a2a8b0;
+  --plk-text-4: #8e949c;
+  --plk-muted: #6b7178;
+  --plk-mono: #7c828a;
+
+  /* accents */
+  --plk-accent: #e0263a;
+  --plk-accent-strong: #a60f1e;
+  --plk-on-accent: #ffffff;
+  --plk-positive: #2dd4c4;
+  --plk-negative: #ff5470;
+  --plk-like: #ff4d6a;
+  --plk-link: #9bc9ff;
+  --plk-link-bg: rgba(80, 150, 255, 0.14);
+
+  /* rumour stage */
+  --plk-stage-rumour: #e5a83b;
+  --plk-stage-progress: #5b9bff;
+  --plk-stage-official: #2dd4c4;
+}
+
+@theme inline {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+/* 타이포·형태 스케일 (text-body / rounded-card 등 유틸 생성) */
+@theme {
+  --text-micro: 10px;
+  --text-caption: 11px;
+  --text-label: 12px;
+  --text-body: 13px;
+  --text-body-lg: 14px;
+  --text-title: 20px;
+  --text-headline: 23px;
+
+  --leading-headline: 1.22;
+  --leading-body: 1.5;
+  --leading-reading: 1.62;
+
+  --tracking-heading: -0.5px;
+  --tracking-caps: 0.5px;
+
+  --radius-chip: 4px;
+  --radius-tag: 6px;
+  --radius-control: 8px;
+  --radius-panel: 10px;
+  --radius-card: 12px;
+}
+
+/* 기본 리셋 */
+* { box-sizing: border-box; }
+html, body { overscroll-behavior: none; }
+body {
+  background: var(--plk-bg);
+  color: var(--plk-text);
+  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+::-webkit-scrollbar { display: none; }
+button, a { -webkit-tap-highlight-color: transparent; }

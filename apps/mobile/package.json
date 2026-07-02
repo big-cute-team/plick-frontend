@@ -19,6 +19,7 @@
   "devDependencies": {
     "@plick/eslint-config": "workspace:*",
     "@plick/typescript-config": "workspace:*",
+    "@plick/tokens": "workspace:*",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
