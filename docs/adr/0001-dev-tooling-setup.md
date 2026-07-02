@@ -1,162 +1,397 @@
-# ADR 0001 — 프론트엔드 개발 도구(Dev Tooling) 세팅
+# ADR 0001 — 프로젝트 세팅 완전 가이드 (처음부터 지금까지)
 
 - **상태(Status):** Accepted
 - **날짜(Date):** 2026-07-02
-- **작성:** 초기 세팅 정비 (create-turbo 부트스트랩 직후, 본격 개발 착수 전)
-- **관련 문서:** [handoff.md](../handoff.md)
+- **이 문서의 목적:** PLick 프론트엔드를 **빈 폴더에서** 지금 상태까지 어떻게 만들었는지,
+  **각 도구가 무엇이고 왜 쓰는지**를 처음 보는 사람도 이해할 수 있게 설명한다.
 
-> ADR = Architecture Decision Record. 이 폴더(`docs/adr/`)는 "왜 이렇게 결정했는가"를
-> 시간순으로 남기는 곳이다. 결정이 바뀌면 새 ADR을 추가해 이 문서를 Superseded 처리한다.
-
----
-
-## 1. 배경 (Context)
-
-`create-turbo`로 부트스트랩한 pnpm + Turborepo 모노레포(apps/web, apps/mobile, packages/\*)에서
-디자인 토큰(`@plick/tokens`)까지 이관한 상태였다. 본격적으로 여러 명이 PR로 협업(`big-cute-team`)하기
-직전 시점에, **팀 개발을 시작하기 전 반드시 있어야 할 공통 개발 도구**가 빠져 있었다.
-
-착수 전 점검에서 확인된 공백:
-
-| 영역           | 문제                                                                     |
-| -------------- | ------------------------------------------------------------------------ |
-| 코드 포맷      | `prettier`는 설치돼 있으나 **설정 파일이 없어** 에디터 기본값에 좌우됨   |
-| Tailwind       | 클래스 정렬 자동화(`prettier-plugin-tailwindcss`) 부재                   |
-| format 범위    | `format` 스크립트가 `ts,tsx,md`만 대상 → css/json/mjs 누락, 캐싱도 안 됨 |
-| 커밋 게이트    | pre-commit 훅 없음 → lint/format 안 통과한 코드도 커밋 가능              |
-| CI             | PR 자동 검증(`.github/workflows`) 없음                                   |
-| Node 버전      | `engines: >=18`인데 **Next 16은 Node 20.9+ 요구** → 거짓 신호            |
-| 에디터 통일    | `.editorconfig` 없음 (들여쓰기/개행/EOF 제각각)                          |
-| 보일러플레이트 | `apps/web/app/layout.tsx`가 아직 "Create Next App" 메타 + `lang="en"`    |
+> 📖 **읽는 법**
+> 위에서부터 순서대로 읽으면 됩니다. "이게 뭐지?" 싶은 용어는 대부분 그 자리에서
+> 비유로 풀어 설명합니다. 급하면 [11. 한눈에 보는 요약](#11-한눈에-보는-요약)과
+> [12. 용어 사전](#12-용어-사전)만 봐도 됩니다.
+>
+> ADR = Architecture Decision Record(결정 기록). 원래는 "왜 이렇게 정했나"를 짧게 남기는
+> 문서인데, 이 0001번은 팀의 **첫 온보딩 문서**를 겸하도록 길게 풀어 썼습니다.
 
 ---
 
-## 2. 결정 (Decision)
+## 0. 우리가 만들고 있는 것 (30초 요약)
 
-위 공백을 아래와 같이 메웠다. **"설정을 코드로 고정한다(config as code)"** 를 원칙으로,
-누가 어떤 에디터를 쓰든 동일한 결과가 나오도록 만들었다.
+**PLick** = 프리미어리그 **이적 루머**를 릴스(숏폼)처럼 넘겨보는 앱.
 
-### 2.1 Prettier (P0)
+- 화면을 **세로로 스와이프**하면 다음 루머, **왼쪽으로 스와이프**하면 상세/팬반응.
+- **모바일 우선**. 일단 웹앱으로 만들고, 나중에 네이티브 앱 껍데기로 감쌀 계획.
 
-- **`.prettierrc.json`** — 포맷 규칙을 명시적으로 고정.
-  - `semi: true`, `singleQuote: false`, `trailingComma: "all"`, `printWidth: 80`,
-    `tabWidth: 2`, `endOfLine: "lf"`
-  - `plugins: ["prettier-plugin-tailwindcss"]` — **Tailwind 클래스 자동 정렬**. v4 사용 중이라
-    클래스 순서를 손으로 관리하지 않도록 함(리뷰 노이즈 제거).
-- **`.prettierignore`** — `pnpm-lock.yaml`, `.next`, `.turbo`, 폰트/아이콘 바이너리,
-  `next-env.d.ts` 등 포맷 대상에서 제외.
-- **`package.json` 스크립트 확장**
-  - `format`: 대상 확장 → `**/*.{ts,tsx,js,mjs,cjs,json,css,md}` (기존은 `ts,tsx,md`만)
-  - `format:check`: **CI 및 로컬 검증용**. 파일을 고치지 않고 위반만 리포트.
-
-> 참고: `eslint-config-prettier`는 공유 ESLint 설정(`packages/eslint-config/base.js`, `next.js`)에
-> 이미 연결돼 있어 ESLint ↔ Prettier 규칙 충돌은 없다. (이번에 추가한 것 아님, 기존 확인 사항)
-
-### 2.2 Husky + lint-staged (pre-commit 게이트)
-
-- **`husky` v9** 도입, `prepare: "husky"` 스크립트로 `pnpm install` 시 자동 활성화.
-- **`.husky/pre-commit`** → `pnpm exec lint-staged --concurrent false` 실행.
-- **`lint-staged.config.mjs`**(루트) — 스테이징된 파일만 대상:
-  - `apps/web`·`apps/mobile`·`packages/ui`의 코드 파일 → 해당 워크스페이스의 `pnpm --filter <pkg> lint`
-  - 전체 파일(`ts,tsx,js,mjs,cjs,json,css,md`) → `prettier --write`
-- **모노레포 gotcha (중요):** ESLint v9 flat config는 **실행 위치(cwd)** 에서 `eslint.config.js`를
-  찾는다. 루트엔 설정이 없고 각 워크스페이스 안에만 있어, 루트에서 `eslint`를 직접 돌리면
-  `couldn't find an eslint.config.js`로 실패한다(처음 이 방식으로 짰다가 커밋이 막혀서 발견).
-  → 파일이 속한 **워크스페이스로 스코프**해 `pnpm --filter`로 각 패키지 eslint를 돌려 해결.
-- `--concurrent false`: 읽기 전용 eslint와 `prettier --write`가 같은 파일에 동시 접근하지 않도록 직렬 실행.
-- 효과: 포맷/린트 안 맞는 코드가 애초에 커밋되지 않음.
-
-### 2.3 CI 워크플로
-
-- **`.github/workflows/ci.yml`** — `main` push 및 `main` 대상 PR에서 실행.
-  - 순서: **format:check → lint → check-types → build** (전부 Turborepo 태스크로 실행).
-  - `pnpm/action-setup@v4` + `actions/setup-node@v4`(`node-version-file: .nvmrc`, pnpm 캐시).
-  - `pnpm install --frozen-lockfile` — 락파일과 어긋나면 실패(재현성 보장).
-  - `concurrency` + `cancel-in-progress` — 같은 브랜치에 새 커밋이 오면 이전 실행 취소.
-
-### 2.4 버전 / 에디터 고정
-
-- **`.nvmrc`** → `22` (설치·검증에 쓴 Node 22 LTS, Next 16 요구치 20.9+ 충족). CI도 이 파일을 소스로 사용.
-- **`package.json` `engines.node`** → `>=18` 에서 **`>=20.9.0`** 으로 상향(Next 16 실제 요구치).
-- **`.editorconfig`** — charset/EOL(lf)/final-newline/trim/indent(2 space) 통일.
-  Markdown은 trailing-whitespace 유지(줄바꿈 문법 보존).
-- **`apps/web/app/layout.tsx`** — 메타데이터를 `"Create Next App"` → `"PLick"`,
-  `lang="en"` → `"ko"`, Pretendard Variable CDN link 추가(이미 정리된 `apps/mobile`과 일관화).
+이 저장소는 그 앱의 **프론트엔드(사용자가 보는 화면)** 코드가 사는 곳입니다.
+오늘은 코드를 많이 짜기 전에 **"작업하기 좋은 환경"을 먼저 갖추는 날**이었습니다.
+집을 짓기 전에 수도·전기·연장을 먼저 들여놓는 것과 같아요.
 
 ---
 
-## 3. 의도적으로 하지 않은 것 (Non-goals / 주의)
+## 1. 큰 그림: 오늘의 여정
 
-- **web의 Geist 폰트 완전 제거는 보류.** `apps/web/app/page.module.css`가 아직
-  create-next-app 데모 페이지로 `--font-geist-*` 변수를 참조한다. layout에서 Geist를 지우면
-  데모 스타일이 깨지므로, 메타/lang/Pretendard만 맞추고 **Geist 변수는 유지**했다.
-  → 실제 화면(`/reels` 등) 이관 시 데모 페이지와 함께 정리할 것.
-- **테스트 러너(vitest/playwright) 미도입.** 제스처·seam이 핵심 리스크라 회귀 테스트가 언젠가
-  필요하지만, 이번 세팅 범위(도구 정비) 밖이라 다음 ADR로 분리.
-- **pnpm catalog 미적용.** react/next/typescript 버전이 패키지마다 중복 하드코딩돼 있다.
-  handoff.md 14장의 미해결 항목이며 별도 작업으로 남김.
-- **`@plick/core` 미생성.** handoff.md가 전제하지만 아직 없음("이관 중"). 세팅이 아니라 이관 작업.
-
----
-
-## 4. 검증 (Verification)
-
-세팅 직후 아래를 실행해 전부 통과 확인:
-
-```bash
-pnpm format:check   # ✅ All matched files use Prettier code style!
-pnpm lint           # ✅ 3 successful (web, mobile, @plick/ui)
-pnpm check-types    # ✅ 3 successful
+```
+빈 폴더
+  └─(1) create-turbo 로 "모노레포 뼈대" 생성   ← 이전 커밋에서 완료
+        └─(2) 디자인 토큰(색·글자 규칙) 이관     ← 이전 커밋에서 완료
+              └─(3) 개발 도구 정비 ★오늘 이 문서가 다루는 부분★
+                    - 코드 자동 정리기(Prettier)
+                    - 커밋 자동 검사(Husky)
+                    - 서버에서 자동 검증(CI)
+                    - 버전/에디터 통일
 ```
 
-- `pnpm format` 1회 실행으로 기존 4개 파일(`apps/mobile/app/{layout.tsx,page.module.css}`,
-  `apps/web/app/page.module.css`, `packages/tokens/theme.css`)을 새 규칙에 맞춰 베이스라인 정리.
-  변경 내용은 한 줄 CSS 규칙을 펼치는 등 **동작에 영향 없는 포맷팅뿐**.
-- `git config core.hooksPath` → `.husky/_` 로 husky 훅 정상 연결 확인.
+(1)(2)는 이미 돼 있었고, 이 문서는 **(3)을 중심으로 (1)(2)가 뭔지까지 같이** 설명합니다.
 
 ---
 
-## 5. 팀원용 사용법 (How to use)
+## 2. 왜 "여러 도구"가 필요한가? (핵심 감각)
+
+혼자 메모장에 코드 쓰면 아무 도구도 필요 없습니다. 하지만 **여러 명이, 오래, 안 깨지게**
+개발하려면 아래 세 가지 문제가 생기고, 각 도구는 그 문제 하나씩을 풉니다.
+
+| 문제                                                       | 해결 도구                          |
+| ---------------------------------------------------------- | ---------------------------------- |
+| 여러 앱·공용 코드를 한 곳에서 효율적으로 관리해야 함       | **모노레포 + pnpm + Turborepo**    |
+| 사람마다 코드 스타일(띄어쓰기·따옴표)이 달라 diff가 지저분 | **Prettier**                       |
+| 실수(문법 오류·안 좋은 패턴)를 미리 잡아야 함              | **ESLint · TypeScript**            |
+| 검사 안 한 코드가 커밋/머지되는 걸 막아야 함               | **Husky(커밋 시) · CI(서버)**      |
+| "내 컴퓨터에선 됐는데?" 를 없애야 함                       | **Node 버전 고정 · .editorconfig** |
+
+아래에서 하나씩 봅니다.
+
+---
+
+## 3. 모노레포 · pnpm · Turborepo (프로젝트의 뼈대)
+
+### 3-1. 모노레포(Monorepo)란?
+
+**한 저장소(repo) 안에 여러 개의 프로젝트를 같이 두는 방식**입니다.
+
+우리는 앱이 2개(웹, 모바일)이고, 둘이 **공통으로 쓰는 코드**(버튼 컴포넌트, 색상 규칙 등)가
+있습니다. 이걸 저장소 3개로 쪼개면 공용 코드를 고칠 때마다 복사·배포가 번거롭습니다.
+
+> 🏠 **비유**: 아파트 한 동(=저장소)에 여러 집(=앱)이 살고, 1층에 공용 헬스장·택배함
+> (=공용 패키지)이 있는 구조. 공용 시설을 고치면 모든 집이 바로 혜택을 봅니다.
+
+우리 저장소의 구성:
+
+```
+apps/       ← 실제 "앱"들 (사용자가 접속하는 것)
+  web/        데스크톱 웹     (개발 시 localhost:3000)
+  mobile/     모바일 웹       (개발 시 localhost:3001)
+
+packages/   ← 앱들이 공통으로 가져다 쓰는 "부품"들
+  ui/                 공용 UI 컴포넌트 (버튼, 카드 등)
+  tokens/             디자인 토큰 (색·글자 크기 규칙)  → 4장에서 설명
+  eslint-config/      공용 ESLint 규칙                → 7장
+  typescript-config/  공용 TypeScript 설정            → 6장
+```
+
+- `apps/`의 앱들은 `packages/`의 부품을 `@plick/ui`, `@plick/tokens` 같은 이름으로 가져다 씁니다.
+- `@plick`은 우리 프로젝트의 **스코프(이름표)**. "이건 PLick 내부 패키지야"라는 표시입니다.
+
+### 3-2. pnpm이란? (패키지 매니저)
+
+프로젝트는 남이 만든 코드(라이브러리, 예: React)를 잔뜩 가져다 씁니다. 이 **외부 코드들을
+내려받고 관리하는 도구**가 패키지 매니저입니다. npm, yarn, pnpm이 대표적이고 우리는 **pnpm**을 씁니다.
+
+> 📦 **비유**: 요리(=코드)에 필요한 재료(=라이브러리)를 자동으로 장 봐다 주는 마트 배달앱.
+
+pnpm을 고른 이유:
+
+- **디스크 절약**: 같은 라이브러리를 앱마다 중복 저장하지 않고 한 번만 저장해 링크로 공유.
+- **엄격함**: "설치했다고 선언한 것만" 쓸 수 있게 막아줘서 숨은 의존성 사고를 예방.
+- **모노레포 지원(workspace)**: 여러 패키지를 한 번에 관리하는 기능이 기본 내장.
+
+관련 파일:
+
+- `pnpm-workspace.yaml` — "이 폴더들(`apps/*`, `packages/*`)이 한 몸이야"라고 알려주는 지도.
+- `pnpm-lock.yaml` — 설치한 라이브러리의 **정확한 버전 잠금표**. 이게 있어서 누가 설치하든
+  똑같은 버전이 깔립니다. (**직접 수정 금지**, 자동 생성 파일)
+- `package.json` — 각 프로젝트의 신분증. 이름, 필요한 라이브러리 목록, 실행 명령어(scripts)가 들어감.
+
+### 3-3. Turborepo(turbo)란? (작업 실행기)
+
+모노레포에는 앱·패키지가 여럿이라, "전부 빌드해", "전부 검사해" 같은 명령을 **똑똑하게 한 번에**
+돌려주는 도구가 필요합니다. 그게 **Turborepo**입니다.
+
+> 🎬 **비유**: 여러 배우(=패키지)에게 동시에 지시하고, **바뀐 부분만** 다시 찍고, 안 바뀐 건
+> 지난 촬영분을 재활용(캐시)하는 **감독**.
+
+핵심 이점:
+
+- **병렬 실행**: 여러 패키지 작업을 동시에 → 빠름.
+- **캐시**: 바뀐 게 없으면 이전 결과를 그대로 재사용 → 두 번째부터 훨씬 빠름.
+- **의존성 순서**: "공용 부품을 먼저 빌드하고 앱을 빌드" 같은 순서를 알아서 지킴.
+
+관련 파일: `turbo.json` — 어떤 작업(build/lint/dev 등)이 있고 서로 어떤 순서인지 정의.
+
+우리가 루트에서 `pnpm build` 하면 → 내부적으로 `turbo run build` → 모든 패키지의 build를
+알아서 순서대로/병렬로 실행합니다.
+
+---
+
+## 4. Next.js · TypeScript · Tailwind · 디자인 토큰 (앱을 이루는 기술)
+
+### 4-1. Next.js — 웹 프레임워크
+
+React(화면 만드는 라이브러리)를 실제 서비스로 만들 때 필요한 것들(라우팅=주소별 페이지,
+서버 렌더링, 최적화)을 다 갖춘 **틀**. 우리는 최신 **Next.js 16**을 씁니다.
+`app/` 폴더 안에 페이지를 만들면 그게 곧 화면이 됩니다.
+
+### 4-2. TypeScript — 타입 있는 자바스크립트
+
+자바스크립트에 **"이 값은 숫자, 이건 문자"** 같은 타입 규칙을 얹은 언어.
+오타나 잘못된 데이터 사용을 **코드 실행 전에** 잡아줍니다.
+
+> 🔌 **비유**: 콘센트에 220V만 꽂히게 모양을 정해둔 것. 엉뚱한 걸 꽂으려 하면 미리 막아줌.
+
+- `packages/typescript-config/` = 공용 TS 설정 모음. 각 앱은 이걸 가져다 확장해서 씁니다.
+  (설정을 앱마다 복붙하지 않고 한 곳에서 관리하려는 것.)
+- 검사 명령: `pnpm check-types` (실제로 실행은 안 하고 타입만 검사).
+
+### 4-3. Tailwind CSS v4 — 스타일링 방식
+
+CSS(디자인)를 별도 파일에 쓰지 않고, `class="text-body rounded-card"`처럼 **미리 만들어진
+작은 유틸리티 클래스를 조립**해 스타일을 입히는 방식. 빠르고 일관됩니다.
+
+### 4-4. 디자인 토큰 (`@plick/tokens`)
+
+색·글자 크기·모서리 둥글기 같은 **디자인 값의 "단일 원본"**. 예: 우리 앱의 강조색(빨강)은
+`--plk-accent: #e0263a` 한 곳에만 정의하고, 모든 화면이 이 이름을 참조합니다.
+
+> 🎨 **비유**: 브랜드 색상표를 벽에 딱 하나 붙여두고 모두가 그것만 보고 칠하는 것.
+> 색을 바꾸려면 색상표 한 곳만 고치면 전부 반영됩니다.
+
+파일: `packages/tokens/theme.css` (여기 `--plk-*` 값들이 진짜 원본).
+
+---
+
+## 5. Git · GitHub · 브랜치 (협업의 기본 틀)
+
+- **Git** = 코드의 변경 이력을 저장하는 "무한 되돌리기 + 타임머신".
+- **커밋(commit)** = 변경사항 한 묶음을 이력에 저장하는 것. (스냅샷 찍기)
+- **브랜치(branch)** = 본줄기(`main`)를 건드리지 않고 따로 작업하는 **평행 세계**.
+  작업이 끝나면 본줄기에 합칩니다.
+- **GitHub** = 그 Git 저장소를 온라인에 올려 함께 보는 곳. 우리 주소: `big-cute-team/frontend`.
+- **PR(Pull Request)** = "내 브랜치를 main에 합쳐도 될까요?" 하고 여는 **리뷰 요청서**.
+  여기서 CI 검사(9장)가 돌고, 동료가 코드를 봐준 뒤 합칩니다.
+
+> 🌿 **비유**: `main`은 정식 출판된 책. 브랜치는 내 초고. PR은 편집자에게 초고를 보내
+> "이대로 책에 실어도 될까요?" 검토받는 과정.
+
+---
+
+## 6. Prettier — 코드 자동 정리기 (오늘 추가 ①)
+
+**무엇**: 코드의 **모양(포맷)**을 규칙대로 자동 정리해주는 도구. 띄어쓰기, 따옴표(`'` vs `"`),
+줄바꿈, 세미콜론 등을 통일합니다. **코드의 동작은 안 바꾸고 모양만** 정리합니다.
+
+**왜**: 사람마다 코딩 습관이 달라서, 정리 안 하면 "기능은 그대로인데 스타일만 다른" 변경이
+diff를 더럽히고 리뷰가 피곤해집니다. Prettier가 있으면 **저장할 때마다 자동으로 한 스타일로 통일**.
+
+> 🧹 **비유**: 문서 저장할 때마다 자동으로 줄맞춤·글꼴을 통일해주는 서식 정리 버튼.
+
+**오늘 추가한 것:**
+
+- `.prettierrc.json` — 정리 규칙을 코드로 못박음 (따옴표는 `"`, 줄 최대 80칸, 들여쓰기 2칸 등).
+  규칙을 파일로 고정했기 때문에 **누가 어떤 에디터를 쓰든 결과가 같습니다.**
+- `.prettierignore` — 정리하면 안 되는 것 제외 (자동생성물 `.next`, 잠금파일, 이미지 등).
+- `prettier-plugin-tailwindcss` — Tailwind 클래스 순서를 **자동 정렬**해주는 부가 기능.
+  (클래스 순서를 손으로 맞추는 수고를 없앰.)
+- 실행 명령:
+  - `pnpm format` → 전체 파일을 실제로 정리(파일을 고침).
+  - `pnpm format:check` → 정리 안 된 파일이 있는지 **확인만**(안 고침). CI가 이걸 씁니다.
+
+---
+
+## 7. ESLint · TypeScript 검사 — 실수 잡기 (기존 + 유지)
+
+**ESLint**: 코드의 **품질/버그 위험**을 잡는 도구. Prettier가 "모양"이라면 ESLint는 "내용"입니다.
+예: 안 쓰는 변수, 위험한 패턴, React 규칙 위반 등을 경고/오류로 알려줍니다.
+
+- `packages/eslint-config/` = 공용 ESLint 규칙 모음. 앱마다 규칙을 복붙하지 않고 여기서 관리.
+- 실행: `pnpm lint`.
+
+> Prettier와 ESLint는 역할이 겹치지 않게 `eslint-config-prettier`로 조율돼 있습니다.
+> (모양 관련 규칙은 ESLint에서 끄고 Prettier에 맡김 → 둘이 안 싸움.)
+
+---
+
+## 8. Husky + lint-staged — 커밋 자동 검사 (오늘 추가 ②)
+
+**문제**: 정리/검사 명령이 있어도 **사람이 깜빡하면** 소용없습니다. 검사 안 한 코드가 커밋됨.
+
+**해결**: **커밋하는 순간 자동으로** 검사를 돌리게 합니다.
+
+- **Husky** = Git의 "특정 순간에 스크립트를 자동 실행"하는 기능(=Git hook)을 쉽게 설정해주는 도구.
+  우리는 **커밋 직전(pre-commit)** 시점을 씁니다.
+- **lint-staged** = 이번 커밋에 **포함된 파일만** 콕 집어 검사/정리하는 도구.
+  (전체가 아니라 바뀐 것만 보니 빠름.)
+
+> 🚪 **비유**: 커밋이 "문 밖으로 나가기"라면, Husky는 그 문 앞에 세운 **자동 검문소**.
+> lint-staged는 "이번에 들고 나가는 짐만" 검사하는 검문원.
+
+**커밋할 때 실제로 일어나는 일:**
+
+```
+git commit
+   ↓
+Husky가 pre-commit 훅 실행
+   ↓
+lint-staged 실행
+   ├─ 바뀐 코드 파일 → 해당 앱/패키지의 ESLint 검사
+   └─ 바뀐 모든 파일 → Prettier로 자동 정리
+   ↓
+문제 없으면 → 커밋 완료 ✅
+문제 있으면 → 커밋 취소, 원상복구 ❌ (고치고 다시 커밋)
+```
+
+**오늘 실제로 겪은 함정 (중요, 이해하면 좋음):**
+처음엔 저장소 맨 위(루트)에서 ESLint를 한 번에 돌리게 짰는데 **실패**했습니다.
+이유: 우리 ESLint(v9)는 **명령을 실행한 폴더**에서 설정 파일을 찾는데, 설정은 루트가 아니라
+각 앱/패키지 폴더 안에만 있었거든요. 그래서 **"파일이 속한 폴더로 들어가서 그 폴더의 ESLint를
+돌리도록"** 고쳤습니다. 이 규칙이 `lint-staged.config.mjs`에 들어 있습니다.
+
+관련 파일: `.husky/pre-commit`, `lint-staged.config.mjs`.
+
+---
+
+## 9. CI (GitHub Actions) — 서버에서 자동 검증 (오늘 추가 ③)
+
+**CI(Continuous Integration)** = 코드를 GitHub에 올리면(PR/푸시) **서버가 자동으로** 검사·빌드를
+돌려 "이 코드 합쳐도 안전한가"를 확인해주는 것.
+
+**왜 Husky가 있는데 또?**: Husky는 각자 컴퓨터에서 도는 거라 **끄거나 우회할 수 있습니다.**
+CI는 **모두에게 똑같이, 깨끗한 서버에서** 강제로 돕니다. 최후의 관문이에요.
+
+> 🛃 **비유**: Husky가 집 현관 검문이라면, CI는 **공항 출국 심사**. 여긴 못 건너뜁니다.
+
+**우리 CI(`.github/workflows/ci.yml`)가 하는 일** — PR을 열거나 main에 푸시하면 순서대로:
+
+```
+1. 코드 내려받기
+2. Node/pnpm 준비 → 라이브러리 설치 (잠금표대로 정확히)
+3. format:check  → Prettier 정리 안 된 파일 있나?
+4. lint          → ESLint 문제 있나?
+5. check-types   → 타입 오류 있나?
+6. build         → 실제로 빌드가 되나?
+```
+
+하나라도 실패하면 PR에 **빨간불**이 떠서 "아직 합치면 안 됨"을 알려줍니다.
+
+**이게 값을 한 실제 사례:** 이 CI를 켜자마자 **첫 PR에서 진짜 버그를 잡았습니다.**
+`@plick/ui`의 ESLint 설정 파일이 옛날 이름(`@repo/eslint-config`)을 참조하고 있었는데,
+내 컴퓨터엔 옛 설치 흔적이 남아 우연히 통과했지만 **깨끗한 CI 서버에선 실패**했어요.
+바로 고쳤고(`@plick/eslint-config`), 이게 바로 CI를 두는 이유입니다.
+
+---
+
+## 10. Node 버전 · 에디터 통일 (오늘 추가 ④)
+
+### 10-1. "내 컴퓨터에선 됐는데?" 없애기
+
+- **Node.js** = 자바스크립트를 컴퓨터에서 실행시켜주는 엔진. 버전이 다르면 결과가 달라질 수 있음.
+- `.nvmrc` (내용: `22`) — "이 프로젝트는 Node **22**를 쓴다"는 표시. `nvm use` 한 줄로 맞춰집니다.
+- `package.json`의 `engines` — Node 최소 버전을 `>=20.9.0`으로 명시(우리가 쓰는 Next 16의 실제
+  요구치). 예전엔 `>=18`로 적혀 있었는데 그건 **실제로는 안 도는 버전까지 허용하는 거짓 신호**라 고침.
+
+### 10-2. `.editorconfig`
+
+에디터(VS Code 등) 종류와 무관하게 **들여쓰기 칸 수, 줄바꿈 문자, 파일 끝 빈 줄** 같은 기본을
+통일해주는 파일. 팀원이 서로 다른 에디터를 써도 기본 서식이 어긋나지 않게 합니다.
+
+### 10-3. 보일러플레이트 정리
+
+`apps/web`은 아직 초기 예제(create-next-app 데모) 흔적이 남아 있었습니다. 그중 화면 제목이
+`"Create Next App"`, 언어가 `en`으로 돼 있던 걸 **`"PLick"` / `ko` / Pretendard 폰트**로,
+이미 정리된 `apps/mobile`과 똑같이 맞췄습니다.
+
+> ⚠️ 단, web은 아직 데모 페이지가 옛 폰트(Geist)를 쓰고 있어서 폰트를 완전히 지우면 화면이
+> 깨집니다. 그래서 제목·언어만 정리하고 **폰트는 실제 화면 작업 때 같이 지우기로** 남겨뒀습니다.
+
+---
+
+## 11. 한눈에 보는 요약
+
+### 오늘 추가/변경한 파일
+
+| 파일                            | 한 줄 설명                                       |
+| ------------------------------- | ------------------------------------------------ |
+| `.prettierrc.json`              | 코드 정리 규칙 (+ Tailwind 클래스 정렬 플러그인) |
+| `.prettierignore`               | 정리에서 제외할 대상                             |
+| `.husky/pre-commit`             | 커밋 직전에 lint-staged 실행                     |
+| `lint-staged.config.mjs`        | 바뀐 파일만 워크스페이스별로 ESLint + Prettier   |
+| `.github/workflows/ci.yml`      | PR/푸시 시 서버에서 자동 검증                    |
+| `.nvmrc`                        | Node 버전 22 고정                                |
+| `.editorconfig`                 | 에디터 공통 기본 설정                            |
+| `package.json`                  | scripts 확장 / engines 상향 / 도구 추가          |
+| `apps/web/app/layout.tsx`       | 제목·언어·폰트 정리                              |
+| `packages/ui/eslint.config.mjs` | (CI가 잡은 버그) `@repo` → `@plick` 스코프 수정  |
+
+### 자주 쓰는 명령어
+
+| 명령                | 무엇을 하나                            |
+| ------------------- | -------------------------------------- |
+| `pnpm install`      | 라이브러리 설치 (+ Husky 자동 설치)    |
+| `pnpm dev`          | 개발 서버 실행 (web:3000, mobile:3001) |
+| `pnpm format`       | 전체 코드 자동 정리                    |
+| `pnpm format:check` | 정리 안 된 파일 확인만                 |
+| `pnpm lint`         | ESLint 검사                            |
+| `pnpm check-types`  | 타입 검사                              |
+| `pnpm build`        | 전체 빌드                              |
+
+### 처음 이 저장소를 받았을 때
 
 ```bash
-# 처음 클론 후 (prepare 스크립트가 husky 훅을 자동 설치)
-nvm use            # .nvmrc → Node 22
-pnpm install
-
-# 일상 명령
-pnpm dev           # web(3000) + mobile(3001) 동시
-pnpm format        # 전체 파일 포맷 적용
-pnpm format:check  # 포맷 위반만 확인(고치지 않음)
-pnpm lint
-pnpm check-types
-
-# 커밋 시: pre-commit이 변경 파일에 자동으로 eslint --fix + prettier 적용.
-# 훅이 안 도는 것 같으면 pnpm install을 다시 실행해 husky를 재설치.
+nvm use          # .nvmrc 보고 Node 22로 맞춤
+pnpm install     # 라이브러리 설치 + 커밋 검문소(Husky) 자동 설치
+pnpm dev         # 개발 시작!
 ```
 
 ---
 
-## 6. 추가한/변경한 파일 요약
+## 12. 용어 사전 (헷갈릴 때 여기)
 
-| 파일                              | 종류 | 내용                              |
-| --------------------------------- | ---- | --------------------------------- |
-| `.prettierrc.json`                | 신규 | Prettier 규칙 + tailwind 플러그인 |
-| `.prettierignore`                 | 신규 | 포맷 제외 대상                    |
-| `.husky/pre-commit`               | 신규 | `lint-staged --concurrent false`  |
-| `lint-staged.config.mjs`          | 신규 | 워크스페이스별 lint + prettier    |
-| `.github/workflows/ci.yml`        | 신규 | PR/Push 검증 파이프라인           |
-| `.nvmrc`                          | 신규 | Node 22 고정                      |
-| `.editorconfig`                   | 신규 | 에디터 공통 규칙                  |
-| `package.json`                    | 수정 | scripts/lint-staged/engines/deps  |
-| `apps/web/app/layout.tsx`         | 수정 | 메타/lang/Pretendard              |
-| (포맷 정리) mobile·web·tokens 4개 | 수정 | 새 규칙 베이스라인                |
+| 용어               | 아주 쉽게                                                      |
+| ------------------ | -------------------------------------------------------------- |
+| 저장소(repo)       | 프로젝트 코드가 사는 폴더 전체 (이력 포함)                     |
+| 모노레포           | 한 저장소에 여러 프로젝트를 같이 두는 방식                     |
+| 패키지             | 독립적으로 관리되는 코드 묶음 하나 (앱 하나, 공용 부품 하나)   |
+| 워크스페이스       | 모노레포 안의 각 패키지 자리 (`apps/web` 등)                   |
+| 의존성(dependency) | 내 코드가 가져다 쓰는 남의 코드(라이브러리)                    |
+| pnpm               | 그 라이브러리를 설치·관리하는 도구                             |
+| Turborepo          | 여러 패키지 작업을 똑똑하게(병렬·캐시) 실행하는 도구           |
+| 스코프(`@plick`)   | 우리 내부 패키지임을 나타내는 이름표                           |
+| Next.js            | React로 웹 서비스를 만드는 틀(프레임워크)                      |
+| TypeScript         | 타입(값의 종류)을 검사해주는 자바스크립트                      |
+| Tailwind           | 작은 클래스를 조립해 디자인하는 CSS 방식                       |
+| 디자인 토큰        | 색·글자 크기 등 디자인 값의 단일 원본                          |
+| 린트(lint)         | 코드 품질/버그 위험을 자동 검사하는 것 (ESLint)                |
+| 포맷(format)       | 코드 모양을 규칙대로 정리하는 것 (Prettier)                    |
+| Git hook           | 커밋 등 특정 순간에 자동 실행되는 스크립트                     |
+| Husky              | Git hook을 쉽게 설정해주는 도구                                |
+| lint-staged        | 커밋에 포함된 파일만 검사/정리                                 |
+| CI                 | 코드 올릴 때 서버가 자동으로 검사·빌드 (여기선 GitHub Actions) |
+| 브랜치             | main을 안 건드리고 따로 작업하는 평행 세계                     |
+| PR                 | 브랜치를 main에 합치자는 리뷰 요청                             |
 
 ---
 
-## 7. 다음 단계 (Follow-ups)
+## 13. 아직 안 한 것 · 다음 단계
 
-- [ ] pnpm **catalog**로 react/next/typescript 버전 단일화 (handoff 14장)
-- [ ] **테스트 러너** 도입 및 제스처/seam 회귀 테스트 (→ 별도 ADR)
-- [ ] `@plick/core` 패키지 생성 및 `transpilePackages` 반영 (handoff 4·9장)
-- [ ] web 데모 페이지 정리 시 **Geist 폰트 완전 제거**
-- [ ] (선택) commitlint + Conventional Commits 강제
+이번엔 "개발 도구 정비"만 했고, 아래는 **의도적으로 다음으로** 미뤘습니다.
+
+- [ ] **pnpm catalog** — react/next 등 버전이 패키지마다 중복 적혀 있음 → 한 곳에서 관리하도록 정리
+- [ ] **테스트 도구** 도입 — 화면/제스처가 의도대로 도는지 자동 확인(회귀 방지)
+- [ ] **`@plick/core` 패키지** 생성 — 타입·팀색·제스처 로직 이관 (핸드오프 문서가 전제하지만 아직 없음)
+- [ ] **web 데모 페이지 정리** 시 옛 폰트(Geist) 완전 제거
+- [ ] (선택) 커밋 메시지 형식 강제(commitlint)
+
+---
+
+## 14. 참고
+
+- 제품·UX·데이터 모델 등 **프로젝트 전반**은 [handoff.md](../handoff.md) 참고.
+- 이 문서(ADR 0001)는 **개발 환경/도구**에 집중. 결정이 바뀌면 새 ADR(0002…)로 이어서 기록.
