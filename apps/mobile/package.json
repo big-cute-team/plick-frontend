@@ -1,5 +1,5 @@
 {
-  "name": "docs",
+  "name": "mobile",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -11,18 +11,21 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
+    "@plick/ui": "workspace:*",
     "next": "16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@plick/eslint-config": "workspace:*",
+    "@plick/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2",
     "typescript": "5.9.2"
   }
 }
