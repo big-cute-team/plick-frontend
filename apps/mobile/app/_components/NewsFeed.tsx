@@ -16,7 +16,7 @@ export function NewsFeed({ posts }: { posts: FeedPost[] }) {
   return (
     <>
       <TeamFilterTabs onChange={setFilter} />
-      <div className="px-screen">
+      <div className="px-edge">
         {shown.length > 0 ? (
           shown.map((post) => <NewsItem key={post.id} post={post} />)
         ) : (

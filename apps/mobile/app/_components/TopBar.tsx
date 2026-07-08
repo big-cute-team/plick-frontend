@@ -9,7 +9,7 @@ export function TopBar({ notif = 0 }: { notif?: number }) {
       className="border-border bg-nav/90 shrink-0 border-b backdrop-blur-md"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="px-screen flex h-13 items-center justify-between">
+      <div className="px-edge flex h-13 items-center justify-between">
         <Logo height={18} />
         <div className="flex items-center gap-1">
           <ThemeToggle />

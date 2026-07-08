@@ -25,7 +25,7 @@ export function TeamFilterTabs({
   ];
 
   return (
-    <div className="no-scrollbar border-border px-screen flex gap-4 overflow-x-auto border-b">
+    <div className="no-scrollbar border-border px-edge flex gap-4 overflow-x-auto border-b">
       {items.map(({ key, label }) => {
         const on = active === key;
         return (

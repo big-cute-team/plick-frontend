@@ -134,8 +134,8 @@
   --radius-sheet: 26px;
   --radius-pill: 999px;
 
-  /* spacing */
-  --spacing-screen: 20px;
+  /* spacing — 'screen'은 Tailwind 예약어(w-screen 등)라 edge로 명명 */
+  --spacing-edge: 20px;
   --spacing-gap: 12px;
   --spacing-gap-lg: 14px;
   --spacing-section: 16px;
