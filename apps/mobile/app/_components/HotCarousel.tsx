@@ -24,12 +24,12 @@ export function HotCarousel({ posts }: { posts: FeedPost[] }) {
       <div
         ref={trackRef}
         onScroll={onScroll}
-        className="snap-x-carousel no-scrollbar px-screen flex gap-2.5 overflow-x-auto pb-2"
+        className="snap-x-carousel no-scrollbar flex gap-2.5 overflow-x-auto px-[7%] pb-2"
       >
         {posts.map((post) => (
           <div
             key={post.id}
-            className="aspect-[181/131] w-[92%] shrink-0 snap-start"
+            className="aspect-[181/131] w-[86%] shrink-0 snap-center"
           >
             <HotHeroCard post={post} />
           </div>
