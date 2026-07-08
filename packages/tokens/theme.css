@@ -29,6 +29,10 @@
   --plk-on-accent: #08130c;
   --plk-danger: #f87171;
 
+  /* media (기사 썸네일/영상 placeholder) */
+  --plk-media-bg: #0b101d;
+  --plk-media-on: #ffffff;
+
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
   --plk-team-liv: #c8102e; /* 리버풀 */
@@ -63,11 +67,47 @@
   --plk-accent: #12a968;
   --plk-on-accent: #ffffff;
   --plk-danger: #e5484d;
+
+  /* media */
+  --plk-media-bg: #dfe4ec;
+  --plk-media-on: #ffffff;
 }
 
 @theme inline {
   --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* 색 → Tailwind 유틸 매핑.
+   * inline이라 값을 굳히지 않고 var()를 그대로 emit → [data-theme=light]에서 자동 전환.
+   * 예) bg-bg / text-text / text-text-3 / border-border / bg-accent / text-accent */
+  --color-bg: var(--plk-bg);
+  --color-nav: var(--plk-nav-bg);
+  --color-elevate: var(--plk-elevate);
+  --color-elevate-2: var(--plk-elevate-2);
+  --color-border: var(--plk-border);
+  --color-border-strong: var(--plk-border-strong);
+
+  --color-text: var(--plk-text);
+  --color-text-2: var(--plk-text-2);
+  --color-text-3: var(--plk-text-3);
+  --color-text-4: var(--plk-text-4);
+  --color-icon: var(--plk-icon);
+  --color-avatar: var(--plk-avatar);
+
+  --color-accent: var(--plk-accent);
+  --color-on-accent: var(--plk-on-accent);
+  --color-danger: var(--plk-danger);
+
+  --color-media: var(--plk-media-bg);
+  --color-media-on: var(--plk-media-on);
+
+  --color-kakao: var(--plk-kakao);
+  --color-team-liv: var(--plk-team-liv);
+  --color-team-tot: var(--plk-team-tot);
+  --color-team-ars: var(--plk-team-ars);
+  --color-team-mun: var(--plk-team-mun);
+  --color-team-che: var(--plk-team-che);
+  --color-team-mci: var(--plk-team-mci);
 }
 
 /* 타이포·형태·간격 스케일 (text-body / rounded-card / p-screen 등 유틸 생성) */
