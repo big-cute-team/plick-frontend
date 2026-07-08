@@ -1,0 +1,9 @@
+{
+  // 이 저장소에서 권장하는 확장. VS Code가 "권장 확장 설치" 안내를 띄워줌.
+  "recommendations": [
+    "esbenp.prettier-vscode", // Prettier (포맷)
+    "dbaeumer.vscode-eslint", // ESLint (린트)
+    "bradlc.vscode-tailwindcss", // Tailwind 클래스 자동완성/미리보기
+    "editorconfig.editorconfig" // .editorconfig 적용
+  ]
+}
