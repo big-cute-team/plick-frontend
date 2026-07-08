@@ -33,7 +33,7 @@ export function NewsItem({ post }: { post: FeedPost }) {
       </div>
       <MediaThumb
         team={post.team}
-        className="rounded-control size-16 shrink-0"
+        className="rounded-control size-14 shrink-0"
       />
     </Link>
   );
