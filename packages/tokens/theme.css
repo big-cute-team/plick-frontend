@@ -1,38 +1,68 @@
 /*
- * PLick 디자인 토큰 — 테마 t27 (네이비 + 레드). 색은 이 :root 하나로 관리.
+ * PLick 디자인 토큰 — "그린 시그널"
+ * 다크가 기본(:root), 라이트는 [data-theme="light"] 오버라이드.
+ * 출처: Figma "🎨 PLick 디자인 토큰" (node 122:2).
  */
+
+/* ── 다크 (기본) ───────────────────────────────── */
 :root {
+  color-scheme: dark;
+
   /* surfaces */
-  --plk-bg: #0f1a2e;
-  --plk-surface: #17243f;
-  --plk-nav-bg: #0c1626;
-  --plk-elevate: rgba(255, 255, 255, 0.1);
-  --plk-elevate-2: rgba(255, 255, 255, 0.06);
-  --plk-border: rgba(255, 255, 255, 0.12);
-  --plk-border-soft: rgba(255, 255, 255, 0.06);
+  --plk-bg: #0b0d12;
+  --plk-nav-bg: #0a0b0f;
+  --plk-elevate: rgba(148, 163, 184, 0.09);
+  --plk-elevate-2: rgba(148, 163, 184, 0.06);
+  --plk-border: rgba(148, 163, 184, 0.12);
+  --plk-border-strong: rgba(148, 163, 184, 0.16);
 
   /* text */
-  --plk-text: #f4f5f7;
-  --plk-text-2: #c5cad1;
-  --plk-text-3: #a2a8b0;
-  --plk-text-4: #8e949c;
-  --plk-muted: #6b7178;
-  --plk-mono: #7c828a;
+  --plk-text: #eef2f8;
+  --plk-text-2: #c4cddb;
+  --plk-text-3: #93a0b4;
+  --plk-text-4: #5e6b80;
+  --plk-icon: #c7d2e2;
+  --plk-avatar: #33405c;
 
   /* accents */
-  --plk-accent: #e0263a;
-  --plk-accent-strong: #a60f1e;
-  --plk-on-accent: #ffffff;
-  --plk-positive: #2dd4c4;
-  --plk-negative: #ff5470;
-  --plk-like: #ff4d6a;
-  --plk-link: #9bc9ff;
-  --plk-link-bg: rgba(80, 150, 255, 0.14);
+  --plk-accent: #2fd97f;
+  --plk-on-accent: #08130c;
+  --plk-danger: #f87171;
 
-  /* rumour stage */
-  --plk-stage-rumour: #e5a83b;
-  --plk-stage-progress: #5b9bff;
-  --plk-stage-official: #2dd4c4;
+  /* brand · team colors (모드 공통) */
+  --plk-kakao: #fee500;
+  --plk-team-liv: #c8102e; /* 리버풀 */
+  --plk-team-tot: #132257; /* 토트넘 */
+  --plk-team-ars: #ef0107; /* 아스날 */
+  --plk-team-mun: #da291c; /* 맨유 */
+  --plk-team-che: #034694; /* 첼시 */
+  --plk-team-mci: #6cabdd; /* 맨시티 */
+}
+
+/* ── 라이트 (오버라이드) ───────────────────────── */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* surfaces */
+  --plk-bg: #ffffff;
+  --plk-nav-bg: #ffffff;
+  --plk-elevate: rgba(20, 25, 35, 0.06);
+  --plk-elevate-2: rgba(20, 25, 35, 0.04);
+  --plk-border: rgba(20, 25, 35, 0.1);
+  --plk-border-strong: rgba(20, 25, 35, 0.14);
+
+  /* text */
+  --plk-text: #14171e;
+  --plk-text-2: #333b47;
+  --plk-text-3: #5c6673;
+  --plk-text-4: #98a1ae;
+  --plk-icon: #3d4654;
+  --plk-avatar: #dde3ec;
+
+  /* accents */
+  --plk-accent: #12a968;
+  --plk-on-accent: #ffffff;
+  --plk-danger: #e5484d;
 }
 
 @theme inline {
@@ -40,28 +70,35 @@
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
-/* 타이포·형태 스케일 (text-body / rounded-card 등 유틸 생성) */
+/* 타이포·형태·간격 스케일 (text-body / rounded-card / p-screen 등 유틸 생성) */
 @theme {
-  --text-micro: 10px;
-  --text-caption: 11px;
+  /* type scale */
+  --text-display: 44px;
+  --text-headline: 24px;
+  --text-title: 17px;
+  --text-body-lg: 15px;
+  --text-body: 13.5px;
   --text-label: 12px;
-  --text-body: 13px;
-  --text-body-lg: 14px;
-  --text-title: 20px;
-  --text-headline: 23px;
+  --text-caption: 11px;
+  --text-micro: 10px;
 
-  --leading-headline: 1.22;
-  --leading-body: 1.5;
-  --leading-reading: 1.62;
+  /* line height */
+  --leading-body-lg: 1.75; /* 기사 본문 */
+  --leading-body: 1.55; /* 댓글 본문 */
 
-  --tracking-heading: -0.5px;
-  --tracking-caps: 0.5px;
+  /* radius */
+  --radius-badge: 6px;
+  --radius-control: 14px;
+  --radius-card: 16px; /* input · card */
+  --radius-hero: 22px;
+  --radius-sheet: 26px;
+  --radius-pill: 999px;
 
-  --radius-chip: 4px;
-  --radius-tag: 6px;
-  --radius-control: 8px;
-  --radius-panel: 10px;
-  --radius-card: 12px;
+  /* spacing */
+  --spacing-screen: 20px;
+  --spacing-gap: 12px;
+  --spacing-gap-lg: 14px;
+  --spacing-section: 16px;
 }
 
 /* 기본 리셋 */
