@@ -1,4 +1,5 @@
 import { BellIcon } from "./icons";
+import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
 // 상단 크롬. pt에 safe-area-inset-top을 더해 노치/펀치홀 아래로 콘텐츠가 내려온다.
@@ -9,9 +10,7 @@ export function TopBar({ notif = 0 }: { notif?: number }) {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="px-screen flex h-13 items-center justify-between">
-        <span className="text-title text-text font-extrabold tracking-tight">
-          PLick
-        </span>
+        <Logo height={18} />
         <div className="flex items-center gap-1">
           <ThemeToggle />
           <button
