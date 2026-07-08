@@ -10,9 +10,9 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
   const stage = STAGE_META[post.stage];
   return (
     <Link href={`/reels/${post.id}`} className="block h-full">
-      <MediaThumb team={post.team} className="rounded-card h-full">
+      <MediaThumb team={post.team} className="rounded-hero h-full">
         <div
-          className="p-gap absolute inset-x-0 bottom-0 flex flex-col gap-1"
+          className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4"
           style={{
             backgroundImage:
               "linear-gradient(to top, rgba(6,8,14,0.92) 0%, rgba(6,8,14,0.55) 55%, rgba(6,8,14,0) 100%)",
@@ -26,7 +26,7 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
               {stage.label}
             </span>
           </div>
-          <h3 className="text-body-lg text-media-on line-clamp-2 leading-tight font-extrabold">
+          <h3 className="text-title text-media-on line-clamp-2 leading-tight font-extrabold">
             {post.title}
           </h3>
           <p className="text-caption text-media-on/75">

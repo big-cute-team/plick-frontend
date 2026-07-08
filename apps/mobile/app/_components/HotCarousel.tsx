@@ -14,7 +14,7 @@ export function HotCarousel({ posts }: { posts: FeedPost[] }) {
     const el = trackRef.current;
     const first = el?.firstElementChild as HTMLElement | null;
     if (!el || !first) return;
-    const step = first.clientWidth + 12; // 카드폭 + gap
+    const step = first.clientWidth + 10; // 카드폭 + gap(2.5)
     const i = Math.round(el.scrollLeft / step);
     setActive(Math.max(0, Math.min(posts.length - 1, i)));
   }
@@ -24,12 +24,12 @@ export function HotCarousel({ posts }: { posts: FeedPost[] }) {
       <div
         ref={trackRef}
         onScroll={onScroll}
-        className="snap-x-carousel no-scrollbar gap-gap px-screen flex overflow-x-auto pb-2"
+        className="snap-x-carousel no-scrollbar px-screen flex gap-2.5 overflow-x-auto pb-2"
       >
         {posts.map((post) => (
           <div
             key={post.id}
-            className="aspect-[16/11] w-[82%] shrink-0 snap-start"
+            className="aspect-[181/131] w-[92%] shrink-0 snap-start"
           >
             <HotHeroCard post={post} />
           </div>
