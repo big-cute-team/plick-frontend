@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FeedPost } from "../../_lib/types";
-import { ReelDetailSheet, useReelDetailMotion } from "./ReelDetailSheet";
+import { clampTitleOffset } from "../_lib/sheet";
+import { useReelDetailMotion } from "../_lib/useReelDetailMotion";
+import { ReelDetailSheet } from "./ReelDetailSheet";
 import { ReelItem } from "./ReelItem";
 
 /**
@@ -55,7 +57,9 @@ export function ReelsFeed({
             titleMotion={
               motion.mounted && detail?.post.id === post.id
                 ? {
-                    offset: motion.shown ? detail.lift + motion.dragY : 0,
+                    offset: motion.shown
+                      ? clampTitleOffset(detail.lift, motion.dragY)
+                      : 0,
                     dragging: motion.dragging,
                   }
                 : null

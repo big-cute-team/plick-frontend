@@ -1,119 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type {
-  PointerEvent as ReactPointerEvent,
-  TransitionEvent as ReactTransitionEvent,
-} from "react";
-import {
-  CloseIcon,
-  HeartMiniIcon,
-  LinkOutIcon,
-  SendMiniIcon,
-} from "../../_components/icons";
+import { CloseIcon, LinkOutIcon, SendMiniIcon } from "../../_components/icons";
 import { formatCount } from "../../_lib/format";
-import type { Comment, FeedPost } from "../../_lib/types";
-
-/** 시트 상단을 이 거리(px) 이상 끌어내리면 닫는다 */
-const DRAG_CLOSE_THRESHOLD = 100;
-/** 릴 섹션 대비 시트 높이 비율 — 피그마 352/480.7 */
-export const SHEET_HEIGHT_RATIO = 0.73;
-/** 칩·제목 블록 하단과 시트 상단 라인 사이 간격(px) — 피그마 9.9(0.55배율) */
-export const SHEET_TITLE_GAP = 18;
-/** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
-export const SHEET_TRANSITION =
-  "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
-
-export interface ReelDetailMotion {
-  /** 시트가 DOM에 있어야 하는가 (닫힘 애니메이션이 끝나면 false) */
-  mounted: boolean;
-  /** 올라온 상태인가 — false→true 전환이 슬라이드 업, 반대가 다운 */
-  shown: boolean;
-  /** 드래그 중 시트를 따라 내리는 오프셋(px) */
-  dragY: number;
-  dragging: boolean;
-  open: () => void;
-  requestClose: () => void;
-  /** 그랩 존(기자 줄)에 스프레드할 포인터 핸들러 */
-  grabProps: {
-    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
-    onPointerMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
-    onPointerUp: () => void;
-    onPointerCancel: () => void;
-  };
-  onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
-}
-
-/**
- * 시트 개폐·드래그 상태 머신.
- *
- * 시트(ReelDetailSheet)와 릴의 칩·제목(ReelItem)이 같은 상태로 transform을
- * 계산해야 한 몸으로 움직이므로, 상태를 부모(ReelsFeed)로 끌어올리는 훅.
- */
-export function useReelDetailMotion(): ReelDetailMotion {
-  const [mounted, setMounted] = useState(false);
-  const [shown, setShown] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const startYRef = useRef(0);
-  /* 이벤트 핸들러는 리렌더 전 stale state를 볼 수 있어 판정은 ref로 한다 */
-  const draggingRef = useRef(false);
-  const dragYRef = useRef(0);
-
-  useEffect(() => {
-    if (!mounted) return;
-    /* 첫 페인트(translateY 100%) 이후에 shown을 켜야 transition이 재생된다 */
-    const id = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setShown(true)),
-    );
-    return () => cancelAnimationFrame(id);
-  }, [mounted]);
-
-  const grabProps: ReelDetailMotion["grabProps"] = {
-    onPointerDown: (e) => {
-      startYRef.current = e.clientY;
-      draggingRef.current = true;
-      setDragging(true);
-      /* 손가락이 그랩 존을 벗어나도 move/up을 계속 받도록 캡처 */
-      e.currentTarget.setPointerCapture(e.pointerId);
-    },
-    onPointerMove: (e) => {
-      if (!draggingRef.current) return;
-      const dy = Math.max(0, e.clientY - startYRef.current);
-      dragYRef.current = dy;
-      setDragY(dy);
-    },
-    onPointerUp: () => endDrag(),
-    onPointerCancel: () => endDrag(),
-  };
-
-  function endDrag() {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    setDragging(false);
-    if (dragYRef.current > DRAG_CLOSE_THRESHOLD) setShown(false);
-    dragYRef.current = 0;
-    setDragY(0);
-  }
-
-  return {
-    mounted,
-    shown,
-    dragY,
-    dragging,
-    open: () => setMounted(true),
-    requestClose: () => setShown(false),
-    grabProps,
-    onTransitionEnd: (e) => {
-      if (
-        e.target === e.currentTarget &&
-        e.propertyName === "transform" &&
-        !shown
-      )
-        setMounted(false);
-    },
-  };
-}
+import type { FeedPost } from "../../_lib/types";
+import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "../_lib/sheet";
+import type { ReelDetailMotion } from "../_lib/useReelDetailMotion";
+import { CommentThread } from "./CommentThread";
 
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
@@ -136,17 +28,6 @@ export function ReelDetailSheet({
 }) {
   return (
     <div className="absolute inset-0 z-20">
-      {/* 상단 미디어 스크림 — 사진 위 고정 값(테마 무관) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-84 transition-opacity duration-300"
-        style={{
-          opacity: motion.shown ? 1 : 0,
-          backgroundImage:
-            "linear-gradient(180deg, rgba(5,8,14,0.42) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 48%, rgba(5,8,14,0.88) 100%)",
-        }}
-      />
-
       {/* 시트 본체 */}
       <div
         role="dialog"
@@ -242,70 +123,6 @@ export function ReelDetailSheet({
             className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
           >
             <SendMiniIcon size={17} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** 댓글 한 스레드 — 원 댓글 + (있으면) 들여쓴 답글들. */
-function CommentThread({ comment }: { comment: Comment }) {
-  return (
-    <div className="flex flex-col gap-3.75">
-      <CommentItem comment={comment} />
-      {comment.replies?.map((reply) => (
-        <CommentItem key={reply.id} comment={reply} reply />
-      ))}
-    </div>
-  );
-}
-
-/**
- * 댓글 한 줄 (아바타 + 작성자/시간 + 본문 + 좋아요·답글).
- *
- * @param reply - 답글이면 들여쓰기 + 작은 아바타로 렌더
- */
-function CommentItem({
-  comment,
-  reply,
-}: {
-  comment: Comment;
-  reply?: boolean;
-}) {
-  const initials = comment.author.replace("@", "").slice(0, 2).toUpperCase();
-  return (
-    <div className={`flex gap-2.5 ${reply ? "pl-10" : ""}`}>
-      <span
-        className={`bg-avatar text-icon rounded-pill text-micro flex shrink-0 items-center justify-center font-extrabold ${
-          reply ? "size-6.5" : "size-8"
-        }`}
-      >
-        {initials}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.25">
-        <div className="flex items-baseline gap-2">
-          <span className="text-label text-text font-bold">
-            {comment.author}
-          </span>
-          <span className="text-caption text-text-4">{comment.timeLabel}</span>
-        </div>
-        <p className="text-body text-text-2 leading-body">{comment.body}</p>
-        <div className="flex items-center gap-4 pt-0.5">
-          <button
-            type="button"
-            className="text-text-4 flex items-center gap-1.25 active:opacity-60"
-          >
-            <HeartMiniIcon size={13} filled={comment.liked} />
-            <span className="text-caption font-semibold">
-              {formatCount(comment.likeCount)}
-            </span>
-          </button>
-          <button
-            type="button"
-            className="text-caption text-text-4 font-semibold active:opacity-60"
-          >
-            답글
           </button>
         </div>
       </div>
