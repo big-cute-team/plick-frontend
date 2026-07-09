@@ -40,6 +40,17 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 - 다크가 기본, 라이트는 `[data-theme="light"]`로 자동 전환 → **다크 기준으로만 만든다.**
 - 파일 kebab-case / 컴포넌트 PascalCase / 훅 useXxx / 상수 UPPER_SNAKE.
 - 기본 서버 컴포넌트, 상호작용 있을 때만 `"use client"`.
+- **주석은 JSDoc 블록 주석으로.** 선언 위 이중 슬래시(`//`) 블록 금지. props/인자는 `@param`,
+  예시는 `@example`. 표현식 내부처럼 JSDoc이 불가능한 위치의 제약 설명만 인라인 `//` 허용.
+
+## 규칙 기록 (컨벤션이 새로 생기면)
+
+새 컨벤션·작업 방식 피드백은 개인 메모가 아니라 **저장소에 기록**해 팀 전체 클로드에 적용시킨다:
+
+- **팀 공통 규칙**(주석 스타일, 네이밍, Git 절차 등) → 이 `CLAUDE.md`의 해당 섹션에 추가.
+- **화면 퍼블리싱 세부 규칙**(아이콘 벡터, 토큰 사용법, 레이아웃 패턴 등) → `screen-publishing` 스킬에 추가.
+  분량이 크면 `.claude/skills/screen-publishing/` 안에 별도 파일을 만들고 SKILL.md에서 가리킨다.
+- 클로드는 이런 피드백을 받으면 **알아서 위 위치에 반영**하고 커밋에 포함한다.
 
 ## Git · PR
 
