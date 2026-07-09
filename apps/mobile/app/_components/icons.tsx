@@ -187,6 +187,120 @@ export const SaveIcon = ({
   </svg>
 );
 
+/**
+ * 릴 세부 시트 아이콘 — 피그마 V2 기사 세부(node 75-6) 벡터를 그대로 사용.
+ *
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
+
+export const CloseIcon = ({ size = 18, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 9.9 9.9"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M2.47499 2.47501L7.42499 7.42501"
+      stroke="currentColor"
+      strokeWidth={0.825}
+      strokeLinecap="round"
+    />
+    <path
+      d="M7.42499 2.47501L2.47499 7.42501"
+      stroke="currentColor"
+      strokeWidth={0.825}
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+export const LinkOutIcon = ({ size = 13, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 7.15 7.15"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M4.17088 1.19167H5.95838V2.97917"
+      stroke="currentColor"
+      strokeWidth={0.655417}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.95834 1.19167L2.97917 4.17084"
+      stroke="currentColor"
+      strokeWidth={0.655417}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.95838 4.02188V5.66042C5.95838 5.77894 5.9113 5.8926 5.82749 5.97641C5.74369 6.06022 5.63002 6.1073 5.51151 6.1073H1.48963C1.37111 6.1073 1.25745 6.06022 1.17364 5.97641C1.08984 5.8926 1.04276 5.77894 1.04276 5.66042V1.63855C1.04276 1.52003 1.08984 1.40636 1.17364 1.32256C1.25745 1.23875 1.37111 1.19167 1.48963 1.19167H3.12817"
+      stroke="currentColor"
+      strokeWidth={0.655417}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const HeartMiniIcon = ({
+  filled,
+  size = 13,
+  ...p
+}: IconProps & { filled?: boolean }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 7.15 7.15"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M3.57504 6.25625C2.08545 4.91562 0.744827 3.87291 0.744827 2.56208C0.744827 1.72791 1.40024 1.0427 2.23441 1.0427C2.77066 1.0427 3.24733 1.31083 3.57504 1.7577C3.90274 1.31083 4.37941 1.0427 4.91566 1.0427C5.74983 1.0427 6.40524 1.72791 6.40524 2.56208C6.40524 3.87291 5.06462 4.91562 3.57504 6.25625Z"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={0.595833}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const SendMiniIcon = ({ size = 17, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 9.35 9.35"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M8.37603 0.973947L4.20749 5.14249"
+      stroke="currentColor"
+      strokeWidth={0.857083}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8.37604 0.973947L5.84375 8.37603L4.2075 5.14249L0.973956 3.50624L8.37604 0.973947Z"
+      stroke="currentColor"
+      strokeWidth={0.857083}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const BackIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="m14 6-6 6 6 6" />
