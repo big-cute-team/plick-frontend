@@ -6,8 +6,10 @@ export const metadata: Metadata = {
   description: "오늘의 PL 루머를 한 장에",
 };
 
-// 모바일 웹뷰 대응: 노치/펀치홀까지 그려지도록 viewport-fit=cover,
-// 다양한 기기에서 확대 오작동을 줄이기 위해 initialScale 고정.
+/**
+ * 모바일 웹뷰 대응 뷰포트 — 노치/펀치홀까지 그려지도록 `viewport-fit=cover`,
+ * 다양한 기기에서 확대 오작동을 줄이기 위해 initialScale 고정.
+ */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

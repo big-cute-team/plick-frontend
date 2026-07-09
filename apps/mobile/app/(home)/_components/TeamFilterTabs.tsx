@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { TEAMS, TEAM_ORDER } from "../_lib/mock";
-import type { TeamCode } from "../_lib/types";
+import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
+import type { Filter } from "@/(home)/_lib/types";
 
-type Filter = "ALL" | TeamCode;
-
-// 팀 필터(전체 + 빅6). 가로 스크롤로 좁은 화면(폴드 접힘)에서도 넘치지 않음.
+/**
+ * 팀 필터 탭 (전체 + 빅6).
+ *
+ * 가로 스크롤이라 좁은 화면(폴드 접힘)에서도 넘치지 않는다.
+ *
+ * @param onChange - 선택이 바뀔 때 호출되는 콜백
+ */
 export function TeamFilterTabs({
   onChange,
 }: {

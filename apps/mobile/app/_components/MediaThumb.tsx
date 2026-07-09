@@ -1,9 +1,15 @@
 import type { CSSProperties, ReactNode } from "react";
-import { TEAMS } from "../_lib/mock";
-import type { TeamCode } from "../_lib/types";
+import { TEAMS } from "@/_lib/constants";
+import type { TeamCode } from "@/_lib/types";
 
-// 실제 이미지 대신, 팀 컬러에서 미디어 배경 토큰으로 흐르는 그라데이션 placeholder.
-// (BE 연동 시 <img>로 교체) 색은 전부 토큰(CSS 변수) 기반.
+/**
+ * 사진 자리 placeholder — 팀 컬러에서 미디어 배경 토큰으로 흐르는 그라데이션.
+ *
+ * 색은 전부 토큰(CSS 변수) 기반이며, BE 연동 시 `<img>`로 교체한다.
+ *
+ * @param team - 그라데이션 시작색을 정하는 팀 코드
+ * @param children - 미디어 위에 얹을 오버레이(스크림·텍스트 등)
+ */
 export function MediaThumb({
   team,
   className = "",
