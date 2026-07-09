@@ -6,7 +6,7 @@ argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
 너는 PLick 모바일 화면을 퍼블리싱한다. 인자: `$ARGUMENTS`
 (첫 번째 = Jira 티켓 키 `KAN-###`, 두 번째 = Figma `node-id`가 포함된 design URL)
 
-**반드시 `plick-frontend` 스킬과 `docs/adr/0002-mobile-home-layout.md`를 먼저 읽고 그 규칙을 따른다.**
+**반드시 `screen-publishing` 스킬과 `docs/adr/0002-mobile-home-layout.md`를 먼저 읽고 그 규칙을 따른다.**
 
 절차:
 

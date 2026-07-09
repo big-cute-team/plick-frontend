@@ -1,5 +1,5 @@
 ---
-name: plick-frontend
+name: screen-publishing
 description: >-
   PLick 모바일 프론트엔드(apps/mobile) 화면·컴포넌트를 만들거나 수정할 때 따르는 규칙.
   디자인 토큰 사용법, 반응형(dvh·safe-area·max-width) 패턴, 다크/라이트, 컴포넌트 구조,
@@ -8,7 +8,7 @@ description: >-
   webview layouts, or wiring mock data for PLick.
 ---
 
-# PLick 모바일 프론트엔드 규칙
+# 화면 퍼블리싱 규칙 (apps/mobile)
 
 `apps/mobile`에서 화면/컴포넌트를 만들 때 이 규칙을 따른다. 배경·근거는 `docs/adr/0002-mobile-home-layout.md`.
 
