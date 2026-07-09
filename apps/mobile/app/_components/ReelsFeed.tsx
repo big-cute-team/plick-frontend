@@ -6,7 +6,7 @@ import { formatCount } from "../_lib/format";
 import { TEAMS } from "../_lib/mock";
 import type { FeedPost } from "../_lib/types";
 import { MediaThumb } from "./MediaThumb";
-import { BookmarkIcon, CommentIcon, HeartIcon, ShareIcon } from "./icons";
+import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "./icons";
 
 // 릴스 세로 스냅 피드. 릴 하나 = 컨테이너 높이(100dvh) 전체, snap-start로 한 장씩 넘김.
 // 딥링크(/reels/[postId])로 들어오면 해당 릴 위치로 점프한다.
@@ -92,16 +92,16 @@ function ReelItem({ post }: { post: FeedPost }) {
         {/* 우측 액션 레일 */}
         <div className="absolute right-3.5 bottom-52.5 flex flex-col items-center gap-5.5 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)]">
           <RailAction
-            icon={<HeartIcon size={28} filled={post.liked} />}
+            icon={<LikeIcon size={28} filled={post.liked} />}
             label={formatCount(post.likeCount)}
           />
           <RailAction
-            icon={<CommentIcon size={27} />}
+            icon={<ChatIcon size={27} />}
             label={formatCount(post.commentCount)}
           />
-          <RailAction icon={<ShareIcon size={27} />} label="공유" />
+          <RailAction icon={<SendIcon size={27} />} label="공유" />
           <RailAction
-            icon={<BookmarkIcon size={27} filled={post.saved} />}
+            icon={<SaveIcon size={27} filled={post.saved} />}
             label="저장"
           />
         </div>

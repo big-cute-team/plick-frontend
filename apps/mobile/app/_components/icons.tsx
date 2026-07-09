@@ -83,6 +83,103 @@ export const BookmarkIcon = ({
   </svg>
 );
 
+/* ── 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다. */
+
+export const LikeIcon = ({
+  filled,
+  size = 28,
+  ...p
+}: IconProps & { filled?: boolean }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 15.4 15.4"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M7.69998 13.475C4.49164 10.5875 1.60414 8.34166 1.60414 5.51832C1.60414 3.72166 3.01581 2.24582 4.81248 2.24582C5.96748 2.24582 6.99414 2.82332 7.69998 3.78582C8.40581 2.82332 9.43248 2.24582 10.5875 2.24582C12.3841 2.24582 13.7958 3.72166 13.7958 5.51832C13.7958 8.34166 10.9083 10.5875 7.69998 13.475Z"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={1.21917}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const ChatIcon = ({ size = 27, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14.85 14.85"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M12.9937 7.425C12.9937 8.11567 12.8577 8.79958 12.5934 9.43768C12.3291 10.0758 11.9417 10.6556 11.4533 11.1439C10.9649 11.6323 10.3851 12.0197 9.74703 12.284C9.10893 12.5483 8.42502 12.6844 7.73435 12.6844C6.80623 12.6844 5.93998 12.4678 5.19748 12.0656L1.85623 12.9937L2.84623 10.0237C2.60107 9.335 2.50219 8.60271 2.55591 7.87361C2.60963 7.14451 2.81477 6.43461 3.15823 5.78924C3.50169 5.14386 3.97592 4.57718 4.55067 4.12536C5.12541 3.67354 5.78804 3.3465 6.49627 3.16513C7.20449 2.98375 7.94274 2.95202 8.66392 3.07196C9.38509 3.1919 10.0733 3.46088 10.6847 3.86172C11.2961 4.26256 11.8172 4.78647 12.2148 5.39999C12.6124 6.01352 12.8776 6.7032 12.9937 7.425Z"
+      stroke="currentColor"
+      strokeWidth={1.17563}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const SendIcon = ({ size = 27, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14.85 14.85"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M13.3031 1.54688L6.68249 8.1675"
+      stroke="currentColor"
+      strokeWidth={1.17563}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.3031 1.54688L9.28123 13.3031L6.68248 8.1675L1.54685 5.56875L13.3031 1.54688Z"
+      stroke="currentColor"
+      strokeWidth={1.17563}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const SaveIcon = ({
+  filled,
+  size = 27,
+  ...p
+}: IconProps & { filled?: boolean }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14.85 14.85"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M11.7562 12.9937L7.42498 9.89999L3.09373 12.9937V3.09374C3.09373 2.76554 3.2241 2.45078 3.45618 2.2187C3.68826 1.98662 4.00302 1.85624 4.33123 1.85624H10.5187C10.8469 1.85624 11.1617 1.98662 11.3938 2.2187C11.6258 2.45078 11.7562 2.76554 11.7562 3.09374V12.9937Z"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={1.17563}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const BackIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="m14 6-6 6 6 6" />
