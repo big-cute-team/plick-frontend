@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { STAGE_META, formatCount } from "../../_lib/format";
-import { TEAMS } from "../../_lib/mock";
+import { formatCount } from "../../_lib/format";
+import { STAGE_META, TEAMS } from "../../_lib/constants";
 import type { FeedPost } from "../../_lib/types";
 import { MediaThumb } from "../../_components/MediaThumb";
 

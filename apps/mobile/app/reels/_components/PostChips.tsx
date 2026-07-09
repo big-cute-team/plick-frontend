@@ -1,4 +1,4 @@
-import { TEAMS } from "../../_lib/mock";
+import { TEAMS } from "../../_lib/constants";
 import type { FeedPost } from "../../_lib/types";
 
 /**

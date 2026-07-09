@@ -1,31 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type {
-  PointerEvent as ReactPointerEvent,
-  TransitionEvent as ReactTransitionEvent,
-} from "react";
-import { DRAG_CLOSE_THRESHOLD } from "./sheet";
-
-export interface ReelDetailMotion {
-  /** 시트가 DOM에 있어야 하는가 (닫힘 애니메이션이 끝나면 false) */
-  mounted: boolean;
-  /** 올라온 상태인가 — false→true 전환이 슬라이드 업, 반대가 다운 */
-  shown: boolean;
-  /** 드래그 중 시트를 따라 내리는 오프셋(px) */
-  dragY: number;
-  dragging: boolean;
-  open: () => void;
-  requestClose: () => void;
-  /** 그랩 존(기자 줄)에 스프레드할 포인터 핸들러 */
-  grabProps: {
-    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
-    onPointerMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
-    onPointerUp: () => void;
-    onPointerCancel: () => void;
-  };
-  onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
-}
+import { DRAG_CLOSE_THRESHOLD } from "./constants";
+import type { ReelDetailMotion } from "./types";
 
 /**
  * 릴 세부 시트의 개폐·드래그 상태 머신.

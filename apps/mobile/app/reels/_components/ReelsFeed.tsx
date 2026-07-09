@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FeedPost } from "../../_lib/types";
-import { clampTitleOffset } from "../_lib/sheet";
 import { useReelDetailMotion } from "../_lib/useReelDetailMotion";
+import { clampTitleOffset } from "../_lib/utils";
 import { ReelDetailSheet } from "./ReelDetailSheet";
 import { ReelItem } from "./ReelItem";
 

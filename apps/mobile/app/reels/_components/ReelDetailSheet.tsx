@@ -3,8 +3,8 @@
 import { CloseIcon, LinkOutIcon, SendMiniIcon } from "../../_components/icons";
 import { formatCount } from "../../_lib/format";
 import type { FeedPost } from "../../_lib/types";
-import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "../_lib/sheet";
-import type { ReelDetailMotion } from "../_lib/useReelDetailMotion";
+import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "../_lib/constants";
+import type { ReelDetailMotion } from "../_lib/types";
 import { CommentThread } from "./CommentThread";
 
 /**

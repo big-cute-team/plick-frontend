@@ -3,17 +3,11 @@
 import { useRef } from "react";
 import type { FeedPost } from "../../_lib/types";
 import { MediaThumb } from "../../_components/MediaThumb";
-import { SHEET_TRANSITION, titleLiftDistance } from "../_lib/sheet";
+import { SHEET_TRANSITION } from "../_lib/constants";
+import type { TitleMotion } from "../_lib/types";
+import { titleLiftDistance } from "../_lib/utils";
 import { PostChips } from "./PostChips";
 import { ReelActionRail } from "./ReelActionRail";
-
-/** 세부 시트가 떠 있는 동안 칩·제목 요소에 적용할 이동 상태 */
-export interface TitleMotion {
-  /** 현재 translateY 오프셋(px) — 도킹 지점까지의 거리 + 드래그 오프셋 */
-  offset: number;
-  /** 드래그 중이면 transition 없이 손가락을 따라간다 */
-  dragging: boolean;
-}
 
 /**
  * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.

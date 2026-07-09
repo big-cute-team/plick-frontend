@@ -1,24 +1,4 @@
-import type { Comment, FeedPost, Team, TeamCode, User } from "./types";
-
-/** 팀 레지스트리 — 코드 → 한글 이름·컬러 토큰 매핑 */
-export const TEAMS: Record<TeamCode, Team> = {
-  LIV: { code: "LIV", name: "리버풀", colorVar: "--plk-team-liv" },
-  TOT: { code: "TOT", name: "토트넘", colorVar: "--plk-team-tot" },
-  ARS: { code: "ARS", name: "아스날", colorVar: "--plk-team-ars" },
-  MUN: { code: "MUN", name: "맨유", colorVar: "--plk-team-mun" },
-  CHE: { code: "CHE", name: "첼시", colorVar: "--plk-team-che" },
-  MCI: { code: "MCI", name: "맨시티", colorVar: "--plk-team-mci" },
-};
-
-/** 팀 필터 순서 (전체 + 빅6) */
-export const TEAM_ORDER: TeamCode[] = [
-  "LIV",
-  "TOT",
-  "ARS",
-  "MUN",
-  "CHE",
-  "MCI",
-];
+import type { Comment, FeedPost, User } from "./types";
 
 /** 댓글 UI 확인용 샘플 (h1 게시물에 연결) — 릴 세부 시트 피그마(75-6) 카피 */
 const SAMPLE_COMMENTS: Comment[] = [

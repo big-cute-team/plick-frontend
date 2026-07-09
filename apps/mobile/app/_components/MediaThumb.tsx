@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { TEAMS } from "../_lib/mock";
+import { TEAMS } from "../_lib/constants";
 import type { TeamCode } from "../_lib/types";
 
 /**

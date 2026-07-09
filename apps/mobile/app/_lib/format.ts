@@ -1,5 +1,3 @@
-import type { RumorStage } from "./types";
-
 /**
  * 수치를 축약 표기로 포맷한다.
  *
@@ -22,13 +20,3 @@ export function formatCount(n: number): string {
 export function avatarInitials(handle: string): string {
   return handle.replace("@", "").slice(0, 2).toUpperCase();
 }
-
-/** 루머 단계 표시 라벨 + 색 토큰(=Tailwind text 유틸 접미어) */
-export const STAGE_META: Record<
-  RumorStage,
-  { label: string; toneClass: string }
-> = {
-  RUMOUR: { label: "RUMOUR", toneClass: "text-text-3" },
-  IN_PROGRESS: { label: "IN PROGRESS", toneClass: "text-accent" },
-  OFFICIAL: { label: "OFFICIAL", toneClass: "text-accent" },
-};
