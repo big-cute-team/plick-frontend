@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { FeedPost } from "../_lib/types";
+import type { FeedPost } from "../../_lib/types";
 import { HotHeroCard } from "./HotHeroCard";
 
 // 센터 스냅 캐러셀 + 하단 점 인디케이터.

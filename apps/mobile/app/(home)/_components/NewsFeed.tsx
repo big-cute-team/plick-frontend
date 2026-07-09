@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FeedPost, TeamCode } from "../_lib/types";
+import type { FeedPost, TeamCode } from "../../_lib/types";
 import { NewsItem } from "./NewsItem";
 import { TeamFilterTabs } from "./TeamFilterTabs";
 

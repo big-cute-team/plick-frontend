@@ -1,5 +1,5 @@
 import { AppShell } from "../_components/AppShell";
-import { ReelsFeed } from "../_components/ReelsFeed";
+import { ReelsFeed } from "./_components/ReelsFeed";
 import { TabBar } from "../_components/TabBar";
 import { POSTS } from "../_lib/mock";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { FeedPost } from "../_lib/types";
+import type { FeedPost } from "../../_lib/types";
 import { ReelItem } from "./ReelItem";
 
 // 릴스 세로 스냅 피드. 릴 하나 = 컨테이너 높이(100dvh) 전체, snap-start로 한 장씩 넘김.

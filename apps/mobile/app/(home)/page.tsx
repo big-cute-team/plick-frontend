@@ -1,10 +1,10 @@
-import { AppShell } from "./_components/AppShell";
-import { ScrollArea } from "./_components/ScrollArea";
+import { AppShell } from "../_components/AppShell";
+import { ScrollArea } from "../_components/ScrollArea";
 import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
-import { TabBar } from "./_components/TabBar";
-import { TopBar } from "./_components/TopBar";
-import { HOT_POSTS, NEWS_POSTS } from "./_lib/mock";
+import { TabBar } from "../_components/TabBar";
+import { TopBar } from "../_components/TopBar";
+import { HOT_POSTS, NEWS_POSTS } from "../_lib/mock";
 
 export default function HomePage() {
   return (

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { STAGE_META, formatCount } from "../_lib/format";
-import { TEAMS } from "../_lib/mock";
-import type { FeedPost } from "../_lib/types";
-import { MediaThumb } from "./MediaThumb";
+import { STAGE_META, formatCount } from "../../_lib/format";
+import { TEAMS } from "../../_lib/mock";
+import type { FeedPost } from "../../_lib/types";
+import { MediaThumb } from "../../_components/MediaThumb";
 
 // 핫이슈 히어로 카드. 사진(placeholder) 위에 어두운 스크림 + 흰 텍스트.
 // 스크림은 이미지 가독성용 고정 값(테마 무관), 팀·강조색은 토큰.

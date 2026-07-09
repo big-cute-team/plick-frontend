@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
-import { formatCount } from "../_lib/format";
-import { TEAMS } from "../_lib/mock";
-import type { FeedPost } from "../_lib/types";
-import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "./icons";
-import { MediaThumb } from "./MediaThumb";
+import { formatCount } from "../../_lib/format";
+import { TEAMS } from "../../_lib/mock";
+import type { FeedPost } from "../../_lib/types";
+import {
+  ChatIcon,
+  LikeIcon,
+  SaveIcon,
+  SendIcon,
+} from "../../_components/icons";
+import { MediaThumb } from "../../_components/MediaThumb";
 
 // 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
 // 순수 표현 컴포넌트(상태 없음). 스크롤/스냅은 ReelsFeed가 담당한다.

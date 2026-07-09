@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TEAMS, TEAM_ORDER } from "../_lib/mock";
-import type { TeamCode } from "../_lib/types";
+import { TEAMS, TEAM_ORDER } from "../../_lib/mock";
+import type { TeamCode } from "../../_lib/types";
 
 type Filter = "ALL" | TeamCode;
 

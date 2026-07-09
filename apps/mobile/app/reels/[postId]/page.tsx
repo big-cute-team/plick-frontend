@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "../../_components/AppShell";
-import { ReelsFeed } from "../../_components/ReelsFeed";
+import { ReelsFeed } from "../_components/ReelsFeed";
 import { TabBar } from "../../_components/TabBar";
 import { getPost, POSTS } from "../../_lib/mock";
 
