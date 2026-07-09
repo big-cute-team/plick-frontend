@@ -15,12 +15,12 @@ argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
    - `get_metadata`(구조) → `get_variable_defs`(토큰) → 필요 시 `get_design_context`.
    - 스크린샷보다 **JSON 노드/메타데이터를 우선**한다.
 3. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/mobile/app/_lib/`(types·mock)에 먼저 만든다.
-4. **브랜치** — `git switch -c feature/<티켓>-<짧은설명>` (main 기준).
+4. **브랜치** — `git switch -c feature/<티켓>-<짧은설명> develop` (develop 기준).
 5. **구현** — `AppShell`/`ScrollArea`(+`TopBar`/`TabBar`) 위에 토큰 유틸만으로 작성.
    재사용 조각은 `_components/`로 뽑고, 색·간격 하드코딩 금지, 좌우 패딩 `px-edge`, 다크 기준.
 6. **검증** — `pnpm --filter mobile build`(클린) + 로컬 dev(:3001) 모바일 뷰포트 스크린샷으로
    피그마와 대조(간격·정렬·타이포). 다크/라이트 토글 확인.
-7. **커밋·PR** — 커밋 메시지에 티켓 키 포함, `pnpm format` 후 커밋, push, `gh pr create --base main`.
+7. **커밋·PR** — 커밋 메시지에 티켓 키 포함, `pnpm format` 후 커밋, push, `gh pr create --base develop`.
    CI 통과 확인. 병합은 사용자 승인 후.
 
 원칙: 컨텍스트는 얇게(필요한 노드만 읽기), 작게 쪼개기, 피그마를 **그대로** 재현(근사치 금지).

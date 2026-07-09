@@ -74,9 +74,9 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 
 ## Git · PR
 
-- `main`에 직접 커밋 금지 → 브랜치 `feature/KAN-<번호>-<설명>`.
+- `main`·`develop`에 직접 커밋 금지 → `develop`에서 브랜치 `feature/KAN-<번호>-<설명>` 생성.
 - **커밋 메시지에 Jira 키(`KAN-###`) 포함** → 이슈 자동 연결.
-- PR base=`main`, CI(format:check→lint→check-types→build) 통과 확인까지.
+- PR base=`develop`, CI(format:check→lint→check-types→build) 통과 확인까지.
 - 🚫 **병합은 절대 하지 않는다.** 클로드는 **PR 생성 + CI 확인까지만** — `gh pr merge` 금지, 병합은 사용자가 직접.
 - 환경: Node 22(`.nvmrc`), pnpm 9. `node_modules`·`.next`·`pnpm-lock.yaml`은 손대지 않는다(도구 산출물).
 
