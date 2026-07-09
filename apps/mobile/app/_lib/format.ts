@@ -1,5 +1,3 @@
-import type { RumorStage } from "./types";
-
 /**
  * 수치를 축약 표기로 포맷한다.
  *
@@ -13,12 +11,12 @@ export function formatCount(n: number): string {
   return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}K`;
 }
 
-/** 루머 단계 표시 라벨 + 색 토큰(=Tailwind text 유틸 접미어) */
-export const STAGE_META: Record<
-  RumorStage,
-  { label: string; toneClass: string }
-> = {
-  RUMOUR: { label: "RUMOUR", toneClass: "text-text-3" },
-  IN_PROGRESS: { label: "IN PROGRESS", toneClass: "text-accent" },
-  OFFICIAL: { label: "OFFICIAL", toneClass: "text-accent" },
-};
+/**
+ * 핸들에서 아바타 이니셜 2글자를 뽑는다.
+ *
+ * @example
+ * avatarInitials("@kop_anfield"); // "KO"
+ */
+export function avatarInitials(handle: string): string {
+  return handle.replace("@", "").slice(0, 2).toUpperCase();
+}

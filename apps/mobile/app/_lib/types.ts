@@ -53,6 +53,8 @@ export interface FeedPost {
   title: string;
   /** 상세 화면용 요약 */
   summary: string;
+  /** 상세 시트 해시태그 (`#` 제외한 키워드) */
+  tags?: string[];
   reporter: Reporter;
   /** 표시용 상대 시각 (서버 ISO를 FE에서 포맷하지만, mock은 표시 문자열로 보관) */
   timeLabel: string;

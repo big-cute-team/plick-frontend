@@ -1,13 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { FeedPost } from "../../_lib/types";
+import type { FeedPost } from "@/_lib/types";
+import { CARD_W, GAP } from "@/(home)/_lib/constants";
 import { HotHeroCard } from "./HotHeroCard";
-
-/** 카드 폭 (트랙 폭 대비 비율) */
-const CARD_W = 0.86;
-/** 카드 사이 간격(px) — gap-2.5와 일치해야 한다 */
-const GAP = 10;
 
 /**
  * 핫이슈 센터 스냅 캐러셀 + 하단 점 인디케이터.

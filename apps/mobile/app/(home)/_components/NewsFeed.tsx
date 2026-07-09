@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { FeedPost, TeamCode } from "../../_lib/types";
+import type { FeedPost } from "@/_lib/types";
+import type { Filter } from "@/(home)/_lib/types";
 import { NewsItem } from "./NewsItem";
 import { TeamFilterTabs } from "./TeamFilterTabs";
-
-type Filter = "ALL" | TeamCode;
 
 /**
  * "지금 올라온 소식" 섹션 — 팀 필터 + 리스트를 묶어 필터링까지 동작시키는
