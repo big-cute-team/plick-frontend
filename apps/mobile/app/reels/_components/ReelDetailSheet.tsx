@@ -13,33 +13,46 @@ import {
 } from "../../_components/icons";
 import { formatCount } from "../../_lib/format";
 import type { Comment, FeedPost } from "../../_lib/types";
-import { PostChips } from "./PostChips";
 
 /** 시트 상단을 이 거리(px) 이상 끌어내리면 닫는다 */
 const DRAG_CLOSE_THRESHOLD = 100;
+/** 릴 섹션 대비 시트 높이 비율 — 피그마 352/480.7 */
+export const SHEET_HEIGHT_RATIO = 0.73;
+/** 칩·제목 블록 하단과 시트 상단 라인 사이 간격(px) — 피그마 9.9(0.55배율) */
+export const SHEET_TITLE_GAP = 18;
+/** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
+export const SHEET_TRANSITION =
+  "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+
+export interface ReelDetailMotion {
+  /** 시트가 DOM에 있어야 하는가 (닫힘 애니메이션이 끝나면 false) */
+  mounted: boolean;
+  /** 올라온 상태인가 — false→true 전환이 슬라이드 업, 반대가 다운 */
+  shown: boolean;
+  /** 드래그 중 시트를 따라 내리는 오프셋(px) */
+  dragY: number;
+  dragging: boolean;
+  open: () => void;
+  requestClose: () => void;
+  /** 그랩 존(기자 줄)에 스프레드할 포인터 핸들러 */
+  grabProps: {
+    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
+    onPointerMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
+    onPointerUp: () => void;
+    onPointerCancel: () => void;
+  };
+  onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
+}
 
 /**
- * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
+ * 시트 개폐·드래그 상태 머신.
  *
- * 릴 화면 위를 덮는 오버레이. 상단엔 미디어 스크림 + 칩/제목,
- * 하단 73%는 본문·해시태그·댓글·입력바를 담은 시트가 아래에서 올라온다.
- *
- * 닫기: 시트 윗부분(기자 줄)을 잡고 아래로 드래그하거나 X 버튼 —
- * 둘 다 시트가 아래로 내려가는 애니메이션 후 언마운트된다.
- *
- * @param post - 세부를 보여줄 게시물
- * @param onClose - 닫힘 애니메이션이 끝난 뒤 호출 (부모가 언마운트)
+ * 시트(ReelDetailSheet)와 릴의 칩·제목(ReelItem)이 같은 상태로 transform을
+ * 계산해야 한 몸으로 움직이므로, 상태를 부모(ReelsFeed)로 끌어올리는 훅.
  */
-export function ReelDetailSheet({
-  post,
-  onClose,
-}: {
-  post: FeedPost;
-  onClose: () => void;
-}) {
-  /** false↔true 전환으로 슬라이드 업/다운을 만든다 (마운트 직후 true) */
+export function useReelDetailMotion(): ReelDetailMotion {
+  const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
-  /** 드래그 중 시트를 따라 내리는 오프셋(px) */
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startYRef = useRef(0);
@@ -48,46 +61,79 @@ export function ReelDetailSheet({
   const dragYRef = useRef(0);
 
   useEffect(() => {
+    if (!mounted) return;
     /* 첫 페인트(translateY 100%) 이후에 shown을 켜야 transition이 재생된다 */
     const id = requestAnimationFrame(() =>
       requestAnimationFrame(() => setShown(true)),
     );
     return () => cancelAnimationFrame(id);
-  }, []);
+  }, [mounted]);
 
-  const onGrabPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    startYRef.current = e.clientY;
-    draggingRef.current = true;
-    setDragging(true);
-    /* 손가락이 그랩 존을 벗어나도 move/up을 계속 받도록 캡처 */
-    e.currentTarget.setPointerCapture(e.pointerId);
+  const grabProps: ReelDetailMotion["grabProps"] = {
+    onPointerDown: (e) => {
+      startYRef.current = e.clientY;
+      draggingRef.current = true;
+      setDragging(true);
+      /* 손가락이 그랩 존을 벗어나도 move/up을 계속 받도록 캡처 */
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    onPointerMove: (e) => {
+      if (!draggingRef.current) return;
+      const dy = Math.max(0, e.clientY - startYRef.current);
+      dragYRef.current = dy;
+      setDragY(dy);
+    },
+    onPointerUp: () => endDrag(),
+    onPointerCancel: () => endDrag(),
   };
 
-  const onGrabPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!draggingRef.current) return;
-    const dy = Math.max(0, e.clientY - startYRef.current);
-    dragYRef.current = dy;
-    setDragY(dy);
-  };
-
-  const onGrabPointerEnd = () => {
+  function endDrag() {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setDragging(false);
     if (dragYRef.current > DRAG_CLOSE_THRESHOLD) setShown(false);
     dragYRef.current = 0;
     setDragY(0);
-  };
+  }
 
-  const onSheetTransitionEnd = (e: ReactTransitionEvent<HTMLDivElement>) => {
-    if (
-      e.target === e.currentTarget &&
-      e.propertyName === "transform" &&
-      !shown
-    )
-      onClose();
+  return {
+    mounted,
+    shown,
+    dragY,
+    dragging,
+    open: () => setMounted(true),
+    requestClose: () => setShown(false),
+    grabProps,
+    onTransitionEnd: (e) => {
+      if (
+        e.target === e.currentTarget &&
+        e.propertyName === "transform" &&
+        !shown
+      )
+        setMounted(false);
+    },
   };
+}
 
+/**
+ * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
+ *
+ * 기자 줄(그랩 존)·본문·해시태그·댓글·입력바를 담고 아래에서 올라온다.
+ * 칩·제목은 이 컴포넌트가 그리지 않는다 — 릴에 원래 있던 요소(ReelItem)가
+ * 같은 motion 상태로 시트 라인 위까지 따라 올라온다.
+ *
+ * 닫기: 그랩 존 드래그 다운 또는 X 버튼 → 내려간 뒤 motion이 스스로 언마운트.
+ *
+ * @param post - 세부를 보여줄 게시물
+ * @param motion - useReelDetailMotion()이 만든 개폐·드래그 상태 (ReelsFeed 소유)
+ */
+export function ReelDetailSheet({
+  post,
+  motion,
+}: {
+  post: FeedPost;
+  motion: ReelDetailMotion;
+}) {
   return (
     <div className="absolute inset-0 z-20">
       {/* 상단 미디어 스크림 — 사진 위 고정 값(테마 무관) */}
@@ -95,124 +141,108 @@ export function ReelDetailSheet({
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-84 transition-opacity duration-300"
         style={{
-          opacity: shown ? 1 : 0,
+          opacity: motion.shown ? 1 : 0,
           backgroundImage:
             "linear-gradient(180deg, rgba(5,8,14,0.42) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 48%, rgba(5,8,14,0.88) 100%)",
         }}
       />
 
-      {/* 이동 유닛 — 칩+제목이 시트 라인 위에 붙어 한 몸으로 오르내린다 */}
+      {/* 시트 본체 */}
       <div
-        className="absolute inset-x-0 bottom-0"
+        role="dialog"
+        aria-modal="true"
+        aria-label="기사 세부"
+        className="bg-bg rounded-t-sheet absolute inset-x-0 bottom-0 flex flex-col overflow-hidden"
         style={{
-          transform: shown ? `translateY(${dragY}px)` : "translateY(100%)",
-          transition: dragging
-            ? "none"
-            : "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)",
+          height: `${SHEET_HEIGHT_RATIO * 100}%`,
+          transform: motion.shown
+            ? `translateY(${motion.dragY}px)`
+            : "translateY(100%)",
+          transition: motion.dragging ? "none" : SHEET_TRANSITION,
         }}
-        onTransitionEnd={onSheetTransitionEnd}
+        onTransitionEnd={motion.onTransitionEnd}
       >
-        <div className="px-edge pointer-events-none flex flex-col gap-2.5 pb-4.5">
-          <PostChips post={post} />
-          <p className="text-headline text-media-on leading-[1.32] font-extrabold tracking-[-0.4px] drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
-            {post.title}
-          </p>
-        </div>
-
-        {/* 시트 본체 */}
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="기사 세부"
-          className="bg-bg rounded-t-sheet flex h-[73dvh] flex-col overflow-hidden"
-        >
-          {/* 그랩 존(기자 줄) — 잡고 끌어내리면 닫힌다 */}
-          <div className="relative shrink-0">
-            <div
-              className="px-edge touch-none pt-5.5 select-none"
-              onPointerDown={onGrabPointerDown}
-              onPointerMove={onGrabPointerMove}
-              onPointerUp={onGrabPointerEnd}
-              onPointerCancel={onGrabPointerEnd}
-            >
-              <div className="flex items-center gap-2 pr-11">
-                <span className="border-accent text-accent rounded-badge text-micro flex size-5 shrink-0 items-center justify-center border font-black">
-                  T{post.reporter.tier}
-                </span>
-                <span className="text-body text-text font-bold">
-                  {post.reporter.name}
-                </span>
-                <span className="text-label text-text-3">
-                  · {post.timeLabel} · 조회 {formatCount(post.views)}
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="닫기"
-              onClick={() => setShown(false)}
-              className="bg-elevate text-icon rounded-pill absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
-            >
-              <CloseIcon size={18} />
-            </button>
-          </div>
-
-          {/* 본문·해시태그·댓글 스크롤 영역 */}
-          <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
-            <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
-              {post.summary}
-            </p>
-
-            <div className="flex items-center gap-2">
-              {post.tags?.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
-                >
-                  #{tag}
-                </span>
-              ))}
-              <button
-                type="button"
-                className="text-accent text-label ml-auto flex items-center gap-1.25 font-bold active:opacity-60"
-              >
-                <LinkOutIcon size={13} />
-                출처 원문 보기
-              </button>
-            </div>
-
-            <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
-              <span className="text-body-lg font-extrabold">댓글</span>
-              <span className="text-label text-text-3 font-semibold">
-                {formatCount(post.commentCount)}
+        {/* 그랩 존(기자 줄) — 잡고 끌어내리면 닫힌다 */}
+        <div className="relative shrink-0">
+          <div
+            className="px-edge touch-none pt-5.5 select-none"
+            {...motion.grabProps}
+          >
+            <div className="flex items-center gap-2 pr-11">
+              <span className="border-accent text-accent rounded-badge text-micro flex size-5 shrink-0 items-center justify-center border font-black">
+                T{post.reporter.tier}
+              </span>
+              <span className="text-body text-text font-bold">
+                {post.reporter.name}
+              </span>
+              <span className="text-label text-text-3">
+                · {post.timeLabel} · 조회 {formatCount(post.views)}
               </span>
             </div>
-
-            {(post.comments ?? []).map((comment) => (
-              <CommentThread key={comment.id} comment={comment} />
-            ))}
           </div>
-
-          {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
-          <div
-            className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 pt-3.25"
-            style={{
-              paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)",
-            }}
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={motion.requestClose}
+            className="bg-elevate text-icon rounded-pill absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
           >
-            <input
-              type="text"
-              placeholder="팬 반응 남기기…"
-              className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 rounded-hero h-11.5 min-w-0 flex-1 border px-4.75"
-            />
+            <CloseIcon size={18} />
+          </button>
+        </div>
+
+        {/* 본문·해시태그·댓글 스크롤 영역 */}
+        <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
+          <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
+            {post.summary}
+          </p>
+
+          <div className="flex items-center gap-2">
+            {post.tags?.map((tag) => (
+              <span
+                key={tag}
+                className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
+              >
+                #{tag}
+              </span>
+            ))}
             <button
               type="button"
-              aria-label="댓글 보내기"
-              className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
+              className="text-accent text-label ml-auto flex items-center gap-1.25 font-bold active:opacity-60"
             >
-              <SendMiniIcon size={17} />
+              <LinkOutIcon size={13} />
+              출처 원문 보기
             </button>
           </div>
+
+          <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
+            <span className="text-body-lg font-extrabold">댓글</span>
+            <span className="text-label text-text-3 font-semibold">
+              {formatCount(post.commentCount)}
+            </span>
+          </div>
+
+          {(post.comments ?? []).map((comment) => (
+            <CommentThread key={comment.id} comment={comment} />
+          ))}
+        </div>
+
+        {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
+        <div
+          className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 pt-3.25"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)" }}
+        >
+          <input
+            type="text"
+            placeholder="팬 반응 남기기…"
+            className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 rounded-hero h-11.5 min-w-0 flex-1 border px-4.75"
+          />
+          <button
+            type="button"
+            aria-label="댓글 보내기"
+            className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
+          >
+            <SendMiniIcon size={17} />
+          </button>
         </div>
       </div>
     </div>
