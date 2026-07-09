@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { formatCount } from "../../_lib/format";
-import { STAGE_META, TEAMS } from "../../_lib/constants";
-import type { FeedPost } from "../../_lib/types";
-import { MediaThumb } from "../../_components/MediaThumb";
+import { formatCount } from "@/_lib/format";
+import { STAGE_META, TEAMS } from "@/_lib/constants";
+import type { FeedPost } from "@/_lib/types";
+import { MediaThumb } from "@/_components/MediaThumb";
 
 /**
  * 핫이슈 히어로 카드 — 사진(placeholder) 위에 어두운 스크림 + 흰 텍스트.

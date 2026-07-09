@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { FeedPost } from "../../_lib/types";
-import { CARD_W, GAP } from "../_lib/constants";
+import type { FeedPost } from "@/_lib/types";
+import { CARD_W, GAP } from "@/(home)/_lib/constants";
 import { HotHeroCard } from "./HotHeroCard";
 
 /**

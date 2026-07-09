@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef } from "react";
-import type { FeedPost } from "../../_lib/types";
-import { MediaThumb } from "../../_components/MediaThumb";
-import { SHEET_TRANSITION } from "../_lib/constants";
-import type { TitleMotion } from "../_lib/types";
-import { titleLiftDistance } from "../_lib/utils";
+import type { FeedPost } from "@/_lib/types";
+import { MediaThumb } from "@/_components/MediaThumb";
+import { SHEET_TRANSITION } from "@/reels/_lib/constants";
+import type { TitleMotion } from "@/reels/_lib/types";
+import { titleLiftDistance } from "@/reels/_lib/utils";
 import { PostChips } from "./PostChips";
 import { ReelActionRail } from "./ReelActionRail";
 

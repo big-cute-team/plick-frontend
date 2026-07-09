@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FeedPost } from "../../_lib/types";
-import type { Filter } from "../_lib/types";
+import type { FeedPost } from "@/_lib/types";
+import type { Filter } from "@/(home)/_lib/types";
 import { NewsItem } from "./NewsItem";
 import { TeamFilterTabs } from "./TeamFilterTabs";
 

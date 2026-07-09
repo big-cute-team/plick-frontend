@@ -1,5 +1,5 @@
-import { TEAMS } from "../../_lib/constants";
-import type { FeedPost } from "../../_lib/types";
+import { TEAMS } from "@/_lib/constants";
+import type { FeedPost } from "@/_lib/types";
 
 /**
  * 릴 미디어 위 배지 줄 — 팀 칩 + (루머 단계일 때) RUMOUR 칩.

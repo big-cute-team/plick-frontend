@@ -1,12 +1,7 @@
 import type { ReactNode } from "react";
-import { formatCount } from "../../_lib/format";
-import type { FeedPost } from "../../_lib/types";
-import {
-  ChatIcon,
-  LikeIcon,
-  SaveIcon,
-  SendIcon,
-} from "../../_components/icons";
+import { formatCount } from "@/_lib/format";
+import type { FeedPost } from "@/_lib/types";
+import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@/_components/icons";
 
 /**
  * 릴 우측 액션 레일 — 좋아요·댓글·공유·저장.

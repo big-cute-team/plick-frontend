@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
-import { TEAMS } from "../_lib/constants";
-import type { TeamCode } from "../_lib/types";
+import { TEAMS } from "@/_lib/constants";
+import type { TeamCode } from "@/_lib/types";
 
 /**
  * 사진 자리 placeholder — 팀 컬러에서 미디어 배경 토큰으로 흐르는 그라데이션.

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { formatCount } from "../../_lib/format";
-import { TEAMS } from "../../_lib/constants";
-import type { FeedPost } from "../../_lib/types";
-import { MediaThumb } from "../../_components/MediaThumb";
+import { formatCount } from "@/_lib/format";
+import { TEAMS } from "@/_lib/constants";
+import type { FeedPost } from "@/_lib/types";
+import { MediaThumb } from "@/_components/MediaThumb";
 
 /** "지금 올라온 소식" 리스트의 한 줄. 탭하면 릴스 딥링크로 이동한다. */
 export function NewsItem({ post }: { post: FeedPost }) {

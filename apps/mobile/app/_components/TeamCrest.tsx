@@ -1,5 +1,5 @@
-import { TEAMS } from "../_lib/constants";
-import type { TeamCode } from "../_lib/types";
+import { TEAMS } from "@/_lib/constants";
+import type { TeamCode } from "@/_lib/types";
 
 /**
  * 코드 생성 팀 크레스트(방패 + 약자) — 이미지 에셋 없이 팀 컬러 토큰으로 채운다.
