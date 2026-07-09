@@ -40,8 +40,14 @@ const TABS: Tab[] = [
   },
 ];
 
-// 하단 탭. pb에 safe-area-inset-bottom을 더해 홈 인디케이터/제스처 영역을 피한다.
-// variant="overlay": 릴스처럼 미디어 위에 얹는 그라데이션 탭(배경 대신 스크림, 비활성은 흰색 dim).
+/**
+ * 하단 탭 내비게이션.
+ *
+ * pb에 `safe-area-inset-bottom`을 더해 홈 인디케이터/제스처 영역을 피한다.
+ *
+ * @param variant - `"solid"`(기본): bg-nav 배경 + 상단 보더.
+ *   `"overlay"`: 릴스처럼 미디어 위에 얹는 그라데이션 스크림 탭(비활성은 흰색 dim).
+ */
 export function TabBar({
   variant = "solid",
 }: {

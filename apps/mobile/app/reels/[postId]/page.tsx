@@ -4,7 +4,7 @@ import { ReelsFeed } from "../_components/ReelsFeed";
 import { TabBar } from "../../_components/TabBar";
 import { getPost, POSTS } from "../../_lib/mock";
 
-// 릴스 딥링크 — 해당 게시물부터 시작하는 동일 피드 (홈 핫이슈 카드가 여기로 링크).
+/** 릴스 딥링크 — 해당 게시물부터 시작하는 동일 피드 (홈 핫이슈 카드가 여기로 링크). */
 export default async function ReelPostPage({
   params,
 }: {

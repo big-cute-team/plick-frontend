@@ -10,8 +10,11 @@ import {
 } from "../../_components/icons";
 import { MediaThumb } from "../../_components/MediaThumb";
 
-// 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
-// 순수 표현 컴포넌트(상태 없음). 스크롤/스냅은 ReelsFeed가 담당한다.
+/**
+ * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
+ *
+ * 순수 표현 컴포넌트(상태 없음). 스크롤/스냅은 ReelsFeed가 담당한다.
+ */
 export function ReelItem({ post }: { post: FeedPost }) {
   const team = TEAMS[post.team];
   return (
@@ -84,6 +87,7 @@ export function ReelItem({ post }: { post: FeedPost }) {
   );
 }
 
+/** 액션 레일 버튼 하나 (아이콘 + 라벨). */
 function RailAction({ icon, label }: { icon: ReactNode; label: string }) {
   return (
     <button

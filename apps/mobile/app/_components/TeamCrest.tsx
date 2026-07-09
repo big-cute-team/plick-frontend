@@ -1,7 +1,12 @@
 import { TEAMS } from "../_lib/mock";
 import type { TeamCode } from "../_lib/types";
 
-// 코드 생성 크레스트(방패 + 약자). 팀 컬러 토큰으로 채운다. 이미지 불필요.
+/**
+ * 코드 생성 팀 크레스트(방패 + 약자) — 이미지 에셋 없이 팀 컬러 토큰으로 채운다.
+ *
+ * @param team - 팀 코드 (예: `"LIV"`)
+ * @param size - 렌더 크기(px, 정사각형)
+ */
 export function TeamCrest({
   team,
   size = 40,

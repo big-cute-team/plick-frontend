@@ -7,7 +7,10 @@ import { TeamFilterTabs } from "./TeamFilterTabs";
 
 type Filter = "ALL" | TeamCode;
 
-// 팀 필터 + 리스트를 묶어 실제 필터링까지 동작시키는 클라이언트 컨테이너.
+/**
+ * "지금 올라온 소식" 섹션 — 팀 필터 + 리스트를 묶어 필터링까지 동작시키는
+ * 클라이언트 컨테이너.
+ */
 export function NewsFeed({ posts }: { posts: FeedPost[] }) {
   const [filter, setFilter] = useState<Filter>("ALL");
   const shown =

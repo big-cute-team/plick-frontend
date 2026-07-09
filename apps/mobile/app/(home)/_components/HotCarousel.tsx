@@ -4,12 +4,18 @@ import { useRef, useState } from "react";
 import type { FeedPost } from "../../_lib/types";
 import { HotHeroCard } from "./HotHeroCard";
 
-// 센터 스냅 캐러셀 + 하단 점 인디케이터.
-// 카드 폭 86%, 좌우 스페이서(7% - gap)로 첫/마지막 카드까지 정확히 화면 중앙에 스냅.
-// (좌우 패딩 방식은 카드가 '패딩 뺀 영역'의 %라 끝단이 중앙까지 못 가는 문제가 있음)
+/** 카드 폭 (트랙 폭 대비 비율) */
 const CARD_W = 0.86;
+/** 카드 사이 간격(px) — gap-2.5와 일치해야 한다 */
 const GAP = 10;
 
+/**
+ * 핫이슈 센터 스냅 캐러셀 + 하단 점 인디케이터.
+ *
+ * 카드 폭 86%, 좌우 스페이서(7% − gap)로 첫/마지막 카드까지 정확히 화면 중앙에
+ * 스냅시킨다. 좌우 패딩 방식은 카드 %가 '패딩 뺀 영역' 기준이라 끝단이 중앙까지
+ * 못 가는 문제가 있다 (ADR 0002 §6-2).
+ */
 export function HotCarousel({ posts }: { posts: FeedPost[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -17,7 +23,7 @@ export function HotCarousel({ posts }: { posts: FeedPost[] }) {
   function onScroll() {
     const el = trackRef.current;
     if (!el) return;
-    const step = el.clientWidth * CARD_W + GAP; // 카드폭 + gap
+    const step = el.clientWidth * CARD_W + GAP;
     const i = Math.round(el.scrollLeft / step);
     setActive(Math.max(0, Math.min(posts.length - 1, i)));
   }

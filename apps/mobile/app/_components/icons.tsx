@@ -1,4 +1,8 @@
-// 토큰 색을 그대로 물려받도록 stroke/fill = currentColor. 크기는 em 기준.
+/**
+ * 공용 인라인 SVG 아이콘 레지스트리.
+ *
+ * 토큰 색을 그대로 물려받도록 stroke/fill = `currentColor`.
+ */
 import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
@@ -83,9 +87,12 @@ export const BookmarkIcon = ({
   </svg>
 );
 
-/* ── 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
+/**
+ * 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
+ *
  * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
- * size로 확대해도 디자인과 동일 비율로 렌더된다. */
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
 
 export const LikeIcon = ({
   filled,
