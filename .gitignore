@@ -36,3 +36,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Claude — 개인 설정만 제외(팀 공유 settings.json·skills·commands·hooks는 커밋)
+.claude/settings.local.json
