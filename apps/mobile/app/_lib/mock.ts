@@ -1,5 +1,6 @@
 import type { Comment, FeedPost, Team, TeamCode, User } from "./types";
 
+/** 팀 레지스트리 — 코드 → 한글 이름·컬러 토큰 매핑 */
 export const TEAMS: Record<TeamCode, Team> = {
   LIV: { code: "LIV", name: "리버풀", colorVar: "--plk-team-liv" },
   TOT: { code: "TOT", name: "토트넘", colorVar: "--plk-team-tot" },
@@ -19,6 +20,7 @@ export const TEAM_ORDER: TeamCode[] = [
   "MCI",
 ];
 
+/** 댓글 UI 확인용 샘플 (h1 게시물에 연결) */
 const SAMPLE_COMMENTS: Comment[] = [
   {
     id: "c1",
@@ -52,6 +54,7 @@ const SAMPLE_COMMENTS: Comment[] = [
   },
 ];
 
+/** 전체 피드 게시물 — 홈·릴스가 공용으로 소비하는 목데이터 */
 export const POSTS: FeedPost[] = [
   {
     id: "h1",
@@ -163,10 +166,12 @@ export const POSTS: FeedPost[] = [
   },
 ];
 
-/** 핫이슈(캐러셀) / 지금 올라온 소식(리스트) 구분 */
+/** 홈 핫이슈 캐러셀용 상위 게시물 */
 export const HOT_POSTS = POSTS.slice(0, 3);
+/** 홈 "지금 올라온 소식" 리스트용 나머지 게시물 */
 export const NEWS_POSTS = POSTS.slice(3);
 
+/** 로그인 유저 목데이터 (MY·온보딩 화면에서 사용 예정) */
 export const CURRENT_USER: User = {
   nickname: "김도완",
   handle: "@kim",
@@ -174,6 +179,11 @@ export const CURRENT_USER: User = {
   myTeam: "LIV",
 };
 
+/**
+ * id로 게시물을 찾는다.
+ *
+ * @returns 해당 게시물, 없으면 `undefined`
+ */
 export function getPost(id: string): FeedPost | undefined {
   return POSTS.find((p) => p.id === id);
 }

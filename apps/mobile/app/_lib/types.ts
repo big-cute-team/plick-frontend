@@ -1,10 +1,14 @@
-// PLick 도메인 타입 (mock/화면 공용). BE 연동 시 이 형태를 기준으로 맞춘다.
+/**
+ * @file PLick 도메인 타입 (mock/화면 공용). BE 연동 시 이 형태를 기준으로 맞춘다.
+ */
 
+/** 빅6 팀 코드 */
 export type TeamCode = "LIV" | "TOT" | "ARS" | "MUN" | "CHE" | "MCI";
 
 export interface Team {
   code: TeamCode;
-  name: string; // 한글 표기 (리버풀)
+  /** 한글 표기 (예: 리버풀) */
+  name: string;
   /** theme.css의 팀 컬러 CSS 변수명 (예: --plk-team-liv) */
   colorVar: string;
 }
@@ -47,9 +51,11 @@ export interface FeedPost {
   stage: RumorStage;
   contentType: ContentType;
   title: string;
-  summary: string; // 상세 요약
+  /** 상세 화면용 요약 */
+  summary: string;
   reporter: Reporter;
-  timeLabel: string; // 서버 ISO를 FE에서 포맷하지만, mock은 표시 문자열로 보관
+  /** 표시용 상대 시각 (서버 ISO를 FE에서 포맷하지만, mock은 표시 문자열로 보관) */
+  timeLabel: string;
   views: number;
   commentCount: number;
   likeCount: number;
@@ -61,7 +67,8 @@ export interface FeedPost {
 
 export interface User {
   nickname: string;
-  handle: string; // @kim
+  /** 핸들 (예: `@kim`) */
+  handle: string;
   email: string;
   myTeam: TeamCode;
 }

@@ -2,7 +2,13 @@ import { BellIcon } from "./icons";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
-// 상단 크롬. pt에 safe-area-inset-top을 더해 노치/펀치홀 아래로 콘텐츠가 내려온다.
+/**
+ * 상단 크롬 (로고 + 테마 토글 + 알림 버튼).
+ *
+ * pt에 `safe-area-inset-top`을 더해 노치/펀치홀 아래로 콘텐츠가 내려온다.
+ *
+ * @param notif - 알림 뱃지 숫자. 0이면 뱃지를 숨긴다.
+ */
 export function TopBar({ notif = 0 }: { notif?: number }) {
   return (
     <header
