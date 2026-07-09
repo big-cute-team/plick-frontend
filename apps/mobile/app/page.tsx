@@ -1,4 +1,5 @@
-import { AppShell, ScrollArea } from "./_components/AppShell";
+import { AppShell } from "./_components/AppShell";
+import { ScrollArea } from "./_components/ScrollArea";
 import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "./_components/TabBar";
