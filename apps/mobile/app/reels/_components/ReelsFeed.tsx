@@ -43,6 +43,7 @@ export function ReelsFeed({
             key={post.id}
             post={post}
             onOpenDetail={() => setDetailPost(post)}
+            detailOpen={detailPost?.id === post.id}
           />
         ))}
       </main>

@@ -17,13 +17,17 @@ import { PostChips } from "./PostChips";
  *
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출 —
  *   ReelsFeed가 세부 바텀시트(ReelDetailSheet)를 띄운다.
+ * @param detailOpen - 이 릴의 세부 시트가 떠 있는 동안 true —
+ *   칩·제목은 시트에 붙어 함께 움직이므로 원래 정보 블록을 숨겨 이중 노출을 막는다.
  */
 export function ReelItem({
   post,
   onOpenDetail,
+  detailOpen,
 }: {
   post: FeedPost;
   onOpenDetail: () => void;
+  detailOpen?: boolean;
 }) {
   return (
     <section className="relative h-full w-full snap-start">
@@ -42,7 +46,9 @@ export function ReelItem({
         <button
           type="button"
           onClick={onOpenDetail}
-          className="absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
+          className={`absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left ${
+            detailOpen ? "invisible" : ""
+          }`}
           style={{
             backgroundImage:
               "linear-gradient(to bottom, rgba(5,8,14,0) 0%, rgba(5,8,14,0.55) 35%, rgba(5,8,14,0.92) 100%)",

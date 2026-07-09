@@ -90,7 +90,7 @@ export function ReelDetailSheet({
 
   return (
     <div className="absolute inset-0 z-20">
-      {/* 상단 미디어 스크림 + 칩/제목 오버레이 — 사진 위 고정 값(테마 무관) */}
+      {/* 상단 미디어 스크림 — 사진 위 고정 값(테마 무관) */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-84 transition-opacity duration-300"
@@ -99,21 +99,11 @@ export function ReelDetailSheet({
           backgroundImage:
             "linear-gradient(180deg, rgba(5,8,14,0.42) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 48%, rgba(5,8,14,0.88) 100%)",
         }}
-      >
-        <div className="px-edge absolute inset-x-0 top-29.5 flex flex-col gap-2.5">
-          <PostChips post={post} />
-          <p className="text-headline text-media-on leading-[1.32] font-extrabold tracking-[-0.4px] drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
-            {post.title}
-          </p>
-        </div>
-      </div>
+      />
 
-      {/* 시트 본체 */}
+      {/* 이동 유닛 — 칩+제목이 시트 라인 위에 붙어 한 몸으로 오르내린다 */}
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="기사 세부"
-        className="bg-bg rounded-t-sheet absolute inset-x-0 bottom-0 flex h-[73%] flex-col overflow-hidden"
+        className="absolute inset-x-0 bottom-0"
         style={{
           transform: shown ? `translateY(${dragY}px)` : "translateY(100%)",
           transition: dragging
@@ -122,90 +112,107 @@ export function ReelDetailSheet({
         }}
         onTransitionEnd={onSheetTransitionEnd}
       >
-        {/* 그랩 존(기자 줄) — 잡고 끌어내리면 닫힌다 */}
-        <div className="relative shrink-0">
-          <div
-            className="px-edge touch-none pt-5.5 select-none"
-            onPointerDown={onGrabPointerDown}
-            onPointerMove={onGrabPointerMove}
-            onPointerUp={onGrabPointerEnd}
-            onPointerCancel={onGrabPointerEnd}
-          >
-            <div className="flex items-center gap-2 pr-11">
-              <span className="border-accent text-accent rounded-badge text-micro flex size-5 shrink-0 items-center justify-center border font-black">
-                T{post.reporter.tier}
-              </span>
-              <span className="text-body text-text font-bold">
-                {post.reporter.name}
-              </span>
-              <span className="text-label text-text-3">
-                · {post.timeLabel} · 조회 {formatCount(post.views)}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            aria-label="닫기"
-            onClick={() => setShown(false)}
-            className="bg-elevate text-icon rounded-pill absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
-          >
-            <CloseIcon size={18} />
-          </button>
+        <div className="px-edge pointer-events-none flex flex-col gap-2.5 pb-4.5">
+          <PostChips post={post} />
+          <p className="text-headline text-media-on leading-[1.32] font-extrabold tracking-[-0.4px] drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
+            {post.title}
+          </p>
         </div>
 
-        {/* 본문·해시태그·댓글 스크롤 영역 */}
-        <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
-          <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
-            {post.summary}
-          </p>
-
-          <div className="flex items-center gap-2">
-            {post.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
-              >
-                #{tag}
-              </span>
-            ))}
+        {/* 시트 본체 */}
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="기사 세부"
+          className="bg-bg rounded-t-sheet flex h-[73dvh] flex-col overflow-hidden"
+        >
+          {/* 그랩 존(기자 줄) — 잡고 끌어내리면 닫힌다 */}
+          <div className="relative shrink-0">
+            <div
+              className="px-edge touch-none pt-5.5 select-none"
+              onPointerDown={onGrabPointerDown}
+              onPointerMove={onGrabPointerMove}
+              onPointerUp={onGrabPointerEnd}
+              onPointerCancel={onGrabPointerEnd}
+            >
+              <div className="flex items-center gap-2 pr-11">
+                <span className="border-accent text-accent rounded-badge text-micro flex size-5 shrink-0 items-center justify-center border font-black">
+                  T{post.reporter.tier}
+                </span>
+                <span className="text-body text-text font-bold">
+                  {post.reporter.name}
+                </span>
+                <span className="text-label text-text-3">
+                  · {post.timeLabel} · 조회 {formatCount(post.views)}
+                </span>
+              </div>
+            </div>
             <button
               type="button"
-              className="text-accent text-label ml-auto flex items-center gap-1.25 font-bold active:opacity-60"
+              aria-label="닫기"
+              onClick={() => setShown(false)}
+              className="bg-elevate text-icon rounded-pill absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
             >
-              <LinkOutIcon size={13} />
-              출처 원문 보기
+              <CloseIcon size={18} />
             </button>
           </div>
 
-          <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
-            <span className="text-body-lg font-extrabold">댓글</span>
-            <span className="text-label text-text-3 font-semibold">
-              {formatCount(post.commentCount)}
-            </span>
+          {/* 본문·해시태그·댓글 스크롤 영역 */}
+          <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
+            <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
+              {post.summary}
+            </p>
+
+            <div className="flex items-center gap-2">
+              {post.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
+                >
+                  #{tag}
+                </span>
+              ))}
+              <button
+                type="button"
+                className="text-accent text-label ml-auto flex items-center gap-1.25 font-bold active:opacity-60"
+              >
+                <LinkOutIcon size={13} />
+                출처 원문 보기
+              </button>
+            </div>
+
+            <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
+              <span className="text-body-lg font-extrabold">댓글</span>
+              <span className="text-label text-text-3 font-semibold">
+                {formatCount(post.commentCount)}
+              </span>
+            </div>
+
+            {(post.comments ?? []).map((comment) => (
+              <CommentThread key={comment.id} comment={comment} />
+            ))}
           </div>
 
-          {(post.comments ?? []).map((comment) => (
-            <CommentThread key={comment.id} comment={comment} />
-          ))}
-        </div>
-
-        {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
-        <div
-          className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 pt-3.25"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)" }}
-        >
-          <input
-            type="text"
-            placeholder="팬 반응 남기기…"
-            className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 rounded-hero h-11.5 min-w-0 flex-1 border px-4.75"
-          />
-          <button
-            type="button"
-            aria-label="댓글 보내기"
-            className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
+          {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
+          <div
+            className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 pt-3.25"
+            style={{
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)",
+            }}
           >
-            <SendMiniIcon size={17} />
-          </button>
+            <input
+              type="text"
+              placeholder="팬 반응 남기기…"
+              className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 rounded-hero h-11.5 min-w-0 flex-1 border px-4.75"
+            />
+            <button
+              type="button"
+              aria-label="댓글 보내기"
+              className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
+            >
+              <SendMiniIcon size={17} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
