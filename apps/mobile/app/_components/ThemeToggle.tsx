@@ -5,7 +5,11 @@ import { MoonIcon, SunIcon } from "./icons";
 
 type Theme = "dark" | "light";
 
-// data-theme 속성을 <html>에서 토글. 새로고침 유지는 추후 localStorage로 확장.
+/**
+ * 다크/라이트 토글 — `<html data-theme>`만 바꾸면 토큰이 전체 UI를 전환한다.
+ *
+ * 새로고침 유지는 추후 localStorage로 확장.
+ */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
 

@@ -1,10 +1,12 @@
-import { AppShell, ScrollArea } from "./_components/AppShell";
+import { AppShell } from "@/_components/AppShell";
+import { ScrollArea } from "@/_components/ScrollArea";
 import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
-import { TabBar } from "./_components/TabBar";
-import { TopBar } from "./_components/TopBar";
-import { HOT_POSTS, NEWS_POSTS } from "./_lib/mock";
+import { TabBar } from "@/_components/TabBar";
+import { TopBar } from "@/_components/TopBar";
+import { HOT_POSTS, NEWS_POSTS } from "@/_lib/mock";
 
+/** 홈 화면 — 핫이슈 캐러셀 + 지금 올라온 소식 리스트 (KAN-163). */
 export default function HomePage() {
   return (
     <AppShell>

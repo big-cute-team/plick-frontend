@@ -1,5 +1,10 @@
-// PLick 워드마크 (Figma logo 그대로). 글자는 currentColor(text-text)로 테마 전환,
-// i 위 점만 accent 토큰.
+/**
+ * PLick 워드마크 (피그마 logo 벡터 그대로).
+ *
+ * 글자는 `currentColor`(text-text)로 테마 전환되고, i 위 점만 accent 토큰을 쓴다.
+ *
+ * @param height - 렌더 높이(px). 폭은 원본 비율로 계산된다.
+ */
 export function Logo({ height = 18 }: { height?: number }) {
   const ratio = 33.0001 / 10.5383;
   return (
