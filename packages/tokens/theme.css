@@ -36,6 +36,9 @@
   --plk-media-on-dim: rgba(255, 255, 255, 0.55);
   --plk-media-chip: rgba(255, 255, 255, 0.14);
   --plk-media-chip-border: rgba(255, 255, 255, 0.22);
+  /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관, 라이트 오버라이드 없음).
+   * 그라데이션에서는 color-mix(in srgb, var(--plk-scrim) N%, transparent)로 알파를 조절한다. */
+  --plk-scrim: #05080e;
 
   /* accent 파생 (칩/배지 배경·테두리) — accent를 따라 테마 전환 */
   --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 16%, transparent);

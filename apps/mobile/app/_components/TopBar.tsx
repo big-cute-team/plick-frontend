@@ -26,7 +26,7 @@ export function TopBar({ notif = 0 }: { notif?: number }) {
           >
             <BellIcon size={20} />
             {notif > 0 && (
-              <span className="rounded-pill bg-accent text-on-accent absolute top-1.5 right-1.5 grid min-w-4 place-items-center px-1 text-[10px] leading-4 font-extrabold">
+              <span className="rounded-pill bg-accent text-on-accent text-micro absolute top-1.5 right-1.5 grid min-w-4 place-items-center px-1 leading-4 font-extrabold">
                 {notif}
               </span>
             )}

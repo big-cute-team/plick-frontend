@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeftIcon } from "@/_components/icons";
+import { BackButton } from "@/_components/BackButton";
 import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
 
 /**
@@ -18,13 +17,7 @@ export function OnboardingTopBar({
   return (
     <header style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <div className="px-edge flex h-13 items-center justify-between">
-        <Link
-          href={backHref}
-          aria-label="뒤로"
-          className="text-icon -ml-1.5 grid size-9 place-items-center active:opacity-60"
-        >
-          <ArrowLeftIcon size={20} />
-        </Link>
+        <BackButton href={backHref} />
         <span className="text-body text-text-4 font-bold tracking-[1px]">
           {step} / {ONBOARDING_TOTAL_STEPS}
         </span>

@@ -67,7 +67,7 @@ export function TabBar({
         // 스크림은 이미지 가독성용 고정 값(테마 무관)
         ...(overlay && {
           backgroundImage:
-            "linear-gradient(to bottom, rgba(4,6,11,0) 0%, rgba(4,6,11,0.9) 45%)",
+            "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 90%, transparent) 45%)",
         }),
       }}
     >
@@ -87,7 +87,7 @@ export function TabBar({
                 } active:opacity-60`}
               >
                 <Icon size={22} />
-                <span className="text-[10px] font-bold">{label}</span>
+                <span className="text-micro font-bold">{label}</span>
               </Link>
             </li>
           );

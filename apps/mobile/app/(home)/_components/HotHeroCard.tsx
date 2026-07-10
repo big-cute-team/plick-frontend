@@ -19,14 +19,14 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
           className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4"
           style={{
             backgroundImage:
-              "linear-gradient(to top, rgba(6,8,14,0.92) 0%, rgba(6,8,14,0.55) 55%, rgba(6,8,14,0) 100%)",
+              "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 55%, transparent 100%)",
           }}
         >
           <div className="flex items-center gap-2">
             <span className="text-caption text-media-on font-extrabold">
               {TEAMS[post.team].name}
             </span>
-            <span className="text-media-on/50 text-[10px] font-bold tracking-wider">
+            <span className="text-media-on/50 text-micro font-bold tracking-wider">
               {stage.label}
             </span>
           </div>

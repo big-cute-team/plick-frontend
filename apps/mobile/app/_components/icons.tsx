@@ -56,37 +56,6 @@ export const UserIcon = (p: IconProps) => (
   </svg>
 );
 
-export const HeartIcon = ({
-  filled,
-  ...p
-}: IconProps & { filled?: boolean }) => (
-  <svg {...base(p)} fill={filled ? "currentColor" : "none"}>
-    <path d="M12 20s-7-4.4-9.2-9C1.3 8 3 4.5 6.4 4.5c2 0 3.2 1.2 3.6 2 .4-.8 1.6-2 3.6-2 3.4 0 5.1 3.5 3.6 6.5C19 15.6 12 20 12 20Z" />
-  </svg>
-);
-
-export const CommentIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="M4 5h16v11H9l-4 4v-4H4z" />
-  </svg>
-);
-
-export const ShareIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-    <path d="M12 15V4M8 7l4-3 4 3" />
-  </svg>
-);
-
-export const BookmarkIcon = ({
-  filled,
-  ...p
-}: IconProps & { filled?: boolean }) => (
-  <svg {...base(p)} fill={filled ? "currentColor" : "none"}>
-    <path d="M6 4h12v16l-6-4-6 4z" />
-  </svg>
-);
-
 /**
  * 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
  *
@@ -301,18 +270,6 @@ export const SendMiniIcon = ({ size = 17, ...p }: IconProps) => (
   </svg>
 );
 
-export const BackIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="m14 6-6 6 6 6" />
-  </svg>
-);
-
-export const ChevronRightIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="m9 6 6 6-6 6" />
-  </svg>
-);
-
 export const SunIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="4" />
@@ -323,13 +280,6 @@ export const SunIcon = (p: IconProps) => (
 export const MoonIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M20 14A8 8 0 0 1 10 4a7 7 0 1 0 10 10Z" />
-  </svg>
-);
-
-export const SettingsIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
   </svg>
 );
 

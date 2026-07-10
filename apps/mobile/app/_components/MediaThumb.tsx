@@ -26,7 +26,7 @@ export function MediaThumb({
     <div
       className={`bg-media relative overflow-hidden ${className}`}
       style={{
-        backgroundImage: `linear-gradient(155deg, color-mix(in oklab, var(${colorVar}) 62%, #05070c) 0%, var(--plk-media-bg) 78%)`,
+        backgroundImage: `linear-gradient(155deg, color-mix(in oklab, var(${colorVar}) 62%, var(--plk-scrim)) 0%, var(--plk-media-bg) 78%)`,
         ...style,
       }}
     >

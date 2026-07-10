@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeftIcon } from "@/_components/icons";
+import { BackButton } from "@/_components/BackButton";
 
 /**
  * 프로필 수정 상단바 — 뒤로가기 + 중앙 정렬 타이틀.
@@ -14,13 +13,7 @@ export function EditTopBar() {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="px-edge relative flex h-13 items-center">
-        <Link
-          href="/me"
-          aria-label="뒤로"
-          className="text-icon -ml-1.5 grid size-9 place-items-center active:opacity-60"
-        >
-          <ArrowLeftIcon size={20} />
-        </Link>
+        <BackButton href="/me" />
         <h1 className="text-title text-text pointer-events-none absolute inset-x-0 text-center font-extrabold">
           프로필 수정
         </h1>
