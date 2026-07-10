@@ -9,7 +9,7 @@ export function NewsItem({ post }: { post: FeedPost }) {
   return (
     <Link
       href={`/reels/${post.id}`}
-      className="border-border flex items-start gap-3 border-b py-3 active:opacity-70"
+      className="border-border gap-gap flex items-start border-b py-3 active:opacity-70"
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">

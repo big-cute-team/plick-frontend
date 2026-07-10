@@ -134,6 +134,9 @@
   /* type scale */
   --text-display: 44px;
   --text-headline: 24px;
+  /* headline은 항상 이 행간·자간과 함께 쓰여 토큰에 내장 (온보딩 제목·릴 제목) */
+  --text-headline--line-height: 1.35;
+  --text-headline--letter-spacing: -0.4px;
   --text-title: 17px;
   --text-body-lg: 15px;
   --text-body: 13.5px;
@@ -144,6 +147,11 @@
   /* line height */
   --leading-body-lg: 1.75; /* 기사 본문 */
   --leading-body: 1.55; /* 댓글 본문 */
+
+  /* letter spacing — 자간 미세값도 임의 bracket 값 대신 토큰으로 */
+  --tracking-tight: -0.2px; /* 태그라인·닉네임 (기본 스케일 오버라이드) */
+  --tracking-snug: -0.1px; /* 기사 본문 */
+  --tracking-label: 1px; /* 대문자 칩·스텝 라벨 */
 
   /* radius */
   --radius-badge: 6px;

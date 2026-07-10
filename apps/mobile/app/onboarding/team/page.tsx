@@ -13,7 +13,7 @@ export default function OnboardingTeamPage() {
 
       <ScrollArea>
         <section className="px-edge pt-5.5 pb-6">
-          <h1 className="text-headline text-text leading-[1.35] font-extrabold tracking-[-0.4px]">
+          <h1 className="text-headline text-text font-extrabold">
             응원하는 팀을 선택해주세요
           </h1>
           <p className="text-body text-text-3 mt-2.5 font-semibold">

@@ -72,7 +72,7 @@ export function ReelDetailSheet({
 
         {/* 본문·해시태그·댓글 스크롤 영역 */}
         <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
-          <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
+          <p className="text-body-lg text-text-2 leading-body-lg tracking-snug">
             {post.summary}
           </p>
 

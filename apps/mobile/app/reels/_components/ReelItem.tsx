@@ -79,7 +79,7 @@ export function ReelItem({
             }}
           >
             <PostChips post={post} />
-            <span className="text-headline text-media-on leading-[1.32] font-extrabold tracking-[-0.4px]">
+            <span className="text-headline text-media-on font-extrabold">
               {post.title}
             </span>
           </div>

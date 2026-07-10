@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/_components/AppShell";
 import { BackButton } from "@/_components/BackButton";
 import { Logo } from "@/_components/Logo";
+import { TopBarShell } from "@/_components/TopBarShell";
 import { GoogleIcon, KakaoIcon } from "@/_components/icons";
 import { SocialLoginButton } from "@/_components/SocialLoginButton";
 
@@ -10,24 +11,19 @@ export default function SignupPage() {
   return (
     <AppShell>
       <main className="relative flex h-full flex-col">
-        <div
-          className="absolute inset-x-0 top-0"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <div className="px-edge flex h-13 items-center">
-            <BackButton href="/login" />
-          </div>
-        </div>
+        <TopBarShell className="absolute inset-x-0 top-0">
+          <BackButton href="/login" />
+        </TopBarShell>
 
-        <section className="px-edge flex flex-1 flex-col items-center justify-center gap-3.5">
+        <section className="px-edge gap-gap-lg flex flex-1 flex-col items-center justify-center">
           <Logo height={34} />
-          <p className="text-body text-text-3 font-semibold tracking-[-0.2px]">
+          <p className="text-body text-text-3 font-semibold tracking-tight">
             간편하게 가입하고 팀 소식을 받아보세요
           </p>
         </section>
 
         <section
-          className="px-edge flex flex-col gap-3"
+          className="px-edge gap-gap flex flex-col"
           /* 피그마 하단 여백 64px, 홈 인디케이터가 그보다 두꺼운 기기에선 24px 띄움 */
           style={{
             paddingBottom: "max(64px, env(safe-area-inset-bottom) + 24px)",

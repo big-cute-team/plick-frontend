@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { CheckIcon } from "@/_components/icons";
 import { TeamCrest } from "@/_components/TeamCrest";
 import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
 import type { TeamCode } from "@/_lib/types";
+import { useTeamSelection } from "@/_lib/useTeamSelection";
 
 /**
  * 마이팀 선택 그리드 — 빅6 팀 카드 2열, 선택 카드는 accent 보더 + 체크 배지.
@@ -14,17 +14,17 @@ import type { TeamCode } from "@/_lib/types";
  * @param initial - 최초 선택 팀 코드
  */
 export function TeamSelectGrid({ initial }: { initial: TeamCode }) {
-  const [selected, setSelected] = useState<TeamCode>(initial);
+  const { select, isSelected } = useTeamSelection(initial);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="gap-gap grid grid-cols-2">
       {TEAM_ORDER.map((code) => {
-        const active = code === selected;
+        const active = isSelected(code);
         return (
           <button
             key={code}
             type="button"
-            onClick={() => setSelected(code)}
+            onClick={() => select(code)}
             aria-pressed={active}
             className={`bg-elevate-2 rounded-card relative flex h-30 flex-col items-center justify-center gap-2.5 border active:opacity-80 ${
               active ? "border-accent" : "border-border"

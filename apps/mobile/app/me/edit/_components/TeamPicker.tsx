@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
 import type { TeamCode } from "@/_lib/types";
+import { useTeamSelection } from "@/_lib/useTeamSelection";
 
 /**
  * 응원팀 선택 — 빅6 팀 칩 중 하나를 고른다.
@@ -12,7 +12,7 @@ import type { TeamCode } from "@/_lib/types";
  * @param initial - 최초 선택 팀 코드
  */
 export function TeamPicker({ initial }: { initial: TeamCode }) {
-  const [selected, setSelected] = useState<TeamCode>(initial);
+  const { select, isSelected } = useTeamSelection(initial);
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -22,12 +22,12 @@ export function TeamPicker({ initial }: { initial: TeamCode }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {TEAM_ORDER.map((code) => {
-          const active = code === selected;
+          const active = isSelected(code);
           return (
             <button
               key={code}
               type="button"
-              onClick={() => setSelected(code)}
+              onClick={() => select(code)}
               className={`rounded-pill text-body border px-3.5 py-2 active:opacity-70 ${
                 active
                   ? "bg-accent-tint border-accent text-accent font-extrabold"

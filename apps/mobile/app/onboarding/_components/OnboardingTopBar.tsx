@@ -1,4 +1,5 @@
 import { BackButton } from "@/_components/BackButton";
+import { TopBarShell } from "@/_components/TopBarShell";
 import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
 
 /**
@@ -15,13 +16,11 @@ export function OnboardingTopBar({
   backHref: string;
 }) {
   return (
-    <header style={{ paddingTop: "env(safe-area-inset-top)" }}>
-      <div className="px-edge flex h-13 items-center justify-between">
-        <BackButton href={backHref} />
-        <span className="text-body text-text-4 font-bold tracking-[1px]">
-          {step} / {ONBOARDING_TOTAL_STEPS}
-        </span>
-      </div>
-    </header>
+    <TopBarShell innerClassName="justify-between">
+      <BackButton href={backHref} />
+      <span className="text-body text-text-4 tracking-label font-bold">
+        {step} / {ONBOARDING_TOTAL_STEPS}
+      </span>
+    </TopBarShell>
   );
 }
