@@ -87,3 +87,4 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 - 제품·UX·데이터 모델·화면 IA 전반 → [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier/Husky/CI 등) 결정 배경 → [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
 - 화면 하나를 티켓+피그마로 구현 → `/screen` 커맨드
+- 코드베이스 전수 감사(중복·배치·컨벤션 리스트업) → `/audit` 커맨드 (`code-audit` 스킬)
