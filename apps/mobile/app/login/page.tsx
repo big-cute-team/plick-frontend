@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { AppShell } from "@/_components/AppShell";
 import { Logo } from "@/_components/Logo";
-import { GoogleIcon, KakaoIcon } from "./_components/icons";
-import { SocialLoginButton } from "./_components/SocialLoginButton";
+import { GoogleIcon, KakaoIcon } from "@/_components/icons";
+import { SocialLoginButton } from "@/_components/SocialLoginButton";
 
 /** A1 로그인 — 로고·태그라인 + 카카오/구글 소셜 로그인 (KAN-174, 피그마 105-6). */
 export default function LoginPage() {
@@ -35,12 +36,12 @@ export default function LoginPage() {
 
           <p className="text-body text-text-3 pt-3.5 text-center">
             처음이신가요?{" "}
-            <button
-              type="button"
+            <Link
+              href="/signup"
               className="text-accent font-extrabold active:opacity-60"
             >
               회원가입
-            </button>
+            </Link>
           </p>
         </section>
       </main>
