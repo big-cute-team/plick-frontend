@@ -8,11 +8,11 @@ import { CameraIcon, UserRoundIcon } from "@/_components/icons";
 export function AvatarField() {
   return (
     <div className="flex justify-center pt-2 pb-0.5">
-      <div className="relative size-[84px]">
+      <div className="relative size-21">
         <span className="bg-avatar text-icon grid size-full place-items-center rounded-full">
           <UserRoundIcon size={40} />
         </span>
-        <span className="bg-accent text-on-accent border-bg absolute right-0 bottom-0 grid size-[34px] place-items-center rounded-full border-[3px]">
+        <span className="bg-accent text-on-accent border-bg absolute right-0 bottom-0 grid size-8.5 place-items-center rounded-full border-3">
           <CameraIcon size={14} />
         </span>
       </div>

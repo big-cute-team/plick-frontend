@@ -12,7 +12,7 @@ export default function OnboardingNicknamePage() {
         <OnboardingTopBar step={1} backHref="/signup" />
 
         <section className="px-edge flex flex-1 flex-col pt-5.5">
-          <h1 className="text-headline text-text leading-[1.35] font-extrabold tracking-[-0.4px]">
+          <h1 className="text-headline text-text font-extrabold">
             닉네임을 정해주세요
           </h1>
           <p className="text-body text-text-3 mt-2.5 font-semibold">

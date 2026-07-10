@@ -6,6 +6,7 @@ import type { FeedPost } from "@/_lib/types";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { ReelDetailMotion } from "@/reels/_lib/types";
 import { CommentThread } from "./CommentThread";
+import { ReporterTierBadge } from "./ReporterTierBadge";
 
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
@@ -50,9 +51,7 @@ export function ReelDetailSheet({
             {...motion.grabProps}
           >
             <div className="flex items-center gap-2 pr-11">
-              <span className="border-accent text-accent rounded-badge text-micro flex size-5 shrink-0 items-center justify-center border font-black">
-                T{post.reporter.tier}
-              </span>
+              <ReporterTierBadge reporter={post.reporter} />
               <span className="text-body text-text font-bold">
                 {post.reporter.name}
               </span>
@@ -73,7 +72,7 @@ export function ReelDetailSheet({
 
         {/* 본문·해시태그·댓글 스크롤 영역 */}
         <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
-          <p className="text-body-lg text-text-2 leading-body-lg tracking-[-0.1px]">
+          <p className="text-body-lg text-text-2 leading-body-lg tracking-snug">
             {post.summary}
           </p>
 

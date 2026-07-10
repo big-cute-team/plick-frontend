@@ -11,7 +11,7 @@ export default function HomePage() {
   return (
     <AppShell>
       <TopBar notif={3} />
-      <ScrollArea className="pb-4">
+      <ScrollArea className="pb-section">
         <section className="pt-3">
           <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">
             🔥 핫이슈

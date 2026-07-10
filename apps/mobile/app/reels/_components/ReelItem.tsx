@@ -8,6 +8,7 @@ import type { TitleMotion } from "@/reels/_lib/types";
 import { titleLiftDistance } from "@/reels/_lib/utils";
 import { PostChips } from "./PostChips";
 import { ReelActionRail } from "./ReelActionRail";
+import { ReporterTierBadge } from "./ReporterTierBadge";
 
 /**
  * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
@@ -52,7 +53,7 @@ export function ReelItem({
           className="absolute inset-y-0 right-0 w-27.5"
           style={{
             backgroundImage:
-              "linear-gradient(to left, rgba(5,8,14,0.55), rgba(5,8,14,0))",
+              "linear-gradient(to left, color-mix(in srgb, var(--plk-scrim) 55%, transparent), transparent)",
           }}
         />
 
@@ -63,7 +64,7 @@ export function ReelItem({
           className="absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
           style={{
             backgroundImage:
-              "linear-gradient(to bottom, rgba(5,8,14,0) 0%, rgba(5,8,14,0.55) 35%, rgba(5,8,14,0.92) 100%)",
+              "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
           }}
         >
           {/* 칩+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
@@ -78,15 +79,13 @@ export function ReelItem({
             }}
           >
             <PostChips post={post} />
-            <span className="text-headline text-media-on leading-[1.32] font-extrabold tracking-[-0.4px]">
+            <span className="text-headline text-media-on font-extrabold">
               {post.title}
             </span>
           </div>
 
           <span className="flex items-center gap-2.25">
-            <span className="border-accent text-accent rounded-badge text-micro flex size-5 items-center justify-center border font-black">
-              T{post.reporter.tier}
-            </span>
+            <ReporterTierBadge reporter={post.reporter} />
             <span className="text-body text-media-on font-bold">
               {post.reporter.name}
             </span>

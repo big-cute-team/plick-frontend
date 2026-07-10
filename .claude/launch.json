@@ -14,6 +14,13 @@
       "runtimeArgs": ["--filter", "mobile", "exec", "next", "start"],
       "port": 3101,
       "autoPort": true
+    },
+    {
+      "name": "web-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "web", "exec", "next", "start"],
+      "port": 3100,
+      "autoPort": true
     }
   ]
 }

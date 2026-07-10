@@ -9,15 +9,15 @@ export default function LoginPage() {
   return (
     <AppShell>
       <main className="flex h-full flex-col">
-        <section className="px-edge flex flex-1 flex-col items-center justify-center gap-3.5">
+        <section className="px-edge gap-gap-lg flex flex-1 flex-col items-center justify-center">
           <Logo height={34} />
-          <p className="text-body text-text-3 font-semibold tracking-[-0.2px]">
+          <p className="text-body text-text-3 font-semibold tracking-tight">
             축구 이적 뉴스, 팬 반응까지 한 번에
           </p>
         </section>
 
         <section
-          className="px-edge flex flex-col gap-3"
+          className="px-edge gap-gap flex flex-col"
           /* 피그마 하단 여백 64px, 홈 인디케이터가 그보다 두꺼운 기기에선 24px 띄움 */
           style={{
             paddingBottom: "max(64px, env(safe-area-inset-bottom) + 24px)",

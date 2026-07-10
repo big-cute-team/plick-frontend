@@ -49,6 +49,8 @@ pnpm format             # Prettier 적용 (확인만: format:check)
   올라가는 import는 절대경로 `@/…`로.** `../`·`../../` 부모 탐색 금지.
   - `@/_lib/types` · `@/_components/AppShell` · `@/reels/_lib/constants` (라우트 그룹은 `@/(home)/_lib/…`)
 - **같은 폴더 형제는 상대경로 `./`** 그대로 둔다(절대경로로 바꾸면 더 길고 관용에 어긋남).
+- **자기 폴더 아래로 내려가는 import도 `./`**(예: `page.tsx` → `./_components/…`). 부모를 거쳐야
+  닿을 때만 `@/…`(예: `reels/[postId]/page.tsx` → `@/reels/_components/…`).
 - `next/`·`react`·`@plick/*` 같은 패키지 import는 당연히 그대로.
 
 ### 타입·상수·유틸 분리 (`_lib`)
@@ -87,3 +89,4 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 - 제품·UX·데이터 모델·화면 IA 전반 → [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier/Husky/CI 등) 결정 배경 → [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
 - 화면 하나를 티켓+피그마로 구현 → `/screen` 커맨드
+- 코드베이스 전수 감사(중복·배치·컨벤션 리스트업) → `/audit` 커맨드 (`code-audit` 스킬)

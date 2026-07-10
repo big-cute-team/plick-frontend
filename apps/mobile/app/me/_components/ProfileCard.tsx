@@ -13,13 +13,13 @@ export function ProfileCard({ user }: { user: User }) {
   return (
     <Link
       href="/me/edit"
-      className="bg-elevate-2 border-border rounded-card flex w-full items-center gap-3.5 border p-4.25 text-left active:opacity-60"
+      className="bg-elevate-2 border-border rounded-card gap-gap-lg flex w-full items-center border p-4.25 text-left active:opacity-60"
     >
       <span className="bg-avatar text-icon rounded-pill grid size-13 shrink-0 place-items-center">
         <UserRoundIcon size={26} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-body-lg text-text font-extrabold tracking-[-0.2px]">
+        <span className="text-body-lg text-text font-extrabold tracking-tight">
           {user.nickname}
         </span>
         <span className="text-label text-text-3">{user.handle}</span>

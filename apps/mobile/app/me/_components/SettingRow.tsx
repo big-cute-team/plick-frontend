@@ -33,7 +33,7 @@ export function SettingRow({
       {trailing}
     </>
   );
-  const layout = "flex w-full items-center gap-3 px-4 py-3.5";
+  const layout = "gap-gap flex w-full items-center px-4 py-3.5";
 
   return pressable ? (
     <button type="button" className={`${layout} active:opacity-60`}>

@@ -24,7 +24,7 @@ export default function MyPage() {
       <TopBar notif={3} />
 
       <ScrollArea>
-        <div className="px-edge flex flex-col gap-3.5 pt-3 pb-8">
+        <div className="px-edge gap-gap-lg flex flex-col pt-3 pb-8">
           <ProfileCard user={CURRENT_USER} />
 
           <section className="bg-elevate-2 border-border rounded-card border">

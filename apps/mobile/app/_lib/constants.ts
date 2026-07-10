@@ -25,12 +25,9 @@ export const TEAM_ORDER: TeamCode[] = [
   "MCI",
 ];
 
-/** 루머 단계 표시 라벨 + 색 토큰(=Tailwind text 유틸 접미어) */
-export const STAGE_META: Record<
-  RumorStage,
-  { label: string; toneClass: string }
-> = {
-  RUMOUR: { label: "RUMOUR", toneClass: "text-text-3" },
-  IN_PROGRESS: { label: "IN PROGRESS", toneClass: "text-accent" },
-  OFFICIAL: { label: "OFFICIAL", toneClass: "text-accent" },
+/** 루머 단계 표시 라벨 */
+export const STAGE_META: Record<RumorStage, { label: string }> = {
+  RUMOUR: { label: "RUMOUR" },
+  IN_PROGRESS: { label: "IN PROGRESS" },
+  OFFICIAL: { label: "OFFICIAL" },
 };

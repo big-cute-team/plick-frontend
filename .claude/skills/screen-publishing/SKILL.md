@@ -19,9 +19,13 @@ description: >-
 - 색: `bg-bg` `bg-nav` `bg-elevate` `text-text` `text-text-2/3/4` `text-icon`
   `bg-accent` `text-accent` `text-on-accent` `border-border` `text-danger`
 - 미디어(사진 자리): `bg-media` / `text-media-on`, 팀색: `bg-team-liv` 등
-- 글자: `text-title`(17) `text-body-lg`(15) `text-body` `text-label` `text-caption` `text-micro`
+- 글자: `text-headline`(24, 행간 1.35·자간 -0.4px 내장) `text-title`(17) `text-body-lg`(15)
+  `text-body` `text-label` `text-caption`(11) `text-micro`(10)
+- 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px) — `tracking-[…]` 임의값 금지
 - 라운드: `rounded-card`(16) `rounded-hero`(22) `rounded-control`(14) `rounded-pill`
-- 간격: **`px-edge`**(화면 좌우 20) `gap`/`gap-lg`/`section` — 그 외는 숫자 유틸
+- 간격: **`px-edge`**(화면 좌우 20) · `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16)처럼
+  시맨틱 간격은 토큰 유틸로 — 그 외 미세 조정만 숫자 유틸
+- 사진 위 스크림: `var(--plk-scrim)` 앵커색을 `color-mix(in srgb, var(--plk-scrim) N%, transparent)`로 — rgba 하드코딩 금지
 
 ⚠️ **`px-screen` 쓰지 말 것.** `screen`은 Tailwind 예약어라 유틸이 생성되지 않는다 → **`px-edge`**.
 
