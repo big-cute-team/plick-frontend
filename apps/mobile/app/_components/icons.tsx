@@ -512,3 +512,62 @@ export const ChevronMiniIcon = ({ size = 17, ...p }: IconProps) => (
     />
   </svg>
 );
+
+/**
+ * 프로필 수정 화면 아이콘 — 피그마 M2(node 25-6) 벡터를 그대로 사용.
+ *
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
+
+export const ArrowLeftIcon = ({ size = 20, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 11 11"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M8.70829 5.5H2.29163"
+      stroke="currentColor"
+      strokeWidth={0.916667}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.04163 8.25L2.29163 5.5L5.04163 2.75"
+      stroke="currentColor"
+      strokeWidth={0.916667}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const CameraIcon = ({ size = 14, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 7.7 7.7"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M4.65214 1.28333H3.04797L2.40631 2.24583H1.28339C1.11321 2.24583 0.949999 2.31343 0.829663 2.43376C0.709328 2.5541 0.641724 2.71731 0.641724 2.88749V5.77499C0.641724 5.94517 0.709328 6.10838 0.829663 6.22872C0.949999 6.34905 1.11321 6.41666 1.28339 6.41666H6.41672C6.5869 6.41666 6.75011 6.34905 6.87045 6.22872C6.99079 6.10838 7.05839 5.94517 7.05839 5.77499V2.88749C7.05839 2.71731 6.99079 2.5541 6.87045 2.43376C6.75011 2.31343 6.5869 2.24583 6.41672 2.24583H5.29381L4.65214 1.28333Z"
+      stroke="currentColor"
+      strokeWidth={0.641667}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M3.85007 5.13334C4.38165 5.13334 4.81257 4.70242 4.81257 4.17084C4.81257 3.63927 4.38165 3.20834 3.85007 3.20834C3.3185 3.20834 2.88757 3.63927 2.88757 4.17084C2.88757 4.70242 3.3185 5.13334 3.85007 5.13334Z"
+      stroke="currentColor"
+      strokeWidth={0.641667}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
