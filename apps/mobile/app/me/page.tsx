@@ -1,6 +1,7 @@
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
+import { TopBar } from "@/_components/TopBar";
 import {
   ChevronMiniIcon,
   HelpCircleIcon,
@@ -20,17 +21,10 @@ export default function MyPage() {
 
   return (
     <AppShell>
-      <header
-        className="shrink-0"
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <h1 className="px-edge text-headline text-text pt-2 pb-3 font-black tracking-[-0.5px]">
-          MY
-        </h1>
-      </header>
+      <TopBar notif={3} />
 
       <ScrollArea>
-        <div className="px-edge flex flex-col gap-3.5 pt-1 pb-8">
+        <div className="px-edge flex flex-col gap-3.5 pt-3 pb-8">
           <ProfileCard user={CURRENT_USER} />
 
           <section className="bg-elevate-2 border-border rounded-card border">
