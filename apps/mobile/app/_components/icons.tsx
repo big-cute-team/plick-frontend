@@ -332,3 +332,183 @@ export const SettingsIcon = (p: IconProps) => (
     <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
   </svg>
 );
+
+/**
+ * MY 화면 아이콘 — 피그마 M1 마이페이지(node 26-6) 벡터를 그대로 사용.
+ *
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
+
+export const UserRoundIcon = ({ size = 26, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14.3 14.3"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M7.15001 7.15001C8.46629 7.15001 9.53334 6.08295 9.53334 4.76667C9.53334 3.45039 8.46629 2.38334 7.15001 2.38334C5.83373 2.38334 4.76668 3.45039 4.76668 4.76667C4.76668 6.08295 5.83373 7.15001 7.15001 7.15001Z"
+      stroke="currentColor"
+      strokeWidth={1.19167}
+      strokeLinecap="round"
+    />
+    <path
+      d="M2.38332 12.5125C3.27707 10.4271 5.06457 9.53334 7.14999 9.53334C9.23541 9.53334 11.0229 10.4271 11.9167 12.5125"
+      stroke="currentColor"
+      strokeWidth={1.19167}
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+export const TeamShieldIcon = ({ size = 19, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 10.45 10.45"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M5.225 1.30625L8.27292 2.6125V4.78959C8.27292 6.7925 7.01021 8.31646 5.225 9.14375C3.43979 8.31646 2.17708 6.7925 2.17708 4.78959V2.6125L5.225 1.30625Z"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const BellLineIcon = ({ size = 19, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 10.45 10.45"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M7.83751 3.48334C7.83751 2.79046 7.56227 2.12596 7.07233 1.63602C6.58239 1.14608 5.91789 0.870839 5.22501 0.870839C4.53213 0.870839 3.86763 1.14608 3.3777 1.63602C2.88776 2.12596 2.61251 2.79046 2.61251 3.48334C2.61251 6.53126 1.30626 7.40209 1.30626 7.40209H9.14376C9.14376 7.40209 7.83751 6.53126 7.83751 3.48334Z"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.96522 9.14375C5.88713 9.26977 5.77815 9.37376 5.64861 9.44588C5.51908 9.51799 5.37327 9.55584 5.22502 9.55584C5.07676 9.55584 4.93096 9.51799 4.80142 9.44588C4.67189 9.37376 4.56291 9.26977 4.48481 9.14375"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const MoonLineIcon = ({ size = 19, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 10.45 10.45"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M8.92607 6.31356C8.25685 6.57336 7.52651 6.63293 6.82403 6.485C6.12155 6.33708 5.47725 5.98804 4.96963 5.48042C4.46201 4.9728 4.11297 4.3285 3.96504 3.62602C3.81712 2.92354 3.87668 2.1932 4.13649 1.52398C3.56257 1.74678 3.05329 2.10924 2.65479 2.57852C2.25629 3.0478 1.98114 3.60907 1.85428 4.21152C1.72742 4.81396 1.75285 5.43853 1.92826 6.02866C2.10368 6.61879 2.42353 7.15585 2.85887 7.59118C3.2942 8.02651 3.83125 8.34637 4.42139 8.52178C5.01152 8.6972 5.63609 8.72262 6.23853 8.59576C6.84097 8.4689 7.40225 8.19376 7.87153 7.79526C8.34081 7.39676 8.70327 6.88748 8.92607 6.31356Z"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const HelpCircleIcon = ({ size = 19, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 10.45 10.45"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M5.22501 9.14374C7.38928 9.14374 9.14376 7.38926 9.14376 5.22499C9.14376 3.06073 7.38928 1.30624 5.22501 1.30624C3.06075 1.30624 1.30626 3.06073 1.30626 5.22499C1.30626 7.38926 3.06075 9.14374 5.22501 9.14374Z"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4.00584 3.91875C4.10853 3.65959 4.29693 3.44345 4.53965 3.30635C4.78236 3.16924 5.06473 3.11946 5.3397 3.16529C5.61467 3.21112 5.86563 3.34979 6.05076 3.5582C6.23589 3.76661 6.344 4.03217 6.35709 4.31062C6.35709 5.09437 5.22501 5.225 5.22501 5.87812"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.22501 7.40207H5.22937"
+      stroke="currentColor"
+      strokeWidth={0.78375}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const LogoutIcon = ({ size = 17, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 9.35 9.35"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M3.50625 8.18126H1.94792C1.74127 8.18126 1.54308 8.09917 1.39696 7.95305C1.25084 7.80693 1.16875 7.60874 1.16875 7.4021V1.94793C1.16875 1.74128 1.25084 1.5431 1.39696 1.39697C1.54308 1.25085 1.74127 1.16876 1.94792 1.16876H3.50625"
+      stroke="currentColor"
+      strokeWidth={0.779167}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.23332 6.62292L8.18124 4.675L6.23332 2.72708"
+      stroke="currentColor"
+      strokeWidth={0.779167}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8.18125 4.67501H3.50625"
+      stroke="currentColor"
+      strokeWidth={0.779167}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const ChevronMiniIcon = ({ size = 17, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 9.35 9.35"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M3.50623 2.33749L5.84373 4.67499L3.50623 7.01249"
+      stroke="currentColor"
+      strokeWidth={0.857083}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

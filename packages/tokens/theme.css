@@ -142,6 +142,7 @@
 
   /* radius */
   --radius-badge: 6px;
+  --radius-tile: 10px; /* 설정 리스트 아이콘 칩 */
   --radius-control: 14px;
   --radius-card: 16px; /* input · card */
   --radius-hero: 22px;
