@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/_components/AppShell";
 import { CURRENT_USER } from "@/_lib/mock";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
@@ -30,12 +31,12 @@ export default function OnboardingNicknamePage() {
             paddingBottom: "max(56px, env(safe-area-inset-bottom) + 24px)",
           }}
         >
-          <button
-            type="button"
+          <Link
+            href="/onboarding/team"
             className="bg-accent text-on-accent rounded-pill text-body-lg flex h-13 w-full items-center justify-center font-extrabold active:opacity-90"
           >
             다음
-          </button>
+          </Link>
         </section>
       </main>
     </AppShell>
