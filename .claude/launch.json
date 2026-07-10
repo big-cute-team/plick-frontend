@@ -4,8 +4,16 @@
     {
       "name": "mobile",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "mobile", "dev"],
-      "port": 3001
+      "runtimeArgs": ["--filter", "mobile", "exec", "next", "dev"],
+      "port": 3001,
+      "autoPort": true
+    },
+    {
+      "name": "mobile-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "mobile", "exec", "next", "start"],
+      "port": 3101,
+      "autoPort": true
     }
   ]
 }

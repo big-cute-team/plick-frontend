@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * 소셜 로그인 pill 버튼 — 아이콘 + 라벨을 중앙 정렬한 풀폭 버튼.
+ * 소셜 인증 pill 버튼 — 아이콘 + 라벨을 중앙 정렬한 풀폭 버튼. 로그인·회원가입 공용.
  *
  * 높이·배경·테두리 등 프로바이더별 차이는 `className`으로 받는다
  * (카카오: `h-13 bg-kakao`, 구글: 테두리 포함 `h-13.5 bg-media-on border-border-strong border`).
