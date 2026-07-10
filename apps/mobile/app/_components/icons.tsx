@@ -573,6 +573,32 @@ export const CameraIcon = ({ size = 14, ...p }: IconProps) => (
 );
 
 /**
+ * 온보딩 아이콘 — 피그마 A5 닉네임 설정(node 96-6) 벡터를 그대로 사용.
+ *
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
+
+export const CheckIcon = ({ size = 14, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 7.7 7.7"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M6.41664 1.92501L2.88748 5.45417L1.28331 3.85001"
+      stroke="currentColor"
+      strokeWidth={0.802083}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/**
  * 소셜 브랜드 아이콘 — 로그인(A1, 105-6)·회원가입(A2, 104-6) 공용. 피그마 노드 벡터 그대로.
  * viewBox 10.45는 피그마 0.55 스케일 원본(실측 19px 렌더)이다.
  */
