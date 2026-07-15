@@ -6,7 +6,7 @@ import type { FeedPost } from "@/_lib/types";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { ReelDetailMotion } from "@/reels/_lib/types";
 import { CommentThread } from "./CommentThread";
-import { ReporterTierBadge } from "./ReporterTierBadge";
+import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").

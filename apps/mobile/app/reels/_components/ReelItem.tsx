@@ -7,9 +7,9 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { TitleMotion } from "@/reels/_lib/types";
 import { titleLiftDistance } from "@/reels/_lib/utils";
-import { PostChips } from "./PostChips";
+import { PostChips } from "@plick/ui/PostChips";
+import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { ReelActionRail } from "./ReelActionRail";
-import { ReporterTierBadge } from "./ReporterTierBadge";
 
 /**
  * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
@@ -79,7 +79,10 @@ export function ReelItem({
               pointerEvents: titleMotion ? "none" : undefined,
             }}
           >
-            <PostChips post={post} />
+            <PostChips
+              teamName={TEAMS[post.team].name}
+              rumour={post.stage === "RUMOUR"}
+            />
             <span className="text-headline text-media-on font-extrabold">
               {post.title}
             </span>
