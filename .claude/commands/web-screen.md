@@ -1,0 +1,35 @@
+---
+description: Jira 티켓 + Figma 노드로 데스크톱 웹 화면 하나를 토큰·공용 컴포넌트 재사용으로 구현하고 PR까지 올린다
+argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
+---
+
+너는 PLick 데스크톱 웹(apps/web) 화면을 퍼블리싱한다. 인자: `$ARGUMENTS`
+(첫 번째 = Jira 티켓 키 `KAN-###`, 두 번째 = Figma `node-id`가 포함된 design URL)
+
+**반드시 `web-publishing` 스킬을 먼저 읽고 그 규칙을 따른다.**
+
+절차:
+
+1. **티켓 파악** — Jira에서 해당 티켓을 읽어 요구사항/완료조건을 정리한다.
+2. **디자인 파악** — Figma 노드에서 구조·토큰·카피를 가져온다.
+   - `get_metadata`(구조) → `get_variable_defs`(토큰) → 필요 시 `get_design_context`.
+   - 스크린샷보다 **JSON 노드/메타데이터를 우선**한다.
+   - 데스크톱 프레임 폭·컨테이너 최대폭을 여기서 확인해 둔다.
+3. **재사용 조사** — 화면을 쪼개 컴포넌트 목록을 만들고, 각각에 대해
+   `packages/ui/src` → `apps/mobile/app/_components` 순으로 기존 구현을 찾는다.
+   모바일에 있고 앱 중립적이면 `@plick/ui` 승격 대상으로 표시한다(스킬 §4 절차).
+4. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/web/app/_lib/`(types·mock)에 만든다.
+   모바일과 같은 도메인이면 타입 모양을 모바일 `_lib/types.ts`와 맞춘다.
+5. **브랜치** — `git switch -c feature/<티켓>-<짧은설명> develop` (develop 기준).
+6. **구현** — 승격 대상을 먼저 `@plick/ui`로 옮기고(모바일 import 교체 포함),
+   그 위에 토큰 유틸만으로 화면을 작성. 색·간격 하드코딩 금지, 컨테이너 패턴으로 폭 제한,
+   hover/focus-visible 상태 포함, 다크 기준.
+7. **검증** — `pnpm --filter web build`(클린), `@plick/ui`·tokens를 건드렸으면
+   `pnpm --filter mobile build`도. 로컬 dev(:3000) 데스크톱 뷰포트(1280×800+) 스크린샷으로
+   피그마와 대조(간격·정렬·타이포). 다크/라이트 토글 확인.
+8. **커밋·PR** — 커밋 메시지에 티켓 키 포함, `pnpm format` 후 커밋, push,
+   `gh pr create --base develop`. CI 통과 확인. 병합은 사용자가 직접.
+
+원칙: 컨텍스트는 얇게(필요한 노드만 읽기), 작게 쪼개기, 피그마를 **그대로** 재현(근사치 금지).
+있는 것을 새로 만들지 않는다 — 재사용 조사(3)를 건너뛰지 않는다. 불명확하면 추측하지 말고
+사용자에게 확인한다.
