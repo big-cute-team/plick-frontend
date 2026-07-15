@@ -17,21 +17,26 @@
 
 릴스 페이지는 KAN-218에서 `100dvh` 고정 + 내부 스크롤이었다(ADR 0007). 여기에 패널을 더하려고
 `ReelsWorkspace`(client)를 새로 두고 헤더 아래를 `flex min-h-0 flex-1`로 감싼 뒤 **뷰어(flex-1) +
-패널(shrink-0)**을 가로로 배치했다. 패널이 열리면 뷰어가 폭을 나눠 주는데, 릴 카드가 이미
-`h-full w-auto max-w-full`(9:16 고정, 높이 기준)이라 **폭 계산 없이 좁아진 공간에 맞춰 저절로 축소**된다 —
-카드 크기 로직을 새로 짤 필요가 없었다.
+패널(shrink-0)**을 가로로 배치했다.
 
-### 개폐 애니메이션 — 마지막 게시물을 붙잡아 두는 mount/leave 패턴
+### 개폐 애니메이션 — 패널을 항상 마운트, 데스크톱은 "폭"을 애니메이트해 릴을 같이 민다
 
 패널 상태는 `ReelsWorkspace`가 `activePost: FeedPost | null`로 소유하고, 제목·댓글 클릭이
-`setActivePost(post)`를 부른다. 패널(`ReelDetailPanel`)은 `post`가 `null`이 되어도 **퇴장 슬라이드가
-끝날 때까지 마지막 게시물을 `rendered` 상태로 붙잡고**, `transform: translateX(shown ? 0 : 100%)`를
-transition으로 애니메이트한 뒤 `onTransitionEnd`에서 언마운트한다. 진입은 `rendered` 세팅 →
-`requestAnimationFrame`으로 `shown=true` 플립(모바일 세부 시트의 `shown`/`onTransitionEnd`
-motion과 같은 아이디어를 오른쪽 슬라이드로 단순화). `Escape`로도 닫힌다.
+`setActivePost(post)`를 부른다. `open = post != null`.
 
-- 데스크톱에서 패널은 flex 슬롯을 즉시 차지(뷰어가 바로 축소)하고 그 슬롯 **안으로** 슬라이드해 들어온다 —
-  "밀기 + 미끄러짐"이 자연스럽게 겹친다.
+- **왜 항상 마운트?** 처음엔 `post`가 null이면 언마운트하고 `requestAnimationFrame`으로 `shown`을
+  플립해 진입을 그렸는데, **여는 애니메이션이 종종 스킵**됐다(마운트→rAF 사이 페인트가 끼면
+  초기 오프셋을 브라우저가 못 보고 바로 최종값으로 점프 — 전형적인 enter-transition 레이스). 그래서
+  패널을 **항상 DOM에 두고 `open` 클래스만 토글**한다 → 열 때·닫을 때 **둘 다** transition이 확실히 탄다.
+  닫힘 동안 내용이 사라지지 않게 마지막 게시물은 `rendered`로 유지(언마운트 안 함), `Escape`로도 닫힌다.
+- **왜 폭 애니메이션?** "패널이 열고 닫힐 때 릴도 같이 움직이게" 하려면 릴 이동이 애니메이트돼야 한다.
+  패널을 마운트/언마운트하거나 `translateX`만 하면 flex 슬롯이 **즉시** 잡혀 릴이 툭 점프했다. 대신
+  데스크톱은 패널 **폭 `0 ↔ 29.5rem`(카드 27.5rem + `pr-gutter`)을 transition**한다. flex 형제인
+  릴 뷰어(`flex-1`)가 프레임마다 남은 폭을 갖고, 가운데 정렬된 릴 카드가 **부드럽게 밀린다**
+  (패널폭+뷰어폭 = 일정, 실측 472+808 ↔ 0+1280). 안쪽 카드는 `lg:w-[29.5rem]` **고정폭**이라 폭 애니 중
+  리플로우 없이 `overflow-hidden`으로 드러난다. `min-width:auto`가 0으로 풀리는 것도 `overflow-hidden` 덕.
+- **모바일(<lg)**은 폭 애니가 아니라 `translateX(100%↔0)`로 미끄러진다(전체 화면 오버레이라 폭은 항상 full).
+  `transition-[width,transform]` 하나로 데스크톱=폭 / 모바일=이동을 같이 커버한다.
 
 ### 모바일 뷰(<lg) — 나란히 못 두니 전체 화면 오버레이
 
