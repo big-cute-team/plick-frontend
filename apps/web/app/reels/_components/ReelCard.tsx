@@ -14,7 +14,7 @@ import { ReelActionRail } from "./ReelActionRail";
  */
 export function ReelCard({ post }: { post: FeedPost }) {
   return (
-    <div className="flex h-full w-full items-center justify-center gap-4 lg:gap-6.5">
+    <div className="flex h-full w-full items-end justify-center gap-4 lg:gap-6.5">
       <MediaThumb
         colorVar={TEAMS[post.team].colorVar}
         className="rounded-hero aspect-[9/16] h-full max-h-[760px] w-auto max-w-full min-w-0"

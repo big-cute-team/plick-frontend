@@ -10,18 +10,18 @@ import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
  */
 export function ReelActionRail({ post }: { post: FeedPost }) {
   return (
-    <div className="flex flex-col items-center gap-4.5">
+    <div className="flex flex-col items-center gap-4 pb-2">
       <RailAction
-        icon={<LikeIcon size={24} filled={post.liked} />}
+        icon={<LikeIcon size={22} filled={post.liked} />}
         label={formatCount(post.likeCount)}
       />
       <RailAction
-        icon={<ChatIcon size={24} />}
+        icon={<ChatIcon size={22} />}
         label={formatCount(post.commentCount)}
       />
-      <RailAction icon={<SendIcon size={24} />} label="공유" />
+      <RailAction icon={<SendIcon size={22} />} label="공유" />
       <RailAction
-        icon={<SaveIcon size={24} filled={post.saved} />}
+        icon={<SaveIcon size={22} filled={post.saved} />}
         label="저장"
       />
     </div>
@@ -35,7 +35,7 @@ function RailAction({ icon, label }: { icon: ReactNode; label: string }) {
       type="button"
       className="text-media-on group flex flex-col items-center gap-1.25"
     >
-      <span className="bg-media-chip group-hover:bg-media-chip-border group-focus-visible:outline-accent grid size-13 place-items-center rounded-full transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2">
+      <span className="bg-media-chip group-hover:bg-media-chip-border group-focus-visible:outline-accent grid size-12 place-items-center rounded-full transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2">
         {icon}
       </span>
       <span className="text-caption font-semibold">{label}</span>
