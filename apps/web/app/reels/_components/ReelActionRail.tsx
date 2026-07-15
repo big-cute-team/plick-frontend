@@ -4,13 +4,22 @@ import type { FeedPost } from "@/_lib/types";
 import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
 
 /**
- * 릴 우측 액션 레일 (데스크톱) — 좋아요·댓글·공유·저장.
+ * 릴 액션 레일 — 좋아요·댓글·공유·저장. 각 아이콘이 원형 칩 배경 위에 놓인다.
  *
- * 모바일 레일과 달리 카드 밖에 세로로 서고, 각 아이콘이 원형 칩 배경 위에 놓인다.
+ * 데스크톱은 카드 밖에 세로로 서고(`ReelCard`에서 flex 형제), 모바일 뷰에선
+ * 사진이 좁아지지 않도록 카드 안 우측에 오버레이한다 — 배치는 `className`으로 제어한다.
+ *
+ * @param className - 래퍼에 덧붙일 클래스(표시·위치 제어: `max-lg:hidden`, `absolute … lg:hidden` 등)
  */
-export function ReelActionRail({ post }: { post: FeedPost }) {
+export function ReelActionRail({
+  post,
+  className = "",
+}: {
+  post: FeedPost;
+  className?: string;
+}) {
   return (
-    <div className="flex flex-col items-center gap-4 pb-2">
+    <div className={`flex flex-col items-center gap-4 pb-2 ${className}`}>
       <RailAction
         icon={<LikeIcon size={22} filled={post.liked} />}
         label={formatCount(post.likeCount)}
