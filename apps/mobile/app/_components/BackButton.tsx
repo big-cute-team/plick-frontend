@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeftIcon } from "./icons";
+import { ArrowLeftIcon } from "@plick/ui/icons";
 
 /**
  * 공용 뒤로가기 버튼 — 상단바 좌측에 놓는 아이콘 링크.

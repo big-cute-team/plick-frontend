@@ -1,6 +1,6 @@
 "use client";
 
-import { CloseIcon, LinkOutIcon, SendMiniIcon } from "@/_components/icons";
+import { CloseIcon, LinkOutIcon, SendMiniIcon } from "@plick/ui/icons";
 import { formatCount } from "@/_lib/format";
 import type { FeedPost } from "@/_lib/types";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/reels/_lib/constants";

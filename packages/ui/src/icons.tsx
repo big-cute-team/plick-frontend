@@ -270,16 +270,62 @@ export const SendMiniIcon = ({ size = 17, ...p }: IconProps) => (
   </svg>
 );
 
-export const SunIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" />
+/**
+ * 데스크톱 웹 GNB 아이콘 — 피그마 W1 홈(node 203-2) 벡터를 그대로 사용.
+ *
+ * viewBox·패스·선 굵기가 피그마 노드 원본(0.45 배율 프레임 기준 단위)이라
+ * size로 확대해도 디자인과 동일 비율로 렌더된다.
+ */
+
+export const SearchLineIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 7.2 7.2"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M3.30012 5.39999C4.45992 5.39999 5.40012 4.45979 5.40012 3.29999C5.40012 2.14019 4.45992 1.19999 3.30012 1.19999C2.14032 1.19999 1.20012 2.14019 1.20012 3.29999C1.20012 4.45979 2.14032 5.39999 3.30012 5.39999Z"
+      stroke="currentColor"
+      strokeWidth={0.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.0002 5.99995L4.9502 4.94995"
+      stroke="currentColor"
+      strokeWidth={0.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
-export const MoonIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="M20 14A8 8 0 0 1 10 4a7 7 0 1 0 10 10Z" />
+export const SunLineIcon = ({ size = 20, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 9 9"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M4.5 6.1876C5.43198 6.1876 6.1875 5.43208 6.1875 4.5001C6.1875 3.56812 5.43198 2.8126 4.5 2.8126C3.56802 2.8126 2.8125 3.56812 2.8125 4.5001C2.8125 5.43208 3.56802 6.1876 4.5 6.1876Z"
+      stroke="currentColor"
+      strokeWidth={0.675}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4.5 0.937561V1.76256M4.5 7.23756V8.06256M0.937573 4.5001H1.76257M7.23757 4.5001H8.06257M1.87493 1.87513L2.47493 2.47513M6.525 6.5251L7.125 7.1251M7.125 1.87513L6.525 2.47513M2.47493 6.5251L1.87493 7.1251"
+      stroke="currentColor"
+      strokeWidth={0.675}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 

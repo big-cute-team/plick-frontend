@@ -7,7 +7,7 @@ import {
   HelpCircleIcon,
   LogoutIcon,
   TeamShieldIcon,
-} from "@/_components/icons";
+} from "@plick/ui/icons";
 import { TEAMS } from "@/_lib/constants";
 import { CURRENT_USER } from "@/_lib/mock";
 import { PreferenceCard } from "./_components/PreferenceCard";

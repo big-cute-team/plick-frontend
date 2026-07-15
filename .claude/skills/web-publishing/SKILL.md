@@ -23,7 +23,11 @@ description: >-
 - 미디어(사진 자리): `bg-media` / `text-media-on`, 팀색: `bg-team-liv` 등
 - 글자: `text-display`(44) `text-headline`(24, 행간·자간 내장) `text-title`(17)
   `text-body-lg`(15) `text-body` `text-label` `text-caption`(11) `text-micro`(10)
-- 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px) — `tracking-[…]` 임의값 금지
+- 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px)
+  `tracking-heading`(-0.3px, 데스크톱 헤딩) — `tracking-[…]` 임의값 금지
+- **데스크톱 전용 스케일**(KAN-200에서 확정, theme.css에 있음): `max-w-page`(1200)
+  `px-gutter`(32) `text-hero`(26) `text-hero-sm`(18.5) `text-section`(20) `text-nav`(14.5)
+  `text-tab`(14) — 데스크톱 피그마는 0.45 배율 프레임이니 **값을 0.45로 나눠** 실제 px를 구한다.
 - 라운드: `rounded-card`(16) `rounded-hero`(22) `rounded-control`(14) `rounded-pill`
 - 간격: `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16) 등 시맨틱 간격은 토큰 유틸로
 - 사진 위 스크림: `color-mix(in srgb, var(--plk-scrim) N%, transparent)` — rgba 하드코딩 금지
@@ -45,9 +49,12 @@ description: >-
 데스크톱은 문서 흐름 그대로 두고 컨테이너로 폭을 제한한다.
 
 - **페이지 뼈대**: 상단 `SiteHeader`(GNB) + 본문 컨테이너 + (필요 시) 푸터.
-  뼈대 컴포넌트는 `apps/web/app/_components/`에 만든다.
-- **컨테이너**: 콘텐츠 최대폭 + `mx-auto` + 좌우 패딩을 담는 `PageContainer` 하나로 통일하고,
-  페이지마다 max-width를 따로 적지 않는다. 최대폭 값은 피그마 데스크톱 프레임에서 확인해 정한다.
+  뼈대 컴포넌트는 `apps/web/app/_components/`에 있다 — `SiteHeader`(GNB, notif prop)와
+  `PageContainer`는 KAN-200에서 만들었으니 새 화면은 그대로 가져다 쓴다.
+- **컨테이너**: `PageContainer`(= `max-w-page`(1200px) + `mx-auto` + `px-gutter`(32px)) 하나로
+  통일하고, 페이지마다 max-width를 따로 적지 않는다.
+- ⚠️ 웹 `globals.css`의 가로 오버플로 방지는 `overflow-x: clip`이어야 한다 — `hidden`으로 바꾸면
+  body가 스크롤 컨테이너가 되어 `position: sticky`(GNB·사이드바)가 깨진다.
 - **반응형**: 피그마 데스크톱 폭 기준으로 만들되, 좁아질 때 깨지지 않게 grid/flex + `min-w-0`으로
   유연하게. 모바일 대응은 apps/mobile 담당이므로 **웹에서 모바일 브레이크포인트를 새로 파지 않는다**
   (태블릿 정도까지 자연스럽게 줄어들면 충분).
@@ -67,20 +74,19 @@ description: >-
    - 파일을 `packages/ui/src/<PascalCase>.tsx`로 **이동**(복사 금지 — 사본이 두 개면 감사 대상).
    - 모바일 쪽 import를 `@plick/ui/<파일명>`으로 바꾸는 것까지 **같은 PR**에서 한다.
    - 토큰 유틸만 쓰는 컴포넌트는 그대로 양쪽에서 동작한다(토큰이 공유되므로).
-   - 승격 후보 예: `TeamCrest` `MediaThumb` `Logo` `ThemeToggle` `icons` 등.
-     (`TeamCrest`의 `public/teams/*.webp`처럼 앱 public 에셋에 의존하면 에셋도 양쪽 앱에 두거나
-     경로를 prop으로 받게 일반화한다.)
+   - 이미 승격됨(KAN-200): `Logo` `ThemeToggle`(className·iconSize prop) `MediaThumb`(colorVar prop)
+     `TeamCrest`(team = `{code, name}` 객체, `/teams/*.webp`는 양쪽 앱 public에 있음) `icons`.
+   - 앱 결합을 일반화한 전례: `MediaThumb`은 팀 코드 대신 `colorVar`를 받는다 — 앱 쪽에서
+     `TEAMS[code].colorVar`를 꺼내 넘긴다.
    - 반대로 `AppShell` `ScrollArea` `TabBar` `TopBar`는 모바일 전용 — 승격 금지.
 3. 둘 다 없으면 새로 만든다 — **한 화면 전용이면 그 라우트 `_components/`, 웹 내 2개 화면 이상
    공용이면 `apps/web/app/_components/`, 모바일과도 공용이면 처음부터 `packages/ui`**.
 
 주의:
 
-- `packages/ui`의 `button.tsx` `card.tsx` `code.tsx`는 **Turborepo 보일러플레이트**(alert 데모)다.
-  재사용하지 말 것. 첫 진짜 공용 컴포넌트를 넣을 때 함께 삭제한다.
 - **Tailwind v4 소스 스캔**: `@plick/ui` 컴포넌트의 클래스는 앱의 Tailwind가 자동 감지하지
-  못한다(node_modules 제외). `@plick/ui`를 처음 소비하는 앱의 `globals.css`에
-  `@source "../../../packages/ui/src";`를 추가한다(양쪽 앱 모두).
+  못한다(node_modules 제외). 양쪽 앱 `globals.css`에 `@source "../../../packages/ui/src";`가
+  이미 들어 있다 — 지우지 말 것.
 - `@plick/ui`에 컴포넌트를 넣으면 **양쪽 앱 빌드를 모두** 확인한다(§6).
 
 ## 5. 구조·목데이터 — 모바일과 동일

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronMiniIcon, UserRoundIcon } from "@/_components/icons";
+import { ChevronMiniIcon, UserRoundIcon } from "@plick/ui/icons";
 import type { User } from "@/_lib/types";
 
 /**

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/_components/AppShell";
 import { BackButton } from "@/_components/BackButton";
-import { Logo } from "@/_components/Logo";
+import { Logo } from "@plick/ui/Logo";
 import { TopBarShell } from "@/_components/TopBarShell";
-import { GoogleIcon, KakaoIcon } from "@/_components/icons";
+import { GoogleIcon, KakaoIcon } from "@plick/ui/icons";
 import { SocialLoginButton } from "@/_components/SocialLoginButton";
 
 /** A2 회원가입 — 뒤로가기 + 로고·태그라인 + 카카오/구글 소셜 가입 + 약관·로그인 링크 (KAN-175, 피그마 104-6). */

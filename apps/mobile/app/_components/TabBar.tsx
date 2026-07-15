@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
-import { BellIcon, HomeIcon, ReelsIcon, SearchIcon, UserIcon } from "./icons";
+import {
+  BellIcon,
+  HomeIcon,
+  ReelsIcon,
+  SearchIcon,
+  UserIcon,
+} from "@plick/ui/icons";
 
 type Tab = {
   href: string;

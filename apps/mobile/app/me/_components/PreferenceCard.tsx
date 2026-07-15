@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellLineIcon, MoonLineIcon } from "@/_components/icons";
+import { BellLineIcon, MoonLineIcon } from "@plick/ui/icons";
 import { SettingRow } from "./SettingRow";
 import { ToggleSwitch } from "./ToggleSwitch";
 

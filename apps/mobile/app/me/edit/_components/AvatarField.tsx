@@ -1,4 +1,4 @@
-import { CameraIcon, UserRoundIcon } from "@/_components/icons";
+import { CameraIcon, UserRoundIcon } from "@plick/ui/icons";
 
 /**
  * 프로필 수정 아바타 — 큰 원형 아바타 + 우하단 카메라 배지(사진 변경 진입).
