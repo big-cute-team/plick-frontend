@@ -23,7 +23,7 @@ export function NavLinks() {
             className={`text-nav rounded-pill focus-visible:outline-accent px-3.5 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 ${
               active
                 ? "bg-accent-tint text-accent font-extrabold"
-                : "text-text-4 hover:bg-elevate-2 hover:text-text-2"
+                : "text-text-2 hover:bg-elevate-2 hover:text-text"
             }`}
           >
             {label}
