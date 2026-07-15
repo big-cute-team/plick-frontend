@@ -144,8 +144,10 @@
   --text-hero-sm--line-height: 1.3;
   --text-section: 20px; /* 섹션 헤딩 (🔥 핫이슈 등) */
   --text-section--line-height: 1.55;
-  --text-nav: 14.5px; /* GNB 링크 · 사이드 위젯 제목 */
-  --text-nav--line-height: 1.55;
+  /* GNB 링크·사이드 위젯 제목. 'nav'는 색 토큰(--color-nav)과 충돌해 text-nav가
+   * 색 유틸로도 해석되므로 'gnb'로 명명한다(text-gnb는 순수 폰트 크기). */
+  --text-gnb: 14.5px;
+  --text-gnb--line-height: 1.55;
   --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
   --text-tab--line-height: 1.55;
 

@@ -26,7 +26,7 @@ description: >-
 - 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px)
   `tracking-heading`(-0.3px, 데스크톱 헤딩) — `tracking-[…]` 임의값 금지
 - **데스크톱 전용 스케일**(KAN-200에서 확정, theme.css에 있음): `max-w-page`(1200)
-  `px-gutter`(32) `text-hero`(26) `text-hero-sm`(18.5) `text-section`(20) `text-nav`(14.5)
+  `px-gutter`(32) `text-hero`(26) `text-hero-sm`(18.5) `text-section`(20) `text-gnb`(14.5)
   `text-tab`(14) — 데스크톱 피그마는 0.45 배율 프레임이니 **값을 0.45로 나눠** 실제 px를 구한다.
 - 라운드: `rounded-card`(16) `rounded-hero`(22) `rounded-control`(14) `rounded-pill`
 - 간격: `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16) 등 시맨틱 간격은 토큰 유틸로

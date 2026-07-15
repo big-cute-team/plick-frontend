@@ -23,7 +23,7 @@ export function HomeSidebar() {
       </section>
 
       <section className="bg-elevate-2 border-border rounded-card p-edge border">
-        <h3 className="text-nav text-text pb-1.5 font-extrabold">
+        <h3 className="text-gnb text-text pb-1.5 font-extrabold">
           실시간 인기
         </h3>
         <ol>
