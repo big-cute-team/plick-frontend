@@ -5,12 +5,14 @@ import { CURRENT_USER, TRENDING_POSTS } from "@/_lib/mock";
 
 /**
  * 홈 우측 사이드바 — 마이팀 카드 + 실시간 인기 랭킹. 스크롤 시 상단에 고정된다.
+ *
+ * @param className - 래퍼에 덧붙일 클래스(모바일에서 `hidden`으로 감추는 등)
  */
-export function HomeSidebar() {
+export function HomeSidebar({ className = "" }: { className?: string }) {
   const myTeam = TEAMS[CURRENT_USER.myTeam];
 
   return (
-    <aside className="sticky top-22 flex flex-col gap-4 self-start">
+    <aside className={`sticky top-22 flex-col gap-4 self-start ${className}`}>
       <section className="bg-elevate-2 border-border rounded-card gap-gap-lg p-edge flex items-center border">
         <TeamCrest team={myTeam} size={44} />
         <div className="min-w-0 flex-1">

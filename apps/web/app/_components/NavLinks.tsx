@@ -6,12 +6,17 @@ import { NAV_LINKS } from "@/_lib/constants";
 
 /**
  * GNB 내비게이션 링크 — 현재 경로와 일치하는 항목을 accent 필(pill)로 표시한다.
+ *
+ * @param className - 컨테이너에 덧붙일 클래스(반응형 표시 제어 등)
  */
-export function NavLinks() {
+export function NavLinks({ className = "" }: { className?: string }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="주 메뉴" className="flex items-center gap-1">
+    <nav
+      aria-label="주 메뉴"
+      className={`flex items-center gap-1 ${className}`}
+    >
       {NAV_LINKS.map(({ href, label }) => {
         const active =
           href === "/" ? pathname === "/" : pathname.startsWith(href);

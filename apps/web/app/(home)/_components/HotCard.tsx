@@ -18,7 +18,7 @@ export function HotCard({ post, size }: { post: FeedPost; size: "lg" | "sm" }) {
     <Link
       href={`/reels/${post.id}`}
       className={`focus-visible:outline-accent rounded-hero group block transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 ${
-        lg ? "h-full" : "aspect-[9/5]"
+        lg ? "aspect-video lg:aspect-auto lg:h-full" : "aspect-[9/5]"
       }`}
     >
       <MediaThumb

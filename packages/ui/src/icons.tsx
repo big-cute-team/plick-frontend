@@ -57,6 +57,16 @@ export const UserIcon = (p: IconProps) => (
 );
 
 /**
+ * 햄버거 메뉴 — 표준 3선. 피그마에 데스크톱 시안만 있어 모바일 GNB용으로 추가한
+ * 기하 아이콘이라(특정 노드 벡터 아님) base() 라인 스타일을 따른다.
+ */
+export const MenuIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);
+
+/**
  * 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
  *
  * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라

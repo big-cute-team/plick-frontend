@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@plick/ui/Logo";
 import { ThemeToggle } from "@plick/ui/ThemeToggle";
 import { BellLineIcon, SearchLineIcon, UserRoundIcon } from "@plick/ui/icons";
+import { MobileNav } from "./MobileNav";
 import { NavLinks } from "./NavLinks";
 import { PageContainer } from "./PageContainer";
 
@@ -13,7 +14,7 @@ import { PageContainer } from "./PageContainer";
 export function SiteHeader({ notif = 0 }: { notif?: number }) {
   return (
     <header className="bg-nav border-border sticky top-0 z-40 border-b">
-      <PageContainer className="flex h-16 items-center gap-7">
+      <PageContainer className="flex h-16 items-center gap-4 lg:gap-7">
         <Link
           href="/"
           aria-label="PLick 홈"
@@ -22,9 +23,12 @@ export function SiteHeader({ notif = 0 }: { notif?: number }) {
           <Logo height={20} />
         </Link>
 
-        <NavLinks />
+        <NavLinks className="hidden lg:flex" />
 
-        <div className="flex min-w-0 flex-1 justify-end">
+        {/* 모바일: 내비·검색을 숨기고 이 스페이서로 아이콘 클러스터를 우측으로 민다 */}
+        <div aria-hidden className="flex-1 lg:hidden" />
+
+        <div className="hidden min-w-0 flex-1 justify-end lg:flex">
           <button
             type="button"
             className="bg-elevate-2 border-border text-body text-text-4 rounded-pill hover:border-border-strong hover:text-text-3 focus-visible:outline-accent flex h-10 w-85 max-w-full items-center gap-2 border px-4 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -34,7 +38,7 @@ export function SiteHeader({ notif = 0 }: { notif?: number }) {
           </button>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 lg:gap-3">
           <ThemeToggle
             className="hover:bg-elevate-2 focus-visible:outline-accent grid size-10 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
             iconSize={20}
@@ -58,6 +62,7 @@ export function SiteHeader({ notif = 0 }: { notif?: number }) {
           >
             <UserRoundIcon size={18} />
           </button>
+          <MobileNav className="lg:hidden" />
         </div>
       </PageContainer>
     </header>

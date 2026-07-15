@@ -25,9 +25,9 @@ export default function HomePage() {
             <h2 className="text-section text-text tracking-heading font-extrabold">
               지금 올라온 소식
             </h2>
-            <div className="pt-gap-lg grid grid-cols-[minmax(0,1fr)_320px] items-start gap-10">
+            <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
               <NewsFeed posts={NEWS_POSTS} />
-              <HomeSidebar />
+              <HomeSidebar className="hidden lg:flex" />
             </div>
           </section>
         </PageContainer>
