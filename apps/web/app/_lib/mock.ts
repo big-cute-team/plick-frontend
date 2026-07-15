@@ -4,7 +4,67 @@
  * 게시물 구성은 모바일 `_lib/mock.ts`와 같은 세트이며(같은 API를 소비할 예정),
  * 기자명 표기만 데스크톱 피그마 카피(한글)를 따른다.
  */
-import type { FeedPost, User } from "./types";
+import type { Comment, FeedPost, User } from "./types";
+
+/**
+ * 릴 세부 패널 댓글 목데이터 — 피그마 W2 기사 세부(node 219-2) 카피 그대로.
+ * 대표 게시물(h1)에 붙는다.
+ */
+const SAMPLE_COMMENTS: Comment[] = [
+  {
+    id: "c1",
+    author: "@kop_anfield",
+    body: "측면 보강 진짜 급했는데 디오망드면 대만족",
+    timeLabel: "1분",
+    likeCount: 482,
+    replies: [
+      {
+        id: "c1r1",
+        author: "@redmen",
+        body: "라이프치히가 쉽게 풀어줄까?",
+        timeLabel: "직전",
+        likeCount: 51,
+      },
+    ],
+  },
+  {
+    id: "c2",
+    author: "@transfer_kr",
+    body: "PSG랑 경쟁이면 가격 더 오를 듯",
+    timeLabel: "3분",
+    likeCount: 233,
+    replies: [
+      {
+        id: "c2r1",
+        author: "@spurs_watch",
+        body: "6천만도 라이프치히는 아쉬울걸",
+        timeLabel: "2분",
+        likeCount: 18,
+      },
+    ],
+  },
+  {
+    id: "c3",
+    author: "@ynwa_daily",
+    body: "6천만이면 라이프치히도 고민 좀 하겠는데",
+    timeLabel: "5분",
+    likeCount: 141,
+  },
+  {
+    id: "c4",
+    author: "@epl_scout",
+    body: "디오망드 드리블 돌파는 리그 최상위권임",
+    timeLabel: "7분",
+    likeCount: 96,
+  },
+  {
+    id: "c5",
+    author: "@kop_daisy",
+    body: "여름 이적시장 벌써 재밌다 ㅋㅋ",
+    timeLabel: "10분",
+    likeCount: 45,
+  },
+];
 
 /** 전체 피드 게시물 — 핫이슈·소식 리스트·실시간 인기가 공용으로 소비 */
 export const POSTS: FeedPost[] = [
@@ -22,6 +82,7 @@ export const POSTS: FeedPost[] = [
     views: 12400,
     commentCount: 318,
     likeCount: 320,
+    comments: SAMPLE_COMMENTS,
   },
   {
     id: "h2",

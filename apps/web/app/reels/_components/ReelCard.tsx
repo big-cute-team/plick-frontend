@@ -1,3 +1,5 @@
+"use client";
+
 import { TEAMS } from "@/_lib/constants";
 import type { FeedPost } from "@/_lib/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
@@ -12,8 +14,16 @@ import { ReelActionRail } from "./ReelActionRail";
  * - **데스크톱(lg↑)**: 카드 밖 오른쪽에 flex 형제로 나란히.
  * - **모바일 뷰**: 사진이 좁아지지 않도록 카드 안 우측에 오버레이하고(우측 스크림으로
  *   가독성 확보), 카드는 `max-w-full`로 가용 폭을 꽉 채운다.
+ *
+ * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
  */
-export function ReelCard({ post }: { post: FeedPost }) {
+export function ReelCard({
+  post,
+  onOpenDetail,
+}: {
+  post: FeedPost;
+  onOpenDetail: () => void;
+}) {
   return (
     <div className="flex h-full w-full items-end justify-center gap-4 lg:gap-6.5">
       <MediaThumb
@@ -43,9 +53,15 @@ export function ReelCard({ post }: { post: FeedPost }) {
             teamName={TEAMS[post.team].name}
             rumour={post.stage === "RUMOUR"}
           />
-          <span className="text-headline text-media-on font-extrabold">
-            {post.title}
-          </span>
+          <button
+            type="button"
+            onClick={onOpenDetail}
+            className="focus-visible:outline-accent w-fit rounded text-left hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <span className="text-headline text-media-on font-extrabold">
+              {post.title}
+            </span>
+          </button>
           <span className="flex items-center gap-2.25">
             <ReporterTierBadge reporter={post.reporter} />
             <span className="text-body text-media-on font-bold">
@@ -60,12 +76,17 @@ export function ReelCard({ post }: { post: FeedPost }) {
         {/* 모바일 전용: 레일을 카드 안 우측 하단에 오버레이 */}
         <ReelActionRail
           post={post}
+          onOpenComments={onOpenDetail}
           className="absolute right-3 bottom-4 lg:hidden"
         />
       </MediaThumb>
 
       {/* 데스크톱 전용: 카드 밖 오른쪽 레일 */}
-      <ReelActionRail post={post} className="max-lg:hidden" />
+      <ReelActionRail
+        post={post}
+        onOpenComments={onOpenDetail}
+        className="max-lg:hidden"
+      />
     </div>
   );
 }

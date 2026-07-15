@@ -10,3 +10,13 @@ export function formatCount(n: number): string {
   const k = n / 1000;
   return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}K`;
 }
+
+/**
+ * 핸들에서 아바타 이니셜 2글자를 뽑는다. (모바일 `_lib/format.ts`와 동일 구현)
+ *
+ * @example
+ * avatarInitials("@kop_anfield"); // "KO"
+ */
+export function avatarInitials(handle: string): string {
+  return handle.replace("@", "").slice(0, 2).toUpperCase();
+}

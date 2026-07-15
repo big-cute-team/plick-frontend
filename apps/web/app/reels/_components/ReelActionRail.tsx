@@ -10,13 +10,16 @@ import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
  * 사진이 좁아지지 않도록 카드 안 우측에 오버레이한다 — 배치는 `className`으로 제어한다.
  *
  * @param className - 래퍼에 덧붙일 클래스(표시·위치 제어: `max-lg:hidden`, `absolute … lg:hidden` 등)
+ * @param onOpenComments - 댓글 버튼 클릭 시 세부 패널을 여는 콜백
  */
 export function ReelActionRail({
   post,
   className = "",
+  onOpenComments,
 }: {
   post: FeedPost;
   className?: string;
+  onOpenComments?: () => void;
 }) {
   return (
     <div className={`flex flex-col items-center gap-4 pb-2 ${className}`}>
@@ -27,6 +30,7 @@ export function ReelActionRail({
       <RailAction
         icon={<ChatIcon size={22} />}
         label={formatCount(post.commentCount)}
+        onClick={onOpenComments}
       />
       <RailAction icon={<SendIcon size={22} />} label="공유" />
       <RailAction
@@ -38,10 +42,19 @@ export function ReelActionRail({
 }
 
 /** 레일 버튼 하나 — 원형 아이콘 칩 + 라벨. */
-function RailAction({ icon, label }: { icon: ReactNode; label: string }) {
+function RailAction({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="text-media-on group flex flex-col items-center gap-1.25"
     >
       <span className="bg-media-chip group-hover:bg-media-chip-border group-focus-visible:outline-accent grid size-12 place-items-center rounded-full transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2">
