@@ -28,6 +28,18 @@ export interface Reporter {
   tier: 1 | 2 | 3;
 }
 
+/** 게시물 댓글(+답글). 릴 세부 패널·바텀시트에서 소비. */
+export interface Comment {
+  id: string;
+  /** 작성자 핸들 (예: `@kop_anfield`) */
+  author: string;
+  body: string;
+  timeLabel: string;
+  likeCount: number;
+  liked?: boolean;
+  replies?: Comment[];
+}
+
 export interface FeedPost {
   id: string;
   team: TeamCode;
@@ -46,6 +58,8 @@ export interface FeedPost {
   likeCount: number;
   liked?: boolean;
   saved?: boolean;
+  /** 세부 패널 댓글 목록 */
+  comments?: Comment[];
 }
 
 export interface User {
