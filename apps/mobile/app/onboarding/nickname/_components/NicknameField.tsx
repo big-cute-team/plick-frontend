@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon } from "@/_components/icons";
+import { CheckIcon } from "@plick/ui/icons";
 import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
 
 /**

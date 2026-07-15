@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckIcon } from "@/_components/icons";
-import { TeamCrest } from "@/_components/TeamCrest";
+import { CheckIcon } from "@plick/ui/icons";
+import { TeamCrest } from "@plick/ui/TeamCrest";
 import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
 import type { TeamCode } from "@/_lib/types";
 import { useTeamSelection } from "@/_lib/useTeamSelection";
@@ -30,7 +30,7 @@ export function TeamSelectGrid({ initial }: { initial: TeamCode }) {
               active ? "border-accent" : "border-border"
             }`}
           >
-            <TeamCrest team={code} size={51} />
+            <TeamCrest team={TEAMS[code]} size={51} />
             <span className="text-body text-text font-bold">
               {TEAMS[code].name}
             </span>

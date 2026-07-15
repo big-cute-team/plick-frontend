@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
+import { TEAMS } from "@/_lib/constants";
 import type { FeedPost } from "@/_lib/types";
-import { MediaThumb } from "@/_components/MediaThumb";
+import { MediaThumb } from "@plick/ui/MediaThumb";
 import { SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { TitleMotion } from "@/reels/_lib/types";
 import { titleLiftDistance } from "@/reels/_lib/utils";
@@ -46,7 +47,7 @@ export function ReelItem({
 
   return (
     <section ref={sectionRef} className="relative h-full w-full snap-start">
-      <MediaThumb team={post.team} className="h-full">
+      <MediaThumb colorVar={TEAMS[post.team].colorVar} className="h-full">
         {/* 우측 스크림 — 액션 레일 가독성용 고정 값(테마 무관) */}
         <div
           aria-hidden

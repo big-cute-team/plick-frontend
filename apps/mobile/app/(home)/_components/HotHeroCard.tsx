@@ -2,7 +2,7 @@ import Link from "next/link";
 import { formatCount } from "@/_lib/format";
 import { STAGE_META, TEAMS } from "@/_lib/constants";
 import type { FeedPost } from "@/_lib/types";
-import { MediaThumb } from "@/_components/MediaThumb";
+import { MediaThumb } from "@plick/ui/MediaThumb";
 
 /**
  * 핫이슈 히어로 카드 — 사진(placeholder) 위에 어두운 스크림 + 흰 텍스트.
@@ -14,7 +14,10 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
   const stage = STAGE_META[post.stage];
   return (
     <Link href={`/reels/${post.id}`} className="block h-full">
-      <MediaThumb team={post.team} className="rounded-hero h-full">
+      <MediaThumb
+        colorVar={TEAMS[post.team].colorVar}
+        className="rounded-hero h-full"
+      >
         <div
           className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4"
           style={{

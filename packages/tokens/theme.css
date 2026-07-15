@@ -131,6 +131,29 @@
 
 /* 타이포·형태·간격 스케일 (text-body / rounded-card / p-screen 등 유틸 생성) */
 @theme {
+  /* ── 데스크톱 웹(apps/web) 스케일 ─────────────── */
+  /* 콘텐츠 최대폭 (max-w-page) — 피그마 W1 데스크톱 프레임 1200px */
+  --container-page: 1200px;
+  /* 페이지 좌우 거터 (px-gutter) — 모바일 px-edge(20)의 데스크톱 대응 */
+  --spacing-gutter: 32px;
+
+  /* 데스크톱 전용 글자 크기 — 행간은 피그마 값 그대로 토큰에 내장 */
+  --text-hero: 26px; /* 핫이슈 히어로 카드 제목 */
+  --text-hero--line-height: 1.3;
+  --text-hero-sm: 18.5px; /* 핫이슈 서브 카드 제목 */
+  --text-hero-sm--line-height: 1.3;
+  --text-section: 20px; /* 섹션 헤딩 (🔥 핫이슈 등) */
+  --text-section--line-height: 1.55;
+  /* GNB 링크·사이드 위젯 제목. 'nav'는 색 토큰(--color-nav)과 충돌해 text-nav가
+   * 색 유틸로도 해석되므로 'gnb'로 명명한다(text-gnb는 순수 폰트 크기). */
+  --text-gnb: 14.5px;
+  --text-gnb--line-height: 1.55;
+  --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
+  --text-tab--line-height: 1.55;
+
+  /* 데스크톱 헤딩 자간 (히어로·섹션 제목) */
+  --tracking-heading: -0.3px;
+
   /* type scale */
   --text-display: 44px;
   --text-headline: 24px;

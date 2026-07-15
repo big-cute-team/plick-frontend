@@ -75,6 +75,15 @@ pnpm format             # Prettier 적용 (확인만: format:check)
   SKILL.md에서 가리킨다.
 - 클로드는 이런 피드백을 받으면 **알아서 위 위치에 반영**하고 커밋에 포함한다.
 
+## 작업 기록 (세션 단위 ADR — 필수)
+
+**한 작업 세션(대화)에서 의미 있는 구현·리팩터·결정을 하면 반드시 `docs/adr/`에 그 세션의 ADR을 남긴다.**
+
+- **세션 시작 시**: 새 ADR 파일 하나 생성 → `docs/adr/000N-<짧은-설명>.md`(N = 다음 번호). 그 세션에서 **무엇을·어떻게·왜 했고 어디서 막혔는지**를 요약한다("무엇"보다 **어떻게·왜·하드원 교훈** 중심 — 기존 ADR 0002·0004·0005 톤을 따른다).
+- **세션 중 변경이 생기면**: 새 파일을 또 만들지 말고 **그 세션 ADR에 계속 이어 붙인다**(후속 피드백·버그 수정도 같은 md의 절로). 같은 PR/브랜치 작업은 같은 ADR.
+- 커밋에 포함하고, 다른 규칙·화면과 얽히면 **`더 읽을 것`·스킬·관련 ADR에 상호 링크**한다.
+- 자명한 잡일(오타 수정, 포맷만)만 한 세션은 생략 가능. 판단이 서지 않으면 남기는 쪽.
+
 ## Git · PR
 
 - `main`·`develop`에 직접 커밋 금지 → `develop`에서 브랜치 `feature/KAN-<번호>-<설명>` 생성.
@@ -88,6 +97,7 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 
 - **모바일 화면/컴포넌트 구현** → `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
 - **데스크톱 웹(apps/web) 화면/컴포넌트 구현** → `web-publishing` 스킬 (`@plick/ui` 승격 절차 포함)
+  - [ADR 0005](docs/adr/0005-web-home-and-ui-promotion.md) (웹 홈·공용 컴포넌트 승격·데스크톱 토큰·Tailwind 토큰 충돌 교훈)
 - 제품·UX·데이터 모델·화면 IA 전반 → [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier/Husky/CI 등) 결정 배경 → [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
 - 화면 하나를 티켓+피그마로 구현 → 모바일 `/screen` · 데스크톱 웹 `/web-screen` 커맨드

@@ -47,8 +47,12 @@ description: >-
 
 - 기본 서버 컴포넌트, 상호작용(상태·이벤트·`usePathname`) 있을 때만 `"use client"`.
 - 컴포넌트는 **화면 전용이면 해당 라우트의 `_components/`**(예: `app/(home)/_components`, `app/reels/_components`), **2개 화면 이상 공용이면 `app/_components/`**. 파일 하나 = 컴포넌트 하나(작은 private 헬퍼는 예외). 도메인/목데이터는 `app/_lib/`(types·mock·format). `_` = 라우트 아님.
-- 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder), 아이콘 = `_components/icons.tsx`(인라인 SVG, `currentColor`).
-- 팀 로고 = `TeamCrest` — `apps/mobile/public/teams/<코드소문자>.webp`의 **실제 구단 로고**를 그린다(피그마의 구단 로고 자리 전부 이걸로). 새 팀은 같은 규칙으로 webp만 추가. 로고 비율이 제각각이라 정사각 + `object-contain`.
+- `Logo` `ThemeToggle` `MediaThumb` `TeamCrest`와 아이콘 레지스트리(`icons.tsx`)는 웹과 공용이라
+  **`@plick/ui`로 승격됨**(KAN-200) — `@plick/ui/<파일명>`으로 import. 새 공용 아이콘도 여기에 추가.
+- 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder) — `colorVar`에 `TEAMS[code].colorVar`를 넘긴다.
+- 팀 로고 = `TeamCrest`(`team`에 `TEAMS[code]` 객체) — `public/teams/<코드소문자>.webp`의 **실제 구단
+  로고**를 그린다(피그마의 구단 로고 자리 전부 이걸로). 새 팀은 같은 규칙으로 webp만 추가(웹·모바일
+  양쪽 public에). 로고 비율이 제각각이라 정사각 + `object-contain`.
 - **아이콘은 피그마 노드 벡터를 그대로 옮긴다** — 기존 비슷한 아이콘 재사용 금지(형태 자체가 스펙).
   `get_design_context`가 주는 에셋 URL(`figma.com/api/mcp/asset/...`, 7일 유효)을 받아
   viewBox·패스·선 굵기를 원본대로 컴포넌트화하고 색만 `currentColor`로 바꾼다.

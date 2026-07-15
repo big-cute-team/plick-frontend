@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/_components/AppShell";
-import { Logo } from "@/_components/Logo";
-import { GoogleIcon, KakaoIcon } from "@/_components/icons";
+import { Logo } from "@plick/ui/Logo";
+import { GoogleIcon, KakaoIcon } from "@plick/ui/icons";
 import { SocialLoginButton } from "@/_components/SocialLoginButton";
 
 /** A1 로그인 — 로고·태그라인 + 카카오/구글 소셜 로그인 (KAN-174, 피그마 105-6). */

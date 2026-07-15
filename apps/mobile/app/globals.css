@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "@plick/tokens/theme.css";
+/* @plick/ui 컴포넌트의 클래스는 node_modules라 자동 스캔에서 빠짐 — 소스를 직접 지정 */
+@source "../../../packages/ui/src";
 
 /* theme.css가 이미 리셋(box-sizing / body 배경·글자 / 스크롤바 숨김 / overscroll)을 담당.
  * 여기선 모바일 웹뷰에 필요한 최소 보강만 한다. */

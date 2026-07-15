@@ -1,6 +1,6 @@
-import { BellIcon } from "./icons";
-import { Logo } from "./Logo";
-import { ThemeToggle } from "./ThemeToggle";
+import { BellIcon } from "@plick/ui/icons";
+import { Logo } from "@plick/ui/Logo";
+import { ThemeToggle } from "@plick/ui/ThemeToggle";
 import { TopBarShell } from "./TopBarShell";
 
 /**
