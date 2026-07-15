@@ -70,8 +70,9 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 새 컨벤션·작업 방식 피드백은 개인 메모가 아니라 **저장소에 기록**해 팀 전체 클로드에 적용시킨다:
 
 - **팀 공통 규칙**(주석 스타일, 네이밍, Git 절차 등) → 이 `CLAUDE.md`의 해당 섹션에 추가.
-- **화면 퍼블리싱 세부 규칙**(아이콘 벡터, 토큰 사용법, 레이아웃 패턴 등) → `screen-publishing` 스킬에 추가.
-  분량이 크면 `.claude/skills/screen-publishing/` 안에 별도 파일을 만들고 SKILL.md에서 가리킨다.
+- **화면 퍼블리싱 세부 규칙**(아이콘 벡터, 토큰 사용법, 레이아웃 패턴 등) → 모바일은 `screen-publishing`,
+  데스크톱 웹은 `web-publishing` 스킬에 추가. 분량이 크면 해당 스킬 폴더 안에 별도 파일을 만들고
+  SKILL.md에서 가리킨다.
 - 클로드는 이런 피드백을 받으면 **알아서 위 위치에 반영**하고 커밋에 포함한다.
 
 ## Git · PR
@@ -86,7 +87,8 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 ## 더 읽을 것 (필요할 때만)
 
 - **모바일 화면/컴포넌트 구현** → `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
+- **데스크톱 웹(apps/web) 화면/컴포넌트 구현** → `web-publishing` 스킬 (`@plick/ui` 승격 절차 포함)
 - 제품·UX·데이터 모델·화면 IA 전반 → [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier/Husky/CI 등) 결정 배경 → [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
-- 화면 하나를 티켓+피그마로 구현 → `/screen` 커맨드
+- 화면 하나를 티켓+피그마로 구현 → 모바일 `/screen` · 데스크톱 웹 `/web-screen` 커맨드
 - 코드베이스 전수 감사(중복·배치·컨벤션 리스트업) → `/audit` 커맨드 (`code-audit` 스킬)
