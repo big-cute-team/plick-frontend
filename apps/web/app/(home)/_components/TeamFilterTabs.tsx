@@ -27,7 +27,8 @@ export function TeamFilterTabs({
   ];
 
   return (
-    <div className="border-border flex gap-5.5 border-b">
+    <div className="border-border flex gap-5.5 overflow-x-auto border-b">
+      {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
       {items.map(({ key, label }) => {
         const on = active === key;
         return (

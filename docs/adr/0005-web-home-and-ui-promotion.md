@@ -110,7 +110,8 @@
   - 함정: 히어로 카드가 `h-full`로 우측 스택 높이에 맞춰져 있었는데, 1열이 되면 **높이 기준이 사라져 카드가 찌부**된다. → 모바일에서 `aspect-video`를 주고 `lg:aspect-auto lg:h-full`로 되돌렸다.
 - **사이드바(마이팀·실시간 인기)**: `HomeSidebar`에 `className` prop을 받게 하고 페이지에서 `hidden lg:flex` 주입. 뉴스 그리드도 `grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px]`.
 - **GNB 햄버거**: 가로 내비·검색은 `hidden lg:flex`, 대신 `MobileNav`(`lg:hidden`) — 햄버거 버튼 + 펼침 패널(내비 링크 세로 스택, 바깥 클릭 백드롭으로 닫힘). 아이콘은 피그마에 모바일 시안이 없어 표준 3선 `MenuIcon`을 `@plick/ui/icons`에 추가(특정 노드 벡터 아닌 기하 아이콘이라 `base()` 라인 스타일). 검색·내비를 숨긴 자리는 스페이서(`flex-1 lg:hidden`)로 아이콘 클러스터를 우측 정렬.
-- **검증**: dev(:3000)에서 390px·1280px 두 폭 — 모바일에서 사이드바 `display:none`, 핫이슈 링크 1개, 햄버거 패널 개폐, **가로 오버플로 0**(`scrollWidth == innerWidth`)을 DOM으로 수치 확인. 데스크톱은 3카드+사이드바+가로 내비 유지. 프리뷰 스크린샷은 지연이 있어 `getComputedStyle`·`read_page` 병행.
+- **넘치는 가로 목록**: 팀 필터 탭(전체+빅6, 7개)은 **330px에서 마지막 탭이 잘려 접근 불가**였다(= 깨짐). body의 `overflow-x: clip`이 페이지 오버플로는 0으로 유지하지만 탭은 잘린 채였다. → 필터 컨테이너에 `overflow-x-auto`를 줘 **가로 스크롤**(스크롤바는 theme.css가 전역으로 숨김, 모바일 앱 필터와 같은 패턴).
+- **검증 기준선 = 330px**(사용자 지정 최소 폭). dev(:3000)에서 330px·1280px 두 폭 — 모바일에서 사이드바 `display:none`, 핫이슈 링크 1개, 햄버거 패널 개폐, 필터 탭 가로 스크롤, **스크롤 컨테이너 밖 오버플로 0**(`scrollWidth == innerWidth`)을 DOM으로 수치 확인. 데스크톱은 3카드+사이드바+가로 내비 유지. 프리뷰 스크린샷은 지연이 있어 `getComputedStyle`·`read_page` 병행.
 
 ## 8. 남은 일
 
