@@ -55,3 +55,6 @@ export interface User {
   email: string;
   myTeam: TeamCode;
 }
+
+/** 팀 필터 선택값 — 전체(ALL) 또는 특정 팀. 홈·기사 등 팀 필터 탭 공용. */
+export type Filter = "ALL" | TeamCode;

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
-import type { Filter } from "@/(home)/_lib/types";
+import type { Filter } from "@/_lib/types";
 
 /**
  * 팀 필터 탭 (전체 + 빅6) — 데스크톱은 밑줄형 탭에 hover 상태를 더한다.
+ * 홈("지금 올라온 소식")·기사 페이지가 공용으로 쓴다.
  *
  * @param onChange - 선택이 바뀔 때 호출되는 콜백
  */

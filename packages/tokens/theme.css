@@ -134,6 +134,9 @@
   /* ── 데스크톱 웹(apps/web) 스케일 ─────────────── */
   /* 콘텐츠 최대폭 (max-w-page) — 피그마 W1 데스크톱 프레임 1200px */
   --container-page: 1200px;
+  /* 본문 읽기 컬럼 폭 (max-w-read) — 단일 컬럼 리스트/본문(기사 등)의 중앙 정렬 폭.
+   * 피그마 W10 기사 프레임 본문 860px(px-gutter 포함). GNB(max-w-page)보다 좁다. */
+  --container-read: 860px;
   /* 페이지 좌우 거터 (px-gutter) — 모바일 px-edge(20)의 데스크톱 대응 */
   --spacing-gutter: 32px;
 
