@@ -86,9 +86,10 @@
 
   /* media */
   --plk-media-bg: #dfe4ec;
-  /* 릴 뷰어 레터박스(stage) — 다크처럼 media-bg와 같은 값으로 맞춰, 라이트에서 dark
-   * 밴드가 남지 않게 한다(없으면 :root 다크값 #0b101d로 폴백돼 배경이 어긋남) */
-  --plk-media-stage: #dfe4ec;
+  /* 릴 뷰어 레터박스(stage) — 페이지 배경(bg)과 맞춘다. 다크에서 stage(#0b101d)가 bg
+   * (#0b0d12)와 사실상 구분 안 되는 관계를 라이트에도 적용해, 세부 패널(흰색)이 열려도
+   * 뷰어 배경이 어긋나 보이지 않게 한다(media-bg #dfe4ec는 미디어 placeholder 회색이라 부적합). */
+  --plk-media-stage: #ffffff;
   --plk-media-on: #ffffff;
 }
 
