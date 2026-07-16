@@ -29,7 +29,7 @@ const VARIANT: Record<
 
 /**
  * 피드 리스트의 한 줄 — 왼쪽 텍스트(팀·시각 / 제목 / 기자·조회·댓글) + 오른쪽 썸네일.
- * 클릭하면 릴스 딥링크로 이동한다. 홈·기사 페이지가 `variant`로 밀도만 바꿔 공용한다.
+ * 클릭하면 해당 기사 세부(`/articles/[postId]`)로 이동한다. 홈·기사 페이지가 `variant`로 밀도만 바꿔 공용한다.
  */
 export function PostListItem({
   post,
@@ -41,7 +41,7 @@ export function PostListItem({
   const v = VARIANT[variant];
   return (
     <Link
-      href={`/reels/${post.id}`}
+      href={`/articles/${post.id}`}
       className={`border-border focus-visible:outline-accent flex items-start border-b transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:-outline-offset-2 ${v.row}`}
     >
       <div className="min-w-0 flex-1">

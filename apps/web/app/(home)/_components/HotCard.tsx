@@ -8,7 +8,7 @@ import type { FeedPost } from "@/_lib/types";
  * 핫이슈 카드 — 사진(placeholder) 위 어두운 스크림 + 흰 텍스트.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고, 팀·강조색은 토큰을 쓴다.
- * 클릭하면 해당 게시물의 릴스 딥링크(`/reels/[postId]`)로 이동한다.
+ * 클릭하면 해당 기사 세부(`/articles/[postId]`)로 이동한다.
  *
  * @param size - `lg`는 좌측 히어로(그리드 셀 높이를 꽉 채움), `sm`은 우측 서브 카드
  */
@@ -16,7 +16,7 @@ export function HotCard({ post, size }: { post: FeedPost; size: "lg" | "sm" }) {
   const lg = size === "lg";
   return (
     <Link
-      href={`/reels/${post.id}`}
+      href={`/articles/${post.id}`}
       className={`focus-visible:outline-accent rounded-hero group block transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 ${
         lg ? "aspect-video lg:aspect-auto lg:h-full" : "aspect-[9/5]"
       }`}
