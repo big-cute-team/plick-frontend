@@ -1,7 +1,7 @@
+import { AvatarField } from "@plick/ui/AvatarField";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { CURRENT_USER } from "@/_lib/mock";
-import { AvatarField } from "./_components/AvatarField";
 import { EditTopBar } from "./_components/EditTopBar";
 import { InfoCard } from "./_components/InfoCard";
 import { TeamPicker } from "./_components/TeamPicker";
