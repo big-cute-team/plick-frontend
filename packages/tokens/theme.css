@@ -143,6 +143,9 @@
   /* 소셜 인증 카드 폭 (max-w-auth) — 로그인·회원가입의 중앙 카드.
    * 피그마 W7 회원가입 카드 207px(0.45 배율) → 460px. */
   --container-auth: 460px;
+  /* 온보딩 카드 폭 (max-w-onboarding) — 닉네임·팀 선택 등 온보딩 단계 카드.
+   * 피그마 W8 닉네임 카드 252px(0.45 배율) → 560px. auth 카드보다 넓다. */
+  --container-onboarding: 560px;
   /* 페이지 좌우 거터 (px-gutter) — 모바일 px-edge(20)의 데스크톱 대응 */
   --spacing-gutter: 32px;
 
