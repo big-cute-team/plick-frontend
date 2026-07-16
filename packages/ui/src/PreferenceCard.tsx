@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { BellLineIcon, MoonLineIcon } from "@plick/ui/icons";
-import { SettingRow } from "./SettingRow";
-import { ToggleSwitch } from "./ToggleSwitch";
+import { SettingRow } from "@plick/ui/SettingRow";
+import { ToggleSwitch } from "@plick/ui/ToggleSwitch";
 
 /**
- * 알림 설정·다크 모드 토글 카드.
+ * 알림 설정·다크 모드 토글 카드. 웹·모바일 공용 (`@plick/ui`).
  *
  * 알림은 목 상태(BE 연동 전), 다크 모드는 ThemeToggle과 같은 방식으로
  * `<html data-theme>`를 토글해 전체 테마를 전환한다.
