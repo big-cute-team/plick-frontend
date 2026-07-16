@@ -105,6 +105,7 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 - **데스크톱 웹(apps/web) 화면/컴포넌트 구현** → `web-publishing` 스킬 (`@plick/ui` 승격 절차 포함)
   - [ADR 0005](docs/adr/0005-web-home-and-ui-promotion.md) (웹 홈·공용 컴포넌트 승격·데스크톱 토큰·Tailwind 토큰 충돌 교훈)
 - **무엇을 공통으로 뺄지 판단(모노레포 공용 경계)** → [ADR 0011](docs/adr/0011-shared-code-boundary.md) (web↔mobile 조각을 `@plick/ui`/토큰으로 승격할지 앱별로 둘지 — 기준·근거·리스크. 승격 *절차*는 ADR 0005)
+- **BE API 연결(mock→fetch, 스웨거 보며 하나씩)** → `api-integration` 스킬 + 커맨드 `/wire-api`. 스웨거로 실제 shape 확인, 도메인 타입 손 매핑, **단발 읽기=서버 컴포넌트 fetch / 릴스·뮤테이션=TanStack Query**, 공용화는 ADR 0011 게이트로 판단.
 - 제품·UX·데이터 모델·화면 IA 전반 → [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier/Husky/CI 등) 결정 배경 → [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
 - 화면 하나를 티켓+피그마로 구현 → 모바일 `/screen` · 데스크톱 웹 `/web-screen` 커맨드
