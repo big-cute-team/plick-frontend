@@ -40,7 +40,7 @@ export function ArticleMain({ post }: { post: FeedPost }) {
       </div>
 
       {/* 제목 */}
-      <h1 className="text-read-title text-text mt-3">{post.title}</h1>
+      <h1 className="text-read-title text-text mt-3 font-bold">{post.title}</h1>
 
       {/* 기자 라인 */}
       <div className="border-border mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b pb-4">

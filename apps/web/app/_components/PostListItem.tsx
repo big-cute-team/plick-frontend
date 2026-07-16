@@ -52,7 +52,7 @@ export function PostListItem({
           <span className="text-caption text-text-4">{post.timeLabel}</span>
         </div>
         <h3
-          className={`text-text mt-1.5 line-clamp-2 leading-snug tracking-tight ${v.title}`}
+          className={`text-text text-title mt-1.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
         >
           {post.title}
         </h3>
