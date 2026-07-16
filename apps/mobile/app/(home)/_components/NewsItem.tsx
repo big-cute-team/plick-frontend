@@ -4,11 +4,11 @@ import { TEAMS } from "@/_lib/constants";
 import type { FeedPost } from "@/_lib/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 
-/** "지금 올라온 소식" 리스트의 한 줄. 탭하면 릴스 딥링크로 이동한다. */
+/** "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다. */
 export function NewsItem({ post }: { post: FeedPost }) {
   return (
     <Link
-      href={`/reels/${post.id}`}
+      href={`/articles/${post.id}`}
       className="border-border gap-gap flex items-start border-b py-3 active:opacity-70"
     >
       <div className="min-w-0 flex-1">
