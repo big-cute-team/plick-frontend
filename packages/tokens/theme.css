@@ -36,10 +36,6 @@
   --plk-media-on-dim: rgba(255, 255, 255, 0.55);
   --plk-media-chip: rgba(255, 255, 255, 0.14);
   --plk-media-chip-border: rgba(255, 255, 255, 0.22);
-  /* 릴스 무대 배경 — 미디어 카드 밖 레터박스. 릴스는 시네마틱 다크 서피스라
-   * 라이트에서도 어둡게 유지한다(테마 무관, 라이트 오버라이드 없음).
-   * 카드 밖 액션 레일이 media/on(흰색) 계열이라 밝은 배경에선 안 보이기 때문. */
-  --plk-media-stage: #0b101d;
   /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관, 라이트 오버라이드 없음).
    * 그라데이션에서는 color-mix(in srgb, var(--plk-scrim) N%, transparent)로 알파를 조절한다. */
   --plk-scrim: #05080e;
@@ -115,7 +111,6 @@
   --color-danger: var(--plk-danger);
 
   --color-media: var(--plk-media-bg);
-  --color-media-stage: var(--plk-media-stage);
   --color-media-on: var(--plk-media-on);
   --color-media-on-dim: var(--plk-media-on-dim);
   --color-media-chip: var(--plk-media-chip);
@@ -158,6 +153,11 @@
   --text-gnb--line-height: 1.55;
   --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
   --text-tab--line-height: 1.55;
+  /* 기사 세부(W11) 읽기 스케일 — GNB보다 넓은 max-w-page 안 기사 본문 컬럼용 */
+  --text-read-title: 32px; /* 기사 세부 제목 (H1) */
+  --text-read-title--line-height: 1.28;
+  --text-read-title--letter-spacing: -0.5px;
+  --text-read-body: 16.5px; /* 기사 본문 문단 (leading-body-lg·tracking-snug와 함께) */
 
   /* 데스크톱 헤딩 자간 (히어로·섹션 제목) */
   --tracking-heading: -0.3px;

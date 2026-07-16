@@ -35,7 +35,7 @@ export function HomeSidebar({ className = "" }: { className?: string }) {
               className="border-border border-b last:border-b-0"
             >
               <Link
-                href={`/reels/${post.id}`}
+                href={`/articles/${post.id}`}
                 className="group focus-visible:outline-accent flex items-start py-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
               >
                 <span className="text-tab text-accent w-7 shrink-0">

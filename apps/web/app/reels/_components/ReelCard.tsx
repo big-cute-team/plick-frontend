@@ -28,7 +28,7 @@ export function ReelCard({
     <div className="flex h-full w-full items-end justify-center gap-4 lg:gap-6.5">
       <MediaThumb
         colorVar={TEAMS[post.team].colorVar}
-        className="rounded-hero aspect-[9/16] h-full max-h-[760px] w-auto max-w-full min-w-0"
+        className="rounded-hero aspect-[9/16] h-full w-auto max-w-full min-w-0"
       >
         {/* 모바일 전용 우측 스크림 — 카드 안 오버레이 레일 가독성용(테마 무관 고정) */}
         <div
@@ -81,9 +81,10 @@ export function ReelCard({
         />
       </MediaThumb>
 
-      {/* 데스크톱 전용: 카드 밖 오른쪽 레일 */}
+      {/* 데스크톱 전용: 카드 밖 오른쪽 레일 — 페이지 배경 위라 surface 톤(테마색) */}
       <ReelActionRail
         post={post}
+        tone="surface"
         onOpenComments={onOpenDetail}
         className="max-lg:hidden"
       />
