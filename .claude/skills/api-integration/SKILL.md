@@ -127,3 +127,4 @@ mock은 항상 성공·즉시였지만 fetch는 아니다. 화면마다 **세 �
 - [ADR 0011 공용 경계](../../docs/adr/0011-shared-code-boundary.md) — 무엇을 공용으로 뺄지 기준(게이트 A/B/C).
 - [ADR 0005 승격 절차](../../docs/adr/0005-web-home-and-ui-promotion.md) — 실제로 올릴 때 밟는 절차(`@source` 스캔·토큰 충돌 등).
 - `screen-publishing`·`web-publishing` 스킬 — 화면 컴포넌트 규칙(표현은 앱별).
+- ADR을 남길 땐 CLAUDE.md `작업 기록`의 **블로그 회고체**(1인칭·짧게·사람 말투, AI 티 금지)로 쓴다.
