@@ -36,10 +36,6 @@
   --plk-media-on-dim: rgba(255, 255, 255, 0.55);
   --plk-media-chip: rgba(255, 255, 255, 0.14);
   --plk-media-chip-border: rgba(255, 255, 255, 0.22);
-  /* 릴스 무대 배경 — 미디어 카드 밖 레터박스. 릴스는 시네마틱 다크 서피스라
-   * 라이트에서도 어둡게 유지한다(테마 무관, 라이트 오버라이드 없음).
-   * 카드 밖 액션 레일이 media/on(흰색) 계열이라 밝은 배경에선 안 보이기 때문. */
-  --plk-media-stage: #0b101d;
   /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관, 라이트 오버라이드 없음).
    * 그라데이션에서는 color-mix(in srgb, var(--plk-scrim) N%, transparent)로 알파를 조절한다. */
   --plk-scrim: #05080e;
@@ -86,10 +82,6 @@
 
   /* media */
   --plk-media-bg: #dfe4ec;
-  /* 릴 뷰어 레터박스(stage) — 페이지 배경(bg)과 맞춘다. 다크에서 stage(#0b101d)가 bg
-   * (#0b0d12)와 사실상 구분 안 되는 관계를 라이트에도 적용해, 세부 패널(흰색)이 열려도
-   * 뷰어 배경이 어긋나 보이지 않게 한다(media-bg #dfe4ec는 미디어 placeholder 회색이라 부적합). */
-  --plk-media-stage: #ffffff;
   --plk-media-on: #ffffff;
 }
 
@@ -119,7 +111,6 @@
   --color-danger: var(--plk-danger);
 
   --color-media: var(--plk-media-bg);
-  --color-media-stage: var(--plk-media-stage);
   --color-media-on: var(--plk-media-on);
   --color-media-on-dim: var(--plk-media-on-dim);
   --color-media-chip: var(--plk-media-chip);

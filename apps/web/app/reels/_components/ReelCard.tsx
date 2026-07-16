@@ -81,9 +81,10 @@ export function ReelCard({
         />
       </MediaThumb>
 
-      {/* 데스크톱 전용: 카드 밖 오른쪽 레일 */}
+      {/* 데스크톱 전용: 카드 밖 오른쪽 레일 — 페이지 배경 위라 surface 톤(테마색) */}
       <ReelActionRail
         post={post}
+        tone="surface"
         onOpenComments={onOpenDetail}
         className="max-lg:hidden"
       />
