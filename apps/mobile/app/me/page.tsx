@@ -8,11 +8,11 @@ import {
   LogoutIcon,
   TeamShieldIcon,
 } from "@plick/ui/icons";
+import { PreferenceCard } from "@plick/ui/PreferenceCard";
+import { ProfileCard } from "@plick/ui/ProfileCard";
+import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@/_lib/constants";
 import { CURRENT_USER } from "@/_lib/mock";
-import { PreferenceCard } from "./_components/PreferenceCard";
-import { ProfileCard } from "./_components/ProfileCard";
-import { SettingRow } from "./_components/SettingRow";
 import { APP_VERSION_LABEL } from "./_lib/constants";
 
 /** MY 마이페이지 — 프로필·응원팀·환경설정·FAQ·로그아웃 (KAN-170, 피그마 26-6). */
@@ -25,7 +25,11 @@ export default function MyPage() {
 
       <ScrollArea>
         <div className="px-edge gap-gap-lg flex flex-col pt-3 pb-8">
-          <ProfileCard user={CURRENT_USER} />
+          <ProfileCard
+            nickname={CURRENT_USER.nickname}
+            handle={CURRENT_USER.handle}
+            href="/me/edit"
+          />
 
           <section className="bg-elevate-2 border-border rounded-card border">
             <SettingRow
