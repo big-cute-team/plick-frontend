@@ -46,6 +46,14 @@
   (스크롤 후 프리뷰 스크린샷이 검게 나오는 이슈는 뷰포트를 문서 높이로 키워 1샷 촬영 + `getComputedStyle`
   수치 병행으로 우회 — [ADR 0005](0005-web-home-and-ui-promotion.md) §7.)
 
+## 후속 — 진입 링크 연결
+
+기사 세부 페이지 신설 뒤, **홈·기사 목록에서 기사를 클릭하면 기사 세부로 가야 한다**는 요구에 맞춰
+진입 링크를 `/reels/[postId]` 딥링크 → `/articles/[postId]`로 전부 교체했다:
+`HotCard`(핫이슈)·`PostListItem`(홈 소식·기사 목록 공용)·`HomeSidebar` 실시간 인기 랭킹.
+(`/reels`는 릴스 전용으로 남고, 기사 카드 클릭은 이제 세부 기사로 간다.) 홈에서 클릭 → `/articles/h2`
+등 정상 이동 확인.
+
 ## 관련
 
 - 재사용/승격 절차·데스크톱 토큰 → `web-publishing` 스킬, [ADR 0005](0005-web-home-and-ui-promotion.md)
