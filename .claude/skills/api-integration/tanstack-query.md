@@ -94,10 +94,18 @@ export function useReelsFeed(initial: {
 
 ## 5. 서버 → 클라 하이드레이션 (릴스: 첫 페이지는 서버가)
 
-이중 페치를 피하려고, **서버 컴포넌트가 첫 페이지를 fetch**해서 클라 훅에 씨앗으로 넘긴다. 두 방식 중 택1:
+**왜 필요한가**: 서버 컴포넌트가 받은 1페이지는 서버 렌더에만 쓰이고 사라진다. 클라의 RQ 캐시는 비어 있어서,
+릴스 훅이 마운트되면 같은 1페이지를 **또 fetch한다**(이중 페치 + 로딩 깜빡임). 그래서 서버가 받은 걸 **클라 RQ 캐시에
+씨앗으로 심어** 준다.
+
+**`HydrationBoundary`가 그 다리다**: 서버가 채운 캐시를 `dehydrate()`로 JSON으로 말려 경계를 넘기고,
+`<HydrationBoundary state={…}>`가 그 JSON을 **클라 QueryClient에 도로 부어넣는다**(hydrate). 그러면 클라 훅이 같은
+쿼리키로 호출될 때 데이터가 이미 캐시에 있어 fetch를 건너뛴다. 두 방식 중 택1:
 
 - **가벼운 방식(권장 시작점)**: 서버에서 첫 페이지를 `await` → 클라 컴포넌트에 **props로** 넘기고 위 훅의 `initialData`로.
-- **정석(HydrationBoundary)**: 서버에서 `queryClient.prefetchInfiniteQuery` → `dehydrate` → `<HydrationBoundary state={…}>`로 감싸기. 공유 쿼리가 많아지면 이쪽.
+  씨앗 심을 쿼리가 하나면 이거면 충분하다.
+- **정석(HydrationBoundary)**: 서버에서 `queryClient.prefetchInfiniteQuery` → `dehydrate` → `<HydrationBoundary state={…}>`로 감싸기.
+  캐시 전체를 싸주니 **한 페이지에서 여러 쿼리를 미리 채워** 여러 자식이 각자 집어가게 할 때(props로 안 넘기고) 이쪽.
 
 ```tsx
 // app/reels/page.tsx (서버 컴포넌트)
@@ -154,6 +162,12 @@ export function useLikePost(id: string) {
 - 로딩: `isPending` → 스켈레톤(`bg-elevate`/`bg-media`).
 - 에러: `isError` → 재시도(`refetch()`) 버튼(기존 버튼 토큰).
 - 빈 상태: 데이터가 빈 배열 → 기존 "아직 …없어요"(`text-text-4`) 패턴.
+
+> **Suspense·ErrorBoundary는 처음부터 따로 안 잡아도 된다.** 서버 fetch는 라우트 `loading.tsx`/`error.tsx`가 곧
+> Next가 자동으로 감싸주는 서스펜스/에러 경계다(`error.tsx`는 `"use client"` 필수). RQ 기본 모드(`useQuery`)는
+> 위처럼 `isPending`/`isError`를 값으로 분기하니 경계가 필요 없다. `useSuspenseQuery`(promise를 던지는 모드)를
+> **일부러 쓸 때만** 바깥에 `<Suspense>` + 에러바운더리를 둔다 — 이것도 "필요해질 때 도입". 라우트 `error.tsx` 하나는
+> RQ 여부와 무관하게 예상 못 한 렌더 에러의 마지막 그물로 두는 게 싸고 좋다(권장).
 
 ---
 
