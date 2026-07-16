@@ -46,8 +46,10 @@ export interface FeedPost {
   stage: RumorStage;
   contentType: ContentType;
   title: string;
-  /** 상세 화면용 요약 */
+  /** 상세 화면용 요약 (카드·시트 미리보기) */
   summary: string;
+  /** 기사 세부(W11) 본문 문단 목록. 없으면 요약 한 문단으로 대체한다. */
+  body?: string[];
   /** 상세 시트 해시태그 (`#` 제외한 키워드) */
   tags?: string[];
   reporter: Reporter;

@@ -158,6 +158,11 @@
   --text-gnb--line-height: 1.55;
   --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
   --text-tab--line-height: 1.55;
+  /* 기사 세부(W11) 읽기 스케일 — GNB보다 넓은 max-w-page 안 기사 본문 컬럼용 */
+  --text-read-title: 32px; /* 기사 세부 제목 (H1) */
+  --text-read-title--line-height: 1.28;
+  --text-read-title--letter-spacing: -0.5px;
+  --text-read-body: 16.5px; /* 기사 본문 문단 (leading-body-lg·tracking-snug와 함께) */
 
   /* 데스크톱 헤딩 자간 (히어로·섹션 제목) */
   --tracking-heading: -0.3px;
