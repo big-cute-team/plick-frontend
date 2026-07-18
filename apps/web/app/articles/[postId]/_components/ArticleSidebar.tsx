@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * 기사 세부 우측 사이드바 — 관련 기사 카드 + 실시간 인기 랭킹. 스크롤 시 상단 고정.

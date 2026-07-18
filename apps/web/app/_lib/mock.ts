@@ -4,7 +4,7 @@
  * 게시물 구성은 모바일 `_lib/mock.ts`와 같은 세트이며(같은 API를 소비할 예정),
  * 기자명 표기만 데스크톱 피그마 카피(한글)를 따른다.
  */
-import type { Comment, FeedPost, User } from "./types";
+import type { Comment, FeedPost, User } from "@plick/domain/types";
 
 /**
  * 릴 세부 패널 댓글 목데이터 — 피그마 W2 기사 세부(node 219-2) 카피 그대로.

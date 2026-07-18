@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { FeedPost } from "@/_lib/types";
+import type { FeedPost } from "@plick/domain/types";
 import { useReelDetailMotion } from "@/reels/_lib/useReelDetailMotion";
 import { clampTitleOffset } from "@/reels/_lib/utils";
 import { ReelDetailSheet } from "./ReelDetailSheet";

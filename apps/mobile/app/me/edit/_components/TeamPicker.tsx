@@ -1,7 +1,7 @@
 "use client";
 
-import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
-import type { TeamCode } from "@/_lib/types";
+import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
+import type { TeamCode } from "@plick/domain/types";
 import { useTeamSelection } from "@/_lib/useTeamSelection";
 
 /**

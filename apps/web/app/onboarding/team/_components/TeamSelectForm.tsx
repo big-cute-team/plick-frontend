@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckIcon } from "@plick/ui/icons";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
+import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { CURRENT_USER } from "@/_lib/mock";
-import type { TeamCode } from "@/_lib/types";
+import type { TeamCode } from "@plick/domain/types";
 import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
 
 /**

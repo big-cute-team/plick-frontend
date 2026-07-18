@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { CheckIcon } from "@plick/ui/icons";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
-import type { TeamCode } from "@/_lib/types";
+import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
+import type { TeamCode } from "@plick/domain/types";
 
 /**
  * 응원팀 선택 — 빅6 팀 크레스트 카드 3열 그리드에서 하나를 고르고, 아래 저장 버튼.

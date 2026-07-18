@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { TeamCode } from "./types";
+import type { TeamCode } from "@plick/domain/types";
 
 /**
  * 팀 선택 상태 훅 — TeamPicker(프로필 수정)·TeamSelectGrid(온보딩)가 공용.

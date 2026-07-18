@@ -1,4 +1,4 @@
-import type { FeedPost } from "@/_lib/types";
+import type { FeedPost } from "@plick/domain/types";
 import { HotCard } from "./HotCard";
 
 /**

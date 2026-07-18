@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FeedPost } from "@/_lib/types";
+import type { FeedPost } from "@plick/domain/types";
 import { ReelDetailPanel } from "./ReelDetailPanel";
 import { ReelViewer } from "./ReelViewer";
 

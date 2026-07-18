@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { formatCount } from "@/_lib/format";
-import { STAGE_META, TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { formatCount } from "@plick/domain/format";
+import { STAGE_META, TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 
 /**

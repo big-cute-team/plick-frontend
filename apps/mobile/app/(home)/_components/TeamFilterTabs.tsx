@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
-import type { Filter } from "@/(home)/_lib/types";
+import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
+import type { Filter } from "@plick/domain/types";
 
 /**
  * 팀 필터 탭 (전체 + 빅6).

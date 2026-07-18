@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { STAGE_META, TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { STAGE_META, TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * "함께 보면 좋은 기사" 카드 — 사진(placeholder) 위 스크림 + 팀·제목·기자.

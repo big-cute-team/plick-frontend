@@ -1,4 +1,4 @@
-import type { User } from "@/_lib/types";
+import type { User } from "@plick/domain/types";
 
 /**
  * 프로필 기본 정보 카드 — 닉네임·이메일 표시 행(라벨 + 값).

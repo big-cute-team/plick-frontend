@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { TEAMS } from "@/_lib/constants";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * 리스트 행 변형 — 마크업은 같고 밀도/썸네일 형태만 다르다.

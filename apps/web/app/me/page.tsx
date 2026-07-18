@@ -8,7 +8,7 @@ import { PreferenceCard } from "@plick/ui/PreferenceCard";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { TEAMS } from "@/_lib/constants";
+import { TEAMS } from "@plick/domain/constants";
 import { CURRENT_USER, NOTIF_COUNT } from "@/_lib/mock";
 import { APP_VERSION_LABEL } from "./_lib/constants";
 

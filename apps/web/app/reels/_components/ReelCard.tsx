@@ -1,7 +1,7 @@
 "use client";
 
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostChips } from "@plick/ui/PostChips";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";

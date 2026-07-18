@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PostListItem, type PostListVariant } from "@/_components/PostListItem";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
-import type { FeedPost, Filter } from "@/_lib/types";
+import type { FeedPost, Filter } from "@plick/domain/types";
 
 /**
  * 팀 필터 탭 + 팀별로 걸러지는 게시물 리스트를 묶는 클라이언트 컨테이너.

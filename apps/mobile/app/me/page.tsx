@@ -11,7 +11,7 @@ import {
 import { PreferenceCard } from "@plick/ui/PreferenceCard";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
-import { TEAMS } from "@/_lib/constants";
+import { TEAMS } from "@plick/domain/constants";
 import { CURRENT_USER } from "@/_lib/mock";
 import { APP_VERSION_LABEL } from "./_lib/constants";
 

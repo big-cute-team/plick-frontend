@@ -8,9 +8,9 @@ import {
   SendMiniIcon,
 } from "@plick/ui/icons";
 import { CommentThread } from "@/_components/CommentThread";
-import { TEAMS } from "@/_lib/constants";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * 기사 세부 본문 — 칩·제목·기자 라인·대표 이미지·문단·태그·액션·댓글.

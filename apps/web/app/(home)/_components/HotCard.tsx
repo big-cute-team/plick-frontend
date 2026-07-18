@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { STAGE_META, TEAMS } from "@/_lib/constants";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
+import { STAGE_META, TEAMS } from "@plick/domain/constants";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * 핫이슈 카드 — 사진(placeholder) 위 어두운 스크림 + 흰 텍스트.
