@@ -71,6 +71,8 @@ packages/
 - 따라서 지금의 리스크는 "shape가 몰래 갈라지는 것" 하나뿐이고, 그건 **파일 헤더 주석 + 코드리뷰**로 관리한다.
 
 > 트레이드오프(명시): 이 선택의 대가는 **shape 동기화를 사람이 책임진다**는 것. BE 계약이 확정되거나 타입이 안정되면 §2 게이트 C가 서므로 **그때 `@plick/types`(또는 `@plick/ui/types`)로 승격**을 재검토한다. 지금은 "수동 동기화 + 주석 계약"이 더 싸다.
+>
+> **2026-07-16 후속:** 전수 감사에서 드리프트(웹 `Filter`/모바일 `Debate` 분기)가 실증되어 위 재검토 조건이 섰다 → types·constants·format을 **`@plick/domain`으로 승격**했다. 경위는 [ADR 0018](0018-audit-driven-refactor.md).
 
 ---
 
@@ -133,6 +135,5 @@ packages/
 - **앱별 유지(의도적)**: `CommentThread` 래퍼, `ArticleBody`/`ArticleMain`, 추천 기사(카드 vs 리스트).
 - **열린 후보(게이트 C 대기)**:
   - `CommentItem`(스레드 **내부 한 줄**) — 웹/모바일이 버튼 상태 클래스(`hover:` vs `active:`) 한 줄만 다르고 나머지 동일. 안쪽만 원자로 올리고 스레드 래퍼는 앱별 유지 검토.
-  - `formatCount`·`avatarInitials` 순수 유틸 — A·B는 통과, C(중복 실증) 서면 승격.
-  - 도메인 타입 `@plick/types` — §3의 트레이드오프대로 BE 계약/안정화 시 재검토.
+  - ~~`formatCount`·`avatarInitials` 순수 유틸~~ · ~~도메인 타입~~ — 2026-07-16 감사로 중복 실증 → **`@plick/domain`으로 승격 완료**(ADR 0018). `ReporterLine`·`TagChips`도 같은 감사에서 `@plick/ui`로 승격.
 - 후보를 실제로 올릴 땐 근거를 추측이 아니라 `/audit` 결과로 확정한다(진짜 동일 vs 형태만 유사 구분).
