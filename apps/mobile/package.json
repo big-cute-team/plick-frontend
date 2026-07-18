@@ -13,21 +13,21 @@
   "dependencies": {
     "@plick/domain": "workspace:*",
     "@plick/ui": "workspace:*",
-    "next": "16.2.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "next": "16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@plick/eslint-config": "workspace:*",
     "@plick/typescript-config": "workspace:*",
     "@plick/tokens": "workspace:*",
-    "@tailwindcss/postcss": "^4.3.2",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.15.3",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
     "eslint": "^9.39.1",
-    "postcss": "^8.5.16",
-    "tailwindcss": "^4.3.2",
+    "postcss": "^8.5.19",
+    "tailwindcss": "^4.3.3",
     "typescript": "5.9.2"
   }
 }
