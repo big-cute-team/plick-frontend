@@ -5,7 +5,7 @@ import { formatCount } from "@/_lib/format";
 import type { FeedPost } from "@/_lib/types";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { ReelDetailMotion } from "@/reels/_lib/types";
-import { CommentThread } from "./CommentThread";
+import { CommentThread } from "@/_components/CommentThread";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 
 /**

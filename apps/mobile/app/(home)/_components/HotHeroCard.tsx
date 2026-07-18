@@ -29,7 +29,7 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
             <span className="text-caption text-media-on font-extrabold">
               {TEAMS[post.team].name}
             </span>
-            <span className="text-media-on/50 text-micro font-bold tracking-wider">
+            <span className="text-media-on/50 text-micro tracking-label font-bold">
               {stage.label}
             </span>
           </div>

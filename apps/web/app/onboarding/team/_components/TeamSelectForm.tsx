@@ -7,7 +7,7 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { TEAMS, TEAM_ORDER } from "@/_lib/constants";
 import { CURRENT_USER } from "@/_lib/mock";
 import type { TeamCode } from "@/_lib/types";
-import { ONBOARDING_STEP } from "@/onboarding/team/_lib/constants";
+import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
 
 /**
  * W9 온보딩 팀 선택 카드 — 스텝 표시(2/2) + 제목 + 빅6 팀 그리드(2열, 선택 카드는
@@ -26,7 +26,7 @@ export function TeamSelectForm() {
     <main className="px-edge flex min-h-dvh items-center justify-center py-16">
       <section className="border-border bg-elevate-2 rounded-hero max-w-onboarding gap-gap flex min-h-170 w-full flex-col border px-11 pt-10 pb-9">
         <p className="text-body text-text-4 tracking-label text-right font-bold">
-          {ONBOARDING_STEP.current} / {ONBOARDING_STEP.total}
+          2 / {ONBOARDING_TOTAL_STEPS}
         </p>
 
         <div className="flex w-full flex-col items-start gap-2.5">

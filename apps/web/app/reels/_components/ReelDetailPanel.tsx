@@ -10,7 +10,7 @@ import {
   UserRoundIcon,
 } from "@plick/ui/icons";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
-import { CommentThread } from "./CommentThread";
+import { CommentThread } from "@/_components/CommentThread";
 
 /**
  * 릴 세부 패널 (KAN-219, 피그마 W2 기사 세부 219-2).

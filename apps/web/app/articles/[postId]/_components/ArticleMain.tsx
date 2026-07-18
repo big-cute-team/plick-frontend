@@ -7,7 +7,7 @@ import {
   SendIcon,
   SendMiniIcon,
 } from "@plick/ui/icons";
-import { CommentThread } from "@/reels/_components/CommentThread";
+import { CommentThread } from "@/_components/CommentThread";
 import { TEAMS } from "@/_lib/constants";
 import { formatCount } from "@/_lib/format";
 import type { FeedPost } from "@/_lib/types";
@@ -29,7 +29,7 @@ export function ArticleMain({ post }: { post: FeedPost }) {
     <article className="min-w-0">
       {/* 팀·루머 칩 */}
       <div className="flex items-center gap-2">
-        <span className="bg-elevate border-border text-text text-caption rounded-pill border px-3 py-1 font-extrabold tracking-wide">
+        <span className="bg-elevate border-border text-text text-caption rounded-pill tracking-label border px-3 py-1 font-extrabold">
           {team.name}
         </span>
         {post.stage === "RUMOUR" && (

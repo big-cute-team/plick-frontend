@@ -5,8 +5,8 @@ import { CheckIcon } from "@plick/ui/icons";
 import { CURRENT_USER } from "@/_lib/mock";
 import {
   NICKNAME_MAX_LENGTH,
-  ONBOARDING_STEP,
-} from "@/onboarding/nickname/_lib/constants";
+  ONBOARDING_TOTAL_STEPS,
+} from "@/onboarding/_lib/constants";
 
 /**
  * W8 온보딩 닉네임 설정 카드 — 스텝 표시(1/2) + 제목 + 닉네임 입력(글자수 카운터·
@@ -26,7 +26,7 @@ export function NicknameForm() {
     <main className="px-edge flex min-h-dvh items-center justify-center py-16">
       <section className="border-border bg-elevate-2 rounded-hero max-w-onboarding gap-gap flex min-h-170 w-full flex-col border px-11 pt-10 pb-9">
         <p className="text-body text-text-4 tracking-label text-right font-bold">
-          {ONBOARDING_STEP.current} / {ONBOARDING_STEP.total}
+          1 / {ONBOARDING_TOTAL_STEPS}
         </p>
 
         <div className="flex w-full flex-col items-start gap-2.5">
