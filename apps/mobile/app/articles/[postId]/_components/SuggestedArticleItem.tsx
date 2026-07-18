@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * "함께 보면 좋은 기사" 리스트 한 줄 — 좌측 팀·제목·기자, 우측 정사각 썸네일.

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { TEAMS } from "@/_lib/constants";
+import { TEAMS } from "@plick/domain/constants";
 import { CURRENT_USER, TRENDING_POSTS } from "@/_lib/mock";
 
 /**

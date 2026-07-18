@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { avatarInitials, formatCount } from "@/_lib/format";
-import type { Comment } from "@/_lib/types";
+import { avatarInitials, formatCount } from "@plick/domain/format";
+import type { Comment } from "@plick/domain/types";
 import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
 
 /**

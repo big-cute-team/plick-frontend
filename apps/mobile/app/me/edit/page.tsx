@@ -1,5 +1,6 @@
 import { AvatarField } from "@plick/ui/AvatarField";
 import { AppShell } from "@/_components/AppShell";
+import { PrimaryButton } from "@/_components/PrimaryButton";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { CURRENT_USER } from "@/_lib/mock";
 import { EditTopBar } from "./_components/EditTopBar";
@@ -20,12 +21,7 @@ export default function ProfileEditPage() {
           <InfoCard user={user} />
           <TeamPicker initial={user.myTeam} />
 
-          <button
-            type="button"
-            className="bg-accent text-on-accent rounded-pill text-body-lg flex h-12 w-full items-center justify-center font-extrabold active:opacity-90"
-          >
-            변경사항 저장
-          </button>
+          <PrimaryButton>변경사항 저장</PrimaryButton>
         </div>
       </ScrollArea>
     </AppShell>

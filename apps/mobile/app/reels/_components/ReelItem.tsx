@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { TitleMotion } from "@/reels/_lib/types";

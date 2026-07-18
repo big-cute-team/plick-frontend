@@ -108,9 +108,9 @@ description: >-
 - 타입/상수/유틸은 `_lib`로 분리(CLAUDE.md 규칙 그대로): 웹 공용은 `apps/web/app/_lib/`,
   라우트 전용은 그 라우트의 `_lib/`.
 - 절대경로 import `@/* → apps/web/app/*` — 부모 탐색(`../`) 금지, 형제·하위는 `./`.
-- BE 전이므로 목데이터 우선: `apps/web/app/_lib/mock.ts` + `types.ts`(BE 목표 형태).
-  모바일과 같은 도메인 데이터(루머 포스트·팀 등)는 **타입 모양을 모바일 `_lib/types.ts`와 맞춘다**
-  — 나중에 같은 API를 소비하므로 어긋나면 안 된다.
+- BE 전이므로 목데이터 우선: `apps/web/app/_lib/mock.ts` + `@plick/domain/types`(BE 목표 형태).
+  도메인 타입·팀 레지스트리·포맷 유틸은 `@plick/domain`이 web/mobile **단일 출처**라
+  수동 동기화가 필요 없다(ADR 0018).
 - 아이콘은 피그마 노드 벡터 그대로(`currentColor`) — 비슷한 기존 아이콘 재사용 금지.
 
 ## 6. 검증

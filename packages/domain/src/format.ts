@@ -1,5 +1,10 @@
 /**
- * 수치를 축약 표기로 포맷한다. (모바일 `_lib/format.ts`와 동일 구현)
+ * @file 공용 포맷 유틸 — 수치 축약·아바타 이니셜. 두 앱에 동일 구현으로 복제돼
+ * 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
+ */
+
+/**
+ * 수치를 축약 표기로 포맷한다.
  *
  * @example
  * formatCount(12400); // "12.4K"
@@ -12,7 +17,7 @@ export function formatCount(n: number): string {
 }
 
 /**
- * 핸들에서 아바타 이니셜 2글자를 뽑는다. (모바일 `_lib/format.ts`와 동일 구현)
+ * 핸들에서 아바타 이니셜 2글자를 뽑는다.
  *
  * @example
  * avatarInitials("@kop_anfield"); // "KO"

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FeedPost } from "@/_lib/types";
-import type { Filter } from "@/(home)/_lib/types";
+import type { FeedPost } from "@plick/domain/types";
+import type { Filter } from "@plick/domain/types";
 import { NewsItem } from "./NewsItem";
 import { TeamFilterTabs } from "./TeamFilterTabs";
 
@@ -17,7 +17,7 @@ export function NewsFeed({ posts }: { posts: FeedPost[] }) {
 
   return (
     <>
-      <TeamFilterTabs onChange={setFilter} />
+      <TeamFilterTabs value={filter} onChange={setFilter} />
       <div className="px-edge">
         {shown.length > 0 ? (
           shown.map((post) => <NewsItem key={post.id} post={post} />)

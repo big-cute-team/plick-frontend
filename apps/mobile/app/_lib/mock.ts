@@ -1,4 +1,4 @@
-import type { Comment, FeedPost, User } from "./types";
+import type { Comment, FeedPost, User } from "@plick/domain/types";
 
 /** 댓글 UI 확인용 샘플 (h1 게시물에 연결) — 릴 세부 시트 피그마(75-6) 카피 */
 const SAMPLE_COMMENTS: Comment[] = [

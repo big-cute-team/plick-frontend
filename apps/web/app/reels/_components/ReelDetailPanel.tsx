@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
-import {
-  CloseIcon,
-  LinkOutIcon,
-  SendMiniIcon,
-  UserRoundIcon,
-} from "@plick/ui/icons";
-import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
-import { CommentThread } from "./CommentThread";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
+import { CloseIcon, LinkOutIcon } from "@plick/ui/icons";
+import { ReporterLine } from "@plick/ui/ReporterLine";
+import { TagChips } from "@plick/ui/TagChips";
+import { CommentComposer } from "@/_components/CommentComposer";
+import { CommentsHeader } from "@/_components/CommentsHeader";
+import { CommentThread } from "@/_components/CommentThread";
 
 /**
  * 릴 세부 패널 (KAN-219, 피그마 W2 기사 세부 219-2).
@@ -71,14 +69,12 @@ export function ReelDetailPanel({
             className="bg-bg border-border lg:rounded-card flex h-full w-full flex-col overflow-hidden lg:border"
           >
             {/* 헤더 — 기자 줄 + 닫기 */}
-            <div className="border-border flex items-center gap-2 border-b px-5 py-4">
-              <ReporterTierBadge reporter={rendered.reporter} />
-              <span className="text-body text-text font-bold">
-                {rendered.reporter.name}
-              </span>
-              <span className="text-label text-text-3 min-w-0 truncate">
-                · {rendered.timeLabel} · 조회 {formatCount(rendered.views)}
-              </span>
+            <ReporterLine
+              reporter={rendered.reporter}
+              meta={`· ${rendered.timeLabel} · 조회 ${formatCount(rendered.views)}`}
+              metaClassName="min-w-0 truncate"
+              className="border-border border-b px-5 py-4"
+            >
               <button
                 type="button"
                 aria-label="닫기"
@@ -87,7 +83,7 @@ export function ReelDetailPanel({
               >
                 <CloseIcon size={18} />
               </button>
-            </div>
+            </ReporterLine>
 
             {/* 본문·해시태그·댓글 스크롤 영역 */}
             <div className="flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain px-5 py-5">
@@ -96,14 +92,7 @@ export function ReelDetailPanel({
               </p>
 
               <div className="flex items-center gap-2">
-                {rendered.tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                <TagChips tags={rendered.tags ?? []} />
                 <button
                   type="button"
                   className="text-accent text-label hover:text-accent focus-visible:outline-accent ml-auto flex items-center gap-1.25 rounded font-bold hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -113,12 +102,10 @@ export function ReelDetailPanel({
                 </button>
               </div>
 
-              <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
-                <span className="text-body-lg font-extrabold">댓글</span>
-                <span className="text-label text-text-3 font-semibold">
-                  {formatCount(rendered.commentCount)}
-                </span>
-              </div>
+              <CommentsHeader
+                count={rendered.commentCount}
+                className="border-border border-t pt-3.5"
+              />
 
               {(rendered.comments ?? []).map((comment) => (
                 <CommentThread key={comment.id} comment={comment} />
@@ -126,22 +113,8 @@ export function ReelDetailPanel({
             </div>
 
             {/* 댓글 입력바 */}
-            <div className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 py-3.5">
-              <span className="bg-avatar text-icon grid size-8.5 shrink-0 place-items-center rounded-full">
-                <UserRoundIcon size={18} />
-              </span>
-              <input
-                type="text"
-                placeholder="팬 반응 남기기…"
-                className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 focus-visible:border-border-strong rounded-pill h-10 min-w-0 flex-1 border px-4 outline-none"
-              />
-              <button
-                type="button"
-                aria-label="댓글 보내기"
-                className="bg-accent text-on-accent focus-visible:outline-accent flex size-10 shrink-0 items-center justify-center rounded-full hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                <SendMiniIcon size={17} />
-              </button>
+            <div className="border-border bg-nav shrink-0 border-t px-4 py-3.5">
+              <CommentComposer withAvatar />
             </div>
           </div>
         )}

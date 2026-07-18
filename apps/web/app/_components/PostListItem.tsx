@@ -1,15 +1,9 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { TEAMS } from "@/_lib/constants";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
-
-/**
- * 리스트 행 변형 — 마크업은 같고 밀도/썸네일 형태만 다르다.
- * - `news`: 홈 "지금 올라온 소식" — 가로형 썸네일·제목 17px, 넉넉한 간격.
- * - `article`: 기사 페이지 — 정사각 썸네일(86px)·제목 15px, 더 촘촘.
- */
-export type PostListVariant = "news" | "article";
+import { TEAMS } from "@plick/domain/constants";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
+import type { PostListVariant } from "@/_lib/types";
 
 const VARIANT: Record<
   PostListVariant,

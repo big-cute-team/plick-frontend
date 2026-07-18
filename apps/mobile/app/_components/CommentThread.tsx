@@ -1,5 +1,5 @@
-import { avatarInitials, formatCount } from "@/_lib/format";
-import type { Comment } from "@/_lib/types";
+import { avatarInitials, formatCount } from "@plick/domain/format";
+import type { Comment } from "@plick/domain/types";
 import { HeartMiniIcon } from "@plick/ui/icons";
 
 /** 댓글 한 스레드 — 원 댓글 + (있으면) 들여쓴 답글들. */

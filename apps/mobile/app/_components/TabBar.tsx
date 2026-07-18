@@ -2,49 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentType } from "react";
-import {
-  BellIcon,
-  HomeIcon,
-  ReelsIcon,
-  SearchIcon,
-  UserIcon,
-} from "@plick/ui/icons";
-
-type Tab = {
-  href: string;
-  label: string;
-  Icon: ComponentType<{ size?: number }>;
-  match: (p: string) => boolean;
-};
-
-const TABS: Tab[] = [
-  { href: "/", label: "홈", Icon: HomeIcon, match: (p) => p === "/" },
-  {
-    href: "/search",
-    label: "검색",
-    Icon: SearchIcon,
-    match: (p) => p.startsWith("/search"),
-  },
-  {
-    href: "/reels",
-    label: "릴스",
-    Icon: ReelsIcon,
-    match: (p) => p.startsWith("/reels"),
-  },
-  {
-    href: "/alerts",
-    label: "알림",
-    Icon: BellIcon,
-    match: (p) => p.startsWith("/alerts"),
-  },
-  {
-    href: "/me",
-    label: "MY",
-    Icon: UserIcon,
-    match: (p) => p.startsWith("/me"),
-  },
-];
+import { TABS } from "@/_lib/constants";
 
 /**
  * 하단 탭 내비게이션.

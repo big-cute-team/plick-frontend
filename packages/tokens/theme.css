@@ -202,6 +202,10 @@
   --radius-sheet: 26px;
   --radius-pill: 999px;
 
+  /* 사진 위 요소 가독성 그림자 (릴 액션 레일 등) — 스크림 앵커색 기반 고정 값 */
+  --drop-shadow-media: 0 1px 6px
+    color-mix(in srgb, var(--plk-scrim) 55%, transparent);
+
   /* spacing — 'screen'은 Tailwind 예약어(w-screen 등)라 edge로 명명 */
   --spacing-edge: 20px;
   --spacing-gap: 12px;

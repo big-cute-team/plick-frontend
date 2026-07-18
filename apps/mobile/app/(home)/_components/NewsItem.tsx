@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { formatCount } from "@/_lib/format";
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { formatCount } from "@plick/domain/format";
+import { TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 
 /** "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다. */

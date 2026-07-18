@@ -17,6 +17,7 @@ apps/
 packages/
   tokens/             @plick/tokens — 디자인 토큰(theme.css)
   ui/                 @plick/ui — 공용 컴포넌트
+  domain/             @plick/domain — 도메인 타입·팀 레지스트리·포맷 유틸 (web/mobile 공용)
   eslint-config/      @plick/eslint-config
   typescript-config/  @plick/typescript-config
 ```
@@ -59,8 +60,11 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 경로는 **2개 이상 화면 공용 → `app/_lib/`**, **한 라우트 전용 → 그 라우트의 `_lib/`**(예: `app/reels/_lib/`).
 
 - `types.ts` — 타입·인터페이스. (여러 컴포넌트가 공유하거나 중복되는 타입은 반드시 여기로)
-- `constants.ts` — 상수·설정값. BE가 붙어도 유지되는 참조 데이터(팀 레지스트리 등)도 여기.
-- `utils.ts` — 순수 헬퍼 함수. (공용 포맷 유틸은 `app/_lib/format.ts`)
+- `constants.ts` — 상수·설정값.
+- `utils.ts` — 순수 헬퍼 함수.
+- ⚠️ **web·mobile이 함께 쓰는 도메인 타입(FeedPost 등)·참조 상수(TEAMS 등)·포맷 유틸은
+  `@plick/domain`(types/constants/format)이 단일 출처**다(ADR 0018). 앱 `_lib`에는 앱
+  전용만 남긴다(예: web `NAV_LINKS`, mobile `TABS`).
 - `mock.ts` — 목데이터(나중에 fetch로 교체될 가짜 데이터). 상수(`constants.ts`)와 구분한다.
 - 훅은 파일 하나 = 훅 하나로 `useXxx.ts`.
 - **예외:** 한 컴포넌트 안에서만 쓰는 사적·자명한 타입(예: 그 컴포넌트 로컬 `IconProps`)은 인라인 허용.

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
 import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
 
 /**
@@ -9,7 +9,7 @@ import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
  * - `surface`: 페이지 배경 위(데스크톱 카드 밖) — 테마 텍스트·서피스 색이라 라이트·다크
  *   양쪽 배경에서 보인다(흰색 고정이면 라이트 배경에서 사라진다).
  */
-export type RailTone = "media" | "surface";
+type RailTone = "media" | "surface";
 
 const TONE: Record<RailTone, { button: string; chip: string }> = {
   media: {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { FeedPost } from "@/_lib/types";
+import type { FeedPost } from "@plick/domain/types";
 import { ReelCard } from "./ReelCard";
 
 /**

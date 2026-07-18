@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { formatCount } from "@/_lib/format";
-import type { FeedPost } from "@/_lib/types";
+import { formatCount } from "@plick/domain/format";
+import type { FeedPost } from "@plick/domain/types";
 import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
 
 /**
@@ -16,7 +16,7 @@ export function ReelActionRail({
   onComment: () => void;
 }) {
   return (
-    <div className="absolute right-3.5 bottom-52.5 flex flex-col items-center gap-5.5 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)]">
+    <div className="drop-shadow-media absolute right-3.5 bottom-52.5 flex flex-col items-center gap-5.5">
       <RailAction
         icon={<LikeIcon size={28} filled={post.liked} />}
         label={formatCount(post.likeCount)}

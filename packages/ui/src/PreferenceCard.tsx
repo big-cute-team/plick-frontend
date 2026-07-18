@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellLineIcon, MoonLineIcon } from "@plick/ui/icons";
-import { SettingRow } from "@plick/ui/SettingRow";
-import { ToggleSwitch } from "@plick/ui/ToggleSwitch";
+import { BellLineIcon, MoonLineIcon } from "./icons";
+import { SettingRow } from "./SettingRow";
+import { ToggleSwitch } from "./ToggleSwitch";
 
 /**
  * 알림 설정·다크 모드 토글 카드. 웹·모바일 공용 (`@plick/ui`).

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { formatCount } from "@/_lib/format";
-import { STAGE_META, TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
+import { formatCount } from "@plick/domain/format";
+import { STAGE_META, TEAMS } from "@plick/domain/constants";
+import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 
 /**
@@ -29,7 +29,7 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
             <span className="text-caption text-media-on font-extrabold">
               {TEAMS[post.team].name}
             </span>
-            <span className="text-media-on/50 text-micro font-bold tracking-wider">
+            <span className="text-media-on/50 text-micro tracking-label font-bold">
               {stage.label}
             </span>
           </div>
