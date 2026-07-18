@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   ChevronMiniIcon,
   HelpCircleIcon,
@@ -37,7 +38,7 @@ export default function MyPage() {
               href="/me/edit"
             />
 
-            <section className="bg-elevate-2 border-border rounded-card overflow-hidden border">
+            <CardSection>
               <SettingRow
                 pressable
                 icon={<TeamShieldIcon />}
@@ -51,18 +52,18 @@ export default function MyPage() {
                   </>
                 }
               />
-            </section>
+            </CardSection>
 
             <PreferenceCard />
 
-            <section className="bg-elevate-2 border-border rounded-card overflow-hidden border">
+            <CardSection>
               <SettingRow
                 pressable
                 icon={<HelpCircleIcon />}
                 label="FAQ"
                 trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
               />
-            </section>
+            </CardSection>
 
             <button
               type="button"
@@ -79,5 +80,14 @@ export default function MyPage() {
         </div>
       </main>
     </>
+  );
+}
+
+/** 설정 줄 하나를 감싸는 카드 섀시 — 이 화면에서만 쓰는 사적 헬퍼. */
+function CardSection({ children }: { children: ReactNode }) {
+  return (
+    <section className="bg-elevate-2 border-border rounded-card overflow-hidden border">
+      {children}
+    </section>
   );
 }

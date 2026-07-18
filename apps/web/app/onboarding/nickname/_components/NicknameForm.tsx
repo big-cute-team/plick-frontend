@@ -70,7 +70,7 @@ export function NicknameForm() {
           <button
             type="button"
             disabled={!isAvailable}
-            className="rounded-pill bg-accent text-on-accent text-body-lg focus-visible:ring-accent focus-visible:ring-offset-bg h-13 w-full font-extrabold transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:opacity-60 disabled:opacity-40"
+            className="rounded-pill bg-accent text-on-accent text-body-lg focus-visible:outline-accent h-13 w-full font-extrabold transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60 disabled:opacity-40"
           >
             다음
           </button>

@@ -1,12 +1,15 @@
 "use client";
 
-import { CloseIcon, LinkOutIcon, SendMiniIcon } from "@plick/ui/icons";
+import { CloseIcon, LinkOutIcon } from "@plick/ui/icons";
+import { ReporterLine } from "@plick/ui/ReporterLine";
+import { TagChips } from "@plick/ui/TagChips";
 import { formatCount } from "@plick/domain/format";
 import type { FeedPost } from "@plick/domain/types";
+import { CommentComposer } from "@/_components/CommentComposer";
+import { CommentsHeader } from "@/_components/CommentsHeader";
+import { CommentThread } from "@/_components/CommentThread";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/reels/_lib/constants";
 import type { ReelDetailMotion } from "@/reels/_lib/types";
-import { CommentThread } from "@/_components/CommentThread";
-import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
@@ -50,15 +53,11 @@ export function ReelDetailSheet({
             className="px-edge touch-none pt-5.5 select-none"
             {...motion.grabProps}
           >
-            <div className="flex items-center gap-2 pr-11">
-              <ReporterTierBadge reporter={post.reporter} />
-              <span className="text-body text-text font-bold">
-                {post.reporter.name}
-              </span>
-              <span className="text-label text-text-3">
-                · {post.timeLabel} · 조회 {formatCount(post.views)}
-              </span>
-            </div>
+            <ReporterLine
+              reporter={post.reporter}
+              meta={`· ${post.timeLabel} · 조회 ${formatCount(post.views)}`}
+              className="pr-11"
+            />
           </div>
           <button
             type="button"
@@ -77,14 +76,7 @@ export function ReelDetailSheet({
           </p>
 
           <div className="flex items-center gap-2">
-            {post.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="bg-elevate text-label text-text-3 rounded-pill px-3 py-1.5 font-semibold"
-              >
-                #{tag}
-              </span>
-            ))}
+            <TagChips tags={post.tags ?? []} />
             <button
               type="button"
               className="text-accent text-label ml-auto flex items-center gap-1.25 font-bold active:opacity-60"
@@ -94,12 +86,10 @@ export function ReelDetailSheet({
             </button>
           </div>
 
-          <div className="border-border flex items-baseline gap-1.25 border-t pt-3.5">
-            <span className="text-body-lg font-extrabold">댓글</span>
-            <span className="text-label text-text-3 font-semibold">
-              {formatCount(post.commentCount)}
-            </span>
-          </div>
+          <CommentsHeader
+            count={post.commentCount}
+            className="border-border border-t pt-3.5"
+          />
 
           {(post.comments ?? []).map((comment) => (
             <CommentThread key={comment.id} comment={comment} />
@@ -108,21 +98,10 @@ export function ReelDetailSheet({
 
         {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
         <div
-          className="border-border bg-nav flex shrink-0 items-center gap-2.5 border-t px-4 pt-3.25"
+          className="border-border bg-nav shrink-0 border-t px-4 pt-3.25"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)" }}
         >
-          <input
-            type="text"
-            placeholder="팬 반응 남기기…"
-            className="border-border bg-elevate-2 text-body text-text placeholder:text-text-4 rounded-hero h-11.5 min-w-0 flex-1 border px-4.75"
-          />
-          <button
-            type="button"
-            aria-label="댓글 보내기"
-            className="bg-accent text-on-accent rounded-pill flex size-11 shrink-0 items-center justify-center active:opacity-60"
-          >
-            <SendMiniIcon size={17} />
-          </button>
+          <CommentComposer />
         </div>
       </div>
     </div>

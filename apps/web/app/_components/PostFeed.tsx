@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { PostListItem, type PostListVariant } from "@/_components/PostListItem";
+import { PostListItem } from "@/_components/PostListItem";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
 import type { FeedPost, Filter } from "@plick/domain/types";
+import type { PostListVariant } from "@/_lib/types";
 
 /**
  * 팀 필터 탭 + 팀별로 걸러지는 게시물 리스트를 묶는 클라이언트 컨테이너.
@@ -25,7 +26,7 @@ export function PostFeed({
 
   return (
     <div className="min-w-0">
-      <TeamFilterTabs onChange={setFilter} />
+      <TeamFilterTabs value={filter} onChange={setFilter} />
       <div className={variant === "news" ? "pt-1.5 pb-6" : "pt-1.5"}>
         {shown.length > 0 ? (
           shown.map((post) => (
