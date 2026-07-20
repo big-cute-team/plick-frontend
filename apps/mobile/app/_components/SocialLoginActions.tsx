@@ -39,14 +39,14 @@ export function SocialLoginActions({
         label={`카카오로 ${actionLabel}`}
         className="bg-kakao h-13"
         disabled={isPending}
-        onClick={() => loginWith("kakao")}
+        onClick={() => loginWith("KAKAO")}
       />
       <SocialLoginButton
         icon={<GoogleIcon />}
         label={`구글로 ${actionLabel}`}
         className="bg-media-on border-border-strong h-13.5 border"
         disabled={isPending}
-        onClick={() => loginWith("google")}
+        onClick={() => loginWith("GOOGLE")}
       />
       {error && (
         <p className="text-caption text-danger text-center" role="alert">
