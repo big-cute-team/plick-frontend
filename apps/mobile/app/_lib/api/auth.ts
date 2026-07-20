@@ -48,3 +48,22 @@ export async function login(
 
   redirect(data.needsOnboarding ? ONBOARDING_ENTRY : "/");
 }
+
+/**
+ * 로그아웃 서버 액션 — BE에 로그아웃을 알리고 토큰 쿠키를 지운 뒤 로그인 화면으로 보낸다.
+ * BE 호출이 실패해도 로컬 세션은 반드시 끊는다(쿠키 삭제) — 로그아웃을 못 하는 상태에 갇히지 않게.
+ * 토큰은 HttpOnly라 브라우저 JS로 못 지우므로, login과 대칭으로 삭제도 서버에서 한다.
+ */
+export async function logout(): Promise<void> {
+  try {
+    await apiFetch("/api/v1/auth/logout", { method: "POST" });
+  } catch {
+    // BE가 죽어도 아래에서 쿠키를 지워 로그아웃은 성립시킨다
+  }
+
+  const jar = await cookies();
+  jar.delete(AUTH_COOKIES.access);
+  jar.delete(AUTH_COOKIES.refresh);
+
+  redirect("/login");
+}
