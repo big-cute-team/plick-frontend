@@ -10,20 +10,28 @@ import type { ReactNode } from "react";
  * @param icon - 좌측 브랜드 아이콘
  * @param label - 버튼 문구
  * @param className - 프로바이더별 높이/배경/테두리 토큰 유틸
+ * @param onClick - 클릭 핸들러 (앱이 로그인 액션을 연결)
+ * @param disabled - 진행 중 등 비활성 상태
  */
 export function SocialLoginButton({
   icon,
   label,
   className,
+  onClick,
+  disabled,
 }: {
   icon: ReactNode;
   label: string;
   className: string;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      className={`rounded-pill text-on-kakao focus-visible:ring-accent focus-visible:ring-offset-bg flex w-full items-center justify-center gap-2.5 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:opacity-60 ${className}`}
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-pill text-on-kakao focus-visible:ring-accent focus-visible:ring-offset-bg flex w-full items-center justify-center gap-2.5 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:opacity-60 disabled:opacity-40 ${className}`}
     >
       {icon}
       <span className="text-body-lg font-bold">{label}</span>

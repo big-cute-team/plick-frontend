@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@plick/ui/Logo";
-import { GoogleIcon, KakaoIcon } from "@plick/ui/icons";
-import { SocialLoginButton } from "@plick/ui/SocialLoginButton";
 import { AppShell } from "./AppShell";
 import { BackButton } from "./BackButton";
 import { BottomActionBar } from "./BottomActionBar";
+import { SocialLoginActions } from "./SocialLoginActions";
 import { TopBarShell } from "./TopBarShell";
 
 /**
@@ -54,16 +53,7 @@ export function AuthScreen({
         </section>
 
         <BottomActionBar base={64} className="gap-gap flex flex-col">
-          <SocialLoginButton
-            icon={<KakaoIcon />}
-            label={`카카오로 ${actionLabel}`}
-            className="bg-kakao h-13"
-          />
-          <SocialLoginButton
-            icon={<GoogleIcon />}
-            label={`구글로 ${actionLabel}`}
-            className="bg-media-on border-border-strong h-13.5 border"
-          />
+          <SocialLoginActions actionLabel={actionLabel} />
 
           {terms}
 
