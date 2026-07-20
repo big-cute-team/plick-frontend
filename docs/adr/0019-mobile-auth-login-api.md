@@ -40,6 +40,24 @@
 
 `apiFetch`도 로그인 fetcher도 mobile `_lib`에만 뒀다. 스킬 게이트대로 첫 앱은 앱별. 웹에도 같은 로그인 화면이 있어서 두 번째로 붙일 때 `apiFetch`가 같은 봉투·같은 쿠키 규약을 쓰게 되면, 그때 `@plick/core` 같은 데로 올릴지 판단하면 된다. 지금 미리 빼면 웹에서 안 쓰는 추상화를 떠안는 꼴이라 참았다.
 
+## `_lib`을 데이터 레이어와 앱 스코프로 갈랐다
+
+처음엔 `api.ts`·`login.ts`를 앱 상수·타입(`constants.ts`의 `TABS`, `types.ts`의 `Tab`)과 같은 `_lib` 바닥에 평평하게 뒀는데, 데이터 레이어가 앱 껍데기 코드와 섞여 지저분했다. 그래서 데이터 레이어를 `_lib/api/`로 접어 넣었다.
+
+```
+_lib/
+  api/
+    client.ts      # apiFetch·ApiError — HTTP 래퍼(도메인 무관)
+    auth.ts        # login 서버 액션 + LoginResponse(로컬)
+    constants.ts   # AUTH_COOKIES·AUTH_MOCK_CODE
+    types.ts       # SocialProvider
+  constants.ts     # TABS·ONBOARDING_ENTRY (앱)
+  types.ts         # Tab (앱)
+  mock.ts · useTeamSelection.ts
+```
+
+가르는 김에 알게 된 게 하나 있다. `auth.ts`는 맨 위에 `"use server"`가 붙는데, 이 지시어가 붙은 파일은 **export를 전부 async 함수로만** 해야 한다. 그래서 `AUTH_COOKIES` 같은 상수나 `SocialProvider` 타입을 auth.ts 안에 같이 두고 export할 수가 없다 — 강제로 `api/constants.ts`·`api/types.ts`로 빠진다. 억지로 나눈 게 아니라 규칙이 그렇게 만든 분리라 오히려 깔끔했다. 다음 엔드포인트는 `api/posts.ts`처럼 `api/` 밑에 붙고 `client.ts`를 공유하면 된다. 앱 라우팅 상수인 `ONBOARDING_ENTRY`는 데이터가 아니라 화면 이동 사실이라 앱 `constants.ts`에 `TABS`와 나란히 남겼다.
+
 ## 네트워크 탭에 BE 호출이 안 보여서 잠깐 헷갈렸다
 
 다 만들고 네트워크 탭을 보다 잠깐 멈칫했다. 로그인 버튼을 눌러도 `/api/v1/auth/login`(8080) 호출이 안 보였기 때문이다. 곰곰이 보니 당연했다 — 서버 액션이라 브라우저가 BE를 직접 때리는 게 아니라, 브라우저는 Next 서버 액션(`POST /login`)만 부르고 진짜 8080 호출은 서버 안에서 서버끼리 오간다. 브라우저 네트워크 탭엔 그 서버-서버 구간이 안 잡힌다. HttpOnly로 토큰을 숨긴 것의 대가이자 목적이기도 하다. BE 호출을 눈으로 보고 싶으면 프런트가 아니라 BE 로그를 봐야 한다.
@@ -49,5 +67,7 @@
 ## 막힌 데
 
 lint가 `API_BASE_URL`·`NODE_ENV`를 turbo가 모르는 env라고 경고를 띄웠다. `turbo.json`에 `globalEnv`로 선언해 풀었다. 이걸 안 하면 turbo 캐시가 env 변화를 못 읽어 잘못된 캐시를 줄 수 있으니 경고가 맞다.
+
+`_lib` 폴더를 옮긴 뒤 dev 서버가 계속 옛 경로(`@/_lib/login`)를 못 찾겠다는 에러를 브라우저에 뿌렸다. 소스는 이미 새 경로로 바꿨고 `check-types`·`lint`·프로덕션 빌드까지 다 통과하는데도 그랬다. Turbopack이 파일 이동 뒤 `.next` 영속 캐시를 stale하게 물고 있어서였다 — dev 서버를 재시작해도 안 풀리고 `.next`를 지워야 했다(ADR 0005에서 공유 토큰 옮길 때 겪은 그 캐시 문제와 같은 결). 브라우저 콘솔도 옛 에러 메시지를 안 지우고 계속 보여줘 한참 헷갈렸는데, 결국 프로덕션 빌드가 깨끗이 통과하는 걸로 소스가 맞다는 걸 확정하고 캐시만 비웠다.
 
 검증은 실제 BE에 붙여 네 상태를 다 밟았다. 성공(쿠키 심김·홈 이동), 신규 유저(구글, 역시 홈), 에러(BE 포트를 죽은 걸로 바꿔 실패 메시지 확인), 회원가입 경로까지. mock의 "항상 성공·즉시"에 속지 말라는 스킬 경고가 실제로 유효했다 — 에러 상태는 BE를 꺼봐야 재현됐다.

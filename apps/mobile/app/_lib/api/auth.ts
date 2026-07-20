@@ -2,8 +2,9 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { apiFetch } from "./api";
-import { AUTH_COOKIES, AUTH_MOCK_CODE, ONBOARDING_ENTRY } from "./constants";
+import { ONBOARDING_ENTRY } from "@/_lib/constants";
+import { apiFetch } from "./client";
+import { AUTH_COOKIES, AUTH_MOCK_CODE } from "./constants";
 import type { SocialProvider } from "./types";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */

@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { GoogleIcon, KakaoIcon } from "@plick/ui/icons";
 import { SocialLoginButton } from "@plick/ui/SocialLoginButton";
-import { login } from "@/_lib/login";
-import type { SocialProvider } from "@/_lib/types";
+import { login } from "@/_lib/api/auth";
+import type { SocialProvider } from "@/_lib/api/types";
 
 /**
  * 카카오/구글 버튼 묶음 — 로그인 서버 액션을 연결하는 클라 경계.

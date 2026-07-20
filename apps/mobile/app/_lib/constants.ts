@@ -11,18 +11,6 @@ import {
 import type { Tab } from "./types";
 
 /**
- * 소셜 로그인 인가 코드 자리 — 지금 BE는 mock-auth라 아무 문자열이나 받는다.
- * 실제 OAuth 리다이렉트가 붙으면 프로바이더가 주는 code로 교체된다.
- */
-export const AUTH_MOCK_CODE = "mock";
-
-/** 토큰을 담는 HttpOnly 쿠키 이름 (login이 심고, 이후 보호 API·refresh가 읽는다) */
-export const AUTH_COOKIES = {
-  access: "accessToken",
-  refresh: "refreshToken",
-} as const;
-
-/**
  * 온보딩 진입 경로 — 신규 유저(`needsOnboarding`) 로그인 직후 보내는 첫 단계.
  * 이후 닉네임(1/2) → 마이팀(2/2) → 홈은 각 페이지 버튼이 이어간다.
  */

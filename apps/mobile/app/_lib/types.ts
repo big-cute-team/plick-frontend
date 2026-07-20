@@ -10,6 +10,3 @@ export type Tab = {
   Icon: ComponentType<{ size?: number }>;
   match: (p: string) => boolean;
 };
-
-/** 소셜 로그인 프로바이더 — BE `/api/v1/auth/login`의 `provider` 값 */
-export type SocialProvider = "kakao" | "google";
