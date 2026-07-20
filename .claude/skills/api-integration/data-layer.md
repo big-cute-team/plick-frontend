@@ -84,9 +84,14 @@ export default nextConfig;
 
 ---
 
-## 3. `apiFetch` 클라이언트 (앱별 `_lib/api.ts`)
+## 3. `apiFetch` 클라이언트 (앱별 `_lib/api/client.ts`)
 
-얇은 래퍼 하나. base 선택 · JSON 파싱 · 에러 정규화 · 인증 봉합점만 담당한다. 도메인 지식은 넣지 않는다.
+> **폴더 레이아웃(KAN-253에서 확정):** 데이터 레이어는 앱 `_lib` 바닥에 흩지 말고 **`_lib/api/`로 접는다.**
+> `client.ts`(이 래퍼) · `<도메인>.ts`(fetcher, 예 `auth.ts`·`posts.ts`) · `constants.ts`(`AUTH_COOKIES` 등) · `types.ts`(요청/응답 부수 타입).
+> 앱 스코프(`TABS`·`Tab`)와 라우팅 상수(`ONBOARDING_ENTRY`)는 앱 `_lib/constants.ts`·`_lib/types.ts`에 남긴다.
+> ⚠️ **서버 액션 fetcher(`"use server"`)는 export가 async 함수여야만 한다** → 그 파일에 상수·타입을 같이 두지 말고 `api/constants.ts`·`api/types.ts`로 분리(강제된 분리라 외려 깔끔). 배경 [ADR 0019](../../docs/adr/0019-mobile-auth-login-api.md).
+
+얇은 래퍼 하나. base 선택 · JSON 파싱 · 봉투 해제 · 에러 정규화 · 인증 봉합점만 담당한다. 도메인 지식은 넣지 않는다.
 
 ```ts
 /**
@@ -143,7 +148,7 @@ export async function apiFetch<T>(
 
 ---
 
-## 4. 도메인 fetcher + 경계 변환 (`_lib/getPosts.ts` …)
+## 4. 도메인 fetcher + 경계 변환 (`_lib/api/posts.ts` …)
 
 BE 응답 타입은 **fetcher 파일 로컬**에 두고, 여기서 도메인 타입(`FeedPost` 등)으로 변환한다. 화면은 도메인 타입만 본다.
 

@@ -10,6 +10,12 @@ import {
 } from "@plick/ui/icons";
 import type { Tab } from "./types";
 
+/**
+ * 온보딩 진입 경로 — 신규 유저(`needsOnboarding`) 로그인 직후 보내는 첫 단계.
+ * 이후 닉네임(1/2) → 마이팀(2/2) → 홈은 각 페이지 버튼이 이어간다.
+ */
+export const ONBOARDING_ENTRY = "/onboarding/nickname";
+
 /** 하단 탭 구성 — TabBar가 그린다 */
 export const TABS: Tab[] = [
   { href: "/", label: "홈", Icon: HomeIcon, match: (p) => p === "/" },
