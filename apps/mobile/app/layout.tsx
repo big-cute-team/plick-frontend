@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { AuthProvider } from "@/_components/AuthProvider";
+import { isLoggedIn } from "@/_lib/api/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,11 +19,17 @@ export const viewport: Viewport = {
   themeColor: "#0b0d12",
 };
 
-export default function RootLayout({
+/**
+ * 루트 레이아웃 — 서버에서 로그인 여부를 한 번 읽어 `AuthProvider`로 클라 트리에 시드한다.
+ * refresh 미들웨어가 이보다 먼저 돌아 쿠키를 정리하므로, 여기서 읽는 값은 항상 재발급 반영 후다.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const loggedIn = await isLoggedIn();
+
   return (
     <html lang="ko" data-theme="dark">
       <head>
@@ -30,7 +38,9 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
       </head>
-      <body className="bg-nav text-text">{children}</body>
+      <body className="bg-nav text-text">
+        <AuthProvider isLoggedIn={loggedIn}>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
