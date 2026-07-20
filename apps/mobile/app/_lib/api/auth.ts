@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ONBOARDING_ENTRY } from "@/_lib/constants";
 import { apiFetch } from "./client";
-import { AUTH_COOKIES, AUTH_MOCK_CODE } from "./constants";
+import {
+  ACCESS_TOKEN_MAX_AGE,
+  AUTH_COOKIE_BASE,
+  AUTH_COOKIES,
+  AUTH_MOCK_CODE,
+  REFRESH_TOKEN_MAX_AGE,
+} from "./constants";
 import type { SocialProvider } from "./types";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
@@ -37,14 +43,14 @@ export async function login(
   }
 
   const jar = await cookies();
-  const options = {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-  } as const;
-  jar.set(AUTH_COOKIES.access, data.accessToken, options);
-  jar.set(AUTH_COOKIES.refresh, data.refreshToken, options);
+  jar.set(AUTH_COOKIES.access, data.accessToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  });
+  jar.set(AUTH_COOKIES.refresh, data.refreshToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
 
   redirect(data.needsOnboarding ? ONBOARDING_ENTRY : "/");
 }
