@@ -29,8 +29,15 @@ export async function middleware(request: NextRequest) {
    * - access가 살아있음 → 아직 미만료.
    * - refresh가 없음 → 비로그인 탐색(둘러보기). 로그인 강제 금지.
    * - 로그인 화면 → 여기서 재발급/리다이렉트하면 루프·이상동작만 생긴다.
+   * - OAuth 콜백 → 콜백 핸들러가 직접 새 토큰 쿠키를 심는다. 여기서도 심으면
+   *   같은 쿠키에 Set-Cookie가 겹쳐 어느 값이 남을지 보장이 없다.
    */
-  if (hasAccess || !refreshToken || request.nextUrl.pathname === "/login") {
+  if (
+    hasAccess ||
+    !refreshToken ||
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname.startsWith("/oauth")
+  ) {
     return NextResponse.next();
   }
 

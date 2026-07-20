@@ -8,9 +8,11 @@ import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
   AUTH_COOKIES,
-  AUTH_MOCK_CODE,
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
 } from "./constants";
+import { buildAuthorizeUrl, packOAuthState } from "./oauth";
 import type { SocialProvider } from "./types";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
@@ -22,21 +24,53 @@ interface LoginResponse {
 }
 
 /**
- * 소셜 로그인 서버 액션 — BE에 로그인하고 토큰을 HttpOnly 쿠키로 심은 뒤 이동시킨다.
- * 신규 유저(`needsOnboarding`)는 온보딩 첫 단계로, 기존 유저는 홈으로 보낸다.
- * 토큰이 브라우저 JS에 노출되지 않도록 BE 호출·저장을 전부 서버에서 한다.
+ * 소셜 로그인 시작 서버 액션 (KAN-257) — CSRF 방지 state를 쿠키에 심고
+ * 프로바이더 인가 페이지로 리다이렉트한다. 사용자가 동의하면 프로바이더가
+ * `/oauth/callback`으로 code를 돌려보내고, 거기서 `login`이 마무리한다.
  *
  * @param provider 카카오/구글 버튼이 넘기는 프로바이더
- * @returns 실패 시 화면이 보여줄 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ * @returns 실패 시(설정 누락) 화면이 보여줄 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ */
+export async function startSocialLogin(
+  provider: SocialProvider,
+): Promise<{ error: string } | undefined> {
+  const state = crypto.randomUUID();
+
+  let authorizeUrl: string;
+  try {
+    authorizeUrl = buildAuthorizeUrl(provider, state);
+  } catch {
+    return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+
+  const jar = await cookies();
+  jar.set(OAUTH_STATE_COOKIE, packOAuthState(provider, state), {
+    ...AUTH_COOKIE_BASE,
+    maxAge: OAUTH_STATE_MAX_AGE,
+  });
+
+  redirect(authorizeUrl);
+}
+
+/**
+ * 소셜 로그인 마무리 — 프로바이더가 준 인가 code를 BE에 넘겨 토큰을 받고
+ * HttpOnly 쿠키로 심은 뒤 이동시킨다. 신규 유저(`needsOnboarding`)는 온보딩
+ * 첫 단계로, 기존 유저는 홈으로 보낸다. 콜백 라우트(`/oauth/callback`)가 부른다.
+ * 토큰이 브라우저 JS에 노출되지 않도록 BE 호출·저장을 전부 서버에서 한다.
+ *
+ * @param provider state 쿠키에서 복원한 프로바이더
+ * @param code 프로바이더가 콜백으로 돌려준 인가 코드
+ * @returns 실패 시 호출부가 처리할 에러 메시지. 성공 시 redirect라 반환하지 않는다.
  */
 export async function login(
   provider: SocialProvider,
+  code: string,
 ): Promise<{ error: string } | undefined> {
   let data: LoginResponse;
   try {
     data = await apiFetch<LoginResponse>("/api/v1/auth/login", {
       method: "POST",
-      body: JSON.stringify({ provider, code: AUTH_MOCK_CODE }),
+      body: JSON.stringify({ provider, code }),
     });
   } catch {
     return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };

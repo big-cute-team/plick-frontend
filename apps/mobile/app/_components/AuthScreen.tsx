@@ -20,6 +20,7 @@ import { TopBarShell } from "./TopBarShell";
  * @param switchPrompt - 하단 전환 문구 (예: 처음이신가요?)
  * @param switchHref - 전환 링크 경로
  * @param switchLabel - 전환 링크 라벨
+ * @param errorMessage - 진입 시 버튼 아래 띄울 에러 (OAuth 콜백 실패 안내)
  */
 export function AuthScreen({
   tagline,
@@ -30,6 +31,7 @@ export function AuthScreen({
   switchPrompt,
   switchHref,
   switchLabel,
+  errorMessage,
 }: {
   tagline: string;
   actionLabel: string;
@@ -39,6 +41,7 @@ export function AuthScreen({
   switchPrompt: string;
   switchHref: string;
   switchLabel: string;
+  errorMessage?: string;
 }) {
   return (
     <AppShell>
@@ -69,7 +72,10 @@ export function AuthScreen({
         </section>
 
         <BottomActionBar base={64} className="gap-gap flex flex-col">
-          <SocialLoginActions actionLabel={actionLabel} />
+          <SocialLoginActions
+            actionLabel={actionLabel}
+            initialError={errorMessage}
+          />
 
           {terms}
 
