@@ -43,11 +43,11 @@ export function LogoutButton() {
             className="absolute inset-0"
             style={{
               backgroundColor:
-                "color-mix(in srgb, var(--plk-scrim) 68%, transparent)",
+                "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
             }}
           />
 
-          <div className="bg-elevate-2 border-border rounded-card relative w-full max-w-72 border p-6">
+          <div className="bg-bg border-border rounded-card relative w-full max-w-72 border p-6">
             <p
               id="logout-dialog-title"
               className="text-body-lg text-text text-center font-extrabold"

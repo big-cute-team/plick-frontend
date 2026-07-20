@@ -6,6 +6,7 @@ export default function LoginPage() {
     <AuthScreen
       tagline="축구 이적 뉴스, 팬 반응까지 한 번에"
       actionLabel="로그인"
+      homeHref="/"
       switchPrompt="처음이신가요?"
       switchHref="/signup"
       switchLabel="회원가입"
