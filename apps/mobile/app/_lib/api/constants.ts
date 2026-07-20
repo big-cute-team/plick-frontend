@@ -3,11 +3,37 @@
  * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_lib/constants`.
  */
 
+import type { SocialProvider } from "./types";
+
 /**
- * 소셜 로그인 인가 코드 자리 — 지금 BE는 mock-auth라 아무 문자열이나 받는다.
- * 실제 OAuth 리다이렉트가 붙으면 프로바이더가 주는 code로 교체된다.
+ * 프로바이더별 OAuth 인가 엔드포인트와 고정 파라미터 (KAN-257).
+ * 환경마다 달라지는 client_id·redirect_uri는 env로 읽는다 — 조립은 `oauth.ts`.
+ *
+ * `extraParams` — 프로바이더가 추가로 요구하는 고정 쿼리 (구글은 scope 필수).
  */
-export const AUTH_MOCK_CODE = "mock";
+export const OAUTH_AUTHORIZE: Record<
+  SocialProvider,
+  { endpoint: string; clientIdEnv: string; extraParams: Record<string, string> }
+> = {
+  kakao: {
+    endpoint: "https://kauth.kakao.com/oauth/authorize",
+    clientIdEnv: "KAKAO_CLIENT_ID",
+    extraParams: {},
+  },
+  google: {
+    endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+    clientIdEnv: "GOOGLE_CLIENT_ID",
+    extraParams: { scope: "openid email" },
+  },
+};
+
+/**
+ * OAuth `state`(CSRF 방지 난수)를 인가 왕복 동안 들고 있는 HttpOnly 쿠키.
+ * 값은 `프로바이더:난수` — 콜백 주소가 프로바이더 공용이라 어느 쪽에서 돌아왔는지도 여기서 안다.
+ * 왕복은 수 초면 끝나므로 수명은 넉넉한 10분만 준다.
+ */
+export const OAUTH_STATE_COOKIE = "oauthState";
+export const OAUTH_STATE_MAX_AGE = 60 * 10; // 10분
 
 /** 토큰을 담는 HttpOnly 쿠키 이름 (login이 심고, 이후 보호 API·refresh가 읽는다) */
 export const AUTH_COOKIES = {
