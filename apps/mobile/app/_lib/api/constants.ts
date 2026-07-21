@@ -3,7 +3,25 @@
  * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_lib/constants`.
  */
 
+import type { TeamCode } from "@plick/domain/types";
 import type { SocialProvider } from "./types";
+
+/**
+ * 팀 코드 → BE `teams.team_id` 매핑 (KAN-264). 온보딩·프로필 수정의 `teamIds` 요청에 쓴다.
+ *
+ * ⚠️ BE에 팀 목록 조회 API가 없어 실제 DB(teams 테이블) 값을 상수로 박아둔 계약 공백이다.
+ * teams는 어드민이 쓰기 소유하는 마스터 데이터라 재시드되면 조용히 어긋난다(실제로
+ * KAN-264 작업 중 7~12 → 1~6으로 바뀐 적 있다). 어긋나면 요청이 400 "존재하지 않는
+ * 팀입니다"로 드러난다 — `GET /teams` 류가 생기면 이 상수를 걷어내고 조회로 교체한다.
+ */
+export const TEAM_IDS: Record<TeamCode, number> = {
+  MUN: 1,
+  MCI: 2,
+  LIV: 3,
+  ARS: 4,
+  CHE: 5,
+  TOT: 6,
+};
 
 /**
  * 프로바이더별 OAuth 인가 엔드포인트와 고정 파라미터 (KAN-257).
