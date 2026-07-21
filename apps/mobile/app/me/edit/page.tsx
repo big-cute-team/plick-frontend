@@ -5,6 +5,7 @@ import { ScrollArea } from "@/_components/ScrollArea";
 import { getMyProfile } from "@/_lib/api/profile";
 import { EditTopBar } from "./_components/EditTopBar";
 import { InfoCard } from "./_components/InfoCard";
+import { NicknameEditField } from "./_components/NicknameEditField";
 import { ProfileEditForm } from "./_components/ProfileEditForm";
 
 /**
@@ -26,6 +27,7 @@ export default async function ProfileEditPage() {
         <div className="px-edge flex flex-col gap-4.5 pt-2.5 pb-10">
           <AvatarField />
           <InfoCard nickname={profile.nickname} email={profile.email} />
+          <NicknameEditField />
           <ProfileEditForm initialTeams={profile.myTeams} />
         </div>
       </ScrollArea>
