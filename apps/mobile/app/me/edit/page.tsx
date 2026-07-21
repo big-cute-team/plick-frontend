@@ -24,8 +24,13 @@ export default async function ProfileEditPage() {
 
       <ScrollArea>
         <div className="px-edge flex flex-col gap-4.5 pt-2.5 pb-10">
-          <AvatarField />
-          <InfoCard nickname={profile.nickname} email={profile.email} />
+          <div className="flex flex-col items-center gap-2.5">
+            <AvatarField />
+            <p className="text-body-lg text-text font-extrabold">
+              {profile.nickname ?? "미설정"}
+            </p>
+          </div>
+          <InfoCard email={profile.email} />
           <ProfileEditForm
             currentNickname={profile.nickname}
             nicknameChangeableAt={profile.nicknameChangeableAt}
