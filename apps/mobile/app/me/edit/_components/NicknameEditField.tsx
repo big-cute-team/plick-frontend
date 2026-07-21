@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { CheckIcon, CloseIcon } from "@plick/ui/icons";
 import { checkNickname } from "@/_lib/api/users";
 import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
@@ -17,12 +17,14 @@ type CheckResult = { available: boolean } | { error: string } | null;
  * 닉네임을 함께 보내야 해서다. "중복확인"은 `GET /users/nickname-check`를 서버 액션으로
  * 불러 사용 가능 여부만 확인한다(실제 저장은 폼의 "변경사항 저장" 몫).
  *
- * 7일 제한에 걸려 있으면(`changeableAt` non-null) 인풋·버튼을 잠그고
- * 언제부터 가능한지 빨간 글씨로 안내한다 — 판정은 BE가 하고 화면은 값만 따른다.
+ * 7일 제한 잠금은 `changeableAt`을 **현재 시각과 비교**해 판단한다 — BE 값의
+ * null 여부만 믿지 않는다(응답이 온 뒤 시각이 지나면 풀려야 하므로). 잠겨 있으면
+ * 인풋·버튼을 막고 언제부터 가능한지 빨간 글씨로 안내하며, 시각이 지나면
+ * 리로드 없이 자동으로 풀린다.
  *
  * @param value - 현재 입력값
  * @param onChange - 입력 변경 핸들러
- * @param changeableAt - 닉네임을 다시 바꿀 수 있는 시각(ISO) — null이면 지금 변경 가능
+ * @param changeableAt - 닉네임을 다시 바꿀 수 있는 시각(ISO) — null이면 제한 이력 없음
  */
 export function NicknameEditField({
   value,
@@ -35,8 +37,18 @@ export function NicknameEditField({
 }) {
   const [result, setResult] = useState<CheckResult>(null);
   const [pending, startTransition] = useTransition();
+  const [now, setNow] = useState(() => Date.now());
 
-  const locked = changeableAt !== null;
+  const lockedUntil = changeableAt === null ? null : Date.parse(changeableAt);
+  const locked = lockedUntil !== null && lockedUntil > now;
+
+  /** 잠금 시각이 지나는 순간 한 번 다시 렌더해 자동으로 풀어준다. */
+  useEffect(() => {
+    if (!locked || lockedUntil === null) return;
+    const id = setTimeout(() => setNow(Date.now()), lockedUntil - now);
+    return () => clearTimeout(id);
+  }, [locked, lockedUntil, now]);
+
   const trimmed = value.trim();
 
   /** 입력이 바뀌면 직전 확인 결과는 더 이상 유효하지 않다 — 지운다. */
@@ -90,7 +102,7 @@ export function NicknameEditField({
         </button>
       </div>
 
-      {locked ? (
+      {locked && changeableAt !== null ? (
         <p className="text-label text-danger px-1 font-semibold" role="alert">
           {formatChangeableAt(changeableAt)}까지는 닉네임을 바꿀 수 없어요
         </p>
