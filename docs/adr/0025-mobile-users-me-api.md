@@ -92,6 +92,13 @@ ADR 0011 게이트 B(동일성)가 깨졌으니 공용을 variant로 불리지 �
 `TeamPicker`는 아직 단일 선택 UI라 첫 팀만 초깃값으로 주고, 다중 편집은 PATCH 연동
 티켓으로 미뤘다.
 
+같은 이유로 온보딩 2단계도 다중으로 맞췄다(사용자 지적). `TeamStep`의 단일
+`team` 상태를 `teams: TeamCode[]` + 토글로 바꾸고, `TeamSelectGrid`도 목록 기반
+`selected`/`onToggle` 제어형으로, `submitOnboarding`은 `TeamCode[]`를 받아
+`teamIds` 배열로 보내게 했다(원래도 배열로 보내던 걸 한 개짜리로 감싸던 것뿐이라
+BE 쪽 변화는 없다). 실제 플로우로 두 팀(리버풀·아스날)을 골라 제출 → DB
+`favorite_teams` 2행 → MY 목록 카드에 두 칩이 뜨는 것까지 확인했다.
+
 반대로 알림 설정 제거는 공용 `PreferenceCard`를 직접 고쳤다. 알림 기능 자체가 제품에
 없어서 빼는 거라 웹도 같이 빠지는 게 맞다고 봤다 — 이건 매체 차이가 아니라 제품
 결정이니 게이트 B 위반이 아니다. 공용을 건드렸으니 web·mobile 양쪽 클린 빌드로
