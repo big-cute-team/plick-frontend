@@ -29,15 +29,16 @@ interface ProfileTeamResponse {
 }
 
 /**
- * BE → 화면 경계 변환. 마이팀은 배열로 오지만 제품은 단일 팀이라 첫 항목만 쓰고,
+ * BE → 화면 경계 변환. 응원팀은 다중 선택이라 배열 그대로 코드로 좁히고,
  * 빅6 레지스트리에 없는 코드는 버린다(BE가 팀을 늘려도 화면이 깨지지 않게).
  */
 function toMyProfile(r: ProfileResponse): MyProfile {
-  const team = r.teams.find((t) => t.shortName in TEAMS);
   return {
     nickname: r.nickname,
     email: r.email,
-    myTeam: team ? (team.shortName as TeamCode) : null,
+    myTeams: r.teams
+      .filter((t) => t.shortName in TEAMS)
+      .map((t) => t.shortName as TeamCode),
   };
 }
 

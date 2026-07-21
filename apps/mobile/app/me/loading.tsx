@@ -10,7 +10,8 @@ export default function MyLoading() {
       <TopBar />
       <ScrollArea>
         <div className="px-edge gap-gap-lg flex animate-pulse flex-col pt-3 pb-8">
-          <div className="bg-elevate rounded-card h-24" />
+          <div className="bg-elevate rounded-card h-21.5" />
+          <div className="bg-elevate rounded-card h-27" />
           <div className="bg-elevate rounded-card h-14" />
           <div className="bg-elevate rounded-card h-14" />
         </div>

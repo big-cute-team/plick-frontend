@@ -26,7 +26,8 @@ export default async function ProfileEditPage() {
         <div className="px-edge flex flex-col gap-4.5 pt-2.5 pb-10">
           <AvatarField />
           <InfoCard nickname={profile.nickname} email={profile.email} />
-          <TeamPicker initial={profile.myTeam} />
+          {/* 응원팀은 다중이지만 수정 UI는 아직 단일 선택 — 다중 편집은 PATCH 연동 티켓에서 */}
+          <TeamPicker initial={profile.myTeams[0] ?? null} />
 
           <PrimaryButton>변경사항 저장</PrimaryButton>
         </div>
