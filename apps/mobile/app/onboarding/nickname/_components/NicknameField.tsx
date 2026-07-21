@@ -1,34 +1,34 @@
 "use client";
 
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
-import { useNicknameCheck } from "@/_lib/useNicknameCheck";
+import type { NicknameCheckResult } from "@/_lib/useNicknameCheck";
 import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
 
 /**
  * 닉네임 입력 필드 — accent 보더 인풋 + 글자수 카운터 + 중복확인 버튼 (KAN-269).
- * 상태는 부모(NicknameStep)가 들고 있는 제어형 — 다음 단계로 값을 넘겨야 해서다.
- *
- * "중복확인"은 `useNicknameCheck`(프로필 수정과 공용)로 사용 가능 여부만 확인한다.
- * 확인은 그 순간의 답일 뿐이라 저장(온보딩 제출) 때 BE가 다시 검사한다.
+ * 상태는 전부 부모(NicknameStep)가 든다 — 값은 다음 단계로 넘겨야 하고,
+ * 중복확인 결과는 "다음" 버튼 잠금 판단에 필요해서다. 이 컴포넌트는 표시만 한다.
  *
  * @param value - 현재 닉네임
  * @param onChange - 입력 변경 핸들러
+ * @param result - 중복확인 결과 (`useNicknameCheck`)
+ * @param pending - 중복확인 진행 중 여부
+ * @param onCheck - "중복확인" 버튼 클릭 핸들러
  */
 export function NicknameField({
   value,
   onChange,
+  result,
+  pending,
+  onCheck,
 }: {
   value: string;
   onChange: (value: string) => void;
+  result: NicknameCheckResult;
+  pending: boolean;
+  onCheck: () => void;
 }) {
-  const { result, pending, check, reset } = useNicknameCheck();
   const trimmed = value.trim();
-
-  /** 입력이 바뀌면 직전 확인 결과는 더 이상 유효하지 않다 — 지운다. */
-  const handleChange = (next: string) => {
-    onChange(next);
-    reset();
-  };
 
   return (
     <div>
@@ -37,7 +37,7 @@ export function NicknameField({
           <input
             type="text"
             value={value}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={(e) => onChange(e.target.value)}
             maxLength={NICKNAME_MAX_LENGTH}
             aria-label="닉네임"
             className="text-body-lg text-text min-w-0 flex-1 bg-transparent font-bold outline-none"
@@ -49,7 +49,7 @@ export function NicknameField({
 
         <button
           type="button"
-          onClick={() => check(trimmed)}
+          onClick={onCheck}
           disabled={!trimmed || pending}
           className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-14 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
         >
