@@ -72,7 +72,9 @@ export async function login(
       method: "POST",
       body: JSON.stringify({ provider, code }),
     });
-  } catch {
+  } catch (e) {
+    // 화면엔 공통 문구만 나가므로 실제 실패 사유는 서버 로그로만 남는다
+    console.error("[oauth] BE login 실패:", e);
     return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };
   }
 

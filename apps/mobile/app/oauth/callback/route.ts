@@ -26,10 +26,22 @@ export async function GET(request: NextRequest) {
   jar.delete(OAUTH_STATE_COOKIE);
 
   // 사용자가 동의를 취소하면 code 없이 ?error=만 온다 — 조용히 로그인 화면으로
-  if (!code || !returnedState || !storedValue) redirect(FAILURE_PATH);
+  if (!code || !returnedState || !storedValue) {
+    // 실패가 전부 같은 ?error=oauth로 합쳐지므로 사유는 서버 로그로 구분한다
+    console.error("[oauth] 콜백 파라미터/쿠키 누락:", {
+      code: !!code,
+      state: !!returnedState,
+      cookie: !!storedValue,
+      error: params.get("error"),
+    });
+    redirect(FAILURE_PATH);
+  }
 
   const stored = parseOAuthState(storedValue);
-  if (!stored || stored.state !== returnedState) redirect(FAILURE_PATH);
+  if (!stored || stored.state !== returnedState) {
+    console.error("[oauth] state 검증 실패:", { storedValue, returnedState });
+    redirect(FAILURE_PATH);
+  }
 
   const result = await login(stored.provider, code);
   if (result?.error) redirect(FAILURE_PATH);

@@ -15,12 +15,12 @@ export const OAUTH_AUTHORIZE: Record<
   SocialProvider,
   { endpoint: string; clientIdEnv: string; extraParams: Record<string, string> }
 > = {
-  kakao: {
+  KAKAO: {
     endpoint: "https://kauth.kakao.com/oauth/authorize",
     clientIdEnv: "KAKAO_CLIENT_ID",
     extraParams: {},
   },
-  google: {
+  GOOGLE: {
     endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
     clientIdEnv: "GOOGLE_CLIENT_ID",
     extraParams: { scope: "openid email" },
