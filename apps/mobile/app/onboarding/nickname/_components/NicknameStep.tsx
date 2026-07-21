@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BottomActionBar } from "@/_components/BottomActionBar";
 import { PrimaryButton } from "@/_components/PrimaryButton";
+import { SkipLink } from "@/onboarding/_components/SkipLink";
 import { NicknameField } from "./NicknameField";
 
 /**
@@ -32,6 +33,7 @@ export function NicknameStep({ initial = "" }: { initial?: string }) {
       </section>
 
       <BottomActionBar>
+        <SkipLink />
         {trimmed ? (
           <PrimaryButton
             href={`/onboarding/team?nickname=${encodeURIComponent(trimmed)}`}

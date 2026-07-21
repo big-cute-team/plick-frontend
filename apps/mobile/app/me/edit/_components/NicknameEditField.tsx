@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { CheckIcon, CloseIcon } from "@plick/ui/icons";
-import { checkNickname } from "@/_lib/api/users";
+import { useEffect, useState } from "react";
+import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
+import { useNicknameCheck } from "@/_lib/useNicknameCheck";
 import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
 import { formatChangeableAt } from "../_lib/utils";
-
-/** 중복확인 결과 — 아직 안 눌렀으면 null, 눌렀으면 사용 가능 여부 또는 조회 실패. */
-type CheckResult = { available: boolean } | { error: string } | null;
 
 /**
  * 닉네임 변경 입력 — 인풋 + 중복확인 버튼 (KAN-269).
  *
- * 현재 닉네임은 위 정보 카드에 이미 보이므로, 이 인풋은 "새로 바꿀 값"만 받는다
+ * 현재 닉네임은 아바타 밑에 이미 보이므로, 이 인풋은 "새로 바꿀 값"만 받는다
  * (빈 값 + 플레이스홀더로 시작). 값은 부모(ProfileEditForm)가 드는 제어형 — 저장 시
- * 닉네임을 함께 보내야 해서다. "중복확인"은 `GET /users/nickname-check`를 서버 액션으로
- * 불러 사용 가능 여부만 확인한다(실제 저장은 폼의 "변경사항 저장" 몫).
+ * 닉네임을 함께 보내야 해서다. "중복확인"은 `useNicknameCheck`(온보딩과 공용)로
+ * 사용 가능 여부만 확인한다(실제 저장은 폼의 "변경사항 저장" 몫).
  *
  * 7일 제한 잠금은 `changeableAt`을 **현재 시각과 비교**해 판단한다 — BE 값의
  * null 여부만 믿지 않는다(응답이 온 뒤 시각이 지나면 풀려야 하므로). 잠겨 있으면
@@ -35,8 +32,7 @@ export function NicknameEditField({
   onChange: (value: string) => void;
   changeableAt: string | null;
 }) {
-  const [result, setResult] = useState<CheckResult>(null);
-  const [pending, startTransition] = useTransition();
+  const { result, pending, check, reset } = useNicknameCheck();
   const [now, setNow] = useState(() => Date.now());
 
   const lockedUntil = changeableAt === null ? null : Date.parse(changeableAt);
@@ -54,14 +50,7 @@ export function NicknameEditField({
   /** 입력이 바뀌면 직전 확인 결과는 더 이상 유효하지 않다 — 지운다. */
   const handleChange = (next: string) => {
     onChange(next);
-    setResult(null);
-  };
-
-  const check = () => {
-    if (!trimmed) return;
-    startTransition(async () => {
-      setResult(await checkNickname(trimmed));
-    });
+    reset();
   };
 
   return (
@@ -94,7 +83,7 @@ export function NicknameEditField({
 
         <button
           type="button"
-          onClick={check}
+          onClick={() => check(trimmed)}
           disabled={locked || !trimmed || pending}
           className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-13 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
         >
@@ -107,22 +96,7 @@ export function NicknameEditField({
           {formatChangeableAt(changeableAt)}까지는 닉네임을 바꿀 수 없어요
         </p>
       ) : (
-        result &&
-        ("error" in result ? (
-          <p className="text-label text-danger flex items-center gap-1.5 px-1 font-semibold">
-            {result.error}
-          </p>
-        ) : result.available ? (
-          <p className="text-label text-accent flex items-center gap-1.5 px-1 font-semibold">
-            <CheckIcon size={14} />
-            사용할 수 있는 닉네임이에요
-          </p>
-        ) : (
-          <p className="text-label text-danger flex items-center gap-1.5 px-1 font-semibold">
-            <CloseIcon size={14} />
-            이미 사용 중이거나 쓸 수 없는 닉네임이에요
-          </p>
-        ))
+        <NicknameCheckNotice result={result} />
       )}
     </div>
   );

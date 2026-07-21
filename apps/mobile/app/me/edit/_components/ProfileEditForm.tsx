@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import type { TeamCode } from "@plick/domain/types";
 import { PrimaryButton } from "@/_components/PrimaryButton";
+import { ErrorDialog } from "@/_components/ErrorDialog";
 import { updateMyProfile } from "@/_lib/api/users";
-import { ErrorDialog } from "./ErrorDialog";
 import { NicknameEditField } from "./NicknameEditField";
 import { TeamPicker } from "./TeamPicker";
 
