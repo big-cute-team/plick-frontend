@@ -9,9 +9,9 @@ import { useTeamSelection } from "@/_lib/useTeamSelection";
  *
  * 선택 상태는 로컬로만 유지(퍼블리싱 단계라 저장은 미연결).
  *
- * @param initial - 최초 선택 팀 코드
+ * @param initial - 최초 선택 팀 코드. 응원팀 미설정이면 null(선택 없음으로 시작)
  */
-export function TeamPicker({ initial }: { initial: TeamCode }) {
+export function TeamPicker({ initial }: { initial: TeamCode | null }) {
   const { select, isSelected } = useTeamSelection(initial);
 
   return (

@@ -9,8 +9,8 @@ import { NicknameField } from "./NicknameField";
  * 온보딩 1단계 폼 — 닉네임 상태를 들고, "다음"에 쿼리로 실어 2단계(팀 선택)로 넘긴다.
  * 온보딩 저장 API는 두 단계 값을 한 번에 받으므로(KAN-264) 여기선 전송 없이 값만 나른다.
  *
- * @param initial - 초기 닉네임. `GET /users/me`의 자동 닉네임(plick+숫자)을 플레이스홀더로
- *   쓰는 게 BE 계약이라, 그 연동 전까지는 빈 값으로 시작한다.
+ * @param initial - 초기 닉네임 — `GET /users/me`의 닉네임(KAN-267). 온보딩 전엔 BE가
+ *   null을 주므로(자동 닉네임 미구현) 페이지가 빈 값으로 좁혀 내려준다.
  */
 export function NicknameStep({ initial = "" }: { initial?: string }) {
   const [nickname, setNickname] = useState(initial);

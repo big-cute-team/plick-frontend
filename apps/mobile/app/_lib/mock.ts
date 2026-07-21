@@ -1,4 +1,4 @@
-import type { Comment, FeedPost, User } from "@plick/domain/types";
+import type { Comment, FeedPost } from "@plick/domain/types";
 
 /** 댓글 UI 확인용 샘플 (h1 게시물에 연결) — 릴 세부 시트 피그마(75-6) 카피 */
 const SAMPLE_COMMENTS: Comment[] = [
@@ -155,14 +155,6 @@ export const POSTS: FeedPost[] = [
 export const HOT_POSTS = POSTS.slice(0, 3);
 /** 홈 "지금 올라온 소식" 리스트용 나머지 게시물 */
 export const NEWS_POSTS = POSTS.slice(3);
-
-/** 로그인 유저 목데이터 (MY 프로필 카드·온보딩에서 사용) — 카피는 피그마 M1(26-6) */
-export const CURRENT_USER: User = {
-  nickname: "김도완",
-  handle: "@epl_fan_kim",
-  email: "kim@plkr.app",
-  myTeam: "LIV",
-};
 
 /**
  * id로 게시물을 찾는다.

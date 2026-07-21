@@ -8,10 +8,10 @@ import type { TeamCode } from "@plick/domain/types";
  *
  * 선택 상태는 로컬로만 유지한다(퍼블리싱 단계라 저장은 미연결, BE 연동 시 교체).
  *
- * @param initial - 최초 선택 팀 코드
+ * @param initial - 최초 선택 팀 코드. 아직 응원팀이 없으면 null
  */
-export function useTeamSelection(initial: TeamCode) {
-  const [selected, select] = useState<TeamCode>(initial);
+export function useTeamSelection(initial: TeamCode | null) {
+  const [selected, select] = useState<TeamCode | null>(initial);
   const isSelected = (code: TeamCode) => code === selected;
   return { selected, select, isSelected };
 }

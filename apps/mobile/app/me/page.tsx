@@ -11,8 +11,7 @@ import { PreferenceCard } from "@plick/ui/PreferenceCard";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@plick/domain/constants";
-import { isLoggedIn } from "@/_lib/api/session";
-import { CURRENT_USER } from "@/_lib/mock";
+import { getMyProfile } from "@/_lib/api/profile";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
 import { APP_VERSION_LABEL } from "./_lib/constants";
@@ -20,11 +19,11 @@ import { APP_VERSION_LABEL } from "./_lib/constants";
 /**
  * MY 마이페이지 — 로그인 여부로 갈린다 (KAN-170·KAN-255, 피그마 26-6).
  * 로그인: 프로필·응원팀·로그아웃. 로그아웃: 로그인 유도 카드. 환경설정·FAQ·버전은 공통.
- * 로그인 여부는 accessToken 쿠키 존재로 판단(서버 렌더 중, BE 호출 없이).
+ * 프로필은 `GET /users/me`로 읽는다(KAN-267) — null이면 비로그인/토큰 무효로 보고 유도 카드.
  */
 export default async function MyPage() {
-  const loggedIn = await isLoggedIn();
-  const team = TEAMS[CURRENT_USER.myTeam];
+  const profile = await getMyProfile();
+  const team = profile?.myTeam ? TEAMS[profile.myTeam] : null;
 
   return (
     <AppShell>
@@ -32,11 +31,11 @@ export default async function MyPage() {
 
       <ScrollArea>
         <div className="px-edge gap-gap-lg flex flex-col pt-3 pb-8">
-          {loggedIn ? (
+          {profile ? (
             <>
               <ProfileCard
-                nickname={CURRENT_USER.nickname}
-                handle={CURRENT_USER.handle}
+                nickname={profile.nickname ?? "닉네임 미설정"}
+                handle={profile.email ?? ""}
                 href="/me/edit"
               />
 
@@ -47,9 +46,15 @@ export default async function MyPage() {
                   label="응원팀"
                   trailing={
                     <>
-                      <span className="bg-accent-tint text-accent rounded-pill text-label px-3 py-1.5 font-extrabold">
-                        {team.name}
-                      </span>
+                      {team ? (
+                        <span className="bg-accent-tint text-accent rounded-pill text-label px-3 py-1.5 font-extrabold">
+                          {team.name}
+                        </span>
+                      ) : (
+                        <span className="text-label text-text-4 font-semibold">
+                          미설정
+                        </span>
+                      )}
                       <ChevronMiniIcon className="text-text-4 shrink-0" />
                     </>
                   }
@@ -71,7 +76,7 @@ export default async function MyPage() {
             />
           </section>
 
-          {loggedIn && <LogoutButton />}
+          {profile && <LogoutButton />}
 
           <p className="text-caption text-text-4 text-center">
             {APP_VERSION_LABEL}
