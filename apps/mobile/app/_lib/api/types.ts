@@ -16,5 +16,8 @@ export type SocialProvider = "KAKAO" | "GOOGLE";
 export interface MyProfile {
   nickname: string | null;
   email: string | null;
+  /** 닉네임을 다시 바꿀 수 있는 시각(ISO, KST 오프셋) — null이면 지금 바로 변경 가능.
+   * 7일 정책 계산은 BE 몫이고, 화면은 이 값으로 입력 잠금·안내만 한다(KAN-269). */
+  nicknameChangeableAt: string | null;
   myTeams: TeamCode[];
 }

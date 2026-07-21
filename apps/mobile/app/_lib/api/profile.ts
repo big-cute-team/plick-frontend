@@ -17,6 +17,7 @@ interface ProfileResponse {
   userId: number;
   nickname: string | null;
   email: string | null;
+  nicknameChangeableAt: string | null;
   teams: ProfileTeamResponse[];
 }
 
@@ -36,6 +37,7 @@ function toMyProfile(r: ProfileResponse): MyProfile {
   return {
     nickname: r.nickname,
     email: r.email,
+    nicknameChangeableAt: r.nicknameChangeableAt,
     myTeams: r.teams
       .filter((t) => t.shortName in TEAMS)
       .map((t) => t.shortName as TeamCode),

@@ -5,13 +5,12 @@ import { ScrollArea } from "@/_components/ScrollArea";
 import { getMyProfile } from "@/_lib/api/profile";
 import { EditTopBar } from "./_components/EditTopBar";
 import { InfoCard } from "./_components/InfoCard";
-import { NicknameEditField } from "./_components/NicknameEditField";
 import { ProfileEditForm } from "./_components/ProfileEditForm";
 
 /**
  * 프로필 수정 — 마이페이지 프로필 카드 진입 (KAN-173, 피그마 25-6).
- * 초깃값은 `GET /users/me`(KAN-267), 응원팀 저장은 `PATCH /users/me`(KAN-268).
- * 닉네임·이메일은 표시 전용이라 보내지 않는다.
+ * 초깃값은 `GET /users/me`(KAN-267), 저장은 `PATCH /users/me` — 응원팀(KAN-268)에
+ * 닉네임(KAN-269)까지 한 번에 보낸다. 이메일은 표시 전용.
  */
 export default async function ProfileEditPage() {
   const profile = await getMyProfile();
@@ -27,8 +26,11 @@ export default async function ProfileEditPage() {
         <div className="px-edge flex flex-col gap-4.5 pt-2.5 pb-10">
           <AvatarField />
           <InfoCard nickname={profile.nickname} email={profile.email} />
-          <NicknameEditField />
-          <ProfileEditForm initialTeams={profile.myTeams} />
+          <ProfileEditForm
+            currentNickname={profile.nickname}
+            nicknameChangeableAt={profile.nicknameChangeableAt}
+            initialTeams={profile.myTeams}
+          />
         </div>
       </ScrollArea>
     </AppShell>
