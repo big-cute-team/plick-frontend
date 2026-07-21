@@ -11,18 +11,12 @@ import { TeamSelectGrid } from "./TeamSelectGrid";
 /**
  * 온보딩 2단계 폼 — 팀 선택 상태를 들고, "시작하기"에서 1단계 닉네임과 함께
  * 온보딩 저장 서버 액션을 부른다(KAN-264). 성공하면 액션이 홈으로 보낸다.
+ * 팀은 안 골라도 된다(BE가 미선택 온보딩 허용) — 선택 없음으로 시작한다.
  *
  * @param nickname - 1단계에서 쿼리로 넘어온 닉네임
- * @param initialTeam - 최초 선택 팀 코드
  */
-export function TeamStep({
-  nickname,
-  initialTeam,
-}: {
-  nickname: string;
-  initialTeam: TeamCode;
-}) {
-  const [team, setTeam] = useState<TeamCode>(initialTeam);
+export function TeamStep({ nickname }: { nickname: string }) {
+  const [team, setTeam] = useState<TeamCode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 

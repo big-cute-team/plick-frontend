@@ -12,12 +12,12 @@ import { AUTH_COOKIES, TEAM_IDS } from "./constants";
  * BE는 최초 1회만 허용(재호출 409)하므로, 이미 완료된 세션이면 홈으로 보내 흐름을 끝낸다.
  *
  * @param nickname 1단계에서 정한 닉네임 (BE가 금지어·중복을 다시 검사한다)
- * @param team 2단계에서 고른 마이팀 코드
+ * @param team 2단계에서 고른 마이팀 코드 — 미선택이면 null (BE가 빈 배열 허용)
  * @returns 실패 시 화면이 보여줄 에러 메시지. 성공 시 redirect라 반환하지 않는다.
  */
 export async function submitOnboarding(
   nickname: string,
-  team: TeamCode,
+  team: TeamCode | null,
 ): Promise<{ error: string } | undefined> {
   const jar = await cookies();
   const accessToken = jar.get(AUTH_COOKIES.access)?.value;
@@ -29,7 +29,7 @@ export async function submitOnboarding(
     await apiFetch<void>("/api/v1/users/me/onboarding", {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify({ nickname, teamIds: [TEAM_IDS[team]] }),
+      body: JSON.stringify({ nickname, teamIds: team ? [TEAM_IDS[team]] : [] }),
     });
   } catch (e) {
     if (e instanceof ApiError) {

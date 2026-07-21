@@ -1,5 +1,4 @@
 import { AppShell } from "@/_components/AppShell";
-import { CURRENT_USER } from "@/_lib/mock";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { NicknameStep } from "./_components/NicknameStep";
 
@@ -9,7 +8,7 @@ export default function OnboardingNicknamePage() {
     <AppShell>
       <main className="flex h-full flex-col">
         <OnboardingTopBar step={1} backHref="/signup" />
-        <NicknameStep initial={CURRENT_USER.nickname} />
+        <NicknameStep />
       </main>
     </AppShell>
   );

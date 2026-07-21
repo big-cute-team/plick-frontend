@@ -9,14 +9,14 @@ import type { TeamCode } from "@plick/domain/types";
  * 마이팀 선택 그리드 — 빅6 팀 카드 2열, 선택 카드는 accent 보더 + 체크 배지.
  * 선택 상태는 부모(TeamStep)가 들고 있는 제어형 — 제출 시 선택값이 필요해서다.
  *
- * @param selected - 현재 선택된 팀 코드
+ * @param selected - 현재 선택된 팀 코드 (미선택이면 null)
  * @param onSelect - 팀 카드 클릭 핸들러
  */
 export function TeamSelectGrid({
   selected,
   onSelect,
 }: {
-  selected: TeamCode;
+  selected: TeamCode | null;
   onSelect: (code: TeamCode) => void;
 }) {
   return (

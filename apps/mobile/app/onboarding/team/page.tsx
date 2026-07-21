@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
-import { CURRENT_USER } from "@/_lib/mock";
 import { ONBOARDING_ENTRY } from "@/_lib/constants";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { TeamStep } from "./_components/TeamStep";
@@ -22,7 +21,7 @@ export default async function OnboardingTeamPage({
   return (
     <AppShell>
       <OnboardingTopBar step={2} backHref={ONBOARDING_ENTRY} />
-      <TeamStep nickname={nickname} initialTeam={CURRENT_USER.myTeam} />
+      <TeamStep nickname={nickname} />
     </AppShell>
   );
 }
