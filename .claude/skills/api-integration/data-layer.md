@@ -63,7 +63,10 @@ export default nextConfig;
 
 ## 2. 스웨거를 실제로 읽는다 (티켓을 믿지 말 것)
 
-응답 shape의 **진실은 스웨거**다. 붙이기 전 항상 실제 스펙을 확인한다.
+이 절차는 보통 `be-verify` 서브에이전트가 대신 밟고 요약 리포트를 준다(SKILL §6).
+아래는 손으로 확인할 때 쓰는 명령어다.
+
+응답 shape의 진실은 스웨거다. 붙이기 전 항상 실제 스펙을 확인한다.
 
 - **스웨거 UI**: `http://localhost:8080/swagger-ui/index.html` — 브라우저로 열어 해당 엔드포인트 펼치고
   "Try it out"으로 진짜 응답을 받아본다(status·필드·null 여부·페이지네이션 래핑까지).
@@ -95,14 +98,26 @@ export default nextConfig;
 
 ```ts
 /**
- * @file BE fetch 얇은 래퍼. base 선택·JSON 파싱·에러 정규화·(미래) 토큰 주입만.
+ * @file BE fetch 얇은 래퍼. base 선택·JSON 파싱·봉투 해제·에러 정규화만.
  * 도메인 변환은 각 fetcher(getPosts 등)에서 한다.
  */
+
+/**
+ * BE 공통 응답 봉투 - 모든 엔드포인트가 `{ code, message, data }`로 감싸 온다
+ * (스웨거 `ApiResponse*` 스키마). 성공 시 `code: "OK"`.
+ */
+interface ApiEnvelope<T> {
+  code: string;
+  message: string | null;
+  data: T;
+}
 
 /** BE가 정상 범위 밖 status를 줄 때 던지는 에러 (호출부가 잡아 에러 UI로). */
 export class ApiError extends Error {
   constructor(
     public status: number,
+    /** BE 에러 코드(예: `COMMON_INVALID_PARAM`). 화면 분기는 status보다 이 코드로 한다. */
+    public code: string,
     message: string,
   ) {
     super(message);
@@ -119,10 +134,11 @@ function baseUrl(): string {
 }
 
 /**
- * BE 엔드포인트를 호출하고 JSON을 반환한다.
+ * BE 엔드포인트를 호출하고 봉투를 벗긴 `data`를 반환한다.
+ * 보호 API면 호출부가 `headers`에 `Authorization: Bearer …`를 넘긴다(§6).
  *
  * @param path `/posts` 처럼 앞에 슬래시를 포함한 경로
- * @throws {ApiError} status가 2xx가 아닐 때
+ * @throws {ApiError} status가 2xx가 아닐 때 - BE 에러 봉투의 code·message를 담는다
  */
 export async function apiFetch<T>(
   path: string,
@@ -133,14 +149,20 @@ export async function apiFetch<T>(
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,
-      // 인증 붙을 때 여기서 토큰 주입 (SKILL §7 / data-layer §6)
     },
   });
 
   if (!res.ok) {
-    throw new ApiError(res.status, `${res.status} ${path}`);
+    const body = (await res.json().catch(() => null)) as Partial<
+      ApiEnvelope<unknown>
+    > | null;
+    throw new ApiError(
+      res.status,
+      body?.code ?? String(res.status),
+      body?.message ?? `${res.status} ${path}`,
+    );
   }
-  return res.json() as Promise<T>;
+  return ((await res.json()) as ApiEnvelope<T>).data;
 }
 ```
 
@@ -224,10 +246,26 @@ export async function getHotPosts(): Promise<FeedPost[]> {
 
 ---
 
-## 6. 인증 봉합점 (지금은 비어 있음)
+## 6. 인증 (붙어 있다)
 
-공개 API 단계라 토큰 주입은 **자리만** 있다(§3 `apiFetch`의 headers 주석). 인증이 붙으면:
+ADR 0019~0027에서 확정됐다. access와 refresh 토큰은 HttpOnly 쿠키에 있고, 서버 컴포넌트나 서버 액션이
+`cookies()`로 꺼내 호출마다 `Authorization: Bearer …`로 싣는다. `apiFetch`가 토큰을 스스로 찾지 않고
+호출부가 헤더로 넘긴다.
 
-- 저장 위치·주입 방식은 **사용자에게 확인**(헤더 Bearer vs HttpOnly 쿠키). 추측 금지.
-- **자격증명(토큰·비밀번호)을 코드로 직접 입력·저장하지 않는다** — 안전 규칙 준수. 주입 지점만 열어두고 값은 사용자 몫.
-- 서버 컴포넌트는 요청 컨텍스트(쿠키)에서, 클라(RQ)는 프록시가 쿠키를 실어보내게 하는 식으로 갈릴 수 있음 — 확정 시 이 파일에 기입.
+```ts
+const jar = await cookies();
+const accessToken = jar.get(AUTH_COOKIES.access)?.value;
+if (!accessToken) redirect("/login");
+
+await apiFetch<void>("/api/v1/users/me/onboarding", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${accessToken}` },
+  body: JSON.stringify(payload),
+});
+```
+
+401이 오면 세션이 끊긴 것이므로 `/login`으로 보낸다. 만료는 미들웨어가 refresh로 잇는다(ADR 0021).
+실제 구현은 `apps/mobile/app/_lib/api/users.ts`와 `session.ts`, `refresh.ts`에 있다.
+
+보호 API를 검증할 때는 실제 OAuth를 돌지 않고 `scripts/be-verify/mint-jwt.mjs`로 토큰을 민팅한다.
+그 일은 `be-verify` 서브에이전트가 한다. 자격증명을 코드에 직접 적거나 저장하지 않는다.
