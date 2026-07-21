@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellLineIcon, MoonLineIcon } from "./icons";
+import { MoonLineIcon } from "./icons";
 import { SettingRow } from "./SettingRow";
 import { ToggleSwitch } from "./ToggleSwitch";
 
 /**
- * 알림 설정·다크 모드 토글 카드. 웹·모바일 공용 (`@plick/ui`).
+ * 다크 모드 토글 카드. 웹·모바일 공용 (`@plick/ui`).
  *
- * 알림은 목 상태(BE 연동 전), 다크 모드는 ThemeToggle과 같은 방식으로
- * `<html data-theme>`를 토글해 전체 테마를 전환한다.
+ * ThemeToggle과 같은 방식으로 `<html data-theme>`를 토글해 전체 테마를 전환한다.
+ * (알림 설정 줄은 제품에 알림 기능이 없어 뺐다 — KAN-267 피드백.)
  */
 export function PreferenceCard() {
-  const [notifOn, setNotifOn] = useState(true);
   const [darkOn, setDarkOn] = useState(true);
 
   useEffect(() => {
@@ -31,18 +30,6 @@ export function PreferenceCard() {
 
   return (
     <section className="bg-elevate-2 border-border rounded-card border">
-      <SettingRow
-        icon={<BellLineIcon />}
-        label="알림 설정"
-        trailing={
-          <ToggleSwitch
-            on={notifOn}
-            onToggle={() => setNotifOn((v) => !v)}
-            label="알림 설정"
-          />
-        }
-      />
-      <div className="border-border mx-4 border-t" aria-hidden />
       <SettingRow
         icon={<MoonLineIcon />}
         label="다크 모드"

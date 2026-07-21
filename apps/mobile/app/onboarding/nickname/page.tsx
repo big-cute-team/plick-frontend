@@ -1,14 +1,25 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
+import { getMyProfile } from "@/_lib/api/profile";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { NicknameStep } from "./_components/NicknameStep";
 
-/** A5 온보딩 1/2 닉네임 설정 — 회원가입 직후 진입 (KAN-176, 피그마 96-6). */
-export default function OnboardingNicknamePage() {
+/**
+ * A5 온보딩 1/2 닉네임 설정 — 회원가입 직후 진입 (KAN-176, 피그마 96-6).
+ * 초깃값은 `GET /users/me`의 닉네임(KAN-267) — BE가 자동 닉네임(plick+숫자)을 주면
+ * 그대로 채워 시작하고, 아직 null이면(현 BE) 빈 값으로 시작한다.
+ */
+export default async function OnboardingNicknamePage() {
+  const profile = await getMyProfile();
+  if (!profile) {
+    redirect("/login"); // 온보딩은 가입 직후 흐름 — 세션 없이는 저장도 못 한다
+  }
+
   return (
     <AppShell>
       <main className="flex h-full flex-col">
         <OnboardingTopBar step={1} backHref="/signup" />
-        <NicknameStep />
+        <NicknameStep initial={profile.nickname ?? ""} />
       </main>
     </AppShell>
   );
