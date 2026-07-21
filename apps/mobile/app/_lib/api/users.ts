@@ -90,3 +90,28 @@ export async function updateMyTeams(
 
   redirect("/me");
 }
+
+/**
+ * 닉네임 중복 확인 (KAN-269) — `GET /api/v1/users/nickname-check`.
+ * 익명 허용 공개 API라 토큰을 싣지 않는다. 이미 사용 중이거나 금지어면 BE가
+ * `available: false`로 준다(둘을 구분하지 않으므로 화면도 하나의 "쓸 수 없음"으로 묶는다).
+ *
+ * 클라 버튼 클릭으로 부르지만, 서버 액션으로 두면 `apiFetch`가 서버에서 돌아
+ * CORS·프록시가 필요 없고 기존 `users.ts` 관용과도 맞는다. 단발 확인이라 RQ는 아직 안 쓴다.
+ *
+ * @param nickname 확인할 닉네임 (호출부에서 trim해 넘긴다)
+ * @returns 사용 가능 여부, 또는 조회 실패 시 화면에 보여줄 에러 메시지
+ */
+export async function checkNickname(
+  nickname: string,
+): Promise<{ available: boolean } | { error: string }> {
+  try {
+    const { available } = await apiFetch<{ available: boolean }>(
+      `/api/v1/users/nickname-check?nickname=${encodeURIComponent(nickname)}`,
+    );
+    return { available };
+  } catch (e) {
+    console.error("[nickname-check] 확인 실패:", e);
+    return { error: "확인에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+}
