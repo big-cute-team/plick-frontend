@@ -56,3 +56,37 @@ export async function submitOnboarding(
 
   redirect("/");
 }
+
+/**
+ * 응원팀 저장 서버 액션 (KAN-268) — 프로필 수정 화면의 선택을
+ * `PATCH /api/v1/users/me`로 보낸다. BE는 보낸 항목만 바꾸므로 `teamIds`만 싣는다
+ * (닉네임은 수정 UI가 없어 보내지 않는다). 팀 목록은 전체 교체다 — 빈 배열이면 응원팀 해제.
+ *
+ * @param teams 화면에서 고른 응원팀 코드 목록 (다중, 빈 배열 허용)
+ * @returns 실패 시 화면이 보여줄 에러 메시지. 성공 시 MY로 redirect라 반환하지 않는다.
+ */
+export async function updateMyTeams(
+  teams: TeamCode[],
+): Promise<{ error: string } | undefined> {
+  const jar = await cookies();
+  const accessToken = jar.get(AUTH_COOKIES.access)?.value;
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  try {
+    await apiFetch<void>("/api/v1/users/me", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ teamIds: teams.map((c) => TEAM_IDS[c]) }),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      redirect("/login"); // 토큰 만료/무효 — 세션이 끊긴 것이므로 로그인부터
+    }
+    console.error("[profile-edit] 응원팀 저장 실패:", e);
+    return { error: "저장에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+
+  redirect("/me");
+}
