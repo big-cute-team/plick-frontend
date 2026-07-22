@@ -38,6 +38,20 @@ export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
  */
 export const REELS_PREFETCH_AHEAD = 3;
 
+/**
+ * 재측정(reInit) 때 "스냅이 아직 달리는 중"으로 보는 남은 거리(px) (KAN-276).
+ *
+ * 이보다 많이 남았으면 reInit 후 운동 상태를 복원해 애니메이션을 이어 붙이고,
+ * 미만이면 사실상 멈춘 것이라 그냥 잰다({@link useReelsCarousel}).
+ *
+ * Embla 스스로의 판정(`scrollBody.settled()`)을 쓰지 않는 이유: 허용치가 0.001px인데
+ * 관성 수렴의 수치 오차 때문에 스냅이 다 끝나 화면이 멈춘 뒤에도 `offsetLocation`이
+ * 목표에서 0.004px쯤 어긋난 채 정지할 수 있다(실측). Embla는 그 판정을 정지하는
+ * 프레임에 한 번 쓰고 지나갈 뿐이라 문제가 없지만, 정지 "상태"를 묻는 질의로 쓰면
+ * 영영 false에 머무는 복불복이 된다. 1px 미만은 재도 눈에 보이지 않는 거리다.
+ */
+export const REELS_REMEASURE_EPSILON = 1;
+
 /** 시트 상단을 이 거리(px) 이상 끌어내리면 닫는다 */
 export const DRAG_CLOSE_THRESHOLD = 100;
 

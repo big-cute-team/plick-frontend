@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { REELS_CAROUSEL_OPTIONS } from "@/_constants/reels";
+import {
+  REELS_CAROUSEL_OPTIONS,
+  REELS_REMEASURE_EPSILON,
+} from "@/_constants/reels";
 
 /**
  * 릴스 세로 캐러셀 (KAN-277).
@@ -14,10 +17,9 @@ import { REELS_CAROUSEL_OPTIONS } from "@/_constants/reels";
  * 무한스크롤로 슬라이드가 늘어나면 Embla가 새 슬라이드를 다시 재야 하는데(`reInit`),
  * 그 안의 `deActivate()`가 진행 중인 스냅 애니메이션과 드래그 핸들러를 파괴한다.
  * 다음 페이지는 하필 넘기는 도중에 도착하므로 그때 바로 재면 넘김이 툭 끊긴다.
- * 그래서 Embla의 자동 감지(`watchSlides`)를 끄고 여기서 멈춘 뒤에 잰다 (KAN-276).
- *
- * 미루는 동안에도 새 슬라이드는 DOM에 이미 들어와 있다. Embla가 아직 세지 않았을
- * 뿐이라 보고 있는 릴에는 아무 영향이 없고, 다 재고 나면 그 뒤로 넘어갈 수 있게 된다.
+ * 그래서 Embla의 자동 감지(`watchSlides`)를 끄고 여기서 직접 잰다. 재기 전에
+ * 운동 상태(location·target)를 백업했다가 새 엔진에 복원해 애니메이션을 이어
+ * 붙이므로, 스냅 도중에 재도 끊기지 않는다 (KAN-276).
  *
  * @param slideCount 지금 렌더된 슬라이드 수. 이 값이 바뀌면 다시 잰다.
  * @returns `viewportRef`는 `overflow-hidden` 뷰포트에, 그 안에 슬라이드를 담는 컨테이너를 둔다.
@@ -42,29 +44,50 @@ export function useReelsCarousel(slideCount: number) {
     let frame = 0;
 
     /**
-     * 멈춰 있으면 재고, 아니면 다음 프레임에 다시 본다.
+     * 손가락만 떨어져 있으면 즉시 잰다. 미루면 연속 스와이프가 idle 틈을 안 줘서
+     * 사용자가 옛 경계(Embla가 아는 마지막 장)에 갇히므로, 미루는 대신 재는 걸
+     * 끊기지 않게 만든다.
      *
-     * 움직이는 중인지를 이벤트로 따로 기억하지 않고 Embla에게 그때그때 묻는다.
-     * `settle` 이벤트에 기억해 두는 방식으로 먼저 짰다가, 그 핸들러 안에서 다시
-     * `reInit()`을 부르는 게 Embla의 렌더 루프 한복판에서 그 루프의 엔진을 파괴하는
-     * 재진입이 되어 상태가 어긋났다. 어긋나면 미뤄 둔 재측정이 안 풀려서 마지막
-     * 릴에서 아래로 안 넘어가고, 나중에 리사이즈 같은 다른 계기로만 풀린다.
+     * 스냅이 진행 중이면({@link REELS_REMEASURE_EPSILON}px 이상 남음) reInit 전에
+     * 운동 상태를 백업했다가 새 엔진에 복원한다. reInit은 새 엔진을 스냅 지점에
+     * 정지 상태로 만들기 때문에, 그대로 두면 달리던 중간 프레임이 사라지고 결과만
+     * 툭 나타난다. location(현재 위치)과 target(목적지)을 되돌리고 translate를
+     * 같은 턴에 다시 칠한 뒤(한 프레임 스냅 지점이 번쩍이는 것 방지) 애니메이션을
+     * 다시 시작하면 달리던 자리에서 그대로 이어진다. 목적지는 옛 스냅 지점인데
+     * 슬라이드가 전부 같은 높이라 새 엔진에서도 같은 좌표다.
      *
-     * 두 조건은 Embla가 스스로 "멈췄고 손도 뗐다"를 판정할 때 쓰는 것과 같다
-     * (`hasSettled && !dragHandler.pointerDown()`). 손가락이 닿아 있는 동안 재면
-     * 드래그 핸들러가 그 자리에서 파괴되므로 뗄 때까지 기다린다.
+     * 손가락이 닿아 있는 동안만 기다린다. 새 엔진의 드래그 핸들러는 이미 잡고 있는
+     * 포인터를 모르므로 진행 중인 제스처가 죽는다. 뗀 직후 스냅 애니메이션 도중에
+     * 다음 프레임 폴링이 잡아서 잰다.
+     *
+     * 움직임 판정을 이벤트로 기억하지 않고 그때그때 묻는 것도 의도다. `settle`
+     * 핸들러에서 기억해 두는 방식으로 먼저 짰다가, 핸들러 안 `reInit()`이 Embla
+     * 렌더 루프 한복판에서 그 루프의 엔진을 파괴하는 재진입이 되어 상태가 어긋났다.
+     * Embla의 `scrollBody.settled()`도 쓰지 않는다. 허용치가 0.001px이라 수치 오차로
+     * 멈춘 뒤에도 false에 머무를 수 있다(근거는 상수 주석에).
      */
-    const remeasureWhenIdle = () => {
-      const { dragHandler, scrollBody } = embla.internalEngine();
-      if (dragHandler.pointerDown() || !scrollBody.settled()) {
-        frame = requestAnimationFrame(remeasureWhenIdle);
+    const remeasure = () => {
+      const engine = embla.internalEngine();
+      if (engine.dragHandler.pointerDown()) {
+        frame = requestAnimationFrame(remeasure);
         return;
       }
-      // 멈춘 뒤라 파괴할 애니메이션이 없다. reInit은 지금 인덱스를 유지한다
+      const location = engine.location.get();
+      const target = engine.target.get();
+      const inFlight = Math.abs(target - location) >= REELS_REMEASURE_EPSILON;
       embla.reInit();
+      if (inFlight) {
+        const next = embla.internalEngine();
+        next.location.set(location);
+        next.previousLocation.set(location);
+        next.offsetLocation.set(location);
+        next.target.set(target);
+        next.translate.to(location);
+        next.animation.start();
+      }
     };
 
-    remeasureWhenIdle();
+    remeasure();
 
     return () => cancelAnimationFrame(frame);
   }, [embla, slideCount]);
