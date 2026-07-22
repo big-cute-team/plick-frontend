@@ -26,9 +26,18 @@ export class ApiError extends Error {
   }
 }
 
-/** 서버에선 절대 URL. 클라 fetch가 처음 생기면 same-origin 프록시(/be) 분기를 추가한다. */
+/**
+ * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
+ *
+ * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
+ * 노출된다. `next.config.js`의 rewrites가 `/be/*`를 BE로 넘겨주므로
+ * 브라우저는 자기 오리진만 부르면 된다 (KAN-271).
+ */
 function baseUrl(): string {
-  return process.env.API_BASE_URL ?? "http://localhost:8080";
+  if (typeof window === "undefined") {
+    return process.env.API_BASE_URL ?? "http://localhost:8080";
+  }
+  return "/be";
 }
 
 /**

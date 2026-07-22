@@ -24,6 +24,15 @@ export const TEAM_IDS: Record<TeamCode, number> = {
 };
 
 /**
+ * `TEAM_IDS`의 역방향 — BE `team_id` → 팀 코드 (KAN-271).
+ * 기사 피드 응답의 `teams`가 id 배열로 와서 화면 표시용 코드로 되돌릴 때 쓴다.
+ * 위 매핑에서 파생시켜 두 방향이 갈라지지 않게 한다.
+ */
+export const TEAM_CODES: Record<number, TeamCode> = Object.fromEntries(
+  Object.entries(TEAM_IDS).map(([code, id]) => [id, code as TeamCode]),
+);
+
+/**
  * 프로바이더별 OAuth 인가 엔드포인트와 고정 파라미터 (KAN-257).
  * 환경마다 달라지는 client_id·redirect_uri는 env로 읽는다 — 조립은 `oauth.ts`.
  *

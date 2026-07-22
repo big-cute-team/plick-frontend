@@ -44,6 +44,15 @@ export const nextJsConfig = [
     },
   },
   {
+    // 앱 루트 설정 파일은 Node에서 도는 빌드 스크립트라 process 같은 전역이 필요하다
+    files: ["*.config.js", "*.config.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     plugins: {
       "react-hooks": pluginReactHooks,
     },

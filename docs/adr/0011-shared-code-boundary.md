@@ -135,5 +135,6 @@ packages/
 - **앱별 유지(의도적)**: `CommentThread` 래퍼, `ArticleBody`/`ArticleMain`, 추천 기사(카드 vs 리스트).
 - **열린 후보(게이트 C 대기)**:
   - `CommentItem`(스레드 **내부 한 줄**) — 웹/모바일이 버튼 상태 클래스(`hover:` vs `active:`) 한 줄만 다르고 나머지 동일. 안쪽만 원자로 올리고 스레드 래퍼는 앱별 유지 검토.
+  - `ArticleCard`·`ArticleFeedPage` 타입과 `getArticles` fetcher, `apiFetch`(KAN-271, ADR 0030) — BE가 확정한 기사 피드 계약이라 모양은 굳었지만 **실사용처가 모바일 홈 하나뿐**이라 게이트 C 미달. `apps/mobile/app/_types/articles.ts`·`_services/articles.ts`에 앱별로 뒀다. web이 같은 엔드포인트를 붙이는 순간(두 번째 실사용처) `@plick/domain`·`@plick/core` 승격을 재검토한다. 이때 퍼블리싱 시절 추정 타입인 `FeedPost`를 실계약에 맞게 정리할지도 같이 본다.
   - ~~`formatCount`·`avatarInitials` 순수 유틸~~ · ~~도메인 타입~~ — 2026-07-16 감사로 중복 실증 → **`@plick/domain`으로 승격 완료**(ADR 0018). `ReporterLine`·`TagChips`도 같은 감사에서 `@plick/ui`로 승격.
 - 후보를 실제로 올릴 땐 근거를 추측이 아니라 `/audit` 결과로 확정한다(진짜 동일 vs 형태만 유사 구분).
