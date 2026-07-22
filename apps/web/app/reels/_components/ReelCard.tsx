@@ -49,10 +49,7 @@ export function ReelCard({
               "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
           }}
         >
-          <PostChips
-            teamName={TEAMS[post.team].name}
-            rumour={post.stage === "RUMOUR"}
-          />
+          <PostChips teamName={TEAMS[post.team].name} stage={post.stage} />
           <button
             type="button"
             onClick={onOpenDetail}
