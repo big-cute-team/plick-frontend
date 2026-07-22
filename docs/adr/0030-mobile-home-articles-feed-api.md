@@ -176,8 +176,49 @@ export function useArticleFeed(team: Filter, initial?: ArticleFeedPage) {
 `team === "ALL"`인지 확인하는 조건이 중요하다. 서버가 받아 온 건 전체 탭 첫 페이지지, 아스날 탭 데이터가
 아니다. 조건 없이 심으면 아스날 탭을 눌렀을 때 전체 목록이 아스날 목록인 척 잠깐 보인다.
 
-쿼리가 여러 개로 늘어나면 `HydrationBoundary`로 캐시 전체를 말려 넘기는 정석 방식으로 옮기면 된다.
-지금은 하나라 props가 더 단순하다.
+### initialData와 HydrationBoundary는 뭐가 다른가
+
+리뷰에서 이 둘의 차이를 물어봤다. 위에 "쿼리가 하나라 가벼운 쪽을 썼다"고만 적어 뒀는데 그걸로는
+부족했다. `query-core@5.101.4` 소스로 확인한 차이를 정리해 둔다.
+
+**데이터가 건너오는 경로가 다르다.** `initialData`는 props다. 서버 컴포넌트가 `await`한 평범한 JS 값을
+자식에 내려주고, 훅이 "캐시가 비어 있으면 이걸 초기값으로 써라"라고 선언할 뿐이다. RQ는 이 값이
+서버에서 왔는지도 모른다. `HydrationBoundary`는 캐시 자체를 옮긴다. 서버에서 QueryClient를 만들어
+`prefetchQuery`로 채우고, `dehydrate()`가 그 캐시를 JSON으로 말아 경계를 넘긴 뒤 브라우저 QueryClient에
+도로 부어넣는다. 값이 아니라 캐시 상태가 이동한다.
+
+**여러 쿼리를 한 번에 심을 수 있느냐가 실무에서 제일 큰 차이다.** `initialData`는 쿼리 하나당 props
+하나다. 한 화면에 쿼리가 다섯 개면 값 다섯 개를 트리 아래로 일일이 꽂아야 하고, 소비처가 세 단계
+밑이면 그 사이를 전부 통과시켜야 한다. `dehydrate`는 캐시를 통째로 말기 때문에 `queryHash`로 알아서
+찾아간다. 트리 어디에 있든 같은 쿼리키를 쓰는 훅이면 데이터가 이미 캐시에 있다.
+
+**신선도 시계가 도는 시점이 다르다.** `dehydrate`는 `state`를 통째로 직렬화해서 `dataUpdatedAt`이
+그대로 보존된다. 서버가 실제로 fetch한 시각부터 staleTime이 계산된다. 반면 `initialData`는
+`dataUpdatedAt: hasData ? initialDataUpdatedAt ?? Date.now() : 0`이라, `initialDataUpdatedAt`을 직접
+넘기지 않으면 브라우저가 캐시 엔트리를 만드는 순간으로 찍힌다. 실제보다 조금 더 신선한 것으로
+취급된다는 뜻이다. 우리는 서버 fetch에 `revalidate`를 안 걸어 매번 새로 받으므로 그 간격이 SSR과
+전송 지연 정도라 무시할 만하다. 나중에 Next 데이터 캐시로 응답을 몇 분씩 재사용하게 만들면 이 차이가
+벌어지니 그때는 `initialDataUpdatedAt`을 같이 넘겨야 한다.
+
+**캐시에 이미 데이터가 있을 때의 행동이 정반대다. 그리고 이게 무한스크롤에서는 결정적이다.**
+`initialData`는 무시된다(앞서 본 `state.data === void 0` 가드). `hydrate`는 타임스탬프를 비교해서 더
+새로우면 덮어쓴다.
+
+```js
+if (state.dataUpdatedAt > query.state.dataUpdatedAt || hasNewerSyncData) {
+  query.setState({ ...serializedState, data, ... });
+}
+```
+
+무한 쿼리의 `data`는 `{ pages, pageParams }` 통짜 객체이고 서버가 심는 건 1페이지짜리다. 그래서
+`HydrationBoundary`를 썼다면, 8페이지까지 스크롤한 뒤 릴스에 갔다가 홈으로 소프트 내비게이션할 때
+서버가 새로 받은 1페이지가 더 새로우니 `setState`가 돌아서 쌓아둔 8페이지가 1페이지로 접힌다.
+스크롤하던 목록이 리셋되는 것이다. `initialData`는 그냥 무시하니 8페이지가 그대로 남는다.
+
+솔직히 처음 고를 때 이 리셋 문제까지 본 건 아니었다. 스킬이 씨앗 심을 쿼리가 하나면 가벼운 쪽을
+권해서 골랐고, 나중에 뜯어보니 무한스크롤에는 이쪽이 맞는 선택이었다. `HydrationBoundary`가 나은
+자리는 한 페이지에서 여러 쿼리를 미리 채워 여러 자식이 각자 집어가게 할 때, 그리고 신선도를 정확히
+넘기고 싶을 때다.
 
 ### CORS와 `/be` 프록시
 
