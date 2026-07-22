@@ -20,7 +20,8 @@ export function ReporterLine({
   metaClassName = "",
   children,
 }: {
-  reporter: { name: string; tier: number };
+  /** 티어가 없으면(BE 실데이터의 절반) 배지 없이 이름만 나온다. */
+  reporter: { name: string; tier: number | null };
   meta: string;
   className?: string;
   metaClassName?: string;

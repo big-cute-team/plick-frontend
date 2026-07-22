@@ -13,6 +13,11 @@ import type { EmblaOptionsType } from "embla-carousel";
  * - `skipSnaps: false` 아무리 세게 튕겨도 한 번에 한 장만 넘어간다. 릴스의 기본 감각이다.
  * - `dragThreshold` 이 거리(px)를 넘겨야 드래그로 인정한다. 기본 10보다 낮춰 짧은 플릭도 받는다.
  * - `duration` 스냅 애니메이션 길이(Embla 내부 단위, 기본 25). 낮출수록 빠르게 붙는다.
+ * - `watchSlides: false` 슬라이드가 늘어나도 Embla가 스스로 다시 초기화하지 않게 끈다.
+ *   기본값(true)이면 컨테이너에 걸린 MutationObserver가 자식이 바뀌는 즉시 `reInit()`을
+ *   부르는데, 그 안의 `deActivate()`가 진행 중인 스냅 애니메이션과 드래그 핸들러를
+ *   파괴한다. 다음 페이지가 도착하는 시점이 하필 넘기는 도중이라 넘김이 툭 끊긴다.
+ *   대신 {@link useReelsCarousel}이 멈춘 뒤에 직접 다시 잰다 (KAN-276).
  */
 export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
   axis: "y",
@@ -21,7 +26,17 @@ export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
   skipSnaps: false,
   dragThreshold: 8,
   duration: 22,
+  watchSlides: false,
 };
+
+/**
+ * 남은 릴이 이 개수 이하로 줄면 다음 페이지를 미리 당긴다 (KAN-276).
+ *
+ * 한 페이지가 10장이라 세 장 남았을 때 시작하면 사용자가 끝에 닿기 전에 도착한다.
+ * 리스트의 무한스크롤과 달리 감시 요소를 둘 자리가 없어(릴 한 장이 화면 전체다)
+ * 지금 보고 있는 릴의 인덱스로 판단한다.
+ */
+export const REELS_PREFETCH_AHEAD = 3;
 
 /** 시트 상단을 이 거리(px) 이상 끌어내리면 닫는다 */
 export const DRAG_CLOSE_THRESHOLD = 100;

@@ -8,12 +8,14 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
  * 핫이슈 히어로 카드 — 사진(placeholder) 위에 어두운 스크림 + 흰 텍스트.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고, 팀·강조색은 토큰을 쓴다.
- * 탭하면 해당 게시물의 릴스 딥링크(`/reels/[postId]`)로 이동한다.
+ * 탭하면 릴스 화면으로 이동한다 — 게시물을 지정하는 딥링크였지만 BE에 릴 단건
+ * 조회 API가 없어 라우트를 걷어냈다(KAN-276). 캐러셀도 아직 목데이터라
+ * 여기서 넘길 실제 id가 없다.
  */
 export function HotHeroCard({ post }: { post: FeedPost }) {
   const stage = STAGE_META[post.stage];
   return (
-    <Link href={`/reels/${post.id}`} className="block h-full">
+    <Link href="/reels" className="block h-full">
       <MediaThumb
         colorVar={TEAMS[post.team].colorVar}
         className="rounded-hero h-full"
