@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckIcon, CloseIcon } from "@plick/ui/icons";
-import type { NicknameCheckResult } from "@/_lib/useNicknameCheck";
+import type { NicknameCheckResult } from "@/_hooks/useNicknameCheck";
 
 /**
  * 닉네임 중복확인 결과 한 줄 — 사용 가능(초록 체크)·사용 불가(빨간 X)·조회 실패(빨간 문구).

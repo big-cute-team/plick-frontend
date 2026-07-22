@@ -4,7 +4,7 @@
  */
 
 import { cookies } from "next/headers";
-import { AUTH_COOKIES } from "./constants";
+import { AUTH_COOKIES } from "@/_constants/api";
 
 /**
  * 로그인 여부 — accessToken 쿠키의 존재만으로 판단한다(BE 호출 없이 요청 컨텍스트에서).

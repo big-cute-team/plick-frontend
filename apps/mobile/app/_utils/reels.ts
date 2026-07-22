@@ -1,7 +1,7 @@
 /**
  * @file 릴 세부 바텀시트의 순수 기하 계산.
  */
-import { SHEET_HEIGHT_RATIO, SHEET_TITLE_GAP } from "./constants";
+import { SHEET_HEIGHT_RATIO, SHEET_TITLE_GAP } from "@/_constants/reels";
 
 /**
  * 칩·제목이 도킹 지점(시트 상단 라인 위 {@link SHEET_TITLE_GAP})까지

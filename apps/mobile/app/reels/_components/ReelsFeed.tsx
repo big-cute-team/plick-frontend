@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { FeedPost } from "@plick/domain/types";
-import { useReelDetailMotion } from "@/reels/_lib/useReelDetailMotion";
-import { clampTitleOffset } from "@/reels/_lib/utils";
+import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
+import { clampTitleOffset } from "@/_utils/reels";
 import { ReelDetailSheet } from "./ReelDetailSheet";
 import { ReelItem } from "./ReelItem";
 

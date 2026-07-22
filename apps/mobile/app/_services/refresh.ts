@@ -7,7 +7,7 @@
  * 이 파일은 **BE 호출과 봉투 해제만** 하는 순수 함수로 남긴다(edge·서버 어디서든 부를 수 있게).
  */
 
-import { apiFetch } from "./client";
+import { apiFetch } from "@/_apis/client";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `TokenResponse` 그대로). access·refresh가 함께 회전된다. */
 interface TokenResponse {

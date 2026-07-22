@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TABS } from "@/_lib/constants";
+import { TABS } from "@/_constants/app";
 
 /**
  * 하단 탭 내비게이션.

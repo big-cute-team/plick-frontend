@@ -7,9 +7,9 @@
 import { cookies } from "next/headers";
 import { TEAMS } from "@plick/domain/constants";
 import type { TeamCode } from "@plick/domain/types";
-import { ApiError, apiFetch } from "./client";
-import { AUTH_COOKIES } from "./constants";
-import type { MyProfile } from "./types";
+import { ApiError, apiFetch } from "@/_apis/client";
+import { AUTH_COOKIES } from "@/_constants/api";
+import type { MyProfile } from "@/_types/api";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `ProfileResponse` 그대로). 온보딩 전엔 닉네임이,
  * 카카오 가입이면 이메일이 null로 온다. */

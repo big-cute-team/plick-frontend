@@ -3,8 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { TeamCode } from "@plick/domain/types";
-import { ApiError, apiFetch } from "./client";
-import { AUTH_COOKIES, TEAM_IDS } from "./constants";
+import { ApiError, apiFetch } from "@/_apis/client";
+import { AUTH_COOKIES, TEAM_IDS } from "@/_constants/api";
 
 /**
  * 온보딩 저장 서버 액션 (KAN-264) — 닉네임·응원팀을 BE에 한 번에 보낸다.

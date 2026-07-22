@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { checkNickname } from "@/_lib/api/users";
+import { checkNickname } from "@/_services/users";
 
 /** 중복확인 결과 — 아직 안 눌렀으면 null, 눌렀으면 사용 가능 여부 또는 조회 실패. */
 export type NicknameCheckResult =

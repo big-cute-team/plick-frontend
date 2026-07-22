@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DRAG_CLOSE_THRESHOLD } from "./constants";
-import type { ReelDetailMotion } from "./types";
+import { DRAG_CLOSE_THRESHOLD } from "@/_constants/reels";
+import type { ReelDetailMotion } from "@/_types/reels";
 
 /**
  * 릴 세부 시트의 개폐·드래그 상태 머신.

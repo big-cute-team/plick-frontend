@@ -1,10 +1,10 @@
 /**
  * @file 데이터 레이어 상수. `"use server"` 파일(auth.ts)은 함수만 export할 수 있어
- * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_lib/constants`.
+ * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_constants/app`.
  */
 
 import type { TeamCode } from "@plick/domain/types";
-import type { SocialProvider } from "./types";
+import type { SocialProvider } from "@/_types/api";
 
 /**
  * 팀 코드 → BE `teams.team_id` 매핑 (KAN-264). 온보딩·프로필 수정의 `teamIds` 요청에 쓴다.

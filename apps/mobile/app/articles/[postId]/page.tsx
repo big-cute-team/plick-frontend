@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
-import { getPost, POSTS } from "@/_lib/mock";
+import { getPost, POSTS } from "@/_mocks/posts";
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 import { SuggestedArticles } from "./_components/SuggestedArticles";

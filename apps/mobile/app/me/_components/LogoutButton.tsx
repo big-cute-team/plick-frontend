@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { LogoutIcon } from "@plick/ui/icons";
-import { logout } from "@/_lib/api/auth";
+import { logout } from "@/_services/auth";
 
 /**
  * 로그아웃 버튼 + 확인 팝업 — 마이페이지의 로그아웃 상호작용을 담는 클라 경계.

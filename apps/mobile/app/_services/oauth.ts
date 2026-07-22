@@ -4,8 +4,8 @@
  * `app/oauth/callback/route.ts`가 한다.
  */
 
-import { OAUTH_AUTHORIZE } from "./constants";
-import type { SocialProvider } from "./types";
+import { OAUTH_AUTHORIZE } from "@/_constants/api";
+import type { SocialProvider } from "@/_types/api";
 
 /** 프로바이더가 code를 돌려보낼 우리 쪽 콜백 주소 — 배포 환경에선 env로 교체한다 */
 function redirectUri(): string {

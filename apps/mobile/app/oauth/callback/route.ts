@@ -8,9 +8,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
-import { login } from "@/_lib/api/auth";
-import { OAUTH_STATE_COOKIE } from "@/_lib/api/constants";
-import { parseOAuthState } from "@/_lib/api/oauth";
+import { login } from "@/_services/auth";
+import { OAUTH_STATE_COOKIE } from "@/_constants/api";
+import { parseOAuthState } from "@/_services/oauth";
 
 /** 검증 실패·BE 실패 공통 착지 — 로그인 화면이 `?error=oauth`를 읽어 안내를 띄운다 */
 const FAILURE_PATH = "/login?error=oauth";

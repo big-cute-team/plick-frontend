@@ -2,8 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ONBOARDING_ENTRY } from "@/_lib/constants";
-import { apiFetch } from "./client";
+import { ONBOARDING_ENTRY } from "@/_constants/app";
+import { apiFetch } from "@/_apis/client";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -11,9 +11,9 @@ import {
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
-} from "./constants";
+} from "@/_constants/api";
 import { buildAuthorizeUrl, packOAuthState } from "./oauth";
-import type { SocialProvider } from "./types";
+import type { SocialProvider } from "@/_types/api";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
 interface LoginResponse {

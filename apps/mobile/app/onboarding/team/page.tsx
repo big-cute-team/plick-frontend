@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
-import { ONBOARDING_ENTRY } from "@/_lib/constants";
+import { ONBOARDING_ENTRY } from "@/_constants/app";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { TeamStep } from "./_components/TeamStep";
 

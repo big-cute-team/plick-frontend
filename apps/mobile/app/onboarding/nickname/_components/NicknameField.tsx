@@ -1,8 +1,8 @@
 "use client";
 
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
-import type { NicknameCheckResult } from "@/_lib/useNicknameCheck";
-import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
+import type { NicknameCheckResult } from "@/_hooks/useNicknameCheck";
+import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
 
 /**
  * 닉네임 입력 필드 — accent 보더 인풋 + 글자수 카운터 + 중복확인 버튼 (KAN-269).

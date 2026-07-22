@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
-import { useNicknameCheck } from "@/_lib/useNicknameCheck";
-import { NICKNAME_MAX_LENGTH } from "@/onboarding/_lib/constants";
-import { formatChangeableAt } from "../_lib/utils";
+import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
+import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
+import { formatChangeableAt } from "@/_utils/me";
 
 /**
  * 닉네임 변경 입력 — 인풋 + 중복확인 버튼 (KAN-269).

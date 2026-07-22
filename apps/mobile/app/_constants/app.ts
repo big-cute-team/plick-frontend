@@ -8,7 +8,7 @@ import {
   SearchIcon,
   UserIcon,
 } from "@plick/ui/icons";
-import type { Tab } from "./types";
+import type { Tab } from "@/_types/app";
 
 /**
  * 온보딩 진입 경로 — 신규 유저(`needsOnboarding`) 로그인 직후 보내는 첫 단계.

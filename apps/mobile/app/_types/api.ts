@@ -1,5 +1,5 @@
 /**
- * @file 데이터 레이어 타입. 앱 타입(Tab 등)은 `@/_lib/types`,
+ * @file 데이터 레이어 타입. 앱 타입(Tab 등)은 `@/_types/app`,
  * 도메인 타입(FeedPost 등)은 `@plick/domain/types`.
  */
 
