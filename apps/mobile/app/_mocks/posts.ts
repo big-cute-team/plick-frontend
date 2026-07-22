@@ -27,7 +27,10 @@ const SAMPLE_COMMENTS: Comment[] = [
   },
 ];
 
-/** 전체 피드 게시물 — 홈·릴스가 공용으로 소비하는 목데이터 */
+/**
+ * 전체 피드 게시물 목데이터. 홈(KAN-271, KAN-282)과 릴스(KAN-276)는 실 API로
+ * 갈아타서, 이제 기사 세부 페이지만 남은 소비자다 — 그 API가 붙으면 파일째 지운다.
+ */
 export const POSTS: FeedPost[] = [
   {
     id: "h1",
@@ -150,14 +153,6 @@ export const POSTS: FeedPost[] = [
     },
   },
 ];
-
-/**
- * 홈 핫이슈 캐러셀용 상위 게시물.
- *
- * 홈 소식 리스트는 `GET /api/v1/articles`로 갈아탔지만(KAN-271) 캐러셀은
- * 아직 목이다 — BE에 인기·정렬 개념이 없어 무엇을 핫으로 볼지 근거가 없다.
- */
-export const HOT_POSTS = POSTS.slice(0, 3);
 
 /**
  * id로 게시물을 찾는다.
