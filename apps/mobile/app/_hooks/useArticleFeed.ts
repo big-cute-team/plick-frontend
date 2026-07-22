@@ -36,6 +36,13 @@ export function useArticleFeed(team: Filter, initial?: ArticleFeedPage) {
         ? { pages: [initial], pageParams: [null] }
         : undefined,
     /**
+     * 무한 쿼리의 재요청은 쌓인 페이지를 전부 순차로 다시 받는다. 커서 체인이라
+     * 앞 페이지 응답이 와야 다음 커서를 알 수 있어 병렬도 안 된다. 깊게 스크롤한
+     * 상태에서 탭을 돌아올 때마다 요청이 페이지 수만큼 나가므로 포커스 재요청은 끈다.
+     * 피드는 창을 다시 볼 때마다 최신으로 맞춰야 할 성격도 아니다.
+     */
+    refetchOnWindowFocus: false,
+    /**
      * 4xx는 다시 보내도 같은 답이 온다. 잘못된 파라미터나 커서가 그렇고,
      * 특히 커서가 상하면 재시도 세 번이 전부 400으로 낭비된다.
      * 서버 오류나 네트워크 순단만 다시 시도한다.

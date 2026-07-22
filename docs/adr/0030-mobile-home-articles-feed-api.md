@@ -404,6 +404,66 @@ useInfiniteQuery({
 때만 띄운다. 이어받기 실패는 리스트 아래에 작은 에러와 재시도 버튼으로만 붙는다. 다음 페이지를 받는
 동안에는 리스트 끝에 스켈레톤 한 줄을 붙여 뭔가 오고 있다는 걸 보여준다.
 
+### 서버가 준 첫 페이지와 클라 캐시는 어떻게 맞춰지나
+
+리뷰에서 "전체 탭일 때 서버에만 있는 초기 데이터를 이후 무한스크롤과 어떻게 동기화했냐"는 질문을 받았다.
+답부터 말하면 동기화라는 게 없다. 서버 데이터는 캐시에 한 번 심는 씨앗이고 그 뒤로 서버는 관여하지 않는다.
+헷갈리기 쉬운 대목이라 `@tanstack/query-core@5.101.4` 소스를 열어 확인한 내용을 정리해 둔다.
+
+서버 컴포넌트의 `await getArticles()` 결과는 어떤 캐시에도 안 들어간다. 그냥 평범한 JS 값이고,
+RSC 페이로드에 실려 브라우저로 내려간 뒤 `initial` prop이 된다.
+
+그걸 `initialData`로 넘기면 RQ가 `["articles","feed","ALL"]` 캐시 엔트리를 **만들면서** 그 값을 자기
+데이터로 삼는다. 여기가 `placeholderData`와 갈리는 지점이다. placeholder는 캐시에 안 써지고 화면에만
+잠깐 보이는 임시값이지만, initialData는 진짜 캐시 데이터가 된다. 소스에서 `getDefaultState()`가
+initialData를 읽어 `dataUpdatedAt: Date.now()`까지 찍어 상태로 만든다. 그래서 `staleTime`(전역 60초)이
+그 시점부터 카운트되고 마운트 직후 재요청이 안 나간다. 이중 페치를 막는 실제 메커니즘이 이거다.
+
+무한스크롤은 별도 캐시가 아니라 **같은 엔트리에 쌓인다.** `fetchNextPage()`는 `direction: "forward"`로
+들어가 `oldPages`의 마지막 페이지에 `getNextPageParam`을 돌려 커서를 얻고, 한 페이지만 받아
+`addTo(data.pages, page)`로 뒤에 붙인다.
+
+```
+pages:      [서버가 준 1페이지, 2페이지, 3페이지, ...]
+pageParams: [null,              cursor1,  cursor2, ...]
+```
+
+`pages[0]`은 계속 서버가 준 그 데이터다. 서버 캐시가 따로 살아 있다가 맞춰지는 게 아니라 처음 한 번
+부어넣고 끝이다.
+
+그래서 두 가지 동작이 나온다. 하드 리로드는 완전히 일치한다. RQ 캐시는 브라우저 메모리라 새로고침하면
+비어 있고, SSR HTML과 `initialData`가 같은 값이라 불일치가 날 여지가 없다.
+
+반면 소프트 내비게이션에서는 서버 fetch가 버려진다. 릴스 갔다가 홈으로 돌아오면 서버 컴포넌트가 다시
+돌면서 `getArticles()`를 새로 부르는데, RQ는 엔트리에 이미 데이터가 있으면 initialData를 무시한다.
+소스에 `if (this.state && this.state.data === void 0)` 가드가 있어서 data가 있는 한 덮어쓰지 않는다.
+사실 이건 원하는 동작이다. 8페이지까지 스크롤했다가 돌아왔는데 1페이지로 리셋되면 곤란하다.
+대신 서버가 한 번 헛일을 한다.
+
+### 포커스 재요청을 끈 이유
+
+소스를 보다가 걸린 게 하나 더 있었다. 방향 없는 `refetch`는 쌓인 페이지를 **전부 순차로** 다시 받는다.
+
+```js
+const remainingPages = pages ?? oldPages.length;
+do {
+  const param =
+    currentPage === 0
+      ? (oldPageParams[0] ?? options.initialPageParam)
+      : getNextPageParam(options, result);
+  result = await fetchPage(result, param);
+  currentPage++;
+} while (currentPage < remainingPages);
+```
+
+커서 체인이라 병렬로도 못 받는다. 앞 페이지 응답이 와야 다음 커서를 알기 때문이다. RQ 기본값이
+`refetchOnWindowFocus: true`고 staleTime 60초가 지났으면 stale이라 재요청이 걸리니, 8페이지까지 스크롤한
+상태에서 다른 탭 갔다 오면 요청 8개가 줄줄이 나간다.
+
+그래서 이 쿼리만 `refetchOnWindowFocus: false`로 껐다. 피드가 창을 다시 볼 때마다 최신으로 맞춰져야 할
+성격도 아니다. `refetchOnMount`는 기본값(true)으로 뒀는데, 홈을 떠났다 60초 뒤에 돌아오면 같은 모양으로
+페이지 수만큼 요청이 나간다. 실사용에서 홈 소식을 깊게 스크롤하는 빈도를 보고 판단하려고 일단 남겨 뒀다.
+
 ### 검증
 
 프록시를 통해 1페이지를 받고 그 `nextCursor`로 2페이지를 받아 봤다. id가 겹치지 않았고
