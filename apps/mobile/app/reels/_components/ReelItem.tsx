@@ -14,19 +14,26 @@ import { ReelActionRail } from "./ReelActionRail";
 /**
  * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
  *
+ * Embla 캐러셀의 슬라이드 하나다(`shrink-0 basis-full`). 컨테이너 높이의 100%를
+ * 차지하되 줄어들지 않아야 릴 개수만큼 세로로 쌓인다.
+ *
  * 칩·제목은 릴에 있는 이 요소 하나뿐이다. 세부 시트가 열리면 새로 그리지 않고
  * 이 요소가 transform으로 시트 상단 라인 위 도킹 지점까지 올라가 한 몸으로 움직인다.
  *
+ * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
+ *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
  *   인자는 칩·제목이 도킹 지점까지 이동할 거리(px, 음수) — 탭 시점에 측정한다.
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
  */
 export function ReelItem({
   post,
+  active,
   onOpenDetail,
   titleMotion,
 }: {
   post: FeedPost;
+  active: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
 }) {
@@ -46,7 +53,11 @@ export function ReelItem({
   };
 
   return (
-    <section ref={sectionRef} className="relative h-full w-full snap-start">
+    <section
+      ref={sectionRef}
+      inert={!active}
+      className="relative h-full w-full shrink-0 basis-full"
+    >
       <MediaThumb colorVar={TEAMS[post.team].colorVar} className="h-full">
         {/* 우측 스크림 — 액션 레일 가독성용 고정 값(테마 무관) */}
         <div

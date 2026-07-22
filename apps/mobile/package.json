@@ -14,6 +14,8 @@
     "@plick/domain": "workspace:*",
     "@plick/ui": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "next": "16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
