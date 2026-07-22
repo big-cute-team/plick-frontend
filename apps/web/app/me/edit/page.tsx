@@ -1,6 +1,6 @@
 import { AvatarField } from "@plick/ui/AvatarField";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { CURRENT_USER, NOTIF_COUNT } from "@/_lib/mock";
+import { CURRENT_USER, NOTIF_COUNT } from "@/_mocks/posts";
 import { FavoriteTeamPicker } from "./_components/FavoriteTeamPicker";
 import { InfoCard } from "./_components/InfoCard";
 

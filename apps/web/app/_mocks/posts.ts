@@ -1,7 +1,7 @@
 /**
  * @file 홈 화면 목데이터 — 피그마 W1 홈(node 203-2) 카피 그대로.
  *
- * 게시물 구성은 모바일 `_lib/mock.ts`와 같은 세트이며(같은 API를 소비할 예정),
+ * 게시물 구성은 모바일 `_mocks/posts.ts`와 같은 세트이며(같은 API를 소비할 예정),
  * 기자명 표기만 데스크톱 피그마 카피(한글)를 따른다.
  */
 import type { Comment, FeedPost, User } from "@plick/domain/types";

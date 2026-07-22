@@ -3,7 +3,7 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
 import type { FeedPost } from "@plick/domain/types";
-import type { PostListVariant } from "@/_lib/types";
+import type { PostListVariant } from "@/_types/app";
 
 const VARIANT: Record<
   PostListVariant,

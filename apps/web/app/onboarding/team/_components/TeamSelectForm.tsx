@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
-import { CURRENT_USER } from "@/_lib/mock";
+import { CURRENT_USER } from "@/_mocks/posts";
 import type { TeamCode } from "@plick/domain/types";
 import { TeamCrestCard } from "@/_components/TeamCrestCard";
-import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
+import { ONBOARDING_TOTAL_STEPS } from "@/_constants/onboarding";
 
 /**
  * W9 온보딩 팀 선택 카드 — 스텝 표시(2/2) + 제목 + 빅6 팀 그리드(2열, 선택 카드는

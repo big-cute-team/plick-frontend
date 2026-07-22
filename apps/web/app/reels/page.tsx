@@ -1,5 +1,5 @@
 import { SiteHeader } from "@/_components/SiteHeader";
-import { NOTIF_COUNT, POSTS } from "@/_lib/mock";
+import { NOTIF_COUNT, POSTS } from "@/_mocks/posts";
 import { ReelsWorkspace } from "./_components/ReelsWorkspace";
 
 /**

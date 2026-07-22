@@ -1,6 +1,6 @@
 import { PostFeed } from "@/_components/PostFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { NOTIF_COUNT, POSTS } from "@/_lib/mock";
+import { NOTIF_COUNT, POSTS } from "@/_mocks/posts";
 
 /**
  * 데스크톱 기사 페이지 (KAN-207) — GNB + 중앙 정렬 단일 컬럼(max-w-read)에

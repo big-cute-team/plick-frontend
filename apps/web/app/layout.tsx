@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { QueryProvider } from "@/_queries/QueryProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,9 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
       </head>
-      <body className="bg-bg text-text">{children}</body>
+      <body className="bg-bg text-text">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }
