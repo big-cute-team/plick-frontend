@@ -11,6 +11,13 @@ import {
 import type { Tab } from "@/_types/app";
 
 /**
+ * 태그된 팀이 없는 게시물의 미디어 색 CSS 변수 (KAN-271, KAN-276).
+ * `MediaThumb`이 팀 컬러로 그라데이션을 만드는데 BE `teams`가 빈 배열로 올 수 있어
+ * 그때 강조색으로 대신 채운다. 홈 리스트와 릴스가 같은 폴백을 쓴다.
+ */
+export const NO_TEAM_COLOR_VAR = "--plk-accent";
+
+/**
  * 온보딩 진입 경로 — 신규 유저(`needsOnboarding`) 로그인 직후 보내는 첫 단계.
  * 이후 닉네임(1/2) → 마이팀(2/2) → 홈은 각 페이지 버튼이 이어간다.
  */

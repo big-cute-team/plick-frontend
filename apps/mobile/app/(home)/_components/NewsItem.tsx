@@ -2,11 +2,9 @@ import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { ArticleCard } from "@/_types/articles";
 import { formatRelativeTime } from "@/_utils/time";
-
-/** 팀 태그가 없는 기사의 썸네일 색 — 팀 컬러 대신 강조색으로 채운다. */
-const NO_TEAM_COLOR_VAR = "--plk-accent";
 
 /**
  * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.

@@ -3,30 +3,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Filter } from "@plick/domain/types";
 import { ApiError } from "@/_apis/client";
+import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { articleKeys } from "@/_queries/articleKeys";
 import { getArticles } from "@/_services/articles";
 import type { InitialArticleFeed } from "@/_types/articles";
-
-/** 네트워크 순단만 다시 시도한다 (아래 retry 참고). */
-const MAX_RETRIES = 2;
-
-/**
- * 이 피드를 신선한 것으로 보는 시간(ms). `staleTime`과 `gcTime`에 같은 값을 쓴다.
- *
- * 둘을 붙여 두는 게 핵심이다. 무한 쿼리의 재요청은 쌓인 페이지를 전부 순차로 다시
- * 받는데(커서 체인이라 앞 페이지 응답이 와야 다음 커서를 알아 병렬도 안 된다),
- * `gcTime`이 `staleTime`보다 길면 그 사이 구간에서 정확히 그 일이 벌어진다.
- * 30페이지까지 스크롤하고 홈을 떠났다 그 구간에 돌아오면 요청이 30개 나간다.
- *
- * 같은 값으로 붙이면 그 구간이 사라진다. 신선하면 캐시를 그대로 쓰고(요청 0),
- * 신선하지 않으면 엔트리가 이미 정리돼 서버 컴포넌트가 방금 받아 온 첫 페이지가
- * 씨앗으로 들어간다(역시 요청 0). 홈에 올 때마다 서버는 어차피 첫 페이지를 받고
- * 있었으므로, 버려지던 그 결과가 여기서 쓰인다.
- *
- * 새 글이 몇 분에 한두 개 올라오는 인입 주기라 1분이면 사실상 매번 최신을 본다.
- * 둘 중 하나만 바꾸면 위 구간이 조용히 되살아나므로 반드시 같이 움직인다.
- */
-const FEED_FRESH_MS = 60_000;
 
 /**
  * 팀 필터별 기사 피드 (KAN-271).
@@ -86,7 +66,7 @@ export function useArticleFeed(team: Filter, initial?: InitialArticleFeed) {
       ) {
         return false;
       }
-      return failureCount < MAX_RETRIES;
+      return failureCount < FEED_MAX_RETRIES;
     },
   });
 }

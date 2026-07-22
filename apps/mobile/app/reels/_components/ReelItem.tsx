@@ -2,11 +2,12 @@
 
 import { useRef } from "react";
 import { TEAMS } from "@plick/domain/constants";
-import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { SHEET_TRANSITION } from "@/_constants/reels";
-import type { TitleMotion } from "@/_types/reels";
+import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
+import { formatRelativeTime } from "@/_utils/time";
 import { PostChips } from "@plick/ui/PostChips";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { ReelActionRail } from "./ReelActionRail";
@@ -20,6 +21,9 @@ import { ReelActionRail } from "./ReelActionRail";
  * 칩·제목은 릴에 있는 이 요소 하나뿐이다. 세부 시트가 열리면 새로 그리지 않고
  * 이 요소가 transform으로 시트 상단 라인 위 도킹 지점까지 올라가 한 몸으로 움직인다.
  *
+ * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀 칩과
+ * 팀 컬러를 뺀다. 기자도 없을 수 있다 (KAN-276).
+ *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
@@ -27,18 +31,19 @@ import { ReelActionRail } from "./ReelActionRail";
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
  */
 export function ReelItem({
-  post,
+  reel,
   active,
   onOpenDetail,
   titleMotion,
 }: {
-  post: FeedPost;
+  reel: ReelCard;
   active: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
+  const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
 
   const handleOpen = () => {
     const section = sectionRef.current;
@@ -58,7 +63,10 @@ export function ReelItem({
       inert={!active}
       className="relative h-full w-full shrink-0 basis-full"
     >
-      <MediaThumb colorVar={TEAMS[post.team].colorVar} className="h-full">
+      <MediaThumb
+        colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
+        className="h-full"
+      >
         {/* 우측 스크림 — 액션 레일 가독성용 고정 값(테마 무관) */}
         <div
           aria-hidden
@@ -90,27 +98,32 @@ export function ReelItem({
               pointerEvents: titleMotion ? "none" : undefined,
             }}
           >
-            <PostChips
-              teamName={TEAMS[post.team].name}
-              rumour={post.stage === "RUMOUR"}
-            />
-            <span className="text-headline text-media-on font-extrabold">
-              {post.title}
+            <PostChips teamName={team?.name} rumour={reel.stage === "RUMOUR"} />
+            {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
+            <span className="text-headline text-media-on line-clamp-3 font-extrabold">
+              {reel.title}
             </span>
           </div>
 
           <span className="flex items-center gap-2.25">
-            <ReporterTierBadge reporter={post.reporter} />
-            <span className="text-body text-media-on font-bold">
-              {post.reporter.name}
-            </span>
+            {reel.reporter && (
+              <>
+                <ReporterTierBadge reporter={reel.reporter} />
+                <span className="text-body text-media-on font-bold">
+                  {reel.reporter.name}
+                </span>
+              </>
+            )}
             <span className="text-label text-media-on-dim">
-              · {post.timeLabel}
+              {reel.reporter && "· "}
+              <span suppressHydrationWarning>
+                {formatRelativeTime(reel.publishedAt)}
+              </span>
             </span>
           </span>
         </button>
 
-        <ReelActionRail post={post} onComment={handleOpen} />
+        <ReelActionRail reel={reel} onComment={handleOpen} />
       </MediaThumb>
     </section>
   );
