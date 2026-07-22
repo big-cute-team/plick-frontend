@@ -18,8 +18,8 @@ argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
 3. **재사용 조사** — 화면을 쪼개 컴포넌트 목록을 만들고, 각각에 대해
    `packages/ui/src` → `apps/mobile/app/_components` 순으로 기존 구현을 찾는다.
    모바일에 있고 앱 중립적이면 `@plick/ui` 승격 대상으로 표시한다(스킬 §4 절차).
-4. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/web/app/_lib/`(types·mock)에 만든다.
-   모바일과 같은 도메인이면 타입 모양을 모바일 `_lib/types.ts`와 맞춘다.
+4. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/web/app/_types/`·`_mocks/`에 만든다.
+   모바일과 같은 도메인이면 타입 모양을 모바일 `_types/`와 맞춘다.
 5. **브랜치** — `git switch -c feature/<티켓>-<짧은설명> develop` (develop 기준).
 6. **구현** — 승격 대상을 먼저 `@plick/ui`로 옮기고(모바일 import 교체 포함),
    그 위에 토큰 유틸만으로 화면을 작성. 색·간격 하드코딩 금지, 컨테이너 패턴으로 폭 제한,
