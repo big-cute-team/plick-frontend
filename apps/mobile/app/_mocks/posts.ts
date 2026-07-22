@@ -151,10 +151,13 @@ export const POSTS: FeedPost[] = [
   },
 ];
 
-/** 홈 핫이슈 캐러셀용 상위 게시물 */
+/**
+ * 홈 핫이슈 캐러셀용 상위 게시물.
+ *
+ * 홈 소식 리스트는 `GET /api/v1/articles`로 갈아탔지만(KAN-271) 캐러셀은
+ * 아직 목이다 — BE에 인기·정렬 개념이 없어 무엇을 핫으로 볼지 근거가 없다.
+ */
 export const HOT_POSTS = POSTS.slice(0, 3);
-/** 홈 "지금 올라온 소식" 리스트용 나머지 게시물 */
-export const NEWS_POSTS = POSTS.slice(3);
 
 /**
  * id로 게시물을 찾는다.
