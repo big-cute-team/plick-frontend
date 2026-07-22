@@ -57,3 +57,22 @@ export interface ArticleFeedPage {
   /** 서버 발급 opaque 커서. null이면 마지막 페이지. 파싱하지 말고 되돌려준다. */
   nextCursor: string | null;
 }
+
+/**
+ * 서버 컴포넌트가 미리 받아 클라 캐시에 심을 첫 페이지.
+ *
+ * 페이지와 받은 시각을 한 덩어리로 묶는다. 시각 없이 데이터만 넘기면 캐시가
+ * 묵은 데이터를 방금 받은 것으로 착각하기 때문에(아래 `fetchedAt` 참고),
+ * 둘을 따로 받는 대신 한쪽만 넘길 수 없는 모양으로 둔다.
+ */
+export interface InitialArticleFeed {
+  page: ArticleFeedPage;
+  /**
+   * 서버가 응답을 받은 시각(epoch ms). 캐시 신선도의 기준점이다.
+   *
+   * 이 값을 안 넘기면 RQ가 캐시 엔트리를 만드는 순간을 신선도 기준으로 찍는다.
+   * 그러면 화면에 오래 머문 뒤 이 값이 다시 쓰일 때(팀 탭을 오가다 엔트리가
+   * 정리된 경우) 20분 묵은 데이터가 방금 받은 것으로 취급돼 갱신이 안 걸린다.
+   */
+  fetchedAt: number;
+}

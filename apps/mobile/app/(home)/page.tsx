@@ -5,7 +5,7 @@ import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { getArticles } from "@/_services/articles";
-import type { ArticleFeedPage } from "@/_types/articles";
+import type { InitialArticleFeed } from "@/_types/articles";
 import { HOT_POSTS } from "@/_mocks/posts";
 
 /**
@@ -19,9 +19,11 @@ import { HOT_POSTS } from "@/_mocks/posts";
  * 없다 — 조회수 API가 붙을 때 함께 연결한다.
  */
 export default async function HomePage() {
-  let initial: ArticleFeedPage | undefined;
+  let initial: InitialArticleFeed | undefined;
   try {
-    initial = await getArticles();
+    // 받은 시각을 함께 넘긴다 — 클라 캐시가 이 씨앗의 신선도를 재는 기준이 된다
+    const page = await getArticles();
+    initial = { page, fetchedAt: Date.now() };
   } catch (e) {
     // 서버에서 못 받아도 페이지 전체를 에러로 떨어뜨리지 않는다.
     // 클라가 다시 받아 리스트 자리에만 에러와 재시도 버튼을 보여준다.

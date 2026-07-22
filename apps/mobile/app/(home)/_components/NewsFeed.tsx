@@ -7,7 +7,7 @@ import { ApiError } from "@/_apis/client";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { articleKeys } from "@/_queries/articleKeys";
-import type { ArticleFeedPage } from "@/_types/articles";
+import type { InitialArticleFeed } from "@/_types/articles";
 import { NewsItem } from "./NewsItem";
 import { NewsItemSkeleton } from "./NewsItemSkeleton";
 import { TeamFilterTabs } from "./TeamFilterTabs";
@@ -22,10 +22,10 @@ const SKELETON_COUNT = 4;
  * (KAN-271). 전체 탭 첫 페이지는 서버가 미리 받아 `initial`로 내려주므로 첫
  * 렌더에는 스켈레톤이 보이지 않고, 리스트 끝에 닿으면 커서로 다음 페이지를 잇는다.
  *
- * @param initial 서버 컴포넌트가 받아 둔 전체 탭 첫 페이지. 서버 fetch가
+ * @param initial 서버 컴포넌트가 받아 둔 전체 탭 첫 페이지와 그 시각. 서버 fetch가
  *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  */
-export function NewsFeed({ initial }: { initial?: ArticleFeedPage }) {
+export function NewsFeed({ initial }: { initial?: InitialArticleFeed }) {
   const [filter, setFilter] = useState<Filter>("ALL");
   const queryClient = useQueryClient();
   const {
