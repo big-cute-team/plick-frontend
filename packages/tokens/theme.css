@@ -28,6 +28,9 @@
   --plk-accent: #2fd97f;
   --plk-on-accent: #08130c;
   --plk-danger: #f87171;
+  /* 상태 보조색 — 루머 단계·기자 티어 배지 (KAN-281). info=파랑, warn=노랑 */
+  --plk-info: #60a5fa;
+  --plk-warn: #fbbf24;
 
   /* media (기사 썸네일/영상 placeholder) */
   --plk-media-bg: #0b101d;
@@ -43,6 +46,12 @@
   /* accent 파생 (칩/배지 배경·테두리) — accent를 따라 테마 전환 */
   --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 16%, transparent);
   --plk-accent-border: color-mix(in srgb, var(--plk-accent) 40%, transparent);
+
+  /* info·warn 파생 — 사용 시점에 var()가 풀려 라이트 오버라이드를 따라간다 */
+  --plk-info-tint: color-mix(in srgb, var(--plk-info) 16%, transparent);
+  --plk-info-border: color-mix(in srgb, var(--plk-info) 40%, transparent);
+  --plk-warn-tint: color-mix(in srgb, var(--plk-warn) 16%, transparent);
+  --plk-warn-border: color-mix(in srgb, var(--plk-warn) 40%, transparent);
 
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
@@ -79,6 +88,8 @@
   --plk-accent: #12a968;
   --plk-on-accent: #ffffff;
   --plk-danger: #e5484d;
+  --plk-info: #2563eb;
+  --plk-warn: #d97706;
 
   /* media */
   --plk-media-bg: #dfe4ec;
@@ -109,6 +120,8 @@
   --color-accent: var(--plk-accent);
   --color-on-accent: var(--plk-on-accent);
   --color-danger: var(--plk-danger);
+  --color-info: var(--plk-info);
+  --color-warn: var(--plk-warn);
 
   --color-media: var(--plk-media-bg);
   --color-media-on: var(--plk-media-on);
@@ -118,6 +131,10 @@
 
   --color-accent-tint: var(--plk-accent-tint);
   --color-accent-border: var(--plk-accent-border);
+  --color-info-tint: var(--plk-info-tint);
+  --color-info-border: var(--plk-info-border);
+  --color-warn-tint: var(--plk-warn-tint);
+  --color-warn-border: var(--plk-warn-border);
 
   --color-kakao: var(--plk-kakao);
   --color-on-kakao: var(--plk-on-kakao);

@@ -33,11 +33,7 @@ export function ArticleBody({ post }: { post: FeedPost }) {
 
   return (
     <article className="px-edge flex flex-col gap-3.5 pt-1">
-      <PostChips
-        teamName={team.name}
-        rumour={post.stage === "RUMOUR"}
-        tone="surface"
-      />
+      <PostChips teamName={team.name} stage={post.stage} tone="surface" />
 
       {/* 제목 */}
       <h1 className="text-headline text-text font-extrabold">{post.title}</h1>

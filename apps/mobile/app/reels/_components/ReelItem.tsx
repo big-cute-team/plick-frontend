@@ -98,7 +98,7 @@ export function ReelItem({
               pointerEvents: titleMotion ? "none" : undefined,
             }}
           >
-            <PostChips teamName={team?.name} rumour={reel.stage === "RUMOUR"} />
+            <PostChips teamName={team?.name} stage={reel.stage} />
             {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
             <span className="text-headline text-media-on line-clamp-3 font-extrabold">
               {reel.title}

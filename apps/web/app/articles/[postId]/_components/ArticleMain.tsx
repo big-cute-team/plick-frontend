@@ -31,11 +31,7 @@ export function ArticleMain({ post }: { post: FeedPost }) {
 
   return (
     <article className="min-w-0">
-      <PostChips
-        teamName={team.name}
-        rumour={post.stage === "RUMOUR"}
-        tone="surface"
-      />
+      <PostChips teamName={team.name} stage={post.stage} tone="surface" />
 
       {/* 제목 */}
       <h1 className="text-read-title text-text mt-3 font-bold">{post.title}</h1>

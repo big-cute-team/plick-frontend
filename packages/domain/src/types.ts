@@ -24,8 +24,8 @@ export type ContentType = "GENERAL" | "DEBATE" | "FINISH";
 
 export interface Reporter {
   name: string;
-  /** 1 = 최상위 신뢰(티어1, Romano 등) */
-  tier: 1 | 2 | 3;
+  /** 0 = 최상위 신뢰. 표시 등급은 0=S·1=A·2=B·3=C로 매핑한다(KAN-281, ReporterTierBadge). */
+  tier: 0 | 1 | 2 | 3;
 }
 
 /** 게시물 댓글(+답글). 릴 세부 패널·바텀시트·기사 세부에서 소비. */
