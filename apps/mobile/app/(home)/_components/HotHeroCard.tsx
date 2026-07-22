@@ -1,23 +1,28 @@
 import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
-import type { FeedPost } from "@plick/domain/types";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
+import type { HotArticle } from "@/_types/articles";
+import { formatRelativeTime } from "@/_utils/time";
 
 /**
  * 핫이슈 히어로 카드 — 사진(placeholder) 위에 어두운 스크림 + 흰 텍스트.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고, 팀·강조색은 토큰을 쓴다.
+ * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
+ * 팀 이름 자리를 비운다. 단계·기자도 null이면 그 조각만 빠진다 (KAN-282).
  * 탭하면 릴스 화면으로 이동한다 — 게시물을 지정하는 딥링크였지만 BE에 릴 단건
- * 조회 API가 없어 라우트를 걷어냈다(KAN-276). 캐러셀도 아직 목데이터라
- * 여기서 넘길 실제 id가 없다.
+ * 조회 API가 없어 라우트를 걷어냈다(KAN-276).
  */
-export function HotHeroCard({ post }: { post: FeedPost }) {
-  const stage = STAGE_META[post.stage];
+export function HotHeroCard({ article }: { article: HotArticle }) {
+  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
+  const stage = article.stage ? STAGE_META[article.stage] : null;
+
   return (
     <Link href="/reels" className="block h-full">
       <MediaThumb
-        colorVar={TEAMS[post.team].colorVar}
+        colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
         className="rounded-hero h-full"
       >
         <div
@@ -27,22 +32,34 @@ export function HotHeroCard({ post }: { post: FeedPost }) {
               "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 55%, transparent 100%)",
           }}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-caption text-media-on font-extrabold">
-              {TEAMS[post.team].name}
-            </span>
-            <span className="text-media-on/50 text-micro tracking-label font-bold">
-              {stage.label}
-            </span>
-          </div>
+          {(team || stage) && (
+            <div className="flex items-center gap-2">
+              {team && (
+                <span className="text-caption text-media-on font-extrabold">
+                  {team.name}
+                </span>
+              )}
+              {stage && (
+                <span className="text-media-on/50 text-micro tracking-label font-bold">
+                  {stage.label}
+                </span>
+              )}
+            </div>
+          )}
           <h3 className="text-title text-media-on line-clamp-2 leading-tight font-extrabold">
-            {post.title}
+            {article.title}
           </h3>
           <p className="text-caption text-media-on/75">
-            <span className="font-semibold">{post.reporter.name}</span>
+            {article.reporter && (
+              <span className="font-semibold">{article.reporter.name}</span>
+            )}
             <span className="text-media-on/50">
-              {" · "}
-              {post.timeLabel} · 조회 {formatCount(post.views)}
+              {article.reporter && " · "}
+              <span suppressHydrationWarning>
+                {formatRelativeTime(article.publishedAt)}
+              </span>
+              {" · 조회 "}
+              {formatCount(article.views)}
             </span>
           </p>
         </div>
