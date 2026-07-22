@@ -46,7 +46,8 @@ description: >-
 ## 4. 컴포넌트 구조
 
 - 기본 서버 컴포넌트, 상호작용(상태·이벤트·`usePathname`) 있을 때만 `"use client"`.
-- 컴포넌트는 **화면 전용이면 해당 라우트의 `_components/`**(예: `app/(home)/_components`, `app/reels/_components`), **2개 화면 이상 공용이면 `app/_components/`**. 파일 하나 = 컴포넌트 하나(작은 private 헬퍼는 예외). 목데이터는 `app/_lib/mock.ts`, 도메인 타입·상수·포맷 유틸은 `@plick/domain`(types/constants/format — ADR 0018). `_` = 라우트 아님.
+- 컴포넌트는 **화면 전용이면 해당 라우트의 `_components/`**(예: `app/(home)/_components`, `app/reels/_components`), **2개 화면 이상 공용이면 `app/_components/`**. 파일 하나 = 컴포넌트 하나(작은 private 헬퍼는 예외). 목데이터는 `app/_mocks/posts.ts`, 도메인 타입·상수·포맷 유틸은 `@plick/domain`(types/constants/format — ADR 0018). `_` = 라우트 아님.
+- 새 훅을 만들기 전에 `app/_hooks/`를 먼저 훑는다. 비슷한 훅이 이미 있으면 재사용하거나 확장하고, 새로 만들면 JSDoc 첫 줄에 무엇을 하는 훅인지 요약을 단다(자동완성 목록에서 읽히는 줄이다).
 - `Logo` `ThemeToggle` `MediaThumb` `TeamCrest`와 아이콘 레지스트리(`icons.tsx`)는 웹과 공용이라
   **`@plick/ui`로 승격됨**(KAN-200) — `@plick/ui/<파일명>`으로 import. 새 공용 아이콘도 여기에 추가.
 - 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder) — `colorVar`에 `TEAMS[code].colorVar`를 넘긴다.
@@ -59,7 +60,7 @@ description: >-
 
 ## 5. 목데이터 우선
 
-BE 전이므로 `app/_lib/mock.ts`에 데이터를 먼저 만들고 화면이 소비한다. 타입은 `@plick/domain/types`(BE 목표 형태, web과 단일 출처). 나중에 fetch로 교체.
+BE 전이므로 `app/_mocks/posts.ts`에 데이터를 먼저 만들고 화면이 소비한다. 타입은 `@plick/domain/types`(BE 목표 형태, web과 단일 출처). 나중에 fetch로 교체.
 
 ## 6. 검증
 

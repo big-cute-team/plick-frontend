@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/_components/AuthProvider";
-import { isLoggedIn } from "@/_lib/api/session";
+import { QueryProvider } from "@/_queries/QueryProvider";
+import { isLoggedIn } from "@/_services/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,7 +40,9 @@ export default async function RootLayout({
         />
       </head>
       <body className="bg-nav text-text">
-        <AuthProvider isLoggedIn={loggedIn}>{children}</AuthProvider>
+        <QueryProvider>
+          <AuthProvider isLoggedIn={loggedIn}>{children}</AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

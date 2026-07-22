@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { FeedPost } from "@plick/domain/types";
-import { CARD_W, GAP } from "@/(home)/_lib/constants";
+import { CARD_W, GAP } from "@/_constants/home";
 import { HotHeroCard } from "./HotHeroCard";
 
 /**

@@ -32,7 +32,7 @@ node scripts/be-verify/mint-jwt.mjs <userId> [ttlSeconds]   # access 토큰 출�
 node crypto나 psql 명령을 새로 짜지 않는다. 자세한 건 `scripts/be-verify/README.md`에 있다.
 
 인증은 FE가 access 토큰을 HttpOnly 쿠키로 들고, 서버에서 `cookies()`로 꺼내 호출마다
-`Authorization: Bearer …`로 싣는 방식이다(`apps/mobile/app/_lib/api/users.ts`).
+`Authorization: Bearer …`로 싣는 방식이다(`apps/mobile/app/_services/users.ts`).
 너는 민팅한 토큰으로 그 헤더를 직접 만들면 된다. 브라우저나 쿠키를 흉내 낼 필요 없다.
 
 ## ⚠️ 공유 DB 안전 규칙

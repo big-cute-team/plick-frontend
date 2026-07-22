@@ -10,8 +10,8 @@ import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { TEAMS } from "@plick/domain/constants";
-import { CURRENT_USER, NOTIF_COUNT } from "@/_lib/mock";
-import { APP_VERSION_LABEL } from "./_lib/constants";
+import { CURRENT_USER, NOTIF_COUNT } from "@/_mocks/posts";
+import { APP_VERSION_LABEL } from "@/_constants/me";
 
 /**
  * 데스크톱 마이페이지 (KAN-244) — GNB + 중앙 정렬 좁은 컬럼(max-w-narrow)에

@@ -17,8 +17,8 @@ import {
   AUTH_COOKIE_BASE,
   AUTH_COOKIES,
   REFRESH_TOKEN_MAX_AGE,
-} from "@/_lib/api/constants";
-import { refreshTokens } from "@/_lib/api/refresh";
+} from "@/_constants/api";
+import { refreshTokens } from "@/_services/refresh";
 
 export async function middleware(request: NextRequest) {
   const hasAccess = request.cookies.has(AUTH_COOKIES.access);

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { CheckIcon } from "@plick/ui/icons";
-import { CURRENT_USER } from "@/_lib/mock";
+import { CURRENT_USER } from "@/_mocks/posts";
 import {
   NICKNAME_MAX_LENGTH,
   ONBOARDING_TOTAL_STEPS,
-} from "@/onboarding/_lib/constants";
+} from "@/_constants/onboarding";
 
 /**
  * W8 온보딩 닉네임 설정 카드 — 스텝 표시(1/2) + 제목 + 닉네임 입력(글자수 카운터·

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
-import { getMyProfile } from "@/_lib/api/profile";
+import { getMyProfile } from "@/_services/profile";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { NicknameStep } from "./_components/NicknameStep";
 

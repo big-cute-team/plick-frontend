@@ -1,6 +1,6 @@
 import { BackButton } from "@/_components/BackButton";
 import { TopBarShell } from "@/_components/TopBarShell";
-import { ONBOARDING_TOTAL_STEPS } from "@/onboarding/_lib/constants";
+import { ONBOARDING_TOTAL_STEPS } from "@/_constants/onboarding";
 
 /**
  * 온보딩 상단바 — 뒤로가기 + 우측 스텝 표시(`1 / 2`).

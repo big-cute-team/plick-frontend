@@ -1,6 +1,6 @@
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { HOT_POSTS, NEWS_POSTS, NOTIF_COUNT } from "@/_lib/mock";
+import { HOT_POSTS, NEWS_POSTS, NOTIF_COUNT } from "@/_mocks/posts";
 import { PostFeed } from "@/_components/PostFeed";
 import { HotIssueGrid } from "./_components/HotIssueGrid";
 import { HomeSidebar } from "./_components/HomeSidebar";

@@ -1,4 +1,4 @@
-import { NAV_LINKS } from "@/_lib/constants";
+import { NAV_LINKS } from "@/_constants/app";
 import { NavItem } from "./NavItem";
 
 /**

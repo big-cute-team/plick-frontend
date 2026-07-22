@@ -6,12 +6,12 @@ import { ChevronMiniIcon, HelpCircleIcon } from "@plick/ui/icons";
 import { PreferenceCard } from "@plick/ui/PreferenceCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@plick/domain/constants";
-import { getMyProfile } from "@/_lib/api/profile";
+import { getMyProfile } from "@/_services/profile";
 import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
 import { MyProfileCard } from "./_components/MyProfileCard";
-import { APP_VERSION_LABEL } from "./_lib/constants";
+import { APP_VERSION_LABEL } from "@/_constants/me";
 
 /**
  * MY 마이페이지 — 로그인 여부로 갈린다 (KAN-170·KAN-255, 피그마 26-6).

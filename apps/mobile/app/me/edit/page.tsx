@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AvatarField } from "@plick/ui/AvatarField";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
-import { getMyProfile } from "@/_lib/api/profile";
+import { getMyProfile } from "@/_services/profile";
 import { EditTopBar } from "./_components/EditTopBar";
 import { InfoCard } from "./_components/InfoCard";
 import { ProfileEditForm } from "./_components/ProfileEditForm";

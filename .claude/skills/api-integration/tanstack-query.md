@@ -12,35 +12,16 @@
 
 셋 다 아니면(단발 읽기) → 서버 컴포넌트 fetch. RQ 안 쓴다([data-layer.md](data-layer.md)).
 
-첫 도입 시 설치(그 앱에서 처음 필요할 때만):
-
-```bash
-pnpm --filter mobile add @tanstack/react-query
-```
+패키지는 두 앱에 이미 설치돼 있다(ADR 0029). 설치 단계는 건너뛴다.
 
 ---
 
 ## 2. Provider (앱당 한 번)
 
-`app/_components/QueryProvider.tsx` (클라 컴포넌트) → 루트 `layout.tsx`에서 children을 감싼다.
-
-```tsx
-"use client";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
-
-/** RQ 클라이언트를 컴포넌트 트리에 제공한다. 루트 layout에서 children을 감싼다. */
-export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
-      }),
-  );
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
-```
+이미 두 앱에 세팅돼 있다(ADR 0029). `app/_queries/query-client.ts`(`getQueryClient` — 서버는 요청마다
+새 인스턴스, 브라우저는 싱글턴)와 `app/_queries/QueryProvider.tsx`(클라 컴포넌트, 렌더 중 `getQueryClient()`
+호출 — useState로 만들면 suspend 시 클라이언트가 유실될 수 있어 피한다). 루트 `layout.tsx`가 children을 감싼다.
+새로 만들지 말고 그대로 쓴다. 기본 옵션 조정도 `query-client.ts`에서 한다.
 
 ---
 
@@ -66,9 +47,9 @@ export const postKeys = {
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getPostsPage } from "@/_lib/getPosts";
-import { postKeys } from "@/_lib/postKeys";
-import type { FeedPost } from "@/_lib/types";
+import { getPostsPage } from "@/_services/posts";
+import { postKeys } from "@/_queries/postKeys";
+import type { FeedPost } from "@plick/domain/types";
 
 /**
  * 릴스 피드. 서버가 받은 첫 페이지를 initialData로 심어 이중 페치를 막는다(§5).
@@ -109,7 +90,7 @@ export function useReelsFeed(initial: {
 
 ```tsx
 // app/reels/page.tsx (서버 컴포넌트)
-import { getPostsPage } from "@/_lib/getPosts";
+import { getPostsPage } from "@/_services/posts";
 import { ReelsFeed } from "./_components/ReelsFeed"; // "use client", 위 훅 사용
 
 export default async function ReelsPage() {
@@ -128,9 +109,9 @@ export default async function ReelsPage() {
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { likePost } from "@/_lib/likePost";
-import { postKeys } from "@/_lib/postKeys";
-import type { FeedPost } from "@/_lib/types";
+import { likePost } from "@/_services/posts";
+import { postKeys } from "@/_queries/postKeys";
+import type { FeedPost } from "@plick/domain/types";
 
 /** 좋아요 토글 — UI를 먼저 바꾸고, 실패하면 되돌린다. */
 export function useLikePost(id: string) {
@@ -173,5 +154,5 @@ export function useLikePost(id: string) {
 
 ## 8. 공용화
 
-RQ provider·쿼리키 규약·`apiFetch`는 **첫 앱에선 앱별 `_lib`**. 두 번째 앱이 같은 규약을 쓰게 되면 `@plick/core` 승격을
+RQ provider·쿼리키 규약·`apiFetch`는 **첫 앱에선 앱별 레이어 폴더(`_queries/`·`_apis/`)**. 두 번째 앱이 같은 규약을 쓰게 되면 `@plick/core` 승격을
 ADR 0011 게이트로 판단한다(SKILL §3). 첫 앱에서 미리 빼지 않는다.

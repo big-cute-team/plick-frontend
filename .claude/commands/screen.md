@@ -14,7 +14,7 @@ argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
 2. **디자인 파악** — Figma 노드에서 구조·토큰·카피를 가져온다.
    - `get_metadata`(구조) → `get_variable_defs`(토큰) → 필요 시 `get_design_context`.
    - 스크린샷보다 **JSON 노드/메타데이터를 우선**한다.
-3. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/mobile/app/_lib/`(types·mock)에 먼저 만든다.
+3. **목데이터 먼저** — 화면에 필요한 데이터를 `apps/mobile/app/_types/`·`_mocks/`에 먼저 만든다.
 4. **브랜치** — `git switch -c feature/<티켓>-<짧은설명> develop` (develop 기준).
 5. **구현** — `AppShell`/`ScrollArea`(+`TopBar`/`TabBar`) 위에 토큰 유틸만으로 작성.
    재사용 조각은 `_components/`로 뽑고, 색·간격 하드코딩 금지, 좌우 패딩 `px-edge`, 다크 기준.

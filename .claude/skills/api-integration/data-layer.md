@@ -87,12 +87,12 @@ export default nextConfig;
 
 ---
 
-## 3. `apiFetch` 클라이언트 (앱별 `_lib/api/client.ts`)
+## 3. `apiFetch` 클라이언트 (앱별 `_apis/client.ts`)
 
-> **폴더 레이아웃(KAN-253에서 확정):** 데이터 레이어는 앱 `_lib` 바닥에 흩지 말고 **`_lib/api/`로 접는다.**
-> `client.ts`(이 래퍼) · `<도메인>.ts`(fetcher, 예 `auth.ts`·`posts.ts`) · `constants.ts`(`AUTH_COOKIES` 등) · `types.ts`(요청/응답 부수 타입).
-> 앱 스코프(`TABS`·`Tab`)와 라우팅 상수(`ONBOARDING_ENTRY`)는 앱 `_lib/constants.ts`·`_lib/types.ts`에 남긴다.
-> ⚠️ **서버 액션 fetcher(`"use server"`)는 export가 async 함수여야만 한다** → 그 파일에 상수·타입을 같이 두지 말고 `api/constants.ts`·`api/types.ts`로 분리(강제된 분리라 외려 깔끔). 배경 [ADR 0019](../../docs/adr/0019-mobile-auth-login-api.md).
+> **폴더 레이아웃(ADR 0029 레이어드 구조):** 통신 래퍼는 `_apis/`, 도메인 fetcher·서버 액션은 `_services/`에 둔다.
+> `_apis/client.ts`(이 래퍼) · `_services/<도메인>.ts`(fetcher, 예 `auth.ts`·`posts.ts`) · `_constants/api.ts`(`AUTH_COOKIES` 등) · `_types/api.ts`(요청/응답 부수 타입).
+> 앱 스코프(`TABS`·`Tab`)와 라우팅 상수(`ONBOARDING_ENTRY`)는 `_constants/app.ts`·`_types/app.ts`에 둔다.
+> ⚠️ **서버 액션 fetcher(`"use server"`)는 export가 async 함수여야만 한다** → 그 파일에 상수·타입을 같이 두지 말고 `_constants/api.ts`·`_types/api.ts`로 분리(강제된 분리라 외려 깔끔). 배경 [ADR 0019](../../docs/adr/0019-mobile-auth-login-api.md).
 
 얇은 래퍼 하나. base 선택 · JSON 파싱 · 봉투 해제 · 에러 정규화 · 인증 봉합점만 담당한다. 도메인 지식은 넣지 않는다.
 
@@ -170,7 +170,7 @@ export async function apiFetch<T>(
 
 ---
 
-## 4. 도메인 fetcher + 경계 변환 (`_lib/api/posts.ts` …)
+## 4. 도메인 fetcher + 경계 변환 (`_services/posts.ts` …)
 
 BE 응답 타입은 **fetcher 파일 로컬**에 두고, 여기서 도메인 타입(`FeedPost` 등)으로 변환한다. 화면은 도메인 타입만 본다.
 
@@ -218,8 +218,8 @@ export async function getHotPosts(): Promise<FeedPost[]> {
 지금 페이지가 `HOT_POSTS`를 import해 props로 내리는 구조라, **한 줄 교체**다:
 
 ```diff
-- import { HOT_POSTS, NEWS_POSTS } from "@/_lib/mock";
-+ import { getHotPosts, getNewsPosts } from "@/_lib/getPosts";
+- import { HOT_POSTS, NEWS_POSTS } from "@/_mocks/posts";
++ import { getHotPosts, getNewsPosts } from "@/_services/posts";
 
 - export default function HomePage() {
 + export default async function HomePage() {
@@ -265,7 +265,7 @@ await apiFetch<void>("/api/v1/users/me/onboarding", {
 ```
 
 401이 오면 세션이 끊긴 것이므로 `/login`으로 보낸다. 만료는 미들웨어가 refresh로 잇는다(ADR 0021).
-실제 구현은 `apps/mobile/app/_lib/api/users.ts`와 `session.ts`, `refresh.ts`에 있다.
+실제 구현은 `apps/mobile/app/_services/users.ts`와 `session.ts`, `refresh.ts`에 있다.
 
 보호 API를 검증할 때는 실제 OAuth를 돌지 않고 `scripts/be-verify/mint-jwt.mjs`로 토큰을 민팅한다.
 그 일은 `be-verify` 서브에이전트가 한다. 자격증명을 코드에 직접 적거나 저장하지 않는다.

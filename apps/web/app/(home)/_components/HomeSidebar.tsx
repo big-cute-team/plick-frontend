@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { TEAMS } from "@plick/domain/constants";
-import { CURRENT_USER, TRENDING_POSTS } from "@/_lib/mock";
+import { CURRENT_USER, TRENDING_POSTS } from "@/_mocks/posts";
 
 /**
  * 홈 우측 사이드바 — 마이팀 카드 + 실시간 인기 랭킹. 스크롤 시 상단에 고정된다.

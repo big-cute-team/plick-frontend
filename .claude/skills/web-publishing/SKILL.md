@@ -105,10 +105,12 @@ description: >-
 ## 5. 구조·목데이터 — 모바일과 동일
 
 - 기본 서버 컴포넌트, 상호작용 있을 때만 `"use client"`.
-- 타입/상수/유틸은 `_lib`로 분리(CLAUDE.md 규칙 그대로): 웹 공용은 `apps/web/app/_lib/`,
-  라우트 전용은 그 라우트의 `_lib/`.
+- 타입/상수/유틸은 레이어 폴더로 분리(CLAUDE.md 규칙 그대로): `apps/web/app/_types/`·`_constants/`·`_utils/`,
+  주제별 파일(`_constants/me.ts` 등). 훅은 `_hooks/`, 데이터 레이어는 `_services/`·`_apis/`.
+- 새 훅을 만들기 전에 `app/_hooks/`를 먼저 훑는다. 비슷한 훅이 있으면 재사용하거나 확장하고,
+  새로 만들면 JSDoc 첫 줄에 요약을 단다(자동완성 목록에서 읽히는 줄이다).
 - 절대경로 import `@/* → apps/web/app/*` — 부모 탐색(`../`) 금지, 형제·하위는 `./`.
-- BE 전이므로 목데이터 우선: `apps/web/app/_lib/mock.ts` + `@plick/domain/types`(BE 목표 형태).
+- BE 전이므로 목데이터 우선: `apps/web/app/_mocks/posts.ts` + `@plick/domain/types`(BE 목표 형태).
   도메인 타입·팀 레지스트리·포맷 유틸은 `@plick/domain`이 web/mobile **단일 출처**라
   수동 동기화가 필요 없다(ADR 0018).
 - 아이콘은 피그마 노드 벡터 그대로(`currentColor`) — 비슷한 기존 아이콘 재사용 금지.

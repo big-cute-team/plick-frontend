@@ -1,0 +1,111 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ONBOARDING_ENTRY } from "@/_constants/app";
+import { apiFetch } from "@/_apis/client";
+import {
+  ACCESS_TOKEN_MAX_AGE,
+  AUTH_COOKIE_BASE,
+  AUTH_COOKIES,
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_MAX_AGE,
+  REFRESH_TOKEN_MAX_AGE,
+} from "@/_constants/api";
+import { buildAuthorizeUrl, packOAuthState } from "./oauth";
+import type { SocialProvider } from "@/_types/api";
+
+/** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  /** true면 신규 자동가입 유저 — 온보딩(닉네임→마이팀) 2단계로 보낸다 */
+  needsOnboarding: boolean;
+}
+
+/**
+ * 소셜 로그인 시작 서버 액션 (KAN-257) — CSRF 방지 state를 쿠키에 심고
+ * 프로바이더 인가 페이지로 리다이렉트한다. 사용자가 동의하면 프로바이더가
+ * `/oauth/callback`으로 code를 돌려보내고, 거기서 `login`이 마무리한다.
+ *
+ * @param provider 카카오/구글 버튼이 넘기는 프로바이더
+ * @returns 실패 시(설정 누락) 화면이 보여줄 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ */
+export async function startSocialLogin(
+  provider: SocialProvider,
+): Promise<{ error: string } | undefined> {
+  const state = crypto.randomUUID();
+
+  let authorizeUrl: string;
+  try {
+    authorizeUrl = buildAuthorizeUrl(provider, state);
+  } catch {
+    return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+
+  const jar = await cookies();
+  jar.set(OAUTH_STATE_COOKIE, packOAuthState(provider, state), {
+    ...AUTH_COOKIE_BASE,
+    maxAge: OAUTH_STATE_MAX_AGE,
+  });
+
+  redirect(authorizeUrl);
+}
+
+/**
+ * 소셜 로그인 마무리 — 프로바이더가 준 인가 code를 BE에 넘겨 토큰을 받고
+ * HttpOnly 쿠키로 심은 뒤 이동시킨다. 신규 유저(`needsOnboarding`)는 온보딩
+ * 첫 단계로, 기존 유저는 홈으로 보낸다. 콜백 라우트(`/oauth/callback`)가 부른다.
+ * 토큰이 브라우저 JS에 노출되지 않도록 BE 호출·저장을 전부 서버에서 한다.
+ *
+ * @param provider state 쿠키에서 복원한 프로바이더
+ * @param code 프로바이더가 콜백으로 돌려준 인가 코드
+ * @returns 실패 시 호출부가 처리할 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ */
+export async function login(
+  provider: SocialProvider,
+  code: string,
+): Promise<{ error: string } | undefined> {
+  let data: LoginResponse;
+  try {
+    data = await apiFetch<LoginResponse>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ provider, code }),
+    });
+  } catch (e) {
+    // 화면엔 공통 문구만 나가므로 실제 실패 사유는 서버 로그로만 남는다
+    console.error("[oauth] BE login 실패:", e);
+    return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+
+  const jar = await cookies();
+  jar.set(AUTH_COOKIES.access, data.accessToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  });
+  jar.set(AUTH_COOKIES.refresh, data.refreshToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+
+  redirect(data.needsOnboarding ? ONBOARDING_ENTRY : "/");
+}
+
+/**
+ * 로그아웃 서버 액션 — BE에 로그아웃을 알리고 토큰 쿠키를 지운 뒤 로그인 화면으로 보낸다.
+ * BE 호출이 실패해도 로컬 세션은 반드시 끊는다(쿠키 삭제) — 로그아웃을 못 하는 상태에 갇히지 않게.
+ * 토큰은 HttpOnly라 브라우저 JS로 못 지우므로, login과 대칭으로 삭제도 서버에서 한다.
+ */
+export async function logout(): Promise<void> {
+  try {
+    await apiFetch("/api/v1/auth/logout", { method: "POST" });
+  } catch {
+    // BE가 죽어도 아래에서 쿠키를 지워 로그아웃은 성립시킨다
+  }
+
+  const jar = await cookies();
+  jar.delete(AUTH_COOKIES.access);
+  jar.delete(AUTH_COOKIES.refresh);
+
+  redirect("/login");
+}
