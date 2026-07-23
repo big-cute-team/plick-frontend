@@ -1,7 +1,7 @@
 "use client";
 
 import { Tweet, type TweetComponents } from "react-tweet";
-import { useFitScale } from "@/_hooks/useFitScale";
+import { useTweetFit } from "@/_hooks/useTweetFit";
 import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /**
@@ -17,8 +17,9 @@ const EMBED_COMPONENTS: TweetComponents = {
  * 사진이 null인 카드의 사진 자리를 대신하는 원문 트윗 임베드 (KAN-284).
  *
  * 부모 박스(position 기준)를 가득 채우고, 트윗 카드가 박스보다 크면
- * {@link useFitScale}로 통째로 축소해 넣는다. 박스 높이가 트랜지션으로 변해도
- * (릴 세부 시트 개폐) 같은 경로로 따라 줄어든다.
+ * {@link useTweetFit}이 본문 텍스트를 말줄임해 맞추고 그래도 넘치는 잔여분만
+ * 축소한다 — 사진 크기를 가급적 유지하기 위해서다. 박스 높이가 트랜지션으로
+ * 변해도(릴 세부 시트 개폐) 같은 경로로 따라간다.
  *
  * 데이터는 자체 프록시(`/api/tweet/[id]`)에서 받는다 — react-tweet의 기본
  * 엔드포인트(react-tweet.vercel.app)는 공용 rate limit을 탄다.
@@ -29,7 +30,7 @@ const EMBED_COMPONENTS: TweetComponents = {
  * @param url 원문 트윗 링크 (`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
  */
 export function TweetEmbed({ url }: { url: string }) {
-  const { outerRef, innerRef, scale } = useFitScale<
+  const { outerRef, innerRef, scale } = useTweetFit<
     HTMLDivElement,
     HTMLDivElement
   >();
