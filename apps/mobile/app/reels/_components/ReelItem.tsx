@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TweetEmbed } from "@/_components/TweetEmbed";
@@ -54,6 +54,32 @@ export function ReelItem({
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
   const hasEmbed = !reel.imageUrl && !!reel.sourceUrl;
 
+  /** 임베드 정렬 영역 높이 — 릴 상단부터 칩 줄 윗부분까지 (KAN-291) */
+  const [embedRegion, setEmbedRegion] = useState<number>();
+  /* 측정 가드는 ref로 본다 — 시트 모션 중엔 title에 transform이 끼어 있어
+     rect가 도킹 위치로 재지기 때문에 resting 값만 유지한다 */
+  const titleMotionRef = useRef(titleMotion);
+  titleMotionRef.current = titleMotion;
+
+  useEffect(() => {
+    if (!hasEmbed) return;
+    const section = sectionRef.current;
+    const title = titleRef.current;
+    if (!section || !title) return;
+
+    const measure = () => {
+      if (titleMotionRef.current) return;
+      setEmbedRegion(
+        title.getBoundingClientRect().top - section.getBoundingClientRect().top,
+      );
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [hasEmbed]);
+
   const handleOpen = () => {
     const section = sectionRef.current;
     const title = titleRef.current;
@@ -90,7 +116,8 @@ export function ReelItem({
         {/* 사진이 null이면 원문 트윗 임베드가 미디어 자리를 대신한다 (KAN-284).
             사진처럼 릴 화면을 꽉 채우고(KAN-291), 세부 시트가 떠 있는 동안은
             시트 위 남은 영역으로 줄어든다. 임베드는 카드 전체를 축소하는
-            방식(useTweetFit)으로 층 높이를 따라간다 */}
+            방식(useTweetFit)으로 층 높이를 따라가고, 칩 줄 위 영역보다 짧은
+            카드는 그 영역 가운데에 선다 */}
         {hasEmbed && reel.sourceUrl && (
           <div
             className="absolute inset-x-0 top-0"
@@ -101,7 +128,7 @@ export function ReelItem({
               transition: SHEET_MEDIA_TRANSITION,
             }}
           >
-            <TweetEmbed url={reel.sourceUrl} />
+            <TweetEmbed url={reel.sourceUrl} centerRegionHeight={embedRegion} />
           </div>
         )}
 

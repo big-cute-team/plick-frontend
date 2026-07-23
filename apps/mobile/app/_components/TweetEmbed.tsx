@@ -16,7 +16,8 @@ import { tweetIdFromUrl } from "@/_utils/tweet";
  * 부모 박스(position 기준)를 가득 채운다. 카드가 박스보다 크면
  * {@link useTweetFit}이 카드 전체를 scale로 축소해 맞춘다 — 사진은 항상
  * 포함하고 본문도 건드리지 않는다(X Display Requirements상 본문 수정·말줄임
- * 금지).
+ * 금지). 기본은 상단 밀착이고, centerRegionHeight가 있으면 카드가 그 영역보다
+ * 짧을 때 영역 세로 중앙으로 정렬한다.
  *
  * fill 임베드는 `pointer-events-none`으로 상호작용을 막는다 (KAN-291) —
  * iframe이 포인터 이벤트를 삼켜 임베드 위에서 릴스 세로 스와이프(Embla
@@ -30,19 +31,23 @@ import { tweetIdFromUrl } from "@/_utils/tweet";
  *
  * @param url 원문 트윗 링크 (`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
  * @param layout `fill`(기본): 부모 박스를 absolute로 채움 · `flow`: 문서 흐름
+ * @param centerRegionHeight fill 전용 — 박스 상단부터 이 높이(px)까지를 정렬
+ *   영역으로 보고, 카드가 영역보다 짧으면 영역 가운데에 세운다. 생략 시 상단 밀착.
  */
 export function TweetEmbed({
   url,
   layout = "fill",
+  centerRegionHeight,
 }: {
   url: string;
   layout?: "fill" | "flow";
+  centerRegionHeight?: number;
 }) {
   const id = tweetIdFromUrl(url);
-  const { outerRef, innerRef, scale } = useTweetFit<
+  const { outerRef, innerRef, scale, offsetY } = useTweetFit<
     HTMLDivElement,
     HTMLDivElement
-  >();
+  >(centerRegionHeight);
   const flowRef = useRef<HTMLDivElement>(null);
 
   const isFlow = layout === "flow";
@@ -63,8 +68,8 @@ export function TweetEmbed({
     >
       <div
         ref={innerRef}
-        className="w-full shrink-0"
-        style={{ transform: `scale(${scale})` }}
+        className="w-full shrink-0 origin-top"
+        style={{ transform: `translateY(${offsetY}px) scale(${scale})` }}
       />
     </div>
   );
