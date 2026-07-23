@@ -18,13 +18,6 @@ import type { Tab } from "@/_types/app";
 export const NO_TEAM_COLOR_VAR = "--plk-accent";
 
 /**
- * flow 임베드(기사 세부)의 카드 높이 상한 — 화면 높이 대비 비율 (KAN-283).
- * 트윗 카드가 이보다 길면 릴스(useTweetFit)처럼 미디어를 숨겨 전문 텍스트를
- * 살린다. X Display Requirements상 본문은 자를 수 없어 사진만 뺀다.
- */
-export const TWEET_FLOW_MAX_HEIGHT_RATIO = 0.6;
-
-/**
  * 온보딩 진입 경로 — 신규 유저(`needsOnboarding`) 로그인 직후 보내는 첫 단계.
  * 이후 닉네임(1/2) → 마이팀(2/2) → 홈은 각 페이지 버튼이 이어간다.
  */

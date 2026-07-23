@@ -7,6 +7,7 @@ import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelsCarousel } from "@/_hooks/useReelsCarousel";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
+import { preloadTweetWidgets } from "@/_hooks/useTweetWidget";
 import { reelKeys } from "@/_queries/reelKeys";
 import type { InitialReelFeed, ReelCard } from "@/_types/reels";
 import { clampTitleOffset } from "@/_utils/reels";
@@ -36,6 +37,9 @@ import { ReelStatus } from "./ReelStatus";
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  */
 export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
+  /* 임베드 스크립트를 피드 마운트 시점에 미리 받아 첫 위젯 로딩을 줄인다 */
+  useEffect(preloadTweetWidgets, []);
+
   const motion = useReelDetailMotion();
   const queryClient = useQueryClient();
   /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
@@ -139,6 +143,7 @@ export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
               key={reel.id}
               reel={reel}
               active={i === activeIndex}
+              near={Math.abs(i - activeIndex) <= 1}
               onOpenDetail={(lift) => {
                 setDetail({ reel, lift });
                 motion.open();

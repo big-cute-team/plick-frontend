@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TweetEmbed } from "@/_components/TweetEmbed";
@@ -34,6 +34,9 @@ import { ReelActionRail } from "./ReelActionRail";
  *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
+ * @param near - 보고 있는 릴의 앞뒤 한 장 이내인가. 트윗 임베드는 이때부터
+ *   생성한다 (KAN-291) — 전 릴 동시 로드가 X 스로틀링과 로딩 지연을 키워서다.
+ *   한 번 생성한 임베드는 멀어져도 유지한다(재로드 방지).
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
  *   인자는 칩·제목이 도킹 지점까지 이동할 거리(px, 음수) — 탭 시점에 측정한다.
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
@@ -41,17 +44,50 @@ import { ReelActionRail } from "./ReelActionRail";
 export function ReelItem({
   reel,
   active,
+  near,
   onOpenDetail,
   titleMotion,
 }: {
   reel: ReelCard;
   active: boolean;
+  near: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
+  const hasEmbed = !reel.imageUrl && !!reel.sourceUrl;
+
+  /* 렌더 중 상태 보정 패턴 — near가 한 번이라도 켜지면 임베드를 유지한다 */
+  const [embedLoaded, setEmbedLoaded] = useState(near);
+  if (near && !embedLoaded) setEmbedLoaded(true);
+
+  /** 임베드 정렬 영역 높이 — 릴 상단부터 칩 줄 윗부분까지 (KAN-291) */
+  const [embedRegion, setEmbedRegion] = useState<number>();
+  /* 측정 가드는 ref로 본다 — 시트 모션 중엔 title에 transform이 끼어 있어
+     rect가 도킹 위치로 재지기 때문에 resting 값만 유지한다 */
+  const titleMotionRef = useRef(titleMotion);
+  titleMotionRef.current = titleMotion;
+
+  useEffect(() => {
+    if (!hasEmbed) return;
+    const section = sectionRef.current;
+    const title = titleRef.current;
+    if (!section || !title) return;
+
+    const measure = () => {
+      if (titleMotionRef.current) return;
+      setEmbedRegion(
+        title.getBoundingClientRect().top - section.getBoundingClientRect().top,
+      );
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [hasEmbed]);
 
   const handleOpen = () => {
     const section = sectionRef.current;
@@ -75,12 +111,23 @@ export function ReelItem({
         colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
         imageUrl={reel.imageUrl}
         className="h-full"
+        /* 임베드 릴은 팀 그라데이션 대신 임베드 카드와 같은 배경으로 한 몸처럼
+           보이게 한다 (KAN-291) */
+        style={
+          hasEmbed
+            ? {
+                backgroundImage: "none",
+                backgroundColor: "var(--tweet-embed-bg)",
+              }
+            : undefined
+        }
       >
         {/* 사진이 null이면 원문 트윗 임베드가 미디어 자리를 대신한다 (KAN-284).
-            세부 시트가 떠 있는 동안은 시트 위 남은 영역으로 줄어들고, 임베드는
-            박스를 벗어나면 미디어를 숨기는 방식(useTweetFit)으로 층 높이를
-            따라간다. 하단 30%는 정보 블록(제목·기자)과 겹치지 않게 비워 둔다 */}
-        {!reel.imageUrl && reel.sourceUrl && (
+            사진처럼 릴 화면을 꽉 채우고(KAN-291), 세부 시트가 떠 있는 동안은
+            시트 위 남은 영역으로 줄어든다. 임베드는 카드 전체를 축소하는
+            방식(useTweetFit)으로 층 높이를 따라가고, 칩 줄 위 영역보다 짧은
+            카드는 그 영역 가운데에 선다 */}
+        {hasEmbed && embedLoaded && reel.sourceUrl && (
           <div
             className="absolute inset-x-0 top-0"
             style={{
@@ -90,33 +137,20 @@ export function ReelItem({
               transition: SHEET_MEDIA_TRANSITION,
             }}
           >
-            <div
-              className="absolute inset-x-4 bottom-[30%]"
-              style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
-            >
-              <TweetEmbed url={reel.sourceUrl} />
-            </div>
+            <TweetEmbed url={reel.sourceUrl} centerRegionHeight={embedRegion} />
           </div>
         )}
 
-        {/* 우측 스크림 — 액션 레일 가독성용 고정 값(테마 무관) */}
-        <div
-          aria-hidden
-          className="absolute inset-y-0 right-0 w-27.5"
-          style={{
-            backgroundImage:
-              "linear-gradient(to left, color-mix(in srgb, var(--plk-scrim) 55%, transparent), transparent)",
-          }}
-        />
-
         {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
-            줄만 시트를 여는 탭 타깃이다 — 트윗 임베드가 여기까지 내려오면 칩·
-            그라데이션 영역 탭은 임베드(답글 보기 등)로 통과해야 한다 (KAN-284) */}
+            줄만 시트를 여는 탭 타깃이다 — 그라데이션·칩 영역 탭은 아래 릴
+            (스와이프·탭)로 통과한다 (KAN-284) */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
           style={{
+            /* 트윗 임베드가 이 아래까지 오므로(KAN-291) 텍스트 구간은 완전
+               불투명하게 덮는다 — 리드인(pt-30) 구간에서만 투명→불투명 전환 */
             backgroundImage:
-              "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
+              "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 88%, transparent) 25%, var(--plk-scrim) 55%)",
           }}
         >
           {/* 칩+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
