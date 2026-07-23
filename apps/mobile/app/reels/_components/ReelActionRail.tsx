@@ -19,7 +19,16 @@ export function ReelActionRail({
   onComment: () => void;
 }) {
   return (
-    <div className="drop-shadow-media absolute right-3.5 bottom-52.5 flex flex-col items-center gap-5.5">
+    /* 아이콘 무리 뒤만 스크림으로 가린다 — 세로 라인 전체를 덮는 대신, 트윗
+       임베드가 뒤에 와도(KAN-291) 이 영역만 비치지 않게 한다. 패딩만큼
+       right·bottom을 당겨 아이콘 위치는 스크림 없던 때와 같다 */
+    <div
+      className="drop-shadow-media rounded-pill absolute right-1.5 bottom-49.5 flex flex-col items-center gap-5.5 px-2 py-3"
+      style={{
+        backgroundColor:
+          "color-mix(in srgb, var(--plk-scrim) 55%, transparent)",
+      }}
+    >
       <RailAction
         icon={<LikeIcon size={28} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}

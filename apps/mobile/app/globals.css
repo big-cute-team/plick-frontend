@@ -33,26 +33,24 @@ body {
   scroll-snap-align: start;
 }
 
-/* 트윗 임베드(react-tweet) — 라이브러리 기본 팔레트 대신 PLick 토큰을 물려
- * 다크/라이트 전환을 자동으로 따라가게 한다 (KAN-284).
- * 클래스를 두 번 겹친 건 라이브러리 theme.css의 라이트/다크 셀렉터(특이도 0,1,0)를
- * import 순서와 무관하게 이기기 위한 특이도 확보다. */
-.react-tweet-theme.react-tweet-theme {
-  --tweet-container-margin: 0;
-  --tweet-font-family: inherit;
-  --tweet-bg-color: var(--plk-bg);
-  --tweet-bg-color-hover: var(--plk-bg);
-  --tweet-quoted-bg-color-hover: var(--plk-elevate-2);
-  --tweet-border: 1px solid var(--plk-border-strong);
-  --tweet-font-color: var(--plk-text);
-  --tweet-font-color-secondary: var(--plk-text-3);
-  --tweet-color-blue-secondary: var(--plk-accent);
-  --tweet-color-blue-secondary-hover: var(--plk-accent-tint);
-  --tweet-skeleton-gradient: linear-gradient(
-    270deg,
-    var(--plk-elevate-2),
-    var(--plk-elevate),
-    var(--plk-elevate),
-    var(--plk-elevate-2)
-  );
+/* 트윗 임베드(공식 widgets.js) — 위젯 래퍼의 기본 상하 여백 제거 (KAN-291).
+ * widgets.js가 렌더 후 인라인 스타일로 margin을 다시 걸어 !important가 필요하다.
+ * iframe 내부는 X 소유라 손대지 않는다 — 테마는 createTweet의 theme 옵션으로 맞춘다. */
+.twitter-tweet {
+  margin: 0 !important;
+}
+/* 카드 모서리 밖 흰 꼭짓점 제거 — 임베더(다크)와 iframe 내부의 color-scheme이
+ * 다르면 브라우저가 투명 iframe 뒤를 흰색으로 칠한다. 스킴을 맞춰 투명을 살리고,
+ * X 카드의 고정 radius(12px, 외부 산물이라 토큰 아님)만큼 iframe도 클립한다. */
+.twitter-tweet iframe {
+  color-scheme: light;
+  border-radius: 12px;
+}
+/* X 임베드 카드의 배경색 — 임베드가 미디어 자리를 채울 때 릴 배경을 카드와
+ * 한 몸으로 보이게 맞춘다. X 고정 팔레트를 실측한 값이라 토큰이 아니다. */
+:root {
+  --tweet-embed-bg: #151e26;
+}
+[data-theme="light"] {
+  --tweet-embed-bg: #ffffff;
 }
