@@ -32,3 +32,27 @@ body {
 .snap-start {
   scroll-snap-align: start;
 }
+
+/* 트윗 임베드(react-tweet) — 라이브러리 기본 팔레트 대신 PLick 토큰을 물려
+ * 다크/라이트 전환을 자동으로 따라가게 한다 (KAN-284).
+ * 클래스를 두 번 겹친 건 라이브러리 theme.css의 라이트/다크 셀렉터(특이도 0,1,0)를
+ * import 순서와 무관하게 이기기 위한 특이도 확보다. */
+.react-tweet-theme.react-tweet-theme {
+  --tweet-container-margin: 0;
+  --tweet-font-family: inherit;
+  --tweet-bg-color: var(--plk-bg);
+  --tweet-bg-color-hover: var(--plk-bg);
+  --tweet-quoted-bg-color-hover: var(--plk-elevate-2);
+  --tweet-border: 1px solid var(--plk-border-strong);
+  --tweet-font-color: var(--plk-text);
+  --tweet-font-color-secondary: var(--plk-text-3);
+  --tweet-color-blue-secondary: var(--plk-accent);
+  --tweet-color-blue-secondary-hover: var(--plk-accent-tint);
+  --tweet-skeleton-gradient: linear-gradient(
+    270deg,
+    var(--plk-elevate-2),
+    var(--plk-elevate),
+    var(--plk-elevate),
+    var(--plk-elevate-2)
+  );
+}

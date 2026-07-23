@@ -121,8 +121,9 @@ export async function getArticles({
  *
  * 피드 카드와 shape가 다르다. `summary`·`sourceUrl`·`hashtags`가 없고, 이미지가
  * `mainImageUrl`/`detailImageUrl` 쌍 대신 단일 `imageUrl`이며, reporter가
- * `{ enName, koName }` 쌍 대신 단일 `name`이다. 스웨거 `Reporter` 스키마에는
- * `sourceUrl`이 있지만 실제 응답에는 키 자체가 안 온다.
+ * `{ enName, koName }` 쌍 대신 단일 `name`이다. `sourceUrl`은 KAN-284 시점
+ * 재검증에서 스웨거·실응답 모두 없는 것으로 확인됐다 — 사진 null 폴백(트윗
+ * 임베드)에 필요해서 optional로 받아 두고, BE가 추가하면 그대로 살아난다.
  */
 interface HotCardResponse {
   articleSummaryId: number;
@@ -130,6 +131,7 @@ interface HotCardResponse {
   rumorStage: string | null;
   publishedAt: string;
   imageUrl: string | null;
+  sourceUrl?: string | null;
   teams: number[];
   logoUrl: string | null;
   reporter: {
@@ -154,6 +156,7 @@ function toHotArticle(r: HotCardResponse): HotArticle {
       .map((id) => TEAM_CODES[id])
       .filter((code): code is TeamCode => Boolean(code)),
     imageUrl: r.imageUrl,
+    sourceUrl: r.sourceUrl ?? null,
     reporter: r.reporter?.name
       ? { name: r.reporter.name, tier: r.reporter.tier ?? null }
       : null,

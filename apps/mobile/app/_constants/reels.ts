@@ -64,3 +64,10 @@ export const SHEET_TITLE_GAP = 18;
 /** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
 export const SHEET_TRANSITION =
   "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+
+/**
+ * 시트가 열릴 때 미디어(트윗 임베드) 층이 시트 위 남은 영역으로 줄어드는 높이
+ * 트랜지션 (KAN-284). 시트 슬라이드와 같은 타이밍이라 함께 움직여 보인다.
+ */
+export const SHEET_MEDIA_TRANSITION =
+  "height 320ms cubic-bezier(0.32, 0.72, 0, 1)";

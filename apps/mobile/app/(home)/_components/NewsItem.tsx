@@ -9,6 +9,9 @@ import { formatRelativeTime } from "@/_utils/time";
 /**
  * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.
  *
+ * 사진이 null이면 썸네일 자리를 아예 그리지 않고 텍스트가 전체 폭을 쓴다
+ * (KAN-284).
+ *
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
  * 팀 이름 자리를 비운다. 기자 이름도 원문이 없으면 빠진다.
  */
@@ -48,10 +51,13 @@ export function NewsItem({ article }: { article: ArticleCard }) {
           <span>댓글 {article.commentCount}</span>
         </p>
       </div>
-      <MediaThumb
-        colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
-        className="rounded-control size-14 shrink-0"
-      />
+      {article.imageUrl && (
+        <MediaThumb
+          colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
+          imageUrl={article.imageUrl}
+          className="rounded-control size-14 shrink-0"
+        />
+      )}
     </Link>
   );
 }
