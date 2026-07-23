@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { EmbeddedTweet, useTweet } from "react-tweet";
 import type { Tweet } from "react-tweet/api";
+import { TWEET_FLOW_MAX_HEIGHT_RATIO } from "@/_constants/app";
 import { useTweetFit } from "@/_hooks/useTweetFit";
 import { tweetIdFromUrl } from "@/_utils/tweet";
 
@@ -34,9 +36,22 @@ function withoutMedia(tweet: Tweet): Tweet {
  * 실패하면 아무것도 그리지 않아 뒤의 MediaThumb 그라데이션이 placeholder
  * 역할을 이어받는다.
  *
+ * `layout="flow"`면 박스를 채우는 대신 문서 흐름에 자연 높이로 선다 — 기사
+ * 세부 본문처럼 고정 프레임 없이 임베드만 꽉 차게 보여줄 자리용. 다만 카드가
+ * 화면 높이 대비 상한({@link TWEET_FLOW_MAX_HEIGHT_RATIO})을 넘으면 릴스와
+ * 같은 방식으로 미디어를 숨겨 전문 텍스트를 살린다. 축소는 하지 않는다 —
+ * 박스에 가둘 이유가 없어 사진만 빼면 충분하다.
+ *
  * @param url 원문 트윗 링크 (`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
+ * @param layout `fill`(기본): 부모 박스를 absolute로 채움 · `flow`: 문서 흐름
  */
-export function TweetEmbed({ url }: { url: string }) {
+export function TweetEmbed({
+  url,
+  layout = "fill",
+}: {
+  url: string;
+  layout?: "fill" | "flow";
+}) {
   const id = tweetIdFromUrl(url);
   const { outerRef, innerRef, scale, hideMedia } = useTweetFit<
     HTMLDivElement,
@@ -46,7 +61,35 @@ export function TweetEmbed({ url }: { url: string }) {
     id ?? undefined,
     id ? `/api/tweet/${id}` : undefined,
   );
+
+  const flowRef = useRef<HTMLDivElement>(null);
+  const [flowHideMedia, setFlowHideMedia] = useState(false);
+
+  /* flow: 임베드 로딩·이미지 로드로 카드가 자라는 흐름을 RO로 따라가며 상한을
+     넘는 순간 미디어를 뺀다. 복원은 없다 — 박스가 늘어나는 개념이 없어서다 */
+  useEffect(() => {
+    if (layout !== "flow" || flowHideMedia) return;
+    const el = flowRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (el.offsetHeight > window.innerHeight * TWEET_FLOW_MAX_HEIGHT_RATIO) {
+        setFlowHideMedia(true);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [layout, flowHideMedia, data]);
+
   if (!id) return null;
+
+  if (layout === "flow") {
+    if (!data) return null;
+    return (
+      <div ref={flowRef}>
+        <EmbeddedTweet tweet={flowHideMedia ? withoutMedia(data) : data} />
+      </div>
+    );
+  }
 
   return (
     <div

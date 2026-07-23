@@ -1,18 +1,20 @@
 import { notFound } from "next/navigation";
+import { ApiError } from "@/_apis/client";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
-import { getPost, POSTS } from "@/_mocks/posts";
+import { getArticle } from "@/_services/articles";
+import type { ArticleDetail } from "@/_types/articles";
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 import { SuggestedArticles } from "./_components/SuggestedArticles";
 
 /**
- * 모바일 기사 세부 페이지 (KAN-243) — 상단바 + 본문·댓글 + 하단 추천 기사.
- * 홈 "지금 올라온 소식" 리스트에서 기사를 선택하면 진입한다. 피그마 S1(301:4).
+ * 모바일 기사 세부 페이지 (퍼블리싱 KAN-243, API 연결 KAN-283) — 상단바 +
+ * 본문·댓글 + 하단 추천 기사. 홈 캐러셀·"지금 올라온 소식"에서 기사를 선택하면
+ * 진입한다. 피그마 S1(301:4).
  *
- * 라우팅·구성은 데스크톱 세부(`apps/web`)를 참고했고, 공용 조각은 `@plick/ui`를
- * 그대로 재사용한다(별도 승격 없이 기존 아이콘·MediaThumb·ReporterTierBadge·
- * 모바일 CommentThread로 충족).
+ * 상세(`GET /api/v1/articles/{id}`)는 단발 읽기라 서버 컴포넌트 fetch로 받는다.
+ * 추천 섹션은 API가 아직 없어 준비 중 자리만 둔다.
  */
 export default async function ArticleDetailPage({
   params,
@@ -20,17 +22,28 @@ export default async function ArticleDetailPage({
   params: Promise<{ postId: string }>;
 }) {
   const { postId } = await params;
-  const post = getPost(postId);
-  if (!post) notFound();
 
-  const related = POSTS.filter((p) => p.id !== post.id).slice(0, 3);
+  let article: ArticleDetail;
+  try {
+    article = await getArticle(postId);
+  } catch (e) {
+    // 없는 id·미발행 기사(404)와 정수가 아닌 id(400)는 삭제된 딥링크나
+    // 손으로 친 주소의 정상 경로다 — 에러 화면이 아니라 not-found로 보낸다
+    if (
+      e instanceof ApiError &&
+      (e.code === "ARTICLE_NOT_FOUND" || e.code === "COMMON_INVALID_PARAM")
+    ) {
+      notFound();
+    }
+    throw e;
+  }
 
   return (
     <AppShell>
-      <ArticleTopBar saved={post.saved} />
+      <ArticleTopBar />
       <ScrollArea className="pb-section">
-        <ArticleBody post={post} />
-        <SuggestedArticles posts={related} />
+        <ArticleBody article={article} />
+        <SuggestedArticles />
       </ScrollArea>
     </AppShell>
   );

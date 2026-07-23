@@ -15,13 +15,13 @@ import { formatRelativeTime } from "@/_utils/time";
  * 그리므로 카드 전체를 Link로 감싸는 대신, 미디어를 아래 층에 두고 투명 Link를
  * 위에 얹어 중첩 앵커를 피한다. 임베드의 링크·액션은 X Display Requirements상
  * 막을 수 없어서, 임베드가 보일 때는 Link를 하단 텍스트 구간으로 좁혀 위쪽
- * 탭은 임베드가, 제목 쪽 탭은 릴스 이동이 받는다.
+ * 탭은 임베드가, 제목 쪽 탭은 기사 세부 이동이 받는다.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고, 팀·강조색은 토큰을 쓴다.
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
  * 팀 이름 자리를 비운다. 단계·기자도 null이면 그 조각만 빠진다 (KAN-282).
- * 탭하면 릴스 화면으로 이동한다 — 게시물을 지정하는 딥링크였지만 BE에 릴 단건
- * 조회 API가 없어 라우트를 걷어냈다(KAN-276).
+ * 탭하면 기사 세부 페이지로 이동한다(KAN-283) — 상세 API가 없던 동안 릴스로
+ * 보내던 임시 목적지를 걷어냈다.
  */
 export function HotHeroCard({ article }: { article: HotArticle }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
@@ -77,7 +77,7 @@ export function HotHeroCard({ article }: { article: HotArticle }) {
         </div>
       </MediaThumb>
       <Link
-        href="/reels"
+        href={`/articles/${article.id}`}
         aria-label={article.title}
         className={
           embedUrl ? "absolute inset-x-0 bottom-0 h-2/5" : "absolute inset-0"

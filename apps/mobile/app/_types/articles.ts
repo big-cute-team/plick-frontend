@@ -82,6 +82,49 @@ export interface HotArticle {
 }
 
 /**
+ * 기사 상세 (KAN-283, `GET /api/v1/articles/{articleId}`).
+ *
+ * 목록 카드와 거의 같은 모양이지만 별도 계약이다 — BE 응답은 기자가 단일이
+ * 아니라 배열(`reporters`, `[0]`이 대표)이고, `teams` 필드가 아예 없어 팀은
+ * `hashtags`의 팀 한글명에서 역산한다. 본문 문단·댓글 필드도 없어 본문은
+ * `summary`(긴 요약) 한 문단이 전부다. 경계 변환이 그 차이를 전부 흡수해
+ * 화면은 이 타입만 본다.
+ */
+export interface ArticleDetail {
+  /** BE `articleSummaryId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */
+  id: string;
+  /** 파싱이 어긋나 원문 트윗 전문이 그대로 들어온 행이 있다(이모지·URL 포함). */
+  title: string;
+  /** 긴 요약(`summary_detail`). 본문 필드가 따로 없어 이게 본문 문단이다. */
+  summary: string;
+  /** 루머 단계. 발행 기사의 절반이 null이다. */
+  stage: RumorStage | null;
+  /** 발행 시각 ISO-8601 (KST 오프셋 포함). */
+  publishedAt: string;
+  /** `hashtags`의 팀 한글명에서 역산한 팀 목록 — 다중이고 없을 수 있다. */
+  teams: TeamCode[];
+  /** 대표 이미지. 현재 발행 기사 전건이 null이라 트윗 임베드 폴백이 기본이다. */
+  imageUrl: string | null;
+  /** 대표 기자(BE `reporters[0]`). 배열이 비면 null. */
+  reporter: ArticleReporter | null;
+  /**
+   * 대표 기자의 원문 트윗 링크. 원문 버튼과 사진 null 폴백(트윗 임베드)에
+   * 쓴다(KAN-284). 목록과 달리 최상위 필드가 아니라 기자에게 달려 온다.
+   */
+  sourceUrl: string | null;
+  /**
+   * 조회·좋아요·댓글 집계. BE가 아직 자리 구현(Noop)이라 항상 0·false다 —
+   * 값은 그대로 그리고, BE가 실집계를 붙이면 화면 수정 없이 살아난다.
+   */
+  views: number;
+  commentCount: number;
+  likeCount: number;
+  liked: boolean;
+  /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. 빈 배열일 수 있다. */
+  hashtags: string[];
+}
+
+/**
  * 커서 페이지네이션 한 페이지.
  *
  * BE에 총 건수도 `hasNext`도 없다. 다음 페이지 존재 여부는 `nextCursor`가
