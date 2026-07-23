@@ -38,6 +38,8 @@ export default async function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
+        {/* 트윗 임베드(widgets.js·iframe)의 연결 수립을 미리 끝내 로딩을 줄인다 (KAN-291) */}
+        <link rel="preconnect" href="https://platform.twitter.com" />
       </head>
       <body className="bg-nav text-text">
         <QueryProvider>

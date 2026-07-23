@@ -9,6 +9,15 @@ export type TweetWidgetStatus = "loading" | "ready" | "error";
 let widgetsPromise: Promise<NonNullable<Window["twttr"]> | null> | null = null;
 
 /**
+ * widgets.js를 미리 로드해 둔다 (KAN-291). 릴스처럼 임베드가 확실히 쓰일
+ * 화면이 마운트 시 부르면, 첫 위젯 생성 때 스크립트 로드를 기다리지 않는다.
+ * 클라이언트 전용 — effect 안에서만 부른다.
+ */
+export function preloadTweetWidgets() {
+  void loadWidgets();
+}
+
+/**
  * X 공식 임베드 스크립트를 로드하고 `window.twttr`를 돌려준다.
  * 로드 실패(네트워크·차단기)는 throw 대신 null — 임베드는 조용히 폴백한다.
  */

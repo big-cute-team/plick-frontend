@@ -34,6 +34,9 @@ import { ReelActionRail } from "./ReelActionRail";
  *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
+ * @param near - 보고 있는 릴의 앞뒤 한 장 이내인가. 트윗 임베드는 이때부터
+ *   생성한다 (KAN-291) — 전 릴 동시 로드가 X 스로틀링과 로딩 지연을 키워서다.
+ *   한 번 생성한 임베드는 멀어져도 유지한다(재로드 방지).
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
  *   인자는 칩·제목이 도킹 지점까지 이동할 거리(px, 음수) — 탭 시점에 측정한다.
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
@@ -41,11 +44,13 @@ import { ReelActionRail } from "./ReelActionRail";
 export function ReelItem({
   reel,
   active,
+  near,
   onOpenDetail,
   titleMotion,
 }: {
   reel: ReelCard;
   active: boolean;
+  near: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
 }) {
@@ -53,6 +58,10 @@ export function ReelItem({
   const titleRef = useRef<HTMLDivElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
   const hasEmbed = !reel.imageUrl && !!reel.sourceUrl;
+
+  /* 렌더 중 상태 보정 패턴 — near가 한 번이라도 켜지면 임베드를 유지한다 */
+  const [embedLoaded, setEmbedLoaded] = useState(near);
+  if (near && !embedLoaded) setEmbedLoaded(true);
 
   /** 임베드 정렬 영역 높이 — 릴 상단부터 칩 줄 윗부분까지 (KAN-291) */
   const [embedRegion, setEmbedRegion] = useState<number>();
@@ -118,7 +127,7 @@ export function ReelItem({
             시트 위 남은 영역으로 줄어든다. 임베드는 카드 전체를 축소하는
             방식(useTweetFit)으로 층 높이를 따라가고, 칩 줄 위 영역보다 짧은
             카드는 그 영역 가운데에 선다 */}
-        {hasEmbed && reel.sourceUrl && (
+        {hasEmbed && embedLoaded && reel.sourceUrl && (
           <div
             className="absolute inset-x-0 top-0"
             style={{
