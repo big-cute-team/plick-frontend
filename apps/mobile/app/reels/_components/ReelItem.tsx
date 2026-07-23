@@ -78,8 +78,8 @@ export function ReelItem({
       >
         {/* 사진이 null이면 원문 트윗 임베드가 미디어 자리를 대신한다 (KAN-284).
             세부 시트가 떠 있는 동안은 시트 위 남은 영역으로 줄어들고, 임베드는
-            본문 말줄임과 잔여 축소(useTweetFit)로 층 높이를 따라 리사이징된다.
-            하단 30%는 정보 블록(제목·기자)과 겹치지 않게 비워 둔다 */}
+            박스를 벗어나면 미디어를 숨기는 방식(useTweetFit)으로 층 높이를
+            따라간다. 하단 30%는 정보 블록(제목·기자)과 겹치지 않게 비워 둔다 */}
         {!reel.imageUrl && reel.sourceUrl && (
           <div
             className="absolute inset-x-0 top-0"
