@@ -109,11 +109,11 @@ export function ReelItem({
           }}
         />
 
-        {/* 하단 정보 블록 (스크림 위 텍스트) — 탭하면 세부 시트가 열린다 */}
-        <button
-          type="button"
-          onClick={handleOpen}
-          className="absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
+        {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
+            줄만 시트를 여는 탭 타깃이다 — 트윗 임베드가 여기까지 내려오면 칩·
+            그라데이션 영역 탭은 임베드(답글 보기 등)로 통과해야 한다 (KAN-284) */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
           style={{
             backgroundImage:
               "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
@@ -127,17 +127,27 @@ export function ReelItem({
             style={{
               transform: `translateY(${titleMotion?.offset ?? 0}px)`,
               transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
-              pointerEvents: titleMotion ? "none" : undefined,
             }}
           >
             <PostChips teamName={team?.name} stage={reel.stage} />
-            {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
-            <span className="text-headline text-media-on line-clamp-3 font-extrabold">
-              {reel.title}
-            </span>
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="text-left"
+              style={{ pointerEvents: titleMotion ? "none" : "auto" }}
+            >
+              {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
+              <span className="text-headline text-media-on line-clamp-3 font-extrabold">
+                {reel.title}
+              </span>
+            </button>
           </div>
 
-          <span className="flex items-center gap-2.25">
+          <button
+            type="button"
+            onClick={handleOpen}
+            className="pointer-events-auto flex items-center gap-2.25 text-left"
+          >
             {reel.reporter && (
               <>
                 <ReporterTierBadge reporter={reel.reporter} />
@@ -152,8 +162,8 @@ export function ReelItem({
                 {formatRelativeTime(reel.publishedAt)}
               </span>
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
 
         <ReelActionRail reel={reel} onComment={handleOpen} />
       </MediaThumb>
