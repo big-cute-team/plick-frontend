@@ -64,6 +64,12 @@ export interface HotArticle {
   teams: TeamCode[];
   /** 대표 이미지. BE 실데이터가 아직 전부 비어 있어 placeholder로 폴백한다. */
   imageUrl: string | null;
+  /**
+   * 원문 링크. 사진이 null일 때 트윗 임베드 폴백에 쓴다(KAN-284) —
+   * 다만 hot API는 스웨거·실응답 모두 이 필드가 아직 없어 당분간 항상 null이다.
+   * BE가 필드를 추가하면 화면 수정 없이 임베드가 살아난다.
+   */
+  sourceUrl: string | null;
   reporter: ArticleReporter | null;
   /**
    * 조회·좋아요·댓글 집계. BE가 아직 자리 구현(Noop)이라 항상 0으로 온다 —

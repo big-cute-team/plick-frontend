@@ -3,8 +3,13 @@
 import { useRef } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { TweetEmbed } from "@/_components/TweetEmbed";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
-import { SHEET_TRANSITION } from "@/_constants/reels";
+import {
+  SHEET_HEIGHT_RATIO,
+  SHEET_MEDIA_TRANSITION,
+  SHEET_TRANSITION,
+} from "@/_constants/reels";
 import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { formatRelativeTime } from "@/_utils/time";
@@ -14,6 +19,9 @@ import { ReelActionRail } from "./ReelActionRail";
 
 /**
  * 릴 한 장 — 풀스크린 미디어 + 스크림 + 정보 블록 + 우측 액션 레일.
+ *
+ * 미디어는 사진(imageUrl) → 원문 트윗 임베드 → 팀 컬러 그라데이션 순으로
+ * 폴백한다 (KAN-284).
  *
  * Embla 캐러셀의 슬라이드 하나다(`shrink-0 basis-full`). 컨테이너 높이의 100%를
  * 차지하되 줄어들지 않아야 릴 개수만큼 세로로 쌓인다.
@@ -65,8 +73,32 @@ export function ReelItem({
     >
       <MediaThumb
         colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
+        imageUrl={reel.imageUrl}
         className="h-full"
       >
+        {/* 사진이 null이면 원문 트윗 임베드가 미디어 자리를 대신한다 (KAN-284).
+            세부 시트가 떠 있는 동안은 시트 위 남은 영역으로 줄어들고, 임베드는
+            박스를 벗어나면 미디어를 숨기는 방식(useTweetFit)으로 층 높이를
+            따라간다. 하단 30%는 정보 블록(제목·기자)과 겹치지 않게 비워 둔다 */}
+        {!reel.imageUrl && reel.sourceUrl && (
+          <div
+            className="absolute inset-x-0 top-0"
+            style={{
+              height: titleMotion
+                ? `${(1 - SHEET_HEIGHT_RATIO) * 100}%`
+                : "100%",
+              transition: SHEET_MEDIA_TRANSITION,
+            }}
+          >
+            <div
+              className="absolute inset-x-4 bottom-[30%]"
+              style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
+            >
+              <TweetEmbed url={reel.sourceUrl} />
+            </div>
+          </div>
+        )}
+
         {/* 우측 스크림 — 액션 레일 가독성용 고정 값(테마 무관) */}
         <div
           aria-hidden
@@ -77,11 +109,11 @@ export function ReelItem({
           }}
         />
 
-        {/* 하단 정보 블록 (스크림 위 텍스트) — 탭하면 세부 시트가 열린다 */}
-        <button
-          type="button"
-          onClick={handleOpen}
-          className="absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
+        {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
+            줄만 시트를 여는 탭 타깃이다 — 트윗 임베드가 여기까지 내려오면 칩·
+            그라데이션 영역 탭은 임베드(답글 보기 등)로 통과해야 한다 (KAN-284) */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pt-30 pr-21 pb-27 pl-4.5 text-left"
           style={{
             backgroundImage:
               "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
@@ -95,17 +127,27 @@ export function ReelItem({
             style={{
               transform: `translateY(${titleMotion?.offset ?? 0}px)`,
               transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
-              pointerEvents: titleMotion ? "none" : undefined,
             }}
           >
             <PostChips teamName={team?.name} stage={reel.stage} />
-            {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
-            <span className="text-headline text-media-on line-clamp-3 font-extrabold">
-              {reel.title}
-            </span>
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="text-left"
+              style={{ pointerEvents: titleMotion ? "none" : "auto" }}
+            >
+              {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
+              <span className="text-headline text-media-on line-clamp-3 font-extrabold">
+                {reel.title}
+              </span>
+            </button>
           </div>
 
-          <span className="flex items-center gap-2.25">
+          <button
+            type="button"
+            onClick={handleOpen}
+            className="pointer-events-auto flex items-center gap-2.25 text-left"
+          >
             {reel.reporter && (
               <>
                 <ReporterTierBadge reporter={reel.reporter} />
@@ -120,8 +162,8 @@ export function ReelItem({
                 {formatRelativeTime(reel.publishedAt)}
               </span>
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
 
         <ReelActionRail reel={reel} onComment={handleOpen} />
       </MediaThumb>
