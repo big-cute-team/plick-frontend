@@ -56,3 +56,19 @@ body {
     var(--plk-elevate-2)
   );
 }
+
+/* 릴스 안의 임베드 카드는 릴 배경(--plk-reel-bg)에 맞춰 배경을 통일한다 —
+ * 카드가 릴 바탕과 한 색으로 이어지고 테두리만 남는다 (KAN-296).
+ * 부모(.reel-embed) + 이중 클래스로 특이도를 올려 위 기본값을 확실히 이긴다. */
+.reel-embed .react-tweet-theme.react-tweet-theme {
+  --tweet-bg-color: var(--plk-reel-bg);
+  --tweet-bg-color-hover: var(--plk-reel-bg);
+}
+
+/* 릴 트윗 본문 글자 축소 (KAN-296) — react-tweet 본문은 rem이라 컨테이너
+ * font-size로는 안 줄어든다. 본문 `<p>`를 클래스 부분일치로 잡아 직접 줄인다.
+ * 기본 1.25rem(20px) → 1.0625rem(17px). */
+.reel-embed .react-tweet-theme p[class*="tweet-body-module"] {
+  font-size: 0.8rem;
+  line-height: 1.45;
+}

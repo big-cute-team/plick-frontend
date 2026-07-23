@@ -32,6 +32,10 @@
   --plk-info: #60a5fa;
   --plk-warn: #fbbf24;
 
+  /* 릴스 배경 — 사진·임베드 뒤를 채우는 단일 색. 릴마다 팀 그라데이션으로
+   * 제각각이던 걸 하나로 통일한다 (KAN-296). 라이트에서 흰색으로 뒤집힌다. */
+  --plk-reel-bg: #151e26;
+
   /* media (기사 썸네일/영상 placeholder) */
   --plk-media-bg: #0b101d;
   --plk-media-on: #ffffff;
@@ -91,6 +95,9 @@
   --plk-info: #2563eb;
   --plk-warn: #d97706;
 
+  /* 릴스 배경 — 라이트에선 흰색 (KAN-296) */
+  --plk-reel-bg: #ffffff;
+
   /* media */
   --plk-media-bg: #dfe4ec;
   --plk-media-on: #ffffff;
@@ -123,6 +130,7 @@
   --color-info: var(--plk-info);
   --color-warn: var(--plk-warn);
 
+  --color-reel-bg: var(--plk-reel-bg);
   --color-media: var(--plk-media-bg);
   --color-media-on: var(--plk-media-on);
   --color-media-on-dim: var(--plk-media-on-dim);

@@ -42,15 +42,22 @@ function withoutMedia(tweet: Tweet): Tweet {
  * 같은 방식으로 미디어를 숨겨 전문 텍스트를 살린다. 축소는 하지 않는다 —
  * 박스에 가둘 이유가 없어 사진만 빼면 충분하다.
  *
+ * `layout="reel"`은 사진(미디어)을 그대로 살려 자연 높이·전폭으로 선다 —
+ * 릴스 최종 임베딩 전략(KAN-296). 미디어를 숨기지도 축소하지도 자르지도 않고,
+ * 카드가 영역보다 크면 부모가 위에 붙여 자기 높이만큼 그대로 세운다(칩·제목
+ * 뒤로 겹친다). 릴은 원문을 사진째 보여주는 게 목적이라 전문을 다 담으려 사진을
+ * 빼던 flow/fill과 정반대다.
+ *
  * @param url 원문 트윗 링크 (`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
- * @param layout `fill`(기본): 부모 박스를 absolute로 채움 · `flow`: 문서 흐름
+ * @param layout `fill`(기본): 부모 박스를 absolute로 채움 · `flow`: 문서 흐름 ·
+ *   `reel`: 미디어를 살린 전폭 자연 높이
  */
 export function TweetEmbed({
   url,
   layout = "fill",
 }: {
   url: string;
-  layout?: "fill" | "flow";
+  layout?: "fill" | "flow" | "reel";
 }) {
   const id = tweetIdFromUrl(url);
   const { outerRef, innerRef, scale, hideMedia } = useTweetFit<
@@ -81,6 +88,11 @@ export function TweetEmbed({
   }, [layout, flowHideMedia, data]);
 
   if (!id) return null;
+
+  if (layout === "reel") {
+    if (!data) return null;
+    return <EmbeddedTweet tweet={data} />;
+  }
 
   if (layout === "flow") {
     if (!data) return null;
