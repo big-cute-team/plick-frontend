@@ -46,7 +46,7 @@ export function HotHeroCard({ article }: { article: HotArticle }) {
         className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-16"
         style={{
           backgroundImage:
-            "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 82%, transparent) 55%, color-mix(in srgb, var(--plk-scrim) 40%, transparent) 82%, transparent 100%)",
+            "linear-gradient(to top, var(--plk-scrim) 0%, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 60%, color-mix(in srgb, var(--plk-scrim) 78%, transparent) 85%, transparent 100%)",
         }}
       >
         {(team || stage) && (
