@@ -82,3 +82,17 @@ body {
   font-size: 0.8rem;
   line-height: 1.45;
 }
+
+/* 릴 트윗 헤더(작성자 아바타·이름) 축소 (KAN-297) — 기본 아바타 48px·헤더
+ * 15px가 릴에서 과하게 커서 본문 축소에 맞춰 함께 줄인다. 아바타는 고정 px라
+ * 변수로 못 줄이고, 해시가 낀 모듈 클래스를 접미사 일치([class$="__avatar"])로
+ * 잡는다 — 컨테이너만 잡히고 avatarOverflow류는 접미사가 달라 안 걸린다. */
+.reel-embed .react-tweet-theme.react-tweet-theme {
+  --tweet-header-font-size: 0.8125rem;
+}
+.reel-embed
+  .react-tweet-theme
+  [class*="tweet-header-module"][class$="__avatar"] {
+  width: 34px;
+  height: 34px;
+}
