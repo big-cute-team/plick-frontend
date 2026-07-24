@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { CloseIcon, LinkOutIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
 import { formatCount } from "@plick/domain/format";
 import { CommentComposer } from "@/_components/CommentComposer";
+import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
 import type { ReelCard, ReelDetailMotion } from "@/_types/reels";
@@ -19,9 +21,10 @@ import { formatRelativeTime } from "@/_utils/time";
  *
  * 닫기: 그랩 존 드래그 다운 또는 X 버튼 → 내려간 뒤 motion이 스스로 언마운트.
  *
- * 댓글은 아직 계약에 없다. `GET /api/v1/reels` 응답에 댓글 목록이 없고 댓글 수도
- * 집계 구현이 자리표시라 0으로만 온다. 목데이터로 채우지 않고 빈 상태를 보여준다
- * — 댓글 API가 붙을 때 이 자리에 연결한다 (KAN-276).
+ * 댓글(KAN-303): 릴 카드 id가 곧 BE `articleSummaryId`라 기사와 같은 댓글
+ * API를 쓴다. 시트는 클라에서 열리므로 서버 씨앗 없이 열릴 때 목록을 받는다.
+ * 헤더 카운트는 피드가 준 스냅샷(`reel.commentCount`)에 이 시트에서 단 수를
+ * 로컬로 더한다 — 스냅샷은 방금 단 댓글을 모른다.
  *
  * @param reel - 세부를 보여줄 릴
  * @param motion - useReelDetailMotion()이 만든 개폐·드래그 상태 (ReelsFeed 소유)
@@ -34,6 +37,7 @@ export function ReelDetailSheet({
   motion: ReelDetailMotion;
 }) {
   const meta = `· ${formatRelativeTime(reel.publishedAt)} · 조회 ${formatCount(reel.views)}`;
+  const [addedComments, setAddedComments] = useState(0);
 
   return (
     <div className="absolute inset-0 z-20">
@@ -103,13 +107,14 @@ export function ReelDetailSheet({
           </div>
 
           <CommentsHeader
-            count={reel.commentCount}
+            count={reel.commentCount + addedComments}
             className="border-border border-t pt-3.5"
           />
 
-          <p className="text-body text-text-4 py-6 text-center">
-            아직 댓글이 없어요.
-          </p>
+          <CommentList
+            articleId={reel.id}
+            onPosted={() => setAddedComments((n) => n + 1)}
+          />
         </div>
 
         {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
@@ -117,7 +122,10 @@ export function ReelDetailSheet({
           className="border-border bg-nav shrink-0 border-t px-4 pt-3.25"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)" }}
         >
-          <CommentComposer />
+          <CommentComposer
+            articleId={reel.id}
+            onPosted={() => setAddedComments((n) => n + 1)}
+          />
         </div>
       </div>
     </div>
