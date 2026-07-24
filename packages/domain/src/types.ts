@@ -16,8 +16,8 @@ export interface Team {
   colorVar: string;
 }
 
-/** 루머 신뢰 단계 */
-export type RumorStage = "RUMOUR" | "IN_PROGRESS" | "OFFICIAL";
+/** 루머 신뢰 단계. CONFIRM은 BE 예정 단계라 타입만 선반영 (KAN-299). */
+export type RumorStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRM" | "OFFICIAL";
 
 /** 게시물 유형 — 일반/토론/완료 */
 export type ContentType = "GENERAL" | "DEBATE" | "FINISH";

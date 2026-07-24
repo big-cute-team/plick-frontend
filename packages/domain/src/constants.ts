@@ -31,5 +31,6 @@ export const TEAM_ORDER: TeamCode[] = [
 export const STAGE_META: Record<RumorStage, { label: string }> = {
   RUMOUR: { label: "RUMOUR" },
   IN_PROGRESS: { label: "IN PROGRESS" },
+  CONFIRM: { label: "CONFIRM" },
   OFFICIAL: { label: "OFFICIAL" },
 };
