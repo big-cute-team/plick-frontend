@@ -7,9 +7,9 @@ import { SHEET_TRANSITION } from "@/_constants/reels";
 import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { formatRelativeTime } from "@/_utils/time";
-import { PostChips } from "@plick/ui/PostChips";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { ReelActionRail } from "./ReelActionRail";
+import { ReelBadges } from "./ReelBadges";
 
 /**
  * 릴 한 장 — 통일된 배경(bg-reel-bg) 위에 사진 또는 원문 트윗 임베드 +
@@ -142,7 +142,7 @@ export function ReelItem({
       {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
           줄만 시트를 여는 탭 타깃이다. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pr-21 pb-27 pl-4.5 text-left">
-        {/* 칩+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
+        {/* 배지+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
             z-30: 시트 오버레이(z-20)보다 위에 그려져 스크림을 덮는다 */}
         <div
           ref={titleRef}
@@ -152,7 +152,7 @@ export function ReelItem({
             transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
           }}
         >
-          <PostChips teamName={team?.name} stage={reel.stage} />
+          <ReelBadges team={team} stage={reel.stage} />
           <button
             ref={titleTextRef}
             type="button"
