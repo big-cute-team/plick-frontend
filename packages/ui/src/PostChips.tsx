@@ -1,9 +1,10 @@
 /** 루머 단계 — 도메인 `RumorStage`와 같은 리터럴(ui는 domain에 의존하지 않아 별도 선언). */
-export type PostStage = "RUMOUR" | "IN_PROGRESS" | "OFFICIAL";
+export type PostStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRM" | "OFFICIAL";
 
 /**
  * 단계 칩 표시 스펙(KAN-281) — RUMOUR=초록(accent) · IN_PROGRESS=노랑(warn) ·
  * OFFICIAL=파랑(info). 라벨·색은 표시 스펙이라 이 컴포넌트가 소유한다.
+ * CONFIRM은 BE 예정 단계라 타입만 선반영 — 색 스펙이 나오기 전까지 accent를 빌려 쓴다 (KAN-299).
  */
 const STAGE_CHIP: Record<PostStage, { label: string; classes: string }> = {
   RUMOUR: {
@@ -13,6 +14,10 @@ const STAGE_CHIP: Record<PostStage, { label: string; classes: string }> = {
   IN_PROGRESS: {
     label: "IN PROGRESS",
     classes: "bg-warn-tint border-warn-border text-warn",
+  },
+  CONFIRM: {
+    label: "CONFIRM",
+    classes: "bg-accent-tint border-accent-border text-accent",
   },
   OFFICIAL: {
     label: "OFFICIAL",

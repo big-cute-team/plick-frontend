@@ -2,10 +2,14 @@ import { STAGE_META } from "@plick/domain/constants";
 import type { RumorStage, Team } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 
-/** 단계 글자색 표시 스펙 — 칩(PostChips)의 글자색과 같은 매핑을 따른다. */
+/**
+ * 단계 글자색 표시 스펙 — 칩(PostChips)의 글자색과 같은 매핑을 따른다.
+ * CONFIRM은 BE 예정 단계라 색 스펙이 나오기 전까지 accent를 빌려 쓴다 (KAN-299).
+ */
 const STAGE_TEXT: Record<RumorStage, string> = {
   RUMOUR: "text-accent",
   IN_PROGRESS: "text-warn",
+  CONFIRM: "text-accent",
   OFFICIAL: "text-info",
 };
 
