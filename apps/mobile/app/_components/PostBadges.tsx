@@ -14,15 +14,16 @@ const STAGE_TEXT: Record<RumorStage, string> = {
 };
 
 /**
- * 릴 배지 줄 — 팀 로고 + 우측에 루머 단계 글자 (KAN-299).
+ * 게시물 배지 줄 — 팀 로고 + 우측에 루머 단계 글자 (KAN-299).
  *
  * 텍스트 칩(PostChips) 대신 실제 구단 로고를 그리고, 단계는 알약 배경 없이
- * 로고 우측에 글자만 둔다. 기사 세부는 여전히 PostChips를 쓴다 — 릴 전용 표시다.
+ * 로고 우측에 글자만 둔다. 릴(ReelItem) 전용이었다가 기사 세부도 같은 표시를
+ * 쓰게 되면서(KAN-301) 공용으로 올렸다.
  *
  * @param team - 팀 레지스트리 항목. 태그된 팀이 없으면 null — 로고를 생략한다.
  * @param stage - 루머 단계. 없으면 글자를 생략한다.
  */
-export function ReelBadges({
+export function PostBadges({
   team,
   stage,
 }: {

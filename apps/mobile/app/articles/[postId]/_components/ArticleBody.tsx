@@ -1,35 +1,43 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
-import { PostChips } from "@plick/ui/PostChips";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
 import { HeartMiniIcon, LinkOutIcon, SendIcon } from "@plick/ui/icons";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentsHeader } from "@/_components/CommentsHeader";
-import { TweetEmbed } from "@/_components/TweetEmbed";
+import { PostBadges } from "@/_components/PostBadges";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
-import type { ArticleDetail } from "@/_types/articles";
+import type { ArticleCard, ArticleDetail } from "@/_types/articles";
 import { formatRelativeTime } from "@/_utils/time";
+import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
  * 기사 세부 본문 — 칩·제목·기자 라인·대표 이미지·문단·태그·액션·댓글.
  *
  * 데스크톱 `ArticleMain`(KAN-233)과 같은 구성을 모바일 스케일로 옮긴 것으로,
- * 공용 조각(MediaThumb·PostChips·ReporterLine·TagChips·CommentsHeader·
- * CommentComposer)을 그대로 재사용한다.
+ * 공용 조각(MediaThumb·PostBadges·ReporterLine·TagChips·CommentsHeader·
+ * CommentComposer)을 그대로 재사용한다. 배지 줄은 릴과 같은 표시다(KAN-301).
  * 피그마 S1(301:4)의 균일 14px 세로 흐름을 `gap-3.5` 컬럼으로 재현한다.
  *
- * 사진이 null이면(현재 발행 기사의 기본 상태) 고정 프레임 없이 원문 트윗
- * 임베드가 문서 흐름에 자연 높이로 서고, 원문마저 없으면 미디어 없이 텍스트만
- * 흐른다(KAN-284 폴백의 상세판 — 프레임·음영 없이 임베드만).
+ * 사진이 null이면(현재 발행 기사의 기본 상태) 미디어 없이 텍스트만 흐른다.
+ * 트윗 임베드 폴백은 KAN-301에서 뺐다 — 본문과 임베드 내용이 겹치고 로딩이
+ * 무거워서다. 원문은 기자 라인의 원문 링크로만 연결한다.
  * 팀·단계·기자는 null이면 그 조각만 빠진다. 좋아요·댓글·조회는 BE가 아직
  * 자리 구현이라 전부 0으로 온다 — 값은 그대로 그린다.
  * 정적 렌더(서버 컴포넌트) — 액션·입력은 커뮤니티 API 연동 시 핸들러를 붙인다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
+ * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). BE 추천 API가
+ *   아직 없어 기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
  */
-export function ArticleBody({ article }: { article: ArticleDetail }) {
+export function ArticleBody({
+  article,
+  suggested = [],
+}: {
+  article: ArticleDetail;
+  suggested?: ArticleCard[];
+}) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
   const paragraphs = article.summary.split("\n").filter(Boolean);
@@ -49,12 +57,8 @@ export function ArticleBody({ article }: { article: ArticleDetail }) {
 
   return (
     <article className="px-edge flex flex-col gap-3.5 pt-1">
-      {/* 팀 칩은 BE 태그 원문 그대로 보여준다 — 레지스트리 표기로 옮기지 않는다 */}
-      <PostChips
-        teamName={article.hashtags[0]}
-        stage={article.stage}
-        tone="surface"
-      />
+      {/* 릴과 같은 배지 줄 — 구단 로고 + 알약 없는 단계 글자 (KAN-301) */}
+      <PostBadges team={team} stage={article.stage} />
 
       {/* 제목 */}
       <h1 className="text-headline text-text font-extrabold">
@@ -76,17 +80,13 @@ export function ArticleBody({ article }: { article: ArticleDetail }) {
         </div>
       )}
 
-      {/* 대표 이미지 — 사진 null이면 프레임 없이 원문 트윗 임베드만 그린다 */}
-      {article.imageUrl ? (
+      {/* 대표 이미지 — 사진 null이면 미디어 없이 텍스트만 흐른다 (KAN-301) */}
+      {article.imageUrl && (
         <MediaThumb
           colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
           imageUrl={article.imageUrl}
           className="rounded-card aspect-[16/10] w-full"
         />
-      ) : (
-        article.sourceUrl && (
-          <TweetEmbed url={article.sourceUrl} layout="flow" />
-        )
       )}
 
       {/* 본문 문단 */}
@@ -105,6 +105,9 @@ export function ArticleBody({ article }: { article: ArticleDetail }) {
           <TagChips tags={article.hashtags} />
         </div>
       )}
+
+      {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (KAN-301) */}
+      <SuggestedArticles articles={suggested} />
 
       {/* 액션 */}
       <div className="border-border flex flex-wrap items-center gap-1.5 border-b pb-4">

@@ -8,8 +8,8 @@ import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { formatRelativeTime } from "@/_utils/time";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
+import { PostBadges } from "@/_components/PostBadges";
 import { ReelActionRail } from "./ReelActionRail";
-import { ReelBadges } from "./ReelBadges";
 
 /**
  * 릴 한 장 — 통일된 배경(bg-reel-bg) 위에 사진 또는 원문 트윗 임베드 +
@@ -153,7 +153,7 @@ export function ReelItem({
             transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
           }}
         >
-          <ReelBadges team={team} stage={reel.stage} />
+          <PostBadges team={team} stage={reel.stage} />
           <button
             ref={titleTextRef}
             type="button"
