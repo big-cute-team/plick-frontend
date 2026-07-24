@@ -29,8 +29,8 @@ import { ReelBadges } from "./ReelBadges";
  * 줄거나 자리를 옮기지 않고 제자리에 그대로 있고, 슬라이드업하는 시트와 위로
  * 도킹되는 제목이 그 위를 덮는다. 트윗과 제목이 서로 다른 층으로 읽힌다.
  *
- * 제목·칩과 우측 아이콘 뒤에는 고정 다크 스크림을 깐다 — 배경이 흰색(라이트)
- * 이어도 흰 글자가 읽히게 하는 가독성 음영이다.
+ * 제목·배지 뒤에는 고정 다크 스크림을 깐다 — 배경이 흰색(라이트)이어도 흰
+ * 글자가 읽히게 하는 가독성 음영으로, 팀 로고·루머 단계 줄까지만 어둡다 (KAN-299).
  *
  * Embla 캐러셀의 슬라이드 하나다(`shrink-0 basis-full`).
  *
@@ -124,16 +124,16 @@ export function ReelItem({
         )
       )}
 
-      {/* 제목·칩 뒤 음영 — 배경이 흰색(라이트)이어도 흰 글자가 읽히게 고정 다크
-          스크림을 깐다. 정보 블록보다 위로 넉넉히 올라와 칩 윗선부터 어둡다.
-          시트가 열리면 제목과 같은 translateY로 함께 올라가 도킹된 제목 뒤를
-          그대로 받쳐 준다 (같은 offset·타이밍 공유) */}
+      {/* 제목·배지 뒤 음영 — 배경이 흰색(라이트)이어도 흰 글자가 읽히게 고정 다크
+          스크림을 깐다. 어두운 범위는 팀 로고·루머 단계 줄까지만 닿고 그 위로는
+          빠르게 사라진다 (KAN-299). 시트가 열리면 제목과 같은 translateY로 함께
+          올라가 도킹된 제목 뒤를 그대로 받쳐 준다 (같은 offset·타이밍 공유) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
         style={{
           backgroundImage:
-            "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 98%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 82%, transparent) 42%, color-mix(in srgb, var(--plk-scrim) 45%, transparent) 66%, transparent 100%)",
+            "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 98%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 88%, transparent) 55%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 80%, transparent 100%)",
           transform: `translateY(${titleMotion?.offset ?? 0}px)`,
           transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
         }}
@@ -141,7 +141,8 @@ export function ReelItem({
 
       {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
           줄만 시트를 여는 탭 타깃이다. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pr-21 pb-27 pl-4.5 text-left">
+      {/* pb는 우측 레일(bottom-27)보다 낮다 — 좌측 요소만 살짝 아래로 내린다 (KAN-299) */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pr-21 pb-22 pl-4.5 text-left">
         {/* 배지+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
             z-30: 시트 오버레이(z-20)보다 위에 그려져 스크림을 덮는다 */}
         <div
