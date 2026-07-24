@@ -24,7 +24,7 @@ export default async function MyPage() {
 
   return (
     <AppShell>
-      <TopBar notif={3} />
+      <TopBar />
 
       <ScrollArea>
         <div className="px-edge gap-gap-lg flex flex-col pt-3 pb-8">
