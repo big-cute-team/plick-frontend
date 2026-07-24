@@ -2,14 +2,14 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
 import { HeartMiniIcon, LinkOutIcon, SendIcon } from "@plick/ui/icons";
-import { CommentComposer } from "@/_components/CommentComposer";
-import { CommentsHeader } from "@/_components/CommentsHeader";
 import { PostBadges } from "@/_components/PostBadges";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
 import type { ArticleCard, ArticleDetail } from "@/_types/articles";
+import type { InitialCommentPage } from "@/_types/comments";
 import { formatRelativeTime } from "@/_utils/time";
+import { ArticleComments } from "./ArticleComments";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -23,20 +23,24 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 사진이 null이면(현재 발행 기사의 기본 상태) 미디어 없이 텍스트만 흐른다.
  * 트윗 임베드 폴백은 KAN-301에서 뺐다 — 본문과 임베드 내용이 겹치고 로딩이
  * 무거워서다. 원문은 기자 라인의 원문 링크로만 연결한다.
- * 팀·단계·기자는 null이면 그 조각만 빠진다. 좋아요·댓글·조회는 BE가 아직
- * 자리 구현이라 전부 0으로 온다 — 값은 그대로 그린다.
- * 정적 렌더(서버 컴포넌트) — 액션·입력은 커뮤니티 API 연동 시 핸들러를 붙인다.
+ * 팀·단계·기자는 null이면 그 조각만 빠진다.
+ * 서버 컴포넌트 — 댓글 섹션(`ArticleComments`)만 클라 경계로 내려간다(KAN-303).
+ * 좋아요·공유 액션은 아직 미연결이다(별도 티켓).
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). BE 추천 API가
  *   아직 없어 기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
+ * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지(KAN-303).
+ *   실패했으면 undefined — 목록이 클라에서 직접 받는다.
  */
 export function ArticleBody({
   article,
   suggested = [],
+  initialComments,
 }: {
   article: ArticleDetail;
   suggested?: ArticleCard[];
+  initialComments?: InitialCommentPage;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
@@ -132,14 +136,11 @@ export function ArticleBody({
         </button>
       </div>
 
-      <CommentsHeader count={article.commentCount} />
-
-      <CommentComposer />
-
-      {/* 댓글 목록은 아직 계약에 없다(BE 커뮤니티 미구현) — 빈 상태만 둔다 */}
-      <p className="text-body text-text-4 py-4 text-center">
-        아직 댓글이 없어요
-      </p>
+      <ArticleComments
+        articleId={article.id}
+        initialCount={article.commentCount}
+        initialComments={initialComments}
+      />
     </article>
   );
 }
