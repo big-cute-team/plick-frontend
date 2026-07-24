@@ -8,7 +8,7 @@
  */
 export function ReelLoadingSlide() {
   return (
-    <div className="bg-media flex h-full w-full shrink-0 basis-full items-center justify-center">
+    <div className="bg-reel-bg flex h-full w-full shrink-0 basis-full items-center justify-center">
       <span
         role="status"
         aria-label="다음 릴스를 불러오는 중"

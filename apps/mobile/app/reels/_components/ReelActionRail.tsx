@@ -19,7 +19,19 @@ export function ReelActionRail({
   onComment: () => void;
 }) {
   return (
-    <div className="drop-shadow-media absolute right-3.5 bottom-52.5 flex flex-col items-center gap-5.5">
+    <div className="drop-shadow-media absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
+      {/* 아이콘 뭉치 뒤 배경 — 그라데이션 스크림이 아니라 살짝만 비치는(70%)
+          검은 알약을 깐다. 밝은 사진 위에서도 대비로 아이콘이 확실히 읽힌다.
+          -z-10이라 아이콘들 뒤에 깔린다(레일의 drop-shadow가 만드는 stacking
+          context 안이라 릴 뒤로는 안 빠진다) (KAN-296) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-1.5 -inset-y-2 -z-10 rounded-[1.5rem]"
+        style={{
+          backgroundColor:
+            "color-mix(in srgb, var(--plk-scrim) 70%, transparent)",
+        }}
+      />
       <RailAction
         icon={<LikeIcon size={28} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}

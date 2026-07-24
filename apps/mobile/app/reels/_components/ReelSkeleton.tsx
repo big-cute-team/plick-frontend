@@ -6,7 +6,7 @@
  */
 export function ReelSkeleton() {
   return (
-    <div className="bg-media flex h-full w-full flex-col justify-end gap-2.75 pr-21 pb-27 pl-4.5">
+    <div className="bg-reel-bg flex h-full w-full flex-col justify-end gap-2.75 pr-21 pb-27 pl-4.5">
       <div className="bg-elevate rounded-pill h-5 w-24" />
       <div className="bg-elevate rounded-pill h-6 w-full" />
       <div className="bg-elevate rounded-pill h-6 w-2/3" />
