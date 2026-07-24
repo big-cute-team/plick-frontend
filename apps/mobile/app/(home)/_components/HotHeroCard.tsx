@@ -37,7 +37,7 @@ export function HotHeroCard({ article }: { article: HotArticle }) {
         />
       ) : (
         article.sourceUrl && (
-          <div className="reel-embed absolute inset-0 flex flex-col [justify-content:safe_center]">
+          <div className="reel-embed hero-embed absolute inset-0 flex flex-col [justify-content:safe_center]">
             <TweetEmbed url={article.sourceUrl} layout="reel" />
           </div>
         )

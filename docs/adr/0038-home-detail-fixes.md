@@ -67,6 +67,15 @@
 이번에 임베드 상호작용을 전역으로 꺼 버리면서(아래 8번) 그 타협이 통째로 필요 없어졌다 — 투명
 Link가 항상 카드 전체를 덮고, 어디를 눌러도 기사 세부로 간다.
 
+### 코너 라운드 맞추기
+
+PR을 올리고 나서 카드(rounded-hero, 22px)와 임베드 카드(react-tweet 기본 12px)의 코너 둥근
+정도가 달라 이질감이 있다는 피드백이 왔다. react-tweet의 12px는 CSS 변수가 아니라 모듈 CSS에
+박힌 고정값이라, 캐러셀 임베드 래퍼에 `hero-embed` 클래스를 하나 더 얹고 globals.css에서
+`border-radius: var(--radius-hero)`로 덮었다. 특이도는 릴 배경 오버라이드와 같은 수법
+(부모 클래스 + `.react-tweet-theme` 이중)으로 이겼다. 릴스 쪽 임베드는 화면 폭을 그대로 쓰는
+맥락이라 건드리지 않았다.
+
 ## 임베드 상호작용 전역 차단 (8번)
 
 `globals.css`의 `.react-tweet-theme` 오버라이드에 `pointer-events: none` 한 줄을 넣었다.
