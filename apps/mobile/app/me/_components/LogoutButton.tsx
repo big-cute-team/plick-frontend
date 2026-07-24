@@ -9,7 +9,7 @@ import { logout } from "@/_services/auth";
  *
  * 버튼을 누르면 "정말 로그아웃할까요?" 팝업을 띄우고(오탭 방지), 확인해야 로그아웃 서버 액션을
  * 부른다. 액션이 도는 동안 `useTransition`의 `isPending`으로 팝업 버튼을 잠가 연타를 막는다.
- * 성공하면 액션이 서버에서 `/login`으로 redirect하므로 여기선 닫는 처리조차 필요 없다.
+ * 성공하면 액션이 서버에서 홈(`/`)으로 redirect하므로 여기선 닫는 처리조차 필요 없다.
  */
 export function LogoutButton() {
   const [open, setOpen] = useState(false);

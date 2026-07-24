@@ -42,8 +42,9 @@ export function HotHeroCard({ article }: { article: HotArticle }) {
           </div>
         )
       )}
+      {/* pt가 스크림 윗선 — 팀·루머 단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-16"
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-6"
         style={{
           backgroundImage:
             "linear-gradient(to top, var(--plk-scrim) 0%, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 60%, color-mix(in srgb, var(--plk-scrim) 78%, transparent) 85%, transparent 100%)",
