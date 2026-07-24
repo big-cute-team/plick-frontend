@@ -28,8 +28,8 @@ function withoutMedia(tweet: Tweet): Tweet {
  * 부모 박스(position 기준)를 가득 채운다. 카드가 박스보다 크면
  * {@link useTweetFit}이 미디어를 숨겨 전문 텍스트를 그대로 보여주고, 그래도
  * 넘치는 잔여분만 축소한다 — X Display Requirements상 본문은 자르거나 수정할
- * 수 없다. 같은 이유로 임베드의 링크·액션(답글·마음·프로필)은 막지 않고
- * 그대로 동작한다(전부 새 탭으로 X에 연다).
+ * 수 없다. 임베드 내부 링크·액션(답글·마음·프로필)은 전역 CSS에서 전부
+ * 꺼뒀다(globals.css, KAN-297) — 임베드는 읽기 전용 미디어다.
  *
  * 데이터는 자체 프록시(`/api/tweet/[id]`)에서 받는다 — react-tweet의 기본
  * 엔드포인트(react-tweet.vercel.app)는 공용 rate limit을 탄다. 로딩 중이거나

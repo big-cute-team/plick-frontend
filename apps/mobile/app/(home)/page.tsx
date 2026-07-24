@@ -42,7 +42,7 @@ export default async function HomePage() {
 
   return (
     <AppShell>
-      <TopBar notif={3} />
+      <TopBar />
       <ScrollArea className="pb-section">
         <section className="pt-3">
           <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">

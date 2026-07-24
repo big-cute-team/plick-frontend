@@ -1,19 +1,13 @@
 /**
  * @file 모바일 앱 전용 상수. 도메인 상수(TEAMS 등)는 `@plick/domain/constants`.
  */
-import {
-  BellIcon,
-  HomeIcon,
-  ReelsIcon,
-  SearchIcon,
-  UserIcon,
-} from "@plick/ui/icons";
+import { HomeIcon, ReelsIcon, UserIcon } from "@plick/ui/icons";
 import type { Tab } from "@/_types/app";
 
 /**
  * 태그된 팀이 없는 게시물의 미디어 색 CSS 변수 (KAN-271, KAN-276).
  * `MediaThumb`이 팀 컬러로 그라데이션을 만드는데 BE `teams`가 빈 배열로 올 수 있어
- * 그때 강조색으로 대신 채운다. 홈 리스트와 릴스가 같은 폴백을 쓴다.
+ * 그때 강조색으로 대신 채운다. 홈 리스트와 기사 세부가 같은 폴백을 쓴다.
  */
 export const NO_TEAM_COLOR_VAR = "--plk-accent";
 
@@ -30,26 +24,14 @@ export const TWEET_FLOW_MAX_HEIGHT_RATIO = 0.6;
  */
 export const ONBOARDING_ENTRY = "/onboarding/nickname";
 
-/** 하단 탭 구성 — TabBar가 그린다 */
+/** 하단 탭 구성 — TabBar가 그린다. 검색·알림 탭은 기능이 없어 뺐다 (KAN-297). */
 export const TABS: Tab[] = [
   { href: "/", label: "홈", Icon: HomeIcon, match: (p) => p === "/" },
-  {
-    href: "/search",
-    label: "검색",
-    Icon: SearchIcon,
-    match: (p) => p.startsWith("/search"),
-  },
   {
     href: "/reels",
     label: "릴스",
     Icon: ReelsIcon,
     match: (p) => p.startsWith("/reels"),
-  },
-  {
-    href: "/alerts",
-    label: "알림",
-    Icon: BellIcon,
-    match: (p) => p.startsWith("/alerts"),
   },
   {
     href: "/me",
