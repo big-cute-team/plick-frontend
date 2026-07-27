@@ -11,8 +11,8 @@ import { LoginPromptDialog } from "./LoginPromptDialog";
 /**
  * 댓글 입력바 — pill 인풋 + accent 원형 전송 버튼. 기사 세부·릴 세부 시트 공용.
  *
- * 두 자리에서 쓰인다. 화면 하단의 원 댓글 입력바가 기본이고,
- * `parentCommentId`가 오면 답글 입력바다 — 유튜브처럼 원 댓글의 "답글"을
+ * 두 자리에서 쓰인다. 화면 하단의 원 댓글 입력바가 기본이고(placeholder는
+ * KAN-307로 없앴다), `parentCommentId`가 오면 답글 입력바다 — 유튜브처럼 원 댓글의 "답글"을
  * 누른 자리에 인라인으로 생기며(`CommentThread`), 마운트되자마자 포커스를
  * 받고 취소 버튼이 붙는다. 등록 성공도 `onCancel`로 입력바를 접는다.
  *
@@ -107,7 +107,7 @@ export function CommentComposer({
               setShowLogin(true);
             }
           }}
-          placeholder={isReply ? "답글 남기기…" : "팬 반응 남기기…"}
+          placeholder={isReply ? "답글 남기기…" : undefined}
           className={`bg-elevate-2 border-border text-body text-text placeholder:text-text-4 rounded-pill min-w-0 flex-1 border px-4 focus-visible:outline-none ${
             isReply ? "h-9.5" : "h-11"
           }`}
