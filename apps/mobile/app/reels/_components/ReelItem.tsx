@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
+import { ShareDialog } from "@/_components/ShareDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { SHEET_TRANSITION } from "@/_constants/reels";
@@ -42,7 +43,7 @@ import { ReelActionRail } from "./ReelActionRail";
  * 뺀다. 기자도 없을 수 있다 (KAN-276).
  *
  * 좋아요 상태는 여기서 들고 있다 (KAN-308). 비로그인 팝업이 레일이 아니라 이 층에
- * 붙는 이유는 {@link ReelActionRail} 주석에 있다.
+ * 붙는 이유는 {@link ReelActionRail} 주석에 있다. 공유 팝업(KAN-312)도 같은 자리에 둔다.
  *
  * 활성 슬라이드가 되면 조회로 기록한다 (KAN-310, {@link useArticleView}).
  *
@@ -68,6 +69,7 @@ export function ReelItem({
   const titleTextRef = useRef<HTMLButtonElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
   const like = useReelLike(reel);
+  const [shareOpen, setShareOpen] = useState(false);
 
   /* 활성 슬라이드가 되는 즉시 조회로 기록한다 (KAN-310). 릴스 전용 엔드포인트가
      없어 기사와 같은 걸 쓴다 — 릴과 기사가 같은 articleSummaryId 체계다 */
@@ -204,13 +206,22 @@ export function ReelItem({
         </button>
       </div>
 
-      <ReelActionRail reel={reel} onLike={like.toggle} onComment={handleOpen} />
+      <ReelActionRail
+        reel={reel}
+        onLike={like.toggle}
+        onComment={handleOpen}
+        onShare={() => setShareOpen(true)}
+      />
 
       {like.needsLogin && (
         <LoginPromptDialog
           onClose={like.dismissLogin}
           description={LIKE_LOGIN_PROMPT}
         />
+      )}
+
+      {shareOpen && (
+        <ShareDialog articleId={reel.id} onClose={() => setShareOpen(false)} />
       )}
     </section>
   );
