@@ -22,6 +22,8 @@ description: >-
   서버 컴포넌트 교체, 스웨거 읽는 법, 로컬 BE로 검증.
 - [tanstack-query.md](tanstack-query.md): RQ를 언제 도입하는지, provider와 쿼리키, 무한스크롤과 prefetch,
   낙관적 뮤테이션, 서버에서 클라로 하이드레이션.
+- [web-wiring.md](web-wiring.md): 모바일 연결이 끝난 API를 web에 이식하는 단계(`/web-wire-api`) 전용.
+  계약 출처가 모바일 코드로 바뀐 것, 승격 후보 목록, web 신규 인프라, 화면 함정, 이식 순서.
 
 배경은 [ADR 0011 공용 경계](../../docs/adr/0011-shared-code-boundary.md)와
 [ADR 0005 승격 절차](../../docs/adr/0005-web-home-and-ui-promotion.md)에 있다.
@@ -75,6 +77,8 @@ BE가 붙으면 그 mock을 실제 응답으로 교체한다. 이때 도메인 �
 ## 2. 순서 (엔드포인트 하나가 작업 하나이자 PR 하나)
 
 1. 실제 shape 파악은 `be-verify` 서브에이전트에 위임한다. 항상 위임한다. 티켓도 스웨거 설명도 믿지 않는다.
+   예외는 web 이식 단계다. 모바일이 이미 붙인 엔드포인트면 검증된 계약이 모바일 코드에 있으므로
+   그걸 먼저 읽고, `be-verify`는 [web-wiring.md](web-wiring.md) §1의 조건일 때만 부른다.
    그쪽이 스웨거를 읽고 실제로 때려서 path, method, 파라미터, 요청 body, 응답 필드와 타입, 페이지네이션,
    에러 code까지 대조한 리포트를 돌려준다. 보호 API면 JWT 민팅과 일회용 테스트 유저, DB 대조도 그쪽 몫이다.
    손으로 할 때의 명령어는 [data-layer.md](data-layer.md) §2에 있다.
@@ -187,6 +191,7 @@ mock은 항상 성공하고 즉시 왔지만 fetch는 아니다. 화면마다 �
 ## 참고
 
 - [data-layer.md](data-layer.md), [tanstack-query.md](tanstack-query.md): 이 스킬의 코드 패턴.
+- [web-wiring.md](web-wiring.md): web 이식 단계에서 달라지는 것.
 - [ADR 0011 공용 경계](../../docs/adr/0011-shared-code-boundary.md): 무엇을 공용으로 뺄지 판단하는 게이트.
 - [ADR 0005 승격 절차](../../docs/adr/0005-web-home-and-ui-promotion.md): 실제로 올릴 때 밟는 절차.
 - `screen-publishing`, `web-publishing`: 화면 컴포넌트 규칙.

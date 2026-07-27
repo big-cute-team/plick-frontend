@@ -6,6 +6,8 @@ argument-hint: <KAN-티켓번호> [엔드포인트/스코프]
 퍼블리싱된 화면에 로컬 백엔드 API를 하나씩 연결한다. 인자: `$ARGUMENTS`
 (첫 번째는 Jira 티켓 키 `KAN-###`, 두 번째는 선택으로 붙일 엔드포인트나 화면 스코프)
 
+모바일 연결이 끝난 API를 web에 이식하는 작업이면 이 커맨드가 아니라 `/web-wire-api`를 쓴다.
+
 시작 전에 `api-integration` 스킬과 `data-layer.md`, `tanstack-query.md`, `docs/adr/0011-shared-code-boundary.md`를
 읽고 그 규칙을 따른다. 승격을 실제로 할 땐 `docs/adr/0005-web-home-and-ui-promotion.md` 절차도 본다.
 
