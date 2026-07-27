@@ -5,9 +5,11 @@
  * 부르므로 릴스 fetcher처럼 평범한 모듈이다. base URL 선택은 `apiFetch`가
  * 실행 위치를 보고 알아서 한다.
  *
- * 익명 허용 공개 API다. 토큰을 실으면 `likedByMe`만 채워지는데, 댓글 좋아요는
- * 이 티켓 범위 밖이라 일부러 싣지 않는다 — 피드와 같은 판단(만료 토큰이 조회를
- * 통째로 죽이는 걸 피한다, ADR 0030). 좋아요를 붙일 때 재검토한다.
+ * 익명 허용 공개 API지만 토큰을 실어야 `likedByMe`가 그 유저 기준으로 온다.
+ * KAN-303에서는 댓글 좋아요가 범위 밖이라 일부러 안 실었고, KAN-309에서 붙이면서
+ * 실도록 바꿨다. 브라우저에서 부를 때(릴 시트·다음 페이지)는 `proxy.ts`가 `/be`
+ * 요청에 Bearer를 심어 주므로 여기서 넘길 게 없고, 서버 컴포넌트가 부를 때만
+ * 호출부가 `getAccessToken()`으로 꺼내 넘긴다(기사 상세와 같은 방식, ADR 0044).
  *
  * 작성(POST)은 보호 API라 쿠키를 읽어야 해서 서버 액션으로 분리했다
  * (`comment-actions.ts`). BE 응답 타입과 경계 변환은 두 파일이 같이 쓰므로
@@ -60,6 +62,8 @@ export function toComment(r: CommentResponse): ArticleComment {
  * @param articleId 기사(릴) id — 라우트 파라미터와 결이 같은 문자열
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null.
  * @param size 한 페이지 건수 (1..30)
+ * @param accessToken 서버에서 부를 때만 넘긴다 — 응답의 `likedByMe`가 그 유저
+ *   기준으로 계산된다. 브라우저 호출은 `proxy.ts`가 대신 실어 준다.
  * @throws {ApiError} 없는 기사는 404 `ARTICLE_NOT_FOUND`,
  *   잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
  */
@@ -68,13 +72,17 @@ export async function getComments(
   {
     cursor = null,
     size = COMMENTS_PAGE_SIZE,
-  }: { cursor?: string | null; size?: number } = {},
+    accessToken,
+  }: { cursor?: string | null; size?: number; accessToken?: string } = {},
 ): Promise<CommentPage> {
   const params = new URLSearchParams({ size: String(size) });
   if (cursor) params.set("cursor", cursor);
 
   const page = await apiFetch<CommentListResponse>(
     `/api/v1/articles/${encodeURIComponent(articleId)}/comments?${params}`,
+    accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined,
   );
 
   return {
