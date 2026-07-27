@@ -15,7 +15,9 @@ import { formatRelativeTime } from "@/_utils/time";
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").
  *
- * 기자 줄(그랩 존)·본문·해시태그·댓글·입력바를 담고 아래에서 올라온다.
+ * 기자 줄(그랩 존)·본문·해시태그·댓글을 담고 아래에서 올라온다.
+ * 댓글 입력바는 기사 세부와 같게 댓글 헤더 바로 밑에 둔다(KAN-307) —
+ * 하단 고정 바가 아니라 본문과 같이 스크롤된다.
  * 칩·제목은 이 컴포넌트가 그리지 않는다 — 릴에 원래 있던 요소(ReelItem)가
  * 같은 motion 상태로 시트 라인 위까지 따라 올라온다.
  *
@@ -111,18 +113,12 @@ export function ReelDetailSheet({
             className="border-border border-t pt-3.5"
           />
 
-          <CommentList
+          <CommentComposer
             articleId={reel.id}
             onPosted={() => setAddedComments((n) => n + 1)}
           />
-        </div>
 
-        {/* 댓글 입력바 — 홈 인디케이터/제스처 영역을 피해 pb에 safe-area를 더한다 */}
-        <div
-          className="border-border bg-nav shrink-0 border-t px-4 pt-3.25"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 13px)" }}
-        >
-          <CommentComposer
+          <CommentList
             articleId={reel.id}
             onPosted={() => setAddedComments((n) => n + 1)}
           />
