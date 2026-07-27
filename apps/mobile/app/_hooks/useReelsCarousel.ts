@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import {
   REELS_CAROUSEL_OPTIONS,
   REELS_REMEASURE_EPSILON,
 } from "@/_constants/reels";
+import { useViewState } from "@/_stores/view-state";
 
 /**
  * 릴스 세로 캐러셀 (KAN-277).
@@ -21,6 +22,10 @@ import {
  * 운동 상태(location·target)를 백업했다가 새 엔진에 복원해 애니메이션을 이어
  * 붙이므로, 스냅 도중에 재도 끊기지 않는다 (KAN-276).
  *
+ * 보고 있던 릴은 뷰 상태 스토어에 남겨 두고 돌아올 때 되돌린다 (KAN-314).
+ * 탭으로 홈에 다녀오면 이 트리는 언마운트되고 캐러셀도 처음부터 다시 만들어지는데,
+ * 릴 데이터는 쿼리 캐시에 남아 있으므로 몇 번째였는지만 기억하면 그 자리로 되돌아간다.
+ *
  * @param slideCount 지금 렌더된 슬라이드 수. 이 값이 바뀌면 다시 잰다.
  * @returns `viewportRef`는 `overflow-hidden` 뷰포트에, 그 안에 슬라이드를 담는 컨테이너를 둔다.
  *   `activeIndex`는 지금 보고 있는 릴 — 화면 밖 릴 비활성화와 다음 페이지 프리페치에 쓴다.
@@ -28,16 +33,53 @@ import {
 export function useReelsCarousel(slideCount: number) {
   const [viewportRef, embla] = useEmblaCarousel(REELS_CAROUSEL_OPTIONS);
   const [activeIndex, setActiveIndex] = useState(0);
+  /**
+   * 되돌릴 자리를 첫 렌더에 미리 떠 둔다. 아래 sync가 마운트하자마자 0을 스토어에
+   * 덮어쓰기 때문에, 이펙트 안에서 읽으면 이미 늦다.
+   */
+  const saved = useRef(useViewState.getState().reelsIndex);
+  const restored = useRef(false);
 
   useEffect(() => {
     if (!embla) return;
-    const sync = () => setActiveIndex(embla.selectedScrollSnap());
+    const sync = () => {
+      const index = embla.selectedScrollSnap();
+      setActiveIndex(index);
+      useViewState.getState().setReelsIndex(index);
+    };
     sync();
     embla.on("select", sync).on("reInit", sync);
     return () => {
       embla.off("select", sync).off("reInit", sync);
     };
   }, [embla]);
+
+  /**
+   * 보던 릴로 되돌린다. 캐러셀은 슬라이드가 붙은 뒤에야 만들어지므로 옵션의
+   * `startIndex`로는 못 잡는다 — 첫 렌더에는 아직 데이터가 없어 0장이다.
+   * 만들어진 직후 한 번만 건너뛴다(`jump`라 애니메이션 없이 그 자리에서 시작한다).
+   *
+   * 캐시가 정리돼 릴이 첫 페이지로 줄었으면 그만큼만 되돌린다.
+   */
+  useEffect(() => {
+    if (!embla || restored.current || slideCount === 0) return;
+    restored.current = true;
+    const target = Math.min(saved.current, slideCount - 1);
+    if (target > 0) embla.scrollTo(target, true);
+  }, [embla, slideCount]);
+
+  /**
+   * 하단 탭에서 릴스 탭을 한 번 더 누르면 첫 릴로 돌아간다. 곧이어 목록도 첫
+   * 페이지로 리셋되므로 애니메이션 없이(`jump`) 즉시 옮긴다 — 달려가는 도중에
+   * 목적지 슬라이드가 사라지는 상황을 만들지 않는다.
+   */
+  const topTick = useViewState((state) => state.topTicks.reels);
+  const seenTick = useRef(topTick);
+  useEffect(() => {
+    if (seenTick.current === topTick) return;
+    seenTick.current = topTick;
+    embla?.scrollTo(0, true);
+  }, [topTick, embla]);
 
   useEffect(() => {
     if (!embla) return;

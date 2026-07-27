@@ -1,5 +1,6 @@
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { TabBar } from "@/_components/TabBar";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 
 /**
@@ -53,6 +54,9 @@ export default function ArticleDetailLoading() {
           </div>
         </div>
       </ScrollArea>
+      {/* 실제 화면(page.tsx)에도 하단바가 있다 — 여기 없으면 로딩이 끝나는 순간
+          본문이 탭바 높이만큼 밀린다 (KAN-314) */}
+      <TabBar />
     </AppShell>
   );
 }

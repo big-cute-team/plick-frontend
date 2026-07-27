@@ -1,5 +1,5 @@
 import { AppShell } from "@/_components/AppShell";
-import { ScrollArea } from "@/_components/ScrollArea";
+import { HomeScrollArea } from "./_components/HomeScrollArea";
 import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
@@ -43,7 +43,7 @@ export default async function HomePage() {
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea className="pb-section">
+      <HomeScrollArea>
         <section className="pt-3">
           <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">
             🔥 핫이슈
@@ -67,7 +67,7 @@ export default async function HomePage() {
           </h2>
           <NewsFeed initial={initial} />
         </section>
-      </ScrollArea>
+      </HomeScrollArea>
       <TabBar />
     </AppShell>
   );

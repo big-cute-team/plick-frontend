@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ApiError } from "@/_apis/client";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { TabBar } from "@/_components/TabBar";
 import { getArticle } from "@/_services/articles";
 import { getComments } from "@/_services/comments";
 import { getAccessToken } from "@/_services/session";
@@ -26,6 +27,11 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  *
  * 본문 밑 "함께 보면 좋은 기사"(KAN-301)는 UI만 있고 데이터는 비워 둔다 —
  * BE 추천 API가 아직 없다. API가 생기면 여기서 fetch해 `suggested`로 넘긴다.
+ *
+ * 하단 탭바를 여기에도 둔다 (KAN-314). 기사를 읽다가 릴스나 MY로 바로 건너뛰려면
+ * 상단 뒤로가기로 홈까지 나갔다 다시 눌러야 했다. 이 화면에서는 어느 탭도 활성이
+ * 아니므로(경로가 `/articles/…`라 `TABS`의 `match`가 전부 false다) 셋 다 평범한
+ * 이동이고, 홈을 누르면 두고 온 목록이 그 자리 그대로 되살아난다.
  */
 export default async function ArticleDetailPage({
   params,
@@ -71,6 +77,7 @@ export default async function ArticleDetailPage({
           initialComments={initialComments}
         />
       </ScrollArea>
+      <TabBar />
     </AppShell>
   );
 }
