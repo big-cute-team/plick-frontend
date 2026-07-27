@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { HeartMiniIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { ArticleCard } from "@/_types/articles";
 import { formatRelativeTime } from "@/_utils/time";
@@ -46,6 +47,18 @@ export function NewsItem({ article }: { article: ArticleCard }) {
               <span>·</span>
             </>
           )}
+          {/* 목록에서는 좋아요를 보여주기만 한다 — 누르는 건 릴스와 기사 세부에서.
+              이웃한 조회·댓글과 달리 글자 없이 하트로만 표시한다 (KAN-308).
+              내가 눌렀는지는 칠하지 않는다 — 목록 응답은 익명으로 받아
+              `liked`가 늘 false다.
+              크기는 아이콘 기본값(13) 그대로 둔다. 캡션 글자(11px)에 맞춰 줄이면
+              선 두께가 1px 아래로 내려가(0.92px) 행마다 픽셀 격자에 다르게 걸려
+              어떤 줄은 하트가 흐리거나 반 픽셀 내려앉은 것처럼 보인다 */}
+          <span className="inline-flex items-center gap-0.75">
+            <HeartMiniIcon />
+            {formatCount(article.likeCount)}
+          </span>
+          <span>·</span>
           <span>조회 {formatCount(article.views)}</span>
           <span>·</span>
           <span>댓글 {article.commentCount}</span>

@@ -125,6 +125,20 @@ export interface ArticleDetail {
 }
 
 /**
+ * 좋아요 등록·취소 서버 액션의 결과 (KAN-308).
+ *
+ * 서버 액션은 던진 에러의 메시지를 프로덕션에서 가려 버리므로(`ApiError`
+ * 인스턴스도 경계를 못 넘는다) 값으로 돌려주고, 클라 훅이 다시 `ApiError`로
+ * 되살린다. 댓글 작성(`CreateCommentResult`)과 같은 규약이다.
+ *
+ * 성공이면 BE가 계산한 최신 좋아요 수가 온다 — 낙관적으로 ±1 한 값을 이걸로
+ * 덮어 다른 사람이 그 사이 누른 것까지 반영한다.
+ */
+export type ToggleLikeResult =
+  | { ok: true; likeCount: number }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
  * 커서 페이지네이션 한 페이지.
  *
  * BE에 총 건수도 `hasNext`도 없다. 다음 페이지 존재 여부는 `nextCursor`가

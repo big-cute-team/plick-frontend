@@ -1,7 +1,7 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
-import { HeartMiniIcon, LinkOutIcon, SendIcon } from "@plick/ui/icons";
+import { LinkOutIcon, SendIcon } from "@plick/ui/icons";
 import { PostBadges } from "@/_components/PostBadges";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
@@ -10,6 +10,7 @@ import type { ArticleCard, ArticleDetail } from "@/_types/articles";
 import type { InitialCommentPage } from "@/_types/comments";
 import { formatRelativeTime } from "@/_utils/time";
 import { ArticleComments } from "./ArticleComments";
+import { ArticleLikeButton } from "./ArticleLikeButton";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -115,18 +116,10 @@ export function ArticleBody({
 
       {/* 액션 */}
       <div className="border-border flex flex-wrap items-center gap-1.5 border-b pb-4">
-        {/* 눌렀을 때만 강조색 — 기본은 이웃 버튼과 같은 중립 톤 */}
-        <button
-          type="button"
-          className={`${
-            article.liked
-              ? "bg-accent-tint border-accent-border text-accent"
-              : "bg-elevate-2 border-border text-text-2"
-          } text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70`}
-        >
-          <HeartMiniIcon size={15} filled={article.liked} />
-          {formatCount(article.likeCount)}
-        </button>
+        <ArticleLikeButton
+          articleId={article.id}
+          initial={{ liked: article.liked, likeCount: article.likeCount }}
+        />
         <button
           type="button"
           className="bg-elevate-2 border-border text-text-2 text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70"

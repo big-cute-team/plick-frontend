@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
+import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
+import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { SHEET_TRANSITION } from "@/_constants/reels";
+import { useReelLike } from "@/_hooks/useReelLike";
 import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { formatRelativeTime } from "@/_utils/time";
@@ -37,6 +40,9 @@ import { ReelActionRail } from "./ReelActionRail";
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀 칩을
  * 뺀다. 기자도 없을 수 있다 (KAN-276).
  *
+ * 좋아요 상태는 여기서 들고 있다 (KAN-308). 비로그인 팝업이 레일이 아니라 이 층에
+ * 붙는 이유는 {@link ReelActionRail} 주석에 있다.
+ *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
@@ -58,6 +64,7 @@ export function ReelItem({
   const titleRef = useRef<HTMLDivElement>(null);
   const titleTextRef = useRef<HTMLButtonElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
+  const like = useReelLike(reel);
 
   /** 임베드 영역의 아래선(제목 윗선까지)까지의 거리(px, 릴 바닥 기준) */
   const [regionBottom, setRegionBottom] = useState(0);
@@ -190,7 +197,14 @@ export function ReelItem({
         </button>
       </div>
 
-      <ReelActionRail reel={reel} onComment={handleOpen} />
+      <ReelActionRail reel={reel} onLike={like.toggle} onComment={handleOpen} />
+
+      {like.needsLogin && (
+        <LoginPromptDialog
+          onClose={like.dismissLogin}
+          description={LIKE_LOGIN_PROMPT}
+        />
+      )}
     </section>
   );
 }

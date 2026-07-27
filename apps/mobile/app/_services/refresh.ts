@@ -2,8 +2,9 @@
  * @file 토큰 재발급 fetcher. refresh 토큰을 BE에 넘겨 새 access·refresh 쌍을 받아온다.
  *
  * `auth.ts`(login/logout)와 달리 이 파일은 `"use server"`가 **아니다.** 유일한 소비자가
- * edge 미들웨어(`middleware.ts`)라서다 — 서버 액션은 `next/headers`·`next/navigation`에 기대는데
- * 그건 edge 미들웨어에서 안 돈다. 그래서 쿠키 읽기·심기·리다이렉트는 미들웨어가 자기 API로 하고,
+ * edge에서 도는 `proxy.ts`(옛 `middleware.ts`)라서다 — 서버 액션은 `next/headers`·
+ * `next/navigation`에 기대는데 그건 edge에서 안 돈다. 그래서 쿠키 읽기·심기·리다이렉트는
+ * 프록시가 자기 API로 하고,
  * 이 파일은 **BE 호출과 봉투 해제만** 하는 순수 함수로 남긴다(edge·서버 어디서든 부를 수 있게).
  */
 

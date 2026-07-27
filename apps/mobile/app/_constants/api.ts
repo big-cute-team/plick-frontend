@@ -121,8 +121,16 @@ export const AUTH_COOKIE_BASE = {
 
 /**
  * access·refresh 쿠키 수명(초). BE 토큰 자체엔 만료 정보가 없어(현재 mock은 불투명 문자열),
- * **쿠키의 소멸을 만료 신호로 삼는다** — access가 짧게 살다 사라지면 미들웨어가 refresh로 갈아낀다.
+ * **쿠키의 소멸을 만료 신호로 삼는다** — access가 짧게 살다 사라지면 `proxy.ts`가 refresh로 갈아낀다.
  * 실제 토큰 TTL이 정해지면 그 값에 맞춘다(인증 봉합점). 지금은 흔한 관례값을 자리로 둔다.
  */
 export const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15분
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일
+
+/**
+ * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
+ *
+ * `next.config.ts`의 rewrites가 이 접두어를 떼고 BE로 넘긴다. `apiFetch`가
+ * base로 쓰고, `proxy.ts`가 이 경로의 요청에만 Bearer 토큰을 실어 준다(KAN-308).
+ */
+export const BE_PROXY_PREFIX = "/be";

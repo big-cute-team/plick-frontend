@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 /**
  * 루트 레이아웃 — 서버에서 로그인 여부를 한 번 읽어 `AuthProvider`로 클라 트리에 시드한다.
- * refresh 미들웨어가 이보다 먼저 돌아 쿠키를 정리하므로, 여기서 읽는 값은 항상 재발급 반영 후다.
+ * refresh 프록시(`proxy.ts`)가 이보다 먼저 돌아 쿠키를 정리하므로, 여기서 읽는 값은 항상 재발급 반영 후다.
  */
 export default async function RootLayout({
   children,

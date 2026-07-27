@@ -1,7 +1,13 @@
 /**
- * @file BE fetch 얇은 래퍼. base 선택·JSON 파싱·봉투 해제·에러 정규화·(미래) 토큰 주입만.
+ * @file BE fetch 얇은 래퍼. base 선택·JSON 파싱·봉투 해제·에러 정규화만.
  * 도메인 변환은 각 fetcher(login 등)에서 한다.
+ *
+ * 토큰은 여기서 찾지 않는다. 서버에서 부를 때는 호출부가 쿠키를 읽어
+ * `Authorization` 헤더로 넘기고, 브라우저에서 부를 때는 HttpOnly 쿠키를 못 읽어
+ * 넘길 수가 없어서 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
  */
+
+import { BE_PROXY_PREFIX } from "@/_constants/api";
 
 /**
  * BE 공통 응답 봉투 — 모든 엔드포인트가 `{ code, message, data }`로 감싸 온다
@@ -37,11 +43,16 @@ function baseUrl(): string {
   if (typeof window === "undefined") {
     return process.env.API_BASE_URL ?? "http://localhost:8080";
   }
-  return "/be";
+  return BE_PROXY_PREFIX;
 }
 
 /**
  * BE 엔드포인트를 호출하고 봉투를 벗긴 `data`를 반환한다.
+ *
+ * 토큰을 실은 호출은 서버 데이터 캐시에 넣지 않는다(KAN-308). Next의 데이터 캐시는
+ * 유저 구분 없이 URL 단위로 공유돼서, 한 번 캐시되면 같은 주소를 부른 다른 사람에게
+ * 그대로 나간다 — 좋아요 여부(`likedByMe`)처럼 사람마다 다른 값이 섞이면 남의 상태를
+ * 보게 된다. 기본 캐시 동작에 기대지 않고 인증 호출은 여기서 못박는다.
  *
  * @param path `/api/v1/auth/login` 처럼 앞에 슬래시를 포함한 경로
  * @throws {ApiError} status가 2xx가 아닐 때 — BE 에러 봉투의 code·message를 담는다
@@ -50,13 +61,15 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(`${baseUrl()}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-      // 인증 주입 지점 — 보호 API가 생기면 여기서 쿠키의 accessToken을 Bearer로 싣는다
-    },
+    headers,
+    ...(headers.has("Authorization") ? { cache: "no-store" as const } : {}),
   });
 
   if (!res.ok) {
