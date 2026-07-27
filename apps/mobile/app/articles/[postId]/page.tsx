@@ -8,6 +8,7 @@ import { getAccessToken } from "@/_services/session";
 import type { InitialCommentPage } from "@/_types/comments";
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
+import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
 /**
  * 모바일 기사 세부 페이지 (퍼블리싱 KAN-243, API 연결 KAN-283, 댓글 KAN-303) —
@@ -19,6 +20,9 @@ import { ArticleTopBar } from "./_components/ArticleTopBar";
  * 안 심으면 목록 훅이 마운트되자마자 같은 페이지를 또 받는다(이중 페치).
  * 댓글 fetch만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다 — 목록이
  * 클라에서 다시 받으면서 에러·재시도를 보여준다.
+ *
+ * 진입 자체는 조회로 기록한다(KAN-310) — 서버 렌더가 아니라 브라우저에 마운트된
+ * 뒤에 보낸다({@link ArticleViewTracker}).
  *
  * 본문 밑 "함께 보면 좋은 기사"(KAN-301)는 UI만 있고 데이터는 비워 둔다 —
  * BE 추천 API가 아직 없다. API가 생기면 여기서 fetch해 `suggested`로 넘긴다.
@@ -58,6 +62,8 @@ export default async function ArticleDetailPage({
 
   return (
     <AppShell>
+      {/* 진입을 조회로 기록한다 (KAN-310). 그리는 것 없는 클라 경계 */}
+      <ArticleViewTracker articleId={articleResult.value.id} />
       <ArticleTopBar />
       <ScrollArea className="pb-section">
         <ArticleBody
