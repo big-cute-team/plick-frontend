@@ -1,7 +1,7 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
-import { LinkOutIcon, SendIcon } from "@plick/ui/icons";
+import { LinkOutIcon } from "@plick/ui/icons";
 import { PostBadges } from "@/_components/PostBadges";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
@@ -11,6 +11,7 @@ import type { InitialCommentPage } from "@/_types/comments";
 import { formatRelativeTime } from "@/_utils/time";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
+import { ArticleShareButton } from "./ArticleShareButton";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -26,7 +27,7 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 무거워서다. 원문은 기자 라인의 원문 링크로만 연결한다.
  * 팀·단계·기자는 null이면 그 조각만 빠진다.
  * 서버 컴포넌트 — 댓글 섹션(`ArticleComments`)만 클라 경계로 내려간다(KAN-303).
- * 좋아요·공유 액션은 아직 미연결이다(별도 티켓).
+ * 좋아요는 KAN-308, 공유는 KAN-312에서 각각 클라 경계 버튼으로 연결했다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). BE 추천 API가
@@ -120,13 +121,7 @@ export function ArticleBody({
           articleId={article.id}
           initial={{ liked: article.liked, likeCount: article.likeCount }}
         />
-        <button
-          type="button"
-          className="bg-elevate-2 border-border text-text-2 text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70"
-        >
-          <SendIcon size={15} />
-          공유
-        </button>
+        <ArticleShareButton articleId={article.id} />
       </div>
 
       <ArticleComments

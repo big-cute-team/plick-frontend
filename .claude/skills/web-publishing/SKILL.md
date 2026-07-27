@@ -87,7 +87,7 @@ description: >-
    - 파일을 `packages/ui/src/<PascalCase>.tsx`로 **이동**(복사 금지 — 사본이 두 개면 감사 대상).
    - 모바일 쪽 import를 `@plick/ui/<파일명>`으로 바꾸는 것까지 **같은 PR**에서 한다.
    - 토큰 유틸만 쓰는 컴포넌트는 그대로 양쪽에서 동작한다(토큰이 공유되므로).
-   - 이미 승격됨(KAN-200): `Logo` `ThemeToggle`(className·iconSize prop) `MediaThumb`(colorVar prop)
+   - 이미 승격됨(KAN-200): `Logo` `MediaThumb`(colorVar prop)
      `TeamCrest`(team = `{code, name}` 객체, `/teams/*.webp`는 양쪽 앱 public에 있음) `icons`.
    - 앱 결합을 일반화한 전례: `MediaThumb`은 팀 코드 대신 `colorVar`를 받는다 — 앱 쪽에서
      `TEAMS[code].colorVar`를 꺼내 넘긴다.

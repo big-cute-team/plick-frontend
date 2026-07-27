@@ -13,15 +13,19 @@ import type { ReelCard } from "@/_types/reels";
  *
  * @param onLike - 하트 탭 시 호출
  * @param onComment - 댓글 아이콘 탭 시 호출 (세부 시트 열기)
+ * @param onShare - 공유 아이콘 탭 시 호출 (링크 공유 팝업 열기, KAN-312).
+ *   팝업도 좋아요 팝업과 같은 이유로 부모가 그린다
  */
 export function ReelActionRail({
   reel,
   onLike,
   onComment,
+  onShare,
 }: {
   reel: ReelCard;
   onLike: () => void;
   onComment: () => void;
+  onShare: () => void;
 }) {
   return (
     <div className="drop-shadow-media absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
@@ -50,7 +54,11 @@ export function ReelActionRail({
         label={formatCount(reel.commentCount)}
         onClick={onComment}
       />
-      <RailAction icon={<SendIcon size={27} />} label="공유" />
+      <RailAction
+        icon={<SendIcon size={27} />}
+        label="공유"
+        onClick={onShare}
+      />
     </div>
   );
 }
