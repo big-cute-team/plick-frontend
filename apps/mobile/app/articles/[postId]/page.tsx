@@ -30,11 +30,12 @@ export default async function ArticleDetailPage({
 }) {
   const { postId } = await params;
 
-  // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다 (KAN-308)
+  // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다
+  // (기사 KAN-308, 댓글 KAN-309)
   const accessToken = await getAccessToken();
   const [articleResult, commentsResult] = await Promise.allSettled([
     getArticle(postId, accessToken),
-    getComments(postId),
+    getComments(postId, { accessToken }),
   ]);
 
   if (articleResult.status === "rejected") {

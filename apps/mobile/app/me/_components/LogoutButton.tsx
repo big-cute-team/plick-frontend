@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { LogoutIcon } from "@plick/ui/icons";
 import { logout } from "@/_services/auth";
 
@@ -10,12 +11,24 @@ import { logout } from "@/_services/auth";
  * 버튼을 누르면 "정말 로그아웃할까요?" 팝업을 띄우고(오탭 방지), 확인해야 로그아웃 서버 액션을
  * 부른다. 액션이 도는 동안 `useTransition`의 `isPending`으로 팝업 버튼을 잠가 연타를 막는다.
  * 성공하면 액션이 서버에서 홈(`/`)으로 redirect하므로 여기선 닫는 처리조차 필요 없다.
+ *
+ * 액션을 부르기 전에 쿼리 캐시를 통째로 비운다(KAN-309). 로그아웃의 redirect는 리로드가 아니라
+ * 소프트 내비게이션이라 브라우저 메모리의 TanStack Query 캐시가 그대로 살아남는다. 거기엔
+ * 방금까지 로그인 상태로 받은 유저별 값(`likedByMe`)이 들어 있고, RQ는 캐시에 데이터가 있으면
+ * 서버가 새로 내려준 `initialData`를 무시하므로, 로그아웃 직후 같은 글에 들어가면 내가 누르지도
+ * 않은 하트가 채워진 채로 보인다. 캐시 수명(`FEED_FRESH_MS`, 60초) 안에 다시 들어갈 때만 나므로
+ * 시간을 끌면 저절로 사라져 더 헷갈린다. 댓글뿐 아니라 릴스·피드도 같은 함정이라 키를 골라
+ * 지우지 않고 전부 비운다 — 로그인 경계에서 유저별 데이터를 남길 이유가 없다.
  */
 export function LogoutButton() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
-  const confirm = () => startTransition(() => logout());
+  const confirm = () => {
+    queryClient.clear();
+    startTransition(() => logout());
+  };
 
   return (
     <>

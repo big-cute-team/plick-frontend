@@ -5,7 +5,8 @@ import { formatCount } from "@plick/domain/format";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
-import { useArticleLike, type LikeState } from "@/_hooks/useArticleLike";
+import { useArticleLike } from "@/_hooks/useArticleLike";
+import type { LikeState } from "@/_types/likes";
 
 /**
  * 기사 세부 좋아요 버튼 (KAN-308) — 본문 밑 액션 줄의 알약 버튼.
