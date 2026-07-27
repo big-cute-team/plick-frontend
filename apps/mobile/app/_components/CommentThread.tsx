@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { avatarInitials, formatCount } from "@plick/domain/format";
-import { HeartMiniIcon } from "@plick/ui/icons";
+import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
 import type { ArticleComment } from "@/_types/comments";
 import { formatRelativeTime } from "@/_utils/time";
 import { CommentComposer } from "./CommentComposer";
 
 /**
- * 댓글 한 스레드 — 원 댓글 + (있으면) 들여쓴 답글들. 기사 세부·릴 세부 시트 공용.
+ * 댓글 한 스레드 — 원 댓글 + (있으면) 접힌 답글들. 기사 세부·릴 세부 시트 공용.
+ *
+ * 답글은 유튜브 숏츠처럼 기본으로 접혀 있고 "답글 N개"를 눌러야 펼쳐진다
+ * (KAN-307). 내가 답글을 새로 달면 바로 보이도록 자동으로 펼친다.
  *
  * "답글"을 누르면 유튜브처럼 그 원 댓글 바로 밑에 답글 입력바가 인라인으로
  * 생긴다(기존 답글들 위). 열림 상태는 스레드마다 각자 든다 — 스레드 여러 개가
@@ -27,6 +30,9 @@ export function CommentThread({
   onPosted?: () => void;
 }) {
   const [replying, setReplying] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const hasReplies = comment.replies.length > 0;
 
   return (
     <div className="flex flex-col gap-3.75">
@@ -37,14 +43,32 @@ export function CommentThread({
           articleId={articleId}
           parentCommentId={comment.id}
           onCancel={() => setReplying(false)}
-          onPosted={onPosted}
+          onPosted={() => {
+            setExpanded(true);
+            onPosted?.();
+          }}
           className="pl-10"
         />
       )}
 
-      {comment.replies.map((reply) => (
-        <CommentItem key={reply.id} comment={reply} reply />
-      ))}
+      {hasReplies && (
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="text-caption text-accent flex items-center gap-1 pl-10 font-semibold active:opacity-60"
+        >
+          답글 {comment.replies.length}개
+          <ChevronMiniIcon
+            size={11}
+            className={expanded ? "-rotate-90" : "rotate-90"}
+          />
+        </button>
+      )}
+
+      {expanded &&
+        comment.replies.map((reply) => (
+          <CommentItem key={reply.id} comment={reply} reply />
+        ))}
     </div>
   );
 }
