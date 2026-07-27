@@ -6,9 +6,11 @@
  * 실행 위치를 보고 알아서 한다.
  *
  * 익명 허용 공개 API다. 스웨거에는 전역 `bearerAuth`가 걸려 있어 인증이 필요한 것처럼
- * 보이지만 토큰 없이 200이 온다. 오히려 만료된 토큰을 실으면 401 `AUTH_EXPIRED_TOKEN`으로
- * 피드 전체가 죽고, 토큰을 실어도 응답이 바이트 단위로 같아서(참여 정보가 아직 Noop 구현)
- * 여기서는 일부러 토큰을 싣지 않는다. 기사 피드와 같은 판단이다(ADR 0030).
+ * 보이지만 토큰 없이 200이 온다. 처음 붙일 때는 토큰을 아예 싣지 않았는데(ADR 0030),
+ * 좋아요를 붙이면서 있으면 싣는 쪽으로 바꿨다 — BE가 참여 정보를 실제로 채우기
+ * 시작해서 `likedByMe`가 토큰이 있을 때만 그 유저 기준으로 온다(KAN-308).
+ * 만료 토큰으로 401을 맞을 걱정은 없다 — access 쿠키 수명이 곧 토큰 수명이라
+ * 만료되면 쿠키가 사라져 토큰 없이 부르게 된다.
  */
 
 import type { TeamCode } from "@plick/domain/types";
@@ -92,19 +94,29 @@ function toReelCard(r: ReelsCardResponse): ReelCard {
  *
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null.
  * @param size 한 페이지 건수 (1..30)
+ * @param accessToken 서버에서 부를 때만 넘긴다 — 응답의 `likedByMe`가 그 유저
+ *   기준으로 계산된다(KAN-308). 브라우저에서 부를 때는 쿠키를 못 읽으므로
+ *   비우고, 대신 `proxy.ts`가 `/be` 프록시 요청에 같은 헤더를 실어 준다.
  * @throws {ApiError} 잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
  */
 export async function getReels({
   cursor = null,
   size = REELS_PAGE_SIZE,
+  accessToken,
 }: {
   cursor?: string | null;
   size?: number;
+  accessToken?: string;
 } = {}): Promise<ReelFeedPage> {
   const params = new URLSearchParams({ size: String(size) });
   if (cursor) params.set("cursor", cursor);
 
-  const page = await apiFetch<ReelsFeedResponse>(`/api/v1/reels?${params}`);
+  const page = await apiFetch<ReelsFeedResponse>(
+    `/api/v1/reels?${params}`,
+    accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined,
+  );
 
   return {
     items: page.items.map(toReelCard),

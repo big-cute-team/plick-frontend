@@ -245,17 +245,26 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
 /**
  * 기사 상세 한 건. 기사 세부 페이지 서버 컴포넌트에서 await 해 쓴다.
  *
- * 피드와 같은 익명 허용 API라 토큰을 싣지 않는다 — 만료 토큰을 실으면
- * 401 `AUTH_INVALID_TOKEN`으로 오히려 죽는다.
+ * 익명 허용 API라 토큰 없이도 200이 온다. 다만 좋아요를 붙이면서(KAN-308)
+ * 토큰이 있으면 싣게 됐다 — 응답의 `likedByMe`는 토큰이 있을 때만 그 유저
+ * 기준으로 계산되고, 없으면 항상 false라 새로고침 뒤 하트가 빈 채로 남는다.
+ * 만료 토큰으로 401을 맞을 걱정은 없다({@link getAccessToken} 참고).
  *
  * @param articleId 라우트 파라미터 그대로의 기사 id (BE는 int64 정수)
+ * @param accessToken 로그인 중이면 access 토큰. 없으면 익명으로 부른다
  * @throws {ApiError} 없는 id·미발행 기사는 404 `ARTICLE_NOT_FOUND`로 온다 —
  *   삭제·미발행 딥링크의 정상 경로라 호출부가 잡아 not-found로 보낸다.
  *   정수가 아닌 id는 400 `COMMON_INVALID_PARAM`.
  */
-export async function getArticle(articleId: string): Promise<ArticleDetail> {
+export async function getArticle(
+  articleId: string,
+  accessToken?: string,
+): Promise<ArticleDetail> {
   const detail = await apiFetch<ArticleDetailResponse>(
     `/api/v1/articles/${encodeURIComponent(articleId)}`,
+    accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined,
   );
   return toArticleDetail(detail);
 }

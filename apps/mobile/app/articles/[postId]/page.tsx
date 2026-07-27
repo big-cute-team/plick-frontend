@@ -4,6 +4,7 @@ import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { getArticle } from "@/_services/articles";
 import { getComments } from "@/_services/comments";
+import { getAccessToken } from "@/_services/session";
 import type { InitialCommentPage } from "@/_types/comments";
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
@@ -29,8 +30,10 @@ export default async function ArticleDetailPage({
 }) {
   const { postId } = await params;
 
+  // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다 (KAN-308)
+  const accessToken = await getAccessToken();
   const [articleResult, commentsResult] = await Promise.allSettled([
-    getArticle(postId),
+    getArticle(postId, accessToken),
     getComments(postId),
   ]);
 
