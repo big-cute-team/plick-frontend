@@ -166,8 +166,9 @@ PR base는 `develop`이고 CI(format:check, lint, check-types, build) 통과까�
 - 무엇을 공통으로 뺄지 판단하는 모노레포 공용 경계: [ADR 0011](docs/adr/0011-shared-code-boundary.md).
   web과 mobile 조각을 `@plick/ui`나 토큰으로 승격할지 앱별로 둘지의 기준과 근거, 리스크.
   승격 절차 자체는 ADR 0005에 있다.
-- BE API 연결(mock에서 fetch로): `api-integration` 스킬 + 커맨드 `/wire-api`.
+- BE API 연결(mock에서 fetch로): `api-integration` 스킬 + 커맨드 `/wire-api`(모바일), `/web-wire-api`(웹 이식).
   계약 확인과 검증은 `be-verify` 서브에이전트가 맡는다(`scripts/be-verify/` 도구 사용).
+  웹 이식은 모바일 코드가 검증된 계약이라 스킬의 `web-wiring.md`를 따른다.
   단발 읽기는 서버 컴포넌트 fetch, 릴스와 뮤테이션은 TanStack Query. 공용화는 ADR 0011 게이트로 판단한다.
 - 문서 문체: `doc-style` 스킬
 - 제품과 UX, 데이터 모델, 화면 IA 전반: [docs/handoff.md](docs/handoff.md)
