@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Logo } from "@plick/ui/Logo";
-import { ThemeToggle } from "@plick/ui/ThemeToggle";
 import { BellLineIcon, SearchLineIcon, UserRoundIcon } from "@plick/ui/icons";
 import { MobileNav } from "./MobileNav";
 import { NavLinks } from "./NavLinks";
 import { PageContainer } from "./PageContainer";
 
 /**
- * 데스크톱 상단 GNB — 로고 + 내비게이션 + 검색 + (테마 토글·알림·프로필).
+ * 데스크톱 상단 GNB — 로고 + 내비게이션 + 검색 + (알림·프로필).
+ *
+ * 테마 토글은 걷어냈다 — 웹·모바일 모두 다크 고정으로 돌렸다. 라이트 토큰은
+ * `theme.css`에 그대로 남아 있다.
  *
  * @param notif - 알림 뱃지 숫자. 0이면 뱃지를 숨긴다.
  */
@@ -39,10 +41,6 @@ export function SiteHeader({ notif = 0 }: { notif?: number }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2 lg:gap-3">
-          <ThemeToggle
-            className="hover:bg-elevate-2 focus-visible:outline-accent grid size-10 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
-            iconSize={20}
-          />
           <button
             type="button"
             aria-label="알림"

@@ -33,8 +33,10 @@ description: >-
 
 ## 2. 다크/라이트
 
-다크가 기본(`:root`), 라이트는 `[data-theme="light"]` 오버라이드로 **자동 전환**된다.
-→ **화면은 다크 기준으로만 만든다.** 라이트를 따로 만들지 않는다. `ThemeToggle`이 `<html data-theme>`만 바꾼다.
+다크가 기본(`:root`), 라이트는 `[data-theme="light"]` 오버라이드다.
+→ **화면은 다크 기준으로만 만든다.** 라이트를 따로 만들지 않는다.
+앱은 `<html data-theme="dark">` 고정이고 테마 토글 UI는 없다. 라이트 토큰은 `theme.css`에만
+남아 있어 지금 화면에 안 보이지만, 색은 계속 토큰으로 써서 되살릴 여지를 남긴다.
 
 ## 3. 반응형 (웹뷰 다기기)
 
@@ -48,7 +50,7 @@ description: >-
 - 기본 서버 컴포넌트, 상호작용(상태·이벤트·`usePathname`) 있을 때만 `"use client"`.
 - 컴포넌트는 **화면 전용이면 해당 라우트의 `_components/`**(예: `app/(home)/_components`, `app/reels/_components`), **2개 화면 이상 공용이면 `app/_components/`**. 파일 하나 = 컴포넌트 하나(작은 private 헬퍼는 예외). 목데이터는 `app/_mocks/posts.ts`, 도메인 타입·상수·포맷 유틸은 `@plick/domain`(types/constants/format — ADR 0018). `_` = 라우트 아님.
 - 새 훅을 만들기 전에 `app/_hooks/`를 먼저 훑는다. 비슷한 훅이 이미 있으면 재사용하거나 확장하고, 새로 만들면 JSDoc 첫 줄에 무엇을 하는 훅인지 요약을 단다(자동완성 목록에서 읽히는 줄이다).
-- `Logo` `ThemeToggle` `MediaThumb` `TeamCrest`와 아이콘 레지스트리(`icons.tsx`)는 웹과 공용이라
+- `Logo` `MediaThumb` `TeamCrest`와 아이콘 레지스트리(`icons.tsx`)는 웹과 공용이라
   **`@plick/ui`로 승격됨**(KAN-200) — `@plick/ui/<파일명>`으로 import. 새 공용 아이콘도 여기에 추가.
 - 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder) — `colorVar`에 `TEAMS[code].colorVar`를 넘긴다.
 - 팀 로고 = `TeamCrest`(`team`에 `TEAMS[code]` 객체) — `public/teams/<코드소문자>.webp`의 **실제 구단

@@ -5,7 +5,6 @@ import {
   LogoutIcon,
   TeamShieldIcon,
 } from "@plick/ui/icons";
-import { PreferenceCard } from "@plick/ui/PreferenceCard";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -15,7 +14,9 @@ import { APP_VERSION_LABEL } from "@/_constants/me";
 
 /**
  * 데스크톱 마이페이지 (KAN-244) — GNB + 중앙 정렬 좁은 컬럼(max-w-narrow)에
- * 프로필·응원팀·환경설정(알림·다크 모드)·FAQ·로그아웃. 피그마 W4(node 208-2).
+ * 프로필·응원팀·FAQ·로그아웃. 피그마 W4(node 208-2).
+ *
+ * 환경설정(다크 모드) 카드는 걷어냈다 — 웹·모바일 모두 다크 고정으로 돌렸다.
  *
  * 카드·토글·설정 줄은 모바일에서 승격한 `@plick/ui` 공용 컴포넌트를 그대로 쓴다.
  */
@@ -53,8 +54,6 @@ export default function MyPage() {
                 }
               />
             </CardSection>
-
-            <PreferenceCard />
 
             <CardSection>
               <SettingRow

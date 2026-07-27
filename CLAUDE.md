@@ -42,7 +42,9 @@ pnpm format             # Prettier 적용 (확인만: format:check)
 
 화면 좌우 패딩은 `px-edge`다. Tailwind 예약어라 `px-screen`은 안 된다([ADR 0002](docs/adr/0002-mobile-home-layout.md) §6).
 
-다크가 기본이고 라이트는 `[data-theme="light"]`로 자동 전환된다. 다크 기준으로만 만든다.
+앱은 다크 고정이다(`<html data-theme="dark">`). 테마 토글 UI는 없앴고 라이트 토큰
+(`[data-theme="light"]`)만 `theme.css`에 남겨 뒀다. 화면은 다크 기준으로만 만들되 색은 토큰으로
+쓴다 — 나중에 토글을 되살릴 때 화면을 다시 만들지 않아도 되게 한다.
 
 파일은 kebab-case, 컴포넌트는 PascalCase, 훅은 useXxx, 상수는 UPPER_SNAKE.
 
