@@ -9,7 +9,8 @@ import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
-import type { ReelCard, ReelDetailMotion } from "@/_types/reels";
+import type { ReelCard } from "@plick/domain/types";
+import type { ReelDetailMotion } from "@/_types/reels";
 import { formatRelativeTime } from "@plick/domain/format";
 
 /**

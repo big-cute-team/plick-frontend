@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { reelKeys } from "@/_queries/reelKeys";
+import { reelKeys } from "@plick/core/reelKeys";
 
 /**
  * 릴스를 처음부터 다시 받는다 (KAN-314) — 릴스 탭을 한 번 더 눌렀을 때 도는 동작.

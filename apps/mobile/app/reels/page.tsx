@@ -1,9 +1,9 @@
 import { AppShell } from "@/_components/AppShell";
 import { ReelsFeed } from "./_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
-import { getReels } from "@/_services/reels";
+import { getReels } from "@plick/core/reels";
 import { getAccessToken } from "@/_services/session";
-import type { InitialReelFeed } from "@/_types/reels";
+import type { InitialReelFeed } from "@plick/domain/types";
 
 /**
  * 릴스 화면 (KAN-167) — 풀스크린 미디어 위에 탭바를 오버레이로 얹는다.

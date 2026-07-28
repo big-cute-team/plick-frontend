@@ -221,3 +221,60 @@ export interface InitialArticleFeed {
    */
   fetchedAt: number;
 }
+
+/**
+ * 릴 한 장의 데이터 (KAN-276, `GET /api/v1/reels`).
+ *
+ * 지금은 `ArticleCard`와 필드가 같지만 타입을 따로 둔다. BE에서 두 응답이 같은
+ * 이유는 릴스 큐레이션이 아직 없어 같은 쿼리를 쓰기 때문이고(be-verify 확인),
+ * 릴스가 제 기준으로 갈라질 때 기사 카드를 건드리지 않으려는 것이다.
+ * 모바일 `_types/reels.ts`에 있던 것을 web 이식(KAN-323)에서 승격했다.
+ */
+export interface ReelCard {
+  /** BE `articleSummaryId`를 문자열로 담는다. */
+  id: string;
+  title: string;
+  /** BE가 긴 요약(`summary_detail`)을 내려준다. 짧은 요약은 이 API에 없다. */
+  summary: string;
+  /** 루머 단계. BE 실데이터의 절반이 비어 있다. */
+  stage: RumorStage | null;
+  /** 발행 시각 ISO-8601. BE가 KST 오프셋(+09:00)을 박아 내려준다. */
+  publishedAt: string;
+  /** 태그된 팀 목록 — 다중이고 없을 수 있다. 첫 팀을 대표로 쓴다. */
+  teams: TeamCode[];
+  /** 릴 배경 이미지. BE 실데이터가 아직 전부 비어 있어 원문 트윗 임베드로 폴백한다. */
+  imageUrl: string | null;
+  /** 기자. 객체 자체가 없을 수 있고 `tier`도 절반이 비어 있다. */
+  reporter: ArticleReporter | null;
+  /** 원문 링크 (현재는 전부 x.com) */
+  sourceUrl: string | null;
+  views: number;
+  commentCount: number;
+  likeCount: number;
+  liked: boolean;
+  /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
+  hashtags: string[];
+}
+
+/**
+ * 릴스 커서 페이지네이션 한 페이지.
+ *
+ * 총 건수도 `hasNext`도 없다. 다음 페이지 존재 여부는 `nextCursor`가 null인지로만
+ * 판단한다. 마지막 페이지도 items가 꽉 차서 올 수 있어 건수로 끝을 판정하면 안 된다.
+ */
+export interface ReelFeedPage {
+  items: ReelCard[];
+  /** 서버 발급 opaque 커서. null이면 마지막 페이지. 파싱하지 말고 되돌려준다. */
+  nextCursor: string | null;
+}
+
+/**
+ * 서버 컴포넌트가 미리 받아 클라 캐시에 심을 릴스 첫 페이지.
+ *
+ * 페이지와 받은 시각을 한 덩어리로 묶는 이유는 {@link InitialArticleFeed}와 같다.
+ */
+export interface InitialReelFeed {
+  page: ReelFeedPage;
+  /** 서버가 응답을 받은 시각(epoch ms). 캐시 신선도의 기준점이다. */
+  fetchedAt: number;
+}
