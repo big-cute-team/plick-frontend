@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { NOTIF_COUNT, POSTS, TRENDING_POSTS } from "@/_mocks/posts";
+import { POSTS, TRENDING_POSTS } from "@/_mocks/posts";
 import { ArticleMain } from "./_components/ArticleMain";
 import { ArticleSidebar } from "./_components/ArticleSidebar";
 import { SuggestedArticles } from "./_components/SuggestedArticles";
@@ -27,7 +27,7 @@ export default async function ArticleDetailPage({
 
   return (
     <>
-      <SiteHeader notif={NOTIF_COUNT} />
+      <SiteHeader />
       <main>
         <PageContainer className="pt-6 pb-16">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">

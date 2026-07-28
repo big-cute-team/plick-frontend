@@ -198,6 +198,3 @@ export const CURRENT_USER: User = {
   email: "kim@plkr.app",
   myTeam: "LIV",
 };
-
-/** 알림 뱃지 목데이터 */
-export const NOTIF_COUNT = 3;

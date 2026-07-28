@@ -1,14 +1,15 @@
 /**
- * @file 내 프로필 조회 fetcher (KAN-267). 서버 렌더 중 access 쿠키를 Bearer로 실어
- * `GET /api/v1/users/me`를 부른다. 렌더 중 읽기만 하고 쿠키를 심지 않으므로
- * 서버 액션(`"use server"`)이 아니다 — `session.ts`와 같은 서버 전용 모듈.
+ * @file 내 프로필 조회 fetcher (KAN-319, 모바일 KAN-267 이식). 서버 렌더 중 access
+ * 쿠키를 Bearer로 실어 `GET /api/v1/users/me`를 부른다. 렌더 중 읽기만 하고 쿠키를
+ * 심지 않으므로 서버 액션(`"use server"`)이 아니다 — `session.ts`와 같은 서버 전용 모듈.
+ * 쿠키·리다이렉트가 앱에 묶여 승격하지 않고 모바일 `_services/profile.ts`와 같은
+ * 모양으로 동기화한다(수동 계약).
  */
 
 import { cookies } from "next/headers";
 import { TEAMS } from "@plick/domain/constants";
-import type { TeamCode } from "@plick/domain/types";
+import type { MyProfile, TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "@plick/core/client";
-import type { MyProfile } from "@plick/domain/types";
 import { AUTH_COOKIES } from "@/_constants/api";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `ProfileResponse` 그대로). 온보딩 전엔 닉네임이,

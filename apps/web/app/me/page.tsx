@@ -1,31 +1,28 @@
 import type { ReactNode } from "react";
-import {
-  ChevronMiniIcon,
-  HelpCircleIcon,
-  TeamShieldIcon,
-} from "@plick/ui/icons";
+import { ChevronMiniIcon, HelpCircleIcon } from "@plick/ui/icons";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { TEAMS } from "@plick/domain/constants";
-import { CURRENT_USER, NOTIF_COUNT } from "@/_mocks/posts";
+import { getMyProfile } from "@/_services/profile";
 import { APP_VERSION_LABEL } from "@/_constants/me";
+import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
+import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
 
 /**
- * 데스크톱 마이페이지 (KAN-244) — GNB + 중앙 정렬 좁은 컬럼(max-w-narrow)에
- * 프로필·응원팀·FAQ·로그아웃. 피그마 W4(node 208-2).
- *
- * 환경설정(다크 모드) 카드는 걷어냈다 — 웹·모바일 모두 다크 고정으로 돌렸다.
- *
- * 카드·토글·설정 줄은 모바일에서 승격한 `@plick/ui` 공용 컴포넌트를 그대로 쓴다.
+ * 데스크톱 마이페이지 (KAN-244 → KAN-319 API 연결) — GNB + 중앙 정렬 좁은 컬럼
+ * (max-w-narrow). 프로필은 `GET /users/me`로 읽는다(모바일 KAN-267과 같은 계약) —
+ * null이면 비로그인/토큰 무효로 보고 로그인 유도 카드. 응원팀은 다중 선택이라
+ * 목록 카드로 보여준다. 프로필 카드의 보조 줄은 실계약에 핸들이 없어 이메일로
+ * 대체한다(카카오 가입은 이메일이 없어 줄을 숨긴다).
  */
-export default function MyPage() {
-  const team = TEAMS[CURRENT_USER.myTeam];
+export default async function MyPage() {
+  const profile = await getMyProfile();
 
   return (
     <>
-      <SiteHeader notif={NOTIF_COUNT} />
+      <SiteHeader />
       <main>
         <div className="max-w-narrow mx-auto w-full px-6 pt-9 pb-22">
           <h1 className="text-hero text-text tracking-heading font-extrabold">
@@ -33,27 +30,20 @@ export default function MyPage() {
           </h1>
 
           <div className="gap-gap-lg flex flex-col pt-5.5">
-            <ProfileCard
-              nickname={CURRENT_USER.nickname}
-              handle={CURRENT_USER.handle}
-              href="/me/edit"
-            />
-
-            <CardSection>
-              <SettingRow
-                pressable
-                icon={<TeamShieldIcon />}
-                label="응원팀"
-                trailing={
-                  <>
-                    <span className="bg-accent-tint text-accent rounded-pill text-label px-3 py-1.5 font-extrabold">
-                      {team.name}
-                    </span>
-                    <ChevronMiniIcon className="text-text-4 shrink-0" />
-                  </>
-                }
-              />
-            </CardSection>
+            {profile ? (
+              <>
+                <ProfileCard
+                  nickname={profile.nickname ?? "닉네임 미설정"}
+                  handle={profile.email ?? undefined}
+                  href="/me/edit"
+                />
+                <FavoriteTeamsCard
+                  teams={profile.myTeams.map((code) => TEAMS[code])}
+                />
+              </>
+            ) : (
+              <LoginPromptCard />
+            )}
 
             <CardSection>
               <SettingRow
@@ -64,7 +54,7 @@ export default function MyPage() {
               />
             </CardSection>
 
-            <LogoutButton />
+            {profile && <LogoutButton />}
 
             <p className="text-caption text-text-4 text-center">
               {APP_VERSION_LABEL}

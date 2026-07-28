@@ -11,13 +11,13 @@
  * 401로 피드 전체가 죽으므로 여기서는 일부러 토큰을 싣지 않는다.
  */
 
+import { TEAM_IDS } from "@plick/domain/constants";
 import type { Filter, TeamCode } from "@plick/domain/types";
 import { apiFetch } from "@plick/core/client";
 import {
   STAGE_BY_BE_VALUE,
   TEAM_BY_KO_NAME,
   TEAM_CODES,
-  TEAM_IDS,
 } from "@/_constants/api";
 import type {
   ArticleCard,
