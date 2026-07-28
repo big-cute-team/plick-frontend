@@ -1,6 +1,6 @@
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { HOT_POSTS, NEWS_POSTS, NOTIF_COUNT } from "@/_mocks/posts";
+import { HOT_POSTS, NEWS_POSTS } from "@/_mocks/posts";
 import { PostFeed } from "@/_components/PostFeed";
 import { HotIssueGrid } from "./_components/HotIssueGrid";
 import { HomeSidebar } from "./_components/HomeSidebar";
@@ -9,7 +9,7 @@ import { HomeSidebar } from "./_components/HomeSidebar";
 export default function HomePage() {
   return (
     <>
-      <SiteHeader notif={NOTIF_COUNT} />
+      <SiteHeader />
       <main>
         <PageContainer className="pt-7 pb-22">
           <section>

@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
-import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
 import { formatChangeableAt } from "@plick/domain/format";
+import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
 import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
+import { NicknameCheckNotice } from "./NicknameCheckNotice";
 
 /**
- * 닉네임 변경 입력 — 인풋 + 중복확인 버튼 (KAN-269).
+ * 닉네임 변경 입력 — 인풋 + 중복확인 버튼 (KAN-319, 모바일 KAN-269 이식).
  *
  * 현재 닉네임은 아바타 밑에 이미 보이므로, 이 인풋은 "새로 바꿀 값"만 받는다
  * (빈 값 + 플레이스홀더로 시작). 값은 부모(ProfileEditForm)가 드는 제어형 — 저장 시
- * 닉네임을 함께 보내야 해서다. "중복확인"은 `useNicknameCheck`(온보딩과 공용)로
- * 사용 가능 여부만 확인한다(실제 저장은 폼의 "변경사항 저장" 몫).
+ * 닉네임을 함께 보내야 해서다. "중복확인"은 `useNicknameCheck`로 사용 가능 여부만
+ * 확인한다(실제 저장은 폼의 "변경사항 저장" 몫). 데스크톱이라 버튼에 hover를 얹는다.
  *
- * 7일 제한 잠금은 `changeableAt`을 **현재 시각과 비교**해 판단한다 — BE 값의
+ * 7일 제한 잠금은 `changeableAt`을 현재 시각과 비교해 판단한다 — BE 값의
  * null 여부만 믿지 않는다(응답이 온 뒤 시각이 지나면 풀려야 하므로). 잠겨 있으면
  * 인풋·버튼을 막고 언제부터 가능한지 빨간 글씨로 안내하며, 시각이 지나면
  * 리로드 없이 자동으로 풀린다.
@@ -56,7 +56,7 @@ export function NicknameEditField({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline gap-1.5">
-        <span className="text-body text-text font-extrabold">닉네임 변경</span>
+        <span className="text-tab text-text font-extrabold">닉네임 변경</span>
         <span className="text-caption text-text-4">
           7일마다 한 번 바꿀 수 있어요
         </span>
@@ -64,7 +64,7 @@ export function NicknameEditField({
 
       <div className="flex items-stretch gap-2">
         <div
-          className={`bg-elevate-2 border-border rounded-card flex h-13 min-w-0 flex-1 items-center gap-2.5 border px-4 ${locked ? "opacity-40" : ""}`}
+          className={`bg-elevate-2 border-border rounded-card focus-within:border-border-strong flex h-13 min-w-0 flex-1 items-center gap-2.5 border px-4 ${locked ? "opacity-40" : ""}`}
         >
           <input
             type="text"
@@ -85,7 +85,7 @@ export function NicknameEditField({
           type="button"
           onClick={() => check(trimmed)}
           disabled={locked || !trimmed || pending}
-          className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-13 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
+          className="bg-elevate-2 border-border text-text-3 rounded-card text-body hover:bg-elevate focus-visible:outline-accent h-13 shrink-0 border px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-70 disabled:opacity-40"
         >
           {pending ? "확인 중…" : "중복확인"}
         </button>

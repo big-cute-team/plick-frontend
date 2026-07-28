@@ -8,7 +8,8 @@ import { ChevronMiniIcon, UserRoundIcon } from "@plick/ui/icons";
  * 데스크톱 포인터를 위해 hover·focus-visible을 둔다.
  *
  * @param nickname - 표시 닉네임
- * @param handle - 핸들 (예: `@epl_fan_kim`)
+ * @param handle - 닉네임 아래 보조 줄 (핸들·이메일 등). 실계약에 없을 수 있어
+ *   optional — 없으면 줄 자체를 그리지 않는다(KAN-319).
  * @param href - 탭 시 이동할 프로필 수정 경로
  */
 export function ProfileCard({
@@ -17,7 +18,7 @@ export function ProfileCard({
   href,
 }: {
   nickname: string;
-  handle: string;
+  handle?: string;
   href: string;
 }) {
   return (
@@ -32,7 +33,7 @@ export function ProfileCard({
         <span className="text-body-lg text-text font-extrabold tracking-tight">
           {nickname}
         </span>
-        <span className="text-label text-text-3">{handle}</span>
+        {handle && <span className="text-label text-text-3">{handle}</span>}
       </span>
       <ChevronMiniIcon className="text-text-4 shrink-0" />
     </a>

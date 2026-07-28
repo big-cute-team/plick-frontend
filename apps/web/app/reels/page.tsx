@@ -1,5 +1,5 @@
 import { SiteHeader } from "@/_components/SiteHeader";
-import { NOTIF_COUNT, POSTS } from "@/_mocks/posts";
+import { POSTS } from "@/_mocks/posts";
 import { ReelsWorkspace } from "./_components/ReelsWorkspace";
 
 /**
@@ -12,7 +12,7 @@ import { ReelsWorkspace } from "./_components/ReelsWorkspace";
 export default function ReelsPage() {
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
-      <SiteHeader notif={NOTIF_COUNT} />
+      <SiteHeader />
       <ReelsWorkspace posts={POSTS} />
     </div>
   );

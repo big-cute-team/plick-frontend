@@ -28,12 +28,15 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
 승격 후보(모바일 쪽 위치 기준).
 
 - 계약 타입 `_types/articles.ts`, `reels.ts`, `comments.ts`, `likes.ts`, `api.ts` → `@plick/domain`
+  (`api.ts`의 `MyProfile`은 KAN-319에서 승격 완료)
 - BE 매핑 상수 `_constants/api.ts`의 `TEAM_IDS`, `TEAM_CODES`, `TEAM_BY_KO_NAME`, `STAGE_BY_BE_VALUE` → `@plick/domain`
+  (`TEAM_IDS`는 KAN-319에서 승격 완료, `TEAM_CODES`는 모바일 단독 사용이라 파생으로 남김)
 - ~~`_apis/client.ts`(`apiFetch`, `ApiError`)~~ → KAN-318에서 `@plick/core` 신설 승격 완료(ADR 0050).
   refresh fetcher도 같이 올라갔다. 이후 순수 모듈 승격은 이 패키지로 간다.
 - 도메인 fetcher `_services/articles.ts`, `reels.ts`, `comments.ts`(순수 모듈만) → `@plick/core`
 - 쿼리키 `_queries/articleKeys.ts`, `reelKeys.ts`, `commentKeys.ts`와 `query-client.ts`(web에 동일 복제본이 이미 있다)
-- `_utils/time.ts` 같은 순수 포맷터
+- `_utils/time.ts` 같은 순수 포맷터 (`_utils/me.ts`의 `formatChangeableAt`은 KAN-319에서
+  `@plick/domain/format`으로 승격 완료)
 
 `"use server"` 서버 액션 파일(`auth.ts`, `users.ts`, likes, comment-actions)은 승격하지 않는다.
 쿠키와 redirect 경로가 앱에 박혀 있고 파일이 얇아 앱별 복제가 싸다. 로직 차이가 생기면 그때 다시 본다.
@@ -63,8 +66,9 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
 
 - 타입 교체가 큰 덩어리다. `FeedPost`를 받던 컴포넌트 props를 실계약 타입으로 바꾸면서 마크업이 전제하던
   필드(`timeLabel`, 단일 `team`, `author` 핸들)를 실계약(`publishedAt` ISO, 팀 배열, 닉네임)에 맞춘다.
-- 프로필은 `User.myTeam` 단일에서 `MyProfile.myTeams` 다중으로 바뀐다. `me`, `me/edit`, `onboarding/team`
-  세 화면이 단일 팀 전제라, 화면을 어떻게 바꿀지 사용자에게 확인하고 진행한다.
+- 프로필은 `User.myTeam` 단일에서 `MyProfile.myTeams` 다중으로 바뀐다. `me`와 `me/edit`는
+  KAN-319에서 다중으로 전환했다(응원팀 목록 카드, 크레스트 그리드 다중 토글, 프로필 카드
+  보조 줄은 이메일). `onboarding/team`만 단일 팀 전제로 남아 있으니 붙일 때 사용자에게 확인한다.
 - 계약 공백이 둘 있다. `NOTIF_COUNT`(알림)와 `TRENDING_POSTS`(실시간 인기)는 대응 BE 엔드포인트가 없다.
   숨길지 `articles/hot`으로 대체할지 사용자에게 확인한다.
 - web 릴스는 CSS scroll-snap 뷰어라 모바일 제스처 훅(`useReelsCarousel` 등)은 가져오지 않는다.

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Logo } from "@plick/ui/Logo";
+import { GuestEntryButton } from "./GuestEntryButton";
 import { SocialLoginActions } from "./SocialLoginActions";
 
 /**
  * 소셜 인증 카드 — 다크 배경 중앙에 로고·태그라인 + 카카오/구글 소셜 버튼 + (선택)약관 + 하단 전환 링크.
  * 로그인(W6)·회원가입(W7)이 카피만 다르고 형태가 같아 공용으로 뺐다. 피그마 206-2 / 205-2.
  * 버튼은 `SocialLoginActions`가 OAuth 시작 서버 액션과 연결한다(KAN-318).
+ * 하단 "로그인 없이 이용하기"는 안내 팝업을 거쳐 홈으로 보낸다(KAN-319, `GuestEntryButton`).
  *
  * @param tagline - 로고 아래 한 줄 소개
  * @param kakaoLabel - 카카오 버튼 문구
@@ -68,6 +70,8 @@ export function AuthCard({
             {footerLinkLabel}
           </Link>
         </p>
+
+        <GuestEntryButton />
       </section>
     </main>
   );
