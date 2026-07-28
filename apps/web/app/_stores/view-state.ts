@@ -23,6 +23,13 @@ type ViewState = {
   /** surface(홈 소식 리스트·기사 페이지)별 팀 필터 */
   feedFilters: Record<PostListVariant, Filter>;
   setFeedFilter: (surface: PostListVariant, filter: Filter) => void;
+  /**
+   * surface별 문서 스크롤 오프셋(px). 스크롤할 때마다 바뀌므로 컴포넌트에서
+   * 셀렉터로 구독하지 않는다 — 구독하면 한 프레임마다 리렌더가 돈다. 필요한
+   * 순간에 `getState()`로 읽는다(모바일과 같은 규칙).
+   */
+  scrollTops: Partial<Record<PostListVariant, number>>;
+  setScrollTop: (surface: PostListVariant, top: number) => void;
 };
 
 /** 화면별 뷰 상태 스토어 — 앱에서 유일한 zustand 스토어다. */
@@ -31,5 +38,11 @@ export const useViewState = create<ViewState>((set) => ({
   setFeedFilter: (surface, filter) =>
     set((state) => ({
       feedFilters: { ...state.feedFilters, [surface]: filter },
+    })),
+
+  scrollTops: {},
+  setScrollTop: (surface, top) =>
+    set((state) => ({
+      scrollTops: { ...state.scrollTops, [surface]: top },
     })),
 }));
