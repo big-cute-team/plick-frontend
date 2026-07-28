@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import type { InitialArticleFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
 import { articleKeys } from "@plick/core/articleKeys";
 import { PostListItem } from "@/_components/PostListItem";
@@ -10,6 +9,7 @@ import { PostListItemSkeleton } from "@/_components/PostListItemSkeleton";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
+import { useViewState } from "@/_stores/view-state";
 import type { PostListVariant } from "@/_types/app";
 
 /** 첫 로딩에 보여줄 자리 개수 — 한 페이지 건수보다 적게 둬 화면을 덜 채운다. */
@@ -24,6 +24,10 @@ const SKELETON_COUNT = 4;
  * 서버 컴포넌트가 미리 받아 `initial`로 내려주므로 첫 렌더에는 스켈레톤이 보이지
  * 않는다.
  *
+ * 선택한 탭은 컴포넌트가 아니라 뷰 상태 스토어가 surface별로 들고 있다
+ * (모바일 KAN-314와 같은 판단). `useState`에 두면 기사 상세에 들어갔다 나오는
+ * 순간 트리가 언마운트되면서 전체 탭으로 돌아가 버린다.
+ *
  * @param initial - 서버가 받아 둔 전체 탭 첫 페이지와 그 시각. 서버 fetch가
  *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  * @param variant - 행 변형(news=홈, article=기사)
@@ -35,7 +39,8 @@ export function PostFeed({
   initial?: InitialArticleFeed;
   variant: PostListVariant;
 }) {
-  const [filter, setFilter] = useState<Filter>("ALL");
+  const filter = useViewState((state) => state.feedFilters[variant]);
+  const setFeedFilter = useViewState((state) => state.setFeedFilter);
   const queryClient = useQueryClient();
   const {
     data,
@@ -73,7 +78,10 @@ export function PostFeed({
 
   return (
     <div className="min-w-0">
-      <TeamFilterTabs value={filter} onChange={setFilter} />
+      <TeamFilterTabs
+        value={filter}
+        onChange={(f) => setFeedFilter(variant, f)}
+      />
       <div className={variant === "news" ? "pt-1.5 pb-6" : "pt-1.5"}>
         {isPending ? (
           Array.from({ length: SKELETON_COUNT }, (_, i) => (
