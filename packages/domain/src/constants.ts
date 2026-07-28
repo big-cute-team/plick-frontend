@@ -93,8 +93,7 @@ export const TEAM_BY_KO_NAME: Record<string, TeamCode> = {
 export const STAGE_BY_BE_VALUE: Record<string, RumorStage> = {
   RUMOR: "RUMOUR",
   IN_PROGRESS: "IN_PROGRESS",
-  /* CONFIRM은 BE 예정 단계 — 아직 enum·DB에 없고 값이 오기 시작하면 그대로 통과한다 (KAN-299) */
-  CONFIRM: "CONFIRM",
+  CONFIRMED: "CONFIRMED",
   OFFICIAL: "OFFICIAL",
 };
 
@@ -102,6 +101,6 @@ export const STAGE_BY_BE_VALUE: Record<string, RumorStage> = {
 export const STAGE_META: Record<RumorStage, { label: string }> = {
   RUMOUR: { label: "RUMOUR" },
   IN_PROGRESS: { label: "IN PROGRESS" },
-  CONFIRM: { label: "CONFIRM" },
+  CONFIRMED: { label: "CONFIRMED" },
   OFFICIAL: { label: "OFFICIAL" },
 };
