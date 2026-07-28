@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
@@ -30,15 +27,12 @@ const SIZE = {
  * 그렇다) 원문 트윗을 사진째 임베드한다 — 모바일 히어로 카드와 같은 폴백이다.
  * 임베드도 사진도 없으면 통일 배경색이 그대로 남는다.
  *
- * 임베드는 카드 가로를 꽉 채운다(기본 max-width 550px는 globals.css에서 푼다).
- * 세로 기준 영역은 카드 전체가 아니라 카드 맨 위부터 텍스트 블록(팀·단계 줄)
- * 윗선까지다 — 전체 높이 기준으로 가운데를 잡으면 트윗이 스크림·텍스트 뒤로
- * 반쯤 내려앉아 시작부터 가려진다. web 릴(KAN-323, `ReelItem`)과 같은 방식으로
- * 텍스트 블록 윗선을 ResizeObserver로 재서 영역을 잡고, 트윗이 영역보다 작으면
- * 그 안에서 가운데에 서고 크면 위에 붙어 넘친 아래쪽이 스크림 뒤로 잠긴다
+ * 임베드는 모바일 히어로와 같은 규칙으로 앉힌다. 카드 가로를 꽉 채우고
+ * (기본 max-width 550px는 globals.css에서 푼다), 세로는 카드 전체 높이 기준으로
+ * 작으면 가운데에 서고 크면 위에 붙어 넘친 아래쪽이 잘린다
  * (`justify-content: safe center` + `overflow-hidden`) — 본문 자체를 줄이거나
- * 말줄임하지는 않는다(X Display Requirements). 제목이 1~2줄로 자라거나 뷰포트가
- * 바뀌면 다시 잰다.
+ * 말줄임하지는 않는다(X Display Requirements). 텍스트 블록 윗선까지만 영역으로
+ * 재는 릴 방식(KAN-323)도 시도했지만 전체 높이 가운데가 낫다고 확정했다.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고 모바일 히어로와 같은 농도다 —
  * 팀·단계 줄 위까지 확실히 덮어서 임베드 아래쪽이 그 뒤로 자연스럽게 잠긴다
@@ -67,29 +61,8 @@ export function HotCard({
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   const stage = article.stage ? STAGE_META[article.stage] : null;
 
-  const cardRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  /** 임베드 영역의 아래선(텍스트 블록 윗선)까지의 거리(px, 카드 바닥 기준) */
-  const [embedBottom, setEmbedBottom] = useState(0);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    const text = textRef.current;
-    if (!card || !text) return;
-    const measure = () =>
-      setEmbedBottom(
-        card.getBoundingClientRect().bottom - text.getBoundingClientRect().top,
-      );
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(card);
-    observer.observe(text);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div
-      ref={cardRef}
       className={`rounded-hero bg-reel-bg relative overflow-hidden transition-opacity hover:opacity-90 ${v.box}`}
     >
       {article.imageUrl ? (
@@ -102,10 +75,7 @@ export function HotCard({
         />
       ) : (
         article.sourceUrl && (
-          <div
-            className="reel-embed hot-embed absolute inset-x-0 top-0 flex flex-col [justify-content:safe_center]"
-            style={{ bottom: embedBottom }}
-          >
+          <div className="reel-embed hot-embed absolute inset-0 flex flex-col [justify-content:safe_center]">
             <TweetEmbed url={article.sourceUrl} />
           </div>
         )
@@ -113,7 +83,6 @@ export function HotCard({
 
       {/* pt가 스크림 윗선 — 팀·단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
       <div
-        ref={textRef}
         className={`pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 ${v.pad}`}
         style={{
           backgroundImage:
