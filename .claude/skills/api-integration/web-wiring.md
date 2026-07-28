@@ -29,16 +29,19 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
 
 - 계약 타입 `_types/articles.ts`, `reels.ts`, `comments.ts`, `likes.ts`, `api.ts` → `@plick/domain`
   (`api.ts`의 `MyProfile`은 KAN-319, `articles.ts`의 피드 부분(`ArticleCard`·`ArticleFeedPage`·
-  `InitialArticleFeed`·`ArticleReporter`)은 KAN-321에서 승격 완료. `HotArticle`·`ArticleDetail`은
-  모바일 단독이라 남았고 해당 엔드포인트를 web에 붙일 때 따라 올라간다)
+  `InitialArticleFeed`·`ArticleReporter`)은 KAN-321, `ArticleDetail`은 KAN-322에서 승격 완료.
+  `HotArticle`은 모바일 단독이라 남았고 `articles/hot`을 web에 붙일 때 따라 올라간다)
 - BE 매핑 상수 `_constants/api.ts`의 `TEAM_IDS`, `TEAM_CODES`, `TEAM_BY_KO_NAME`, `STAGE_BY_BE_VALUE` → `@plick/domain`
-  (`TEAM_IDS`는 KAN-319, `TEAM_CODES`·`STAGE_BY_BE_VALUE`는 KAN-321에서 승격 완료.
-  `TEAM_BY_KO_NAME`은 상세 전용이라 남음)
+  (`TEAM_IDS`는 KAN-319, `TEAM_CODES`·`STAGE_BY_BE_VALUE`는 KAN-321, `TEAM_BY_KO_NAME`은
+  KAN-322에서 승격 완료 — `_constants/api.ts`에 남은 건 인증 절뿐이다)
 - ~~`_apis/client.ts`(`apiFetch`, `ApiError`)~~ → KAN-318에서 `@plick/core` 신설 승격 완료(ADR 0050).
   refresh fetcher도 같이 올라갔다. 이후 순수 모듈 승격은 이 패키지로 간다.
 - 도메인 fetcher `_services/articles.ts`, `reels.ts`, `comments.ts`(순수 모듈만) → `@plick/core`
-  (`articles.ts`의 피드 fetcher `getArticles`는 KAN-321에서 `@plick/core/articles`로 승격 완료.
-  핫이슈·상세는 모바일에 남음)
+  (`articles.ts`의 `getArticles`는 KAN-321, `getArticle`은 KAN-322에서 `@plick/core/articles`로
+  승격 완료. 핫이슈만 모바일에 남음)
+- 앱 로컬 표현 컴포넌트 중 순수 원자는 `@plick/ui`로(ADR 0011 "두 번째로 쓰이면 공용").
+  `PostBadges`는 KAN-322에서 승격 완료 — ui는 domain에 의존하지 않으므로 도메인 타입·상수를 쓰는
+  컴포넌트는 `PostChips` 전례대로 props를 구조 타입으로 좁히고 표시 스펙을 ui가 소유하게 바꾼다
 - 쿼리키 `_queries/articleKeys.ts`, `reelKeys.ts`, `commentKeys.ts`와 `query-client.ts`
   (`articleKeys`·`query-client`는 KAN-321에서 `@plick/core`로 승격 완료 — core에
   `@tanstack/react-query` 의존이 이때 생겼다. `QueryProvider`는 클라 컴포넌트라 앱별로 남긴다)
@@ -79,8 +82,13 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
 - 프로필은 `User.myTeam` 단일에서 `MyProfile.myTeams` 다중으로 바뀐다. `me`와 `me/edit`는
   KAN-319에서 다중으로 전환했다(응원팀 목록 카드, 크레스트 그리드 다중 토글, 프로필 카드
   보조 줄은 이메일). `onboarding/team`도 KAN-320에서 다중 토글로 전환 완료(건너뛰기 링크 포함).
-- 계약 공백이 둘 있다. `NOTIF_COUNT`(알림)와 `TRENDING_POSTS`(실시간 인기)는 대응 BE 엔드포인트가 없다.
-  숨길지 `articles/hot`으로 대체할지 사용자에게 확인한다.
+- 계약 공백이 여럿 있다. `NOTIF_COUNT`(알림), `TRENDING_POSTS`(실시간 인기), 기사 세부의 관련 기사와
+  추천 기사는 대응 BE 엔드포인트가 없다. 목이나 피드 슬라이싱으로 채우지 않는 게 원칙이고(모바일
+  KAN-283), 자리를 남겨 준비 중 문구를 둘지 통째로 숨길지는 사용자에게 확인한다. 기사 세부는
+  KAN-322에서 자리를 남기고 준비 중 문구로 정했다.
+- 모바일과 화면 구성이 갈리면 모바일에 맞춘다. 기사 세부는 KAN-322에서 배지 줄을 텍스트 칩
+  (`PostChips`)에서 로고 배지(`PostBadges`)로 바꾸고 추천 행을 페이지 하단에서 본문 밑으로 올렸다.
+  퍼블리싱 시안이 모바일 개편 이전에 그려진 경우가 있으니 시안만 보고 다르게 두지 않는다.
 - web 릴스는 CSS scroll-snap 뷰어라 모바일 제스처 훅(`useReelsCarousel` 등)은 가져오지 않는다.
   debate 투표 블록도 web 릴스엔 없다.
 - 화면 검증과 반응형(데스크톱 1280 기준, 330px까지)은 `web-publishing` 스킬을 따른다.
@@ -90,7 +98,8 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
 권장 순서다. 화면이 익명으로도 도는 읽기부터 붙이고 인증은 그 다음, 뮤테이션은 마지막.
 
 1. 인프라(rewrites, env)와 홈 피드(`getArticles`, `getHotArticles`). 첫 PR이 승격 판단의 대부분을 만난다.
-2. 기사 상세와 댓글 읽기.
+   (피드는 KAN-321에서 완료, 핫이슈는 남음)
+2. 기사 상세(KAN-322 완료)와 댓글 읽기.
 3. 릴스.
 4. 인증(로그인, 로그아웃, refresh proxy, oauth callback). redirect_uri 등록을 먼저 받는다.
 5. 프로필과 온보딩(myTeams 화면 확인 포함).

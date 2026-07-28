@@ -30,7 +30,8 @@ argument-hint: [KAN-티켓번호] <엔드포인트/화면 스코프>
    로딩, 성공, 에러, 빈 상태와 반응형(데스크톱 1280 기준, 330px까지)을 본다. 공용 패키지를 건드렸으면
    `pnpm --filter web build`와 `pnpm --filter mobile build`를 둘 다 돌리고 check-types, lint, format:check를 통과시킨다.
 7. 커밋과 PR. 티켓이 있으면 커밋 메시지에 Jira 키를 넣고 없으면 뺀다. `pnpm format` 후 커밋, push,
-   `gh pr create --base develop`. CI 통과까지 확인한다. 병합은 사용자가 한다.
+   `gh pr create --base develop`. PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
+   CI 통과까지 확인한다. 병합은 사용자가 한다.
 
 ## 원칙
 

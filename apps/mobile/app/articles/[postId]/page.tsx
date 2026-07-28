@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
+import { getArticle } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
-import { getArticle } from "@/_services/articles";
 import { getComments } from "@/_services/comments";
 import { getAccessToken } from "@/_services/session";
 import type { InitialCommentPage } from "@/_types/comments";

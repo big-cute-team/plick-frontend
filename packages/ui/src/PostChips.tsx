@@ -2,27 +2,26 @@
 export type PostStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRM" | "OFFICIAL";
 
 /**
+ * 단계 표시 라벨 — 칩(PostChips)과 로고 배지 줄(PostBadges)이 같은 글자를 쓴다.
+ * 라벨은 표시 스펙이라 도메인 상수가 아니라 이 패키지가 소유한다.
+ */
+export const STAGE_LABEL: Record<PostStage, string> = {
+  RUMOUR: "RUMOUR",
+  IN_PROGRESS: "IN PROGRESS",
+  CONFIRM: "CONFIRM",
+  OFFICIAL: "OFFICIAL",
+};
+
+/**
  * 단계 칩 표시 스펙(KAN-281) — RUMOUR=초록(accent) · IN_PROGRESS=노랑(warn) ·
  * OFFICIAL=파랑(info). 라벨·색은 표시 스펙이라 이 컴포넌트가 소유한다.
  * CONFIRM은 BE 예정 단계라 타입만 선반영 — 색 스펙이 나오기 전까지 accent를 빌려 쓴다 (KAN-299).
  */
-const STAGE_CHIP: Record<PostStage, { label: string; classes: string }> = {
-  RUMOUR: {
-    label: "RUMOUR",
-    classes: "bg-accent-tint border-accent-border text-accent",
-  },
-  IN_PROGRESS: {
-    label: "IN PROGRESS",
-    classes: "bg-warn-tint border-warn-border text-warn",
-  },
-  CONFIRM: {
-    label: "CONFIRM",
-    classes: "bg-accent-tint border-accent-border text-accent",
-  },
-  OFFICIAL: {
-    label: "OFFICIAL",
-    classes: "bg-info-tint border-info-border text-info",
-  },
+const STAGE_CHIP: Record<PostStage, string> = {
+  RUMOUR: "bg-accent-tint border-accent-border text-accent",
+  IN_PROGRESS: "bg-warn-tint border-warn-border text-warn",
+  CONFIRM: "bg-accent-tint border-accent-border text-accent",
+  OFFICIAL: "bg-info-tint border-info-border text-info",
 };
 
 /**
@@ -48,7 +47,6 @@ export function PostChips({
 }) {
   const media = tone === "media";
   const pad = media ? "px-3 py-1.5" : "px-3 py-1";
-  const stageChip = stage ? STAGE_CHIP[stage] : null;
   return (
     <div className="flex items-center gap-2">
       {teamName && (
@@ -62,11 +60,11 @@ export function PostChips({
           {teamName}
         </span>
       )}
-      {stageChip && (
+      {stage && (
         <span
-          className={`text-caption rounded-pill tracking-label border font-extrabold whitespace-nowrap ${pad} ${stageChip.classes}`}
+          className={`text-caption rounded-pill tracking-label border font-extrabold whitespace-nowrap ${pad} ${STAGE_CHIP[stage]}`}
         >
-          {stageChip.label}
+          {STAGE_LABEL[stage]}
         </span>
       )}
     </div>

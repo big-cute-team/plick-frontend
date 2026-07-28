@@ -1,13 +1,12 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
 import { LinkOutIcon } from "@plick/ui/icons";
-import { PostBadges } from "@/_components/PostBadges";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
-import type { ArticleCard } from "@plick/domain/types";
-import type { ArticleDetail } from "@/_types/articles";
+import type { ArticleCard, ArticleDetail } from "@plick/domain/types";
 import type { InitialCommentPage } from "@/_types/comments";
 import { formatRelativeTime } from "@plick/domain/format";
 import { ArticleComments } from "./ArticleComments";

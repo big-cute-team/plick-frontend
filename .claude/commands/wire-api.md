@@ -35,7 +35,8 @@ argument-hint: <KAN-티켓번호> [엔드포인트/스코프]
    `be-verify`에 위임한다. 화면(로딩, 성공, 에러, 빈 상태를 브라우저로 밟기)은 직접 한다. 브라우저는 위임하지 않는다.
    CORS가 뜨면 프록시(`/be` rewrites)를 확인한다. 공용을 건드렸으면 양쪽 앱을 클린 빌드하고
    check-types, lint, format:check, CI를 통과시킨다.
-8. 커밋과 PR. 티켓 키를 넣고 `pnpm format` 후 커밋, push, `gh pr create --base develop`. 병합은 사용자가 한다.
+8. 커밋과 PR. 티켓 키를 넣고 `pnpm format` 후 커밋, push, `gh pr create --base develop`.
+   PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다. 병합은 사용자가 한다.
 
 ## 원칙
 
