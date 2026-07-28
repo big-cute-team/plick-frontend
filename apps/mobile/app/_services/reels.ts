@@ -15,7 +15,7 @@
 
 import type { TeamCode } from "@plick/domain/types";
 import { apiFetch } from "@plick/core/client";
-import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@/_constants/api";
+import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@plick/domain/constants";
 import type { ReelCard, ReelFeedPage } from "@/_types/reels";
 
 /** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */

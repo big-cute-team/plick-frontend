@@ -183,8 +183,6 @@ export const POSTS: FeedPost[] = [
 
 /** 홈 핫이슈 그리드용 상위 게시물 (히어로 1 + 서브 2) */
 export const HOT_POSTS = POSTS.slice(0, 3);
-/** 홈 "지금 올라온 소식" 리스트용 나머지 게시물 */
-export const NEWS_POSTS = POSTS.slice(3);
 
 /** 사이드바 "실시간 인기" — 조회수 상위 5개 */
 export const TRENDING_POSTS = [...POSTS]

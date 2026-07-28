@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { articleKeys } from "@/_queries/articleKeys";
+import { articleKeys } from "@plick/core/articleKeys";
 import { useViewState } from "@/_stores/view-state";
 
 /**

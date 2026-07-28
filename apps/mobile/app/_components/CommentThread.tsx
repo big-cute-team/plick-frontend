@@ -6,7 +6,7 @@ import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useCommentLike } from "@/_hooks/useCommentLike";
 import type { ArticleComment } from "@/_types/comments";
-import { formatRelativeTime } from "@/_utils/time";
+import { formatRelativeTime } from "@plick/domain/format";
 import { CommentComposer } from "./CommentComposer";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 

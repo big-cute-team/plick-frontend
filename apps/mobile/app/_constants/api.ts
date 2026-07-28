@@ -3,19 +3,8 @@
  * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_constants/app`.
  */
 
-import { TEAM_IDS } from "@plick/domain/constants";
-import type { RumorStage, TeamCode } from "@plick/domain/types";
+import type { TeamCode } from "@plick/domain/types";
 import type { SocialProvider } from "@/_types/api";
-
-/**
- * `TEAM_IDS`(web 이식 KAN-319에서 `@plick/domain`으로 승격)의 역방향 —
- * BE `team_id` → 팀 코드 (KAN-271).
- * 기사 피드 응답의 `teams`가 id 배열로 와서 화면 표시용 코드로 되돌릴 때 쓴다.
- * 위 매핑에서 파생시켜 두 방향이 갈라지지 않게 한다.
- */
-export const TEAM_CODES: Record<number, TeamCode> = Object.fromEntries(
-  Object.entries(TEAM_IDS).map(([code, id]) => [id, code as TeamCode]),
-);
 
 /**
  * BE 팀 한글 정식 명칭(`teams.name_ko`) → 팀 코드 (KAN-283).
@@ -37,24 +26,6 @@ export const TEAM_BY_KO_NAME: Record<string, TeamCode> = {
   아스널: "ARS",
   첼시: "CHE",
   "토트넘 핫스퍼": "TOT",
-};
-
-/**
- * BE 루머 단계 값 → 도메인 `RumorStage` (KAN-271, KAN-276).
- *
- * 철자가 한 글자 다르다. BE와 DB는 미국식 `RUMOR`, 도메인 타입은 영국식 `RUMOUR`다.
- * 캐스팅으로 넘기면 `STAGE_META["RUMOR"]`가 undefined가 되어 배지 자리에서 런타임에
- * 터지므로 반드시 이 테이블을 거친다. 모르는 값은 null로 떨어져 배지가 안 그려질
- * 뿐이다 — 잘못된 배지보다 없는 배지가 낫다.
- *
- * 기사 피드와 릴스 피드가 같은 값을 쓰므로 두 fetcher가 함께 참조한다.
- */
-export const STAGE_BY_BE_VALUE: Record<string, RumorStage> = {
-  RUMOR: "RUMOUR",
-  IN_PROGRESS: "IN_PROGRESS",
-  /* CONFIRM은 BE 예정 단계 — 아직 enum·DB에 없고 값이 오기 시작하면 그대로 통과한다 (KAN-299) */
-  CONFIRM: "CONFIRM",
-  OFFICIAL: "OFFICIAL",
 };
 
 /**

@@ -1,15 +1,16 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { Filter } from "@plick/domain/types";
+import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
-import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { articleKeys } from "@plick/core/articleKeys";
 import { getArticles } from "@plick/core/articles";
-import type { InitialArticleFeed } from "@plick/domain/types";
+import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
- * 팀 필터별 기사 피드 (KAN-271).
+ * 팀 필터별 기사 피드 (KAN-271, web 이식 KAN-321). 모바일
+ * `_hooks/useArticleFeed.ts`와 동일 구현이다 — 훅은 승격 후보 목록에 없어
+ * 앱별로 둔다.
  *
  * 탭을 바꾸면 쿼리키가 바뀌어 BE에 `teamId`를 붙인 요청이 새로 나가고, 한 번 받은
  * 탭은 신선한 동안 캐시에 남아 되돌아올 때 다시 부르지 않는다. 한 페이지 안에서
@@ -48,8 +49,8 @@ export function useArticleFeed(team: Filter, initial?: InitialArticleFeed) {
     staleTime: FEED_FRESH_MS,
     gcTime: FEED_FRESH_MS,
     /**
-     * 포커스가 돌아올 때마다 위 재체이닝이 도는 걸 막는다. 새 글이 몇 분에 한두
-     * 개라 창을 다시 볼 때마다 맞출 만큼 자주 바뀌지 않고, 홈에 다시 들어오는
+     * 포커스가 돌아올 때마다 재요청 체인이 도는 걸 막는다. 새 글이 몇 분에 한두
+     * 개라 창을 다시 볼 때마다 맞출 만큼 자주 바뀌지 않고, 화면에 다시 들어오는
      * 시점(`refetchOnMount`)이면 충분하다.
      */
     refetchOnWindowFocus: false,

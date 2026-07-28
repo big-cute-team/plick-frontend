@@ -4,8 +4,9 @@ import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { getArticles, getHotArticles } from "@/_services/articles";
-import type { InitialArticleFeed } from "@/_types/articles";
+import { getArticles } from "@plick/core/articles";
+import { getHotArticles } from "@/_services/articles";
+import type { InitialArticleFeed } from "@plick/domain/types";
 
 /**
  * 홈 화면 — 핫이슈 캐러셀 + 지금 올라온 소식 리스트 (KAN-163).

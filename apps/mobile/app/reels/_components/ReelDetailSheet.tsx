@@ -10,7 +10,7 @@ import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
 import type { ReelCard, ReelDetailMotion } from "@/_types/reels";
-import { formatRelativeTime } from "@/_utils/time";
+import { formatRelativeTime } from "@plick/domain/format";
 
 /**
  * 릴 세부 바텀시트 (KAN-168, 피그마 75-6 "V2 기사 세부").

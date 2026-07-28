@@ -8,6 +8,9 @@
  */
 export const ONBOARDING_ENTRY = "/onboarding/nickname";
 
+/** 팀이 태그되지 않은 기사의 썸네일 배경에 쓰는 색 변수 (KAN-321, 모바일과 동일). */
+export const NO_TEAM_COLOR_VAR = "--plk-accent";
+
 /** GNB 링크 — 피그마 W1 홈(node 203-2) 상단 내비게이션 순서 그대로 */
 export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/", label: "홈" },

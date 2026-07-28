@@ -3,7 +3,7 @@ import { formatCount } from "@plick/domain/format";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import type { HotArticle } from "@/_types/articles";
-import { formatRelativeTime } from "@/_utils/time";
+import { formatRelativeTime } from "@plick/domain/format";
 
 /**
  * 핫이슈 히어로 카드 — 릴스와 같은 임베딩 전략으로 통일했다 (KAN-297).
