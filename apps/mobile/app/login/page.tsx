@@ -1,11 +1,22 @@
+import { redirect } from "next/navigation";
 import { AuthScreen } from "@/_components/AuthScreen";
+import { getMyProfile } from "@/_services/profile";
 
-/** A1 로그인 — 로고·태그라인 + 카카오/구글 소셜 로그인 (KAN-174, 피그마 105-6). */
+/**
+ * A1 로그인 — 로고·태그라인 + 카카오/구글 소셜 로그인 (KAN-174, 피그마 105-6).
+ * 이미 로그인된 세션이면 홈으로 보낸다(KAN-320) — 쿠키 존재가 아니라 `GET /users/me`로
+ * 세션이 실제로 유효한지 확인한다. 만료·무효 토큰이면 null이라 로그인 화면이 그대로 열린다.
+ */
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const profile = await getMyProfile();
+  if (profile) {
+    redirect("/");
+  }
+
   const { error } = await searchParams;
 
   return (

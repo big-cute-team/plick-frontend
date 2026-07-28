@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { formatChangeableAt } from "@plick/domain/format";
 import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
 import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
-import { NicknameCheckNotice } from "./NicknameCheckNotice";
+import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 
 /**
  * 닉네임 변경 입력 — 인풋 + 중복확인 버튼 (KAN-319, 모바일 KAN-269 이식).
