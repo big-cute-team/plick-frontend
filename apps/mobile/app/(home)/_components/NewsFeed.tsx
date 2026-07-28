@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { articleKeys } from "@/_queries/articleKeys";

@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Filter } from "@plick/domain/types";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { articleKeys } from "@/_queries/articleKeys";
 import { getArticles } from "@/_services/articles";

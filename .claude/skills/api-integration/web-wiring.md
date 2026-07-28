@@ -29,8 +29,9 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
 
 - 계약 타입 `_types/articles.ts`, `reels.ts`, `comments.ts`, `likes.ts`, `api.ts` → `@plick/domain`
 - BE 매핑 상수 `_constants/api.ts`의 `TEAM_IDS`, `TEAM_CODES`, `TEAM_BY_KO_NAME`, `STAGE_BY_BE_VALUE` → `@plick/domain`
-- `_apis/client.ts`(`apiFetch`, `ApiError`) → 공용 패키지(`@plick/core`) 신설 검토
-- 도메인 fetcher `_services/articles.ts`, `reels.ts`, `comments.ts`(순수 모듈만) → `apiFetch`와 같은 곳
+- ~~`_apis/client.ts`(`apiFetch`, `ApiError`)~~ → KAN-318에서 `@plick/core` 신설 승격 완료(ADR 0050).
+  refresh fetcher도 같이 올라갔다. 이후 순수 모듈 승격은 이 패키지로 간다.
+- 도메인 fetcher `_services/articles.ts`, `reels.ts`, `comments.ts`(순수 모듈만) → `@plick/core`
 - 쿼리키 `_queries/articleKeys.ts`, `reelKeys.ts`, `commentKeys.ts`와 `query-client.ts`(web에 동일 복제본이 이미 있다)
 - `_utils/time.ts` 같은 순수 포맷터
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { ApiError, apiFetch } from "@/_apis/client";
+import { ApiError, apiFetch } from "@plick/core/client";
 import { AUTH_COOKIES } from "@/_constants/api";
 import type { CreateCommentResult } from "@/_types/comments";
 import type { CommentResponse } from "./comments";

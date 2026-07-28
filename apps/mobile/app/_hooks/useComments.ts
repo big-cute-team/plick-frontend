@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { commentKeys } from "@/_queries/commentKeys";
 import { getComments } from "@/_services/comments";

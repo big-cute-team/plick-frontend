@@ -15,7 +15,7 @@
  * 나가는 fire-and-forget 요청에는 과하다.
  */
 
-import { apiFetch } from "@/_apis/client";
+import { apiFetch } from "@plick/core/client";
 
 /**
  * 조회를 한 건 기록한다. 브라우저에서만 부른다.

@@ -14,7 +14,7 @@
  */
 
 import type { TeamCode } from "@plick/domain/types";
-import { apiFetch } from "@/_apis/client";
+import { apiFetch } from "@plick/core/client";
 import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@/_constants/api";
 import type { ReelCard, ReelFeedPage } from "@/_types/reels";
 

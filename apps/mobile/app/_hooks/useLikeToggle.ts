@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { useAuth } from "@/_components/AuthProvider";
 import type { LikeState, ToggleLikeResult } from "@/_types/likes";
 

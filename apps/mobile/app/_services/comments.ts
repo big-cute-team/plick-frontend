@@ -16,7 +16,7 @@
  * 여기서 export한다.
  */
 
-import { apiFetch } from "@/_apis/client";
+import { apiFetch } from "@plick/core/client";
 import { COMMENTS_PAGE_SIZE } from "@/_constants/comments";
 import type { ArticleComment, CommentPage } from "@/_types/comments";
 
