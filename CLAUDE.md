@@ -108,6 +108,8 @@ SKILL.md에서 가리킨다.
 CLAUDE.md와 `.claude/` 아래 커맨드·스킬·서브에이전트, README, PR 본문, 코드 주석은 `doc-style` 스킬을 따른다.
 볼드 강조와 em dash를 쓰지 않고 필수만 남겨 컴팩트하게 쓴다.
 
+PR 본문은 문체에 더해 `pr-writing` 스킬의 5절 틀(구현 사항 / 문제 상황 / 해결 방법 / 검증 / TODO)을 쓴다.
+
 `docs/` 아래는 정반대다. 아래 `작업 기록`을 따른다.
 
 ## 작업 기록 (세션 단위 ADR)
@@ -150,6 +152,8 @@ CLAUDE.md와 `.claude/` 아래 커맨드·스킬·서브에이전트, README, PR
 
 PR base는 `develop`이고 CI(format:check, lint, check-types, build) 통과까지 확인한다.
 
+PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
+
 `main`은 릴리스용이다. `develop`에서 `main`으로 병합하는 건 사용자가 직접 한다.
 
 🚫 병합은 절대 하지 않는다. 클로드는 PR 생성과 CI 확인까지만 한다. `gh pr merge`는 금지다.
@@ -171,6 +175,7 @@ PR base는 `develop`이고 CI(format:check, lint, check-types, build) 통과까�
   웹 이식은 모바일 코드가 검증된 계약이라 스킬의 `web-wiring.md`를 따른다.
   단발 읽기는 서버 컴포넌트 fetch, 릴스와 뮤테이션은 TanStack Query. 공용화는 ADR 0011 게이트로 판단한다.
 - 문서 문체: `doc-style` 스킬
+- PR 본문 틀(구현 사항 / 문제 상황 / 해결 방법 / 검증 / TODO): `pr-writing` 스킬
 - 제품과 UX, 데이터 모델, 화면 IA 전반: [docs/handoff.md](docs/handoff.md)
 - 개발 도구(Prettier, Husky, CI) 결정 배경: [ADR 0001](docs/adr/0001-dev-tooling-setup.md)
 - 화면 하나를 티켓과 피그마로 구현: 모바일은 `/screen`, 데스크톱 웹은 `/web-screen` 커맨드
