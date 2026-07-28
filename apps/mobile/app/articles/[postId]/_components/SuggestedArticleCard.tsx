@@ -3,8 +3,8 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { ChevronMiniIcon } from "@plick/ui/icons";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
-import type { ArticleCard } from "@/_types/articles";
-import { formatRelativeTime } from "@/_utils/time";
+import type { ArticleCard } from "@plick/domain/types";
+import { formatRelativeTime } from "@plick/domain/format";
 
 /**
  * "함께 보면 좋은 기사" 가로 스크롤 카드 한 장 — 팀·단계 + 제목 + 기자·시각의

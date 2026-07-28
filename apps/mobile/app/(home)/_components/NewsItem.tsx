@@ -4,8 +4,8 @@ import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
-import type { ArticleCard } from "@/_types/articles";
-import { formatRelativeTime } from "@/_utils/time";
+import type { ArticleCard } from "@plick/domain/types";
+import { formatRelativeTime } from "@plick/domain/format";
 
 /**
  * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.

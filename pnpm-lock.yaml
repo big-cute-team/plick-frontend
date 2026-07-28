@@ -159,6 +159,13 @@ importers:
         version: 5.9.2
 
   packages/core:
+    dependencies:
+      '@plick/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@tanstack/react-query':
+        specifier: ^5.101.4
+        version: 5.101.4(react@19.2.0)
     devDependencies:
       '@plick/eslint-config':
         specifier: workspace:*

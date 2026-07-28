@@ -28,15 +28,25 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
 승격 후보(모바일 쪽 위치 기준).
 
 - 계약 타입 `_types/articles.ts`, `reels.ts`, `comments.ts`, `likes.ts`, `api.ts` → `@plick/domain`
-  (`api.ts`의 `MyProfile`은 KAN-319에서 승격 완료)
+  (`api.ts`의 `MyProfile`은 KAN-319, `articles.ts`의 피드 부분(`ArticleCard`·`ArticleFeedPage`·
+  `InitialArticleFeed`·`ArticleReporter`)은 KAN-321에서 승격 완료. `HotArticle`·`ArticleDetail`은
+  모바일 단독이라 남았고 해당 엔드포인트를 web에 붙일 때 따라 올라간다)
 - BE 매핑 상수 `_constants/api.ts`의 `TEAM_IDS`, `TEAM_CODES`, `TEAM_BY_KO_NAME`, `STAGE_BY_BE_VALUE` → `@plick/domain`
-  (`TEAM_IDS`는 KAN-319에서 승격 완료, `TEAM_CODES`는 모바일 단독 사용이라 파생으로 남김)
+  (`TEAM_IDS`는 KAN-319, `TEAM_CODES`·`STAGE_BY_BE_VALUE`는 KAN-321에서 승격 완료.
+  `TEAM_BY_KO_NAME`은 상세 전용이라 남음)
 - ~~`_apis/client.ts`(`apiFetch`, `ApiError`)~~ → KAN-318에서 `@plick/core` 신설 승격 완료(ADR 0050).
   refresh fetcher도 같이 올라갔다. 이후 순수 모듈 승격은 이 패키지로 간다.
 - 도메인 fetcher `_services/articles.ts`, `reels.ts`, `comments.ts`(순수 모듈만) → `@plick/core`
-- 쿼리키 `_queries/articleKeys.ts`, `reelKeys.ts`, `commentKeys.ts`와 `query-client.ts`(web에 동일 복제본이 이미 있다)
-- `_utils/time.ts` 같은 순수 포맷터 (`_utils/me.ts`의 `formatChangeableAt`은 KAN-319에서
-  `@plick/domain/format`으로 승격 완료)
+  (`articles.ts`의 피드 fetcher `getArticles`는 KAN-321에서 `@plick/core/articles`로 승격 완료.
+  핫이슈·상세는 모바일에 남음)
+- 쿼리키 `_queries/articleKeys.ts`, `reelKeys.ts`, `commentKeys.ts`와 `query-client.ts`
+  (`articleKeys`·`query-client`는 KAN-321에서 `@plick/core`로 승격 완료 — core에
+  `@tanstack/react-query` 의존이 이때 생겼다. `QueryProvider`는 클라 컴포넌트라 앱별로 남긴다)
+- `_utils/time.ts` 같은 순수 포맷터 (`formatChangeableAt`은 KAN-319, `formatRelativeTime`은
+  KAN-321에서 `@plick/domain/format`으로 승격 완료)
+- 훅(`useArticleFeed`, `useInfiniteScroll`)은 승격하지 않고 앱별 복제로 둔다(KAN-321).
+  React 훅이라 core의 순수 모듈 경계 밖이고, 승격분을 다 걷어낸 뒤엔 얇은 껍데기라 복제가 싸다.
+  피드 캐시 정책 상수(`_constants/feed.ts`)도 표면별 정책이라 앱별로 둔다.
 
 `"use server"` 서버 액션 파일(`auth.ts`, `users.ts`, likes, comment-actions)은 승격하지 않는다.
 쿠키와 redirect 경로가 앱에 박혀 있고 파일이 얇아 앱별 복제가 싸다. 로직 차이가 생기면 그때 다시 본다.

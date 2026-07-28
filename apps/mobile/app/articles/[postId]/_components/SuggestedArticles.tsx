@@ -1,4 +1,4 @@
-import type { ArticleCard } from "@/_types/articles";
+import type { ArticleCard } from "@plick/domain/types";
 import { SuggestedArticleCard } from "./SuggestedArticleCard";
 
 /**

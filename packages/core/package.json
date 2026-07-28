@@ -9,6 +9,10 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
+  "dependencies": {
+    "@plick/domain": "workspace:*",
+    "@tanstack/react-query": "^5.101.4"
+  },
   "devDependencies": {
     "@plick/eslint-config": "workspace:*",
     "@plick/typescript-config": "workspace:*",

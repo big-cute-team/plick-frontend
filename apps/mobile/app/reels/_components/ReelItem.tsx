@@ -11,7 +11,7 @@ import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelLike } from "@/_hooks/useReelLike";
 import type { ReelCard, TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
-import { formatRelativeTime } from "@/_utils/time";
+import { formatRelativeTime } from "@plick/domain/format";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { PostBadges } from "@/_components/PostBadges";
 import { ReelActionRail } from "./ReelActionRail";

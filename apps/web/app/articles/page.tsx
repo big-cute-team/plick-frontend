@@ -1,12 +1,25 @@
+import { getArticles } from "@plick/core/articles";
+import type { InitialArticleFeed } from "@plick/domain/types";
 import { PostFeed } from "@/_components/PostFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { POSTS } from "@/_mocks/posts";
 
 /**
  * 데스크톱 기사 페이지 (KAN-207) — GNB + 중앙 정렬 단일 컬럼(max-w-read)에
  * 제목·부제 + 팀 필터 탭 + 팀별 이적 기사 리스트. 피그마 W10(node 222-2).
+ *
+ * 리스트는 홈과 같은 `GET /api/v1/articles`를 소비한다 (KAN-321). 전체 탭
+ * 첫 페이지를 서버에서 미리 받아 씨앗으로 내려주고, 쿼리키가 홈과 같아
+ * 홈에서 이미 받았으면 캐시를 그대로 이어 쓴다.
  */
-export default function ArticlesPage() {
+export default async function ArticlesPage() {
+  let initial: InitialArticleFeed | undefined;
+  try {
+    // 받은 시각을 함께 넘긴다 — 클라 캐시가 이 씨앗의 신선도를 재는 기준이 된다
+    initial = { page: await getArticles(), fetchedAt: Date.now() };
+  } catch (error) {
+    console.error("[articles] 기사 피드 초기 로드 실패:", error);
+  }
+
   return (
     <>
       <SiteHeader />
@@ -21,7 +34,7 @@ export default function ArticlesPage() {
             </p>
           </header>
           <div className="pt-4.5">
-            <PostFeed posts={POSTS} variant="article" />
+            <PostFeed initial={initial} variant="article" />
           </div>
         </div>
       </main>

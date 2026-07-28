@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { getQueryClient } from "./query-client";
+import { getQueryClient } from "@plick/core/query-client";
 
 /**
  * 루트 레이아웃에서 클라 트리에 QueryClient를 공급한다.
