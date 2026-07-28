@@ -180,8 +180,9 @@ export interface ArticleDetail {
    */
   sourceUrl: string | null;
   /**
-   * 조회·좋아요·댓글 집계. BE가 아직 자리 구현(Noop)이라 항상 0·false다 —
-   * 값은 그대로 그리고, BE가 실집계를 붙이면 화면 수정 없이 살아난다.
+   * 조회·좋아요·댓글 집계. KAN-283 시점에는 BE 자리 구현(Noop) 때문에 항상 0·false였지만
+   * 지금은 요청마다 실집계가 돌아 실값이 온다(KAN-324 재검증). `liked`는 토큰을 실었을
+   * 때만 그 유저 기준으로 계산된다.
    */
   views: number;
   commentCount: number;
@@ -189,6 +190,50 @@ export interface ArticleDetail {
   liked: boolean;
   /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. 빈 배열일 수 있다. */
   hashtags: string[];
+}
+
+/**
+ * 홈 핫이슈 카드 한 장 (KAN-282, `GET /api/v1/articles/hot`).
+ *
+ * 피드 카드와 계약이 다르다 — `summary`·`hashtags`·원문 링크가 없고 이미지가
+ * 단일 필드다. 그래서 `ArticleCard`를 줄여 쓰지 않고 따로 둔다. 모바일
+ * `_types/articles.ts`에 있던 것을 web 이식(KAN-324)에서 승격했다.
+ */
+export interface HotArticle {
+  /** BE `articleSummaryId`를 문자열로 담는다 (`ArticleCard.id`와 결이 같다). */
+  id: string;
+  title: string;
+  /** 루머 단계. null이면 배지를 그리지 않는다. */
+  stage: RumorStage | null;
+  /** 발행 시각 ISO-8601 (KST 오프셋 포함). */
+  publishedAt: string;
+  /** 태그된 팀 목록 — 다중이고 없을 수 있다. 첫 팀을 대표로 쓴다. */
+  teams: TeamCode[];
+  /** 대표 이미지. BE 실데이터가 아직 전부 비어 있어 없으면 트윗 임베드로 폴백한다. */
+  imageUrl: string | null;
+  /**
+   * 대표 원문 링크(현재는 전부 x.com). 사진이 null일 때 트윗 임베드 폴백에 쓴다.
+   *
+   * KAN-282·KAN-284 시점에는 이 키가 응답에 아예 없어 화면이 폴백을 타지 못했는데,
+   * BE가 2026-07-24에 최상위 필드로 추가했다(web 이식 KAN-324 재검증에서 확인).
+   * 대표 원문이 없으면 null이라 가드는 남긴다 — `reporter`와 같은 조건이라 둘은
+   * 항상 함께 null이 된다.
+   */
+  sourceUrl: string | null;
+  reporter: ArticleReporter | null;
+  /**
+   * 조회·좋아요·댓글 집계. KAN-282 시점에는 BE 자리 구현(Noop) 때문에 항상 0이었지만
+   * 지금은 요청마다 실집계가 돌아 실값이 온다(KAN-324 재검증). 값이 작아서 천 단위
+   * 축약이 눈에 띄지 않을 뿐이다.
+   *
+   * `liked`는 토큰을 실었을 때만 그 유저 기준으로 계산된다. 핫이슈 fetcher는 만료
+   * 토큰 401을 피하려고 토큰을 싣지 않으므로(`getHotArticles`) 늘 false다 — 핫이슈
+   * 카드가 하트를 그리지 않는 이유이기도 하다.
+   */
+  views: number;
+  commentCount: number;
+  likeCount: number;
+  liked: boolean;
 }
 
 /**

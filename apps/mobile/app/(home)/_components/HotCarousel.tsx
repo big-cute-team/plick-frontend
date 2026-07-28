@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CARD_W, GAP, HOT_AUTOPLAY_MS } from "@/_constants/home";
-import type { HotArticle } from "@/_types/articles";
+import type { HotArticle } from "@plick/domain/types";
 import { HotHeroCard } from "./HotHeroCard";
 
 /**
