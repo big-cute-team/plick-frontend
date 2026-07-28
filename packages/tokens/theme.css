@@ -28,9 +28,11 @@
   --plk-accent: #2fd97f;
   --plk-on-accent: #08130c;
   --plk-danger: #f87171;
-  /* 상태 보조색 — 루머 단계·기자 티어 배지 (KAN-281). info=파랑, warn=노랑 */
+  /* 상태 보조색 — 루머 단계·기자 티어 배지 (KAN-281). info=파랑, warn=노랑,
+   * confirmed=보라. 루머 단계 넷이 서로 구분되게 accent(초록)까지 넷을 나눠 쓴다. */
   --plk-info: #60a5fa;
   --plk-warn: #fbbf24;
+  --plk-confirmed: #a78bfa;
 
   /* 릴스 배경 — 사진·임베드 뒤를 채우는 단일 색. 릴마다 팀 그라데이션으로
    * 제각각이던 걸 하나로 통일한다 (KAN-296). 라이트에서 흰색으로 뒤집힌다. */
@@ -51,11 +53,21 @@
   --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 16%, transparent);
   --plk-accent-border: color-mix(in srgb, var(--plk-accent) 40%, transparent);
 
-  /* info·warn 파생 — 사용 시점에 var()가 풀려 라이트 오버라이드를 따라간다 */
+  /* info·warn·confirmed 파생 — 사용 시점에 var()가 풀려 라이트 오버라이드를 따라간다 */
   --plk-info-tint: color-mix(in srgb, var(--plk-info) 16%, transparent);
   --plk-info-border: color-mix(in srgb, var(--plk-info) 40%, transparent);
   --plk-warn-tint: color-mix(in srgb, var(--plk-warn) 16%, transparent);
   --plk-warn-border: color-mix(in srgb, var(--plk-warn) 40%, transparent);
+  --plk-confirmed-tint: color-mix(
+    in srgb,
+    var(--plk-confirmed) 16%,
+    transparent
+  );
+  --plk-confirmed-border: color-mix(
+    in srgb,
+    var(--plk-confirmed) 40%,
+    transparent
+  );
 
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
@@ -100,6 +112,7 @@
   --plk-danger: #e5484d;
   --plk-info: #2563eb;
   --plk-warn: #d97706;
+  --plk-confirmed: #7c3aed;
 
   /* 릴스 배경 — 라이트에선 흰색 (KAN-296) */
   --plk-reel-bg: #ffffff;
@@ -135,6 +148,7 @@
   --color-danger: var(--plk-danger);
   --color-info: var(--plk-info);
   --color-warn: var(--plk-warn);
+  --color-confirmed: var(--plk-confirmed);
 
   --color-reel-bg: var(--plk-reel-bg);
   --color-media: var(--plk-media-bg);
@@ -149,6 +163,8 @@
   --color-info-border: var(--plk-info-border);
   --color-warn-tint: var(--plk-warn-tint);
   --color-warn-border: var(--plk-warn-border);
+  --color-confirmed-tint: var(--plk-confirmed-tint);
+  --color-confirmed-border: var(--plk-confirmed-border);
 
   --color-kakao: var(--plk-kakao);
   --color-on-kakao: var(--plk-on-kakao);
