@@ -126,11 +126,3 @@ export const AUTH_COOKIE_BASE = {
  */
 export const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15분
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일
-
-/**
- * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
- *
- * `next.config.ts`의 rewrites가 이 접두어를 떼고 BE로 넘긴다. `apiFetch`가
- * base로 쓰고, `proxy.ts`가 이 경로의 요청에만 Bearer 토큰을 실어 준다(KAN-308).
- */
-export const BE_PROXY_PREFIX = "/be";

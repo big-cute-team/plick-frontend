@@ -7,7 +7,7 @@
 import { cookies } from "next/headers";
 import { TEAMS } from "@plick/domain/constants";
 import type { TeamCode } from "@plick/domain/types";
-import { ApiError, apiFetch } from "@/_apis/client";
+import { ApiError, apiFetch } from "@plick/core/client";
 import { AUTH_COOKIES } from "@/_constants/api";
 import type { MyProfile } from "@/_types/api";
 

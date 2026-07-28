@@ -2,6 +2,7 @@
  * @file 세션 갱신 프록시. access 토큰이 만료됐지만 refresh가 남아있으면 네비게이션 도중
  * 조용히 토큰을 재발급해 로그인 상태를 잇는다. 실패하면 세션을 끊고 로그인 화면으로 보낸다.
  * BE 프록시(`/be/*`)로 나가는 브라우저 fetch에 Bearer 토큰을 실어 주는 일도 여기서 한다.
+ * 모바일 `proxy.ts`와 같은 로직이다(KAN-318) — refresh fetcher는 `@plick/core` 공용.
  *
  * 왜 이 자리인가: 평범한 GET 네비게이션 중에 **응답 쿠키를 심을 수 있는 유일한 자리**다.
  * 서버 액션은 POST(버튼 클릭)에 붙고, 서버 컴포넌트는 요청 쿠키를 읽기만 한다. 그래서 "페이지를
@@ -9,11 +10,10 @@
  *
  * 만료 판정: 현재 BE 토큰은 만료 정보가 없는 불투명 문자열이라 exp를 디코드할 수 없다. 대신
  * **access 쿠키의 수명(짧은 maxAge)을 만료 신호로 쓴다** — 브라우저가 그 쿠키를 버리면(=만료)
- * 요청에 access가 빠지고, refresh만 남은 그 상태가 "재발급해야 함"이다. (constants.ts TTL 참고)
+ * 요청에 access가 빠지고, refresh만 남은 그 상태가 "재발급해야 함"이다. (constants TTL 참고)
  *
- * 파일 이름은 `middleware.ts`였다. Next 16에서 그 규칙이 deprecated되고 `proxy.ts`로
- * 이름이 바뀌어(export 이름도 `middleware` → `proxy`) dev 서버가 경고를 띄우길래 옮겼다.
- * 동작과 API는 그대로다 — Express 미들웨어와 헷갈리지 말라는 명칭 변경이다.
+ * 파일 이름이 `middleware.ts`가 아닌 건 Next 16에서 그 규칙이 deprecated되고 `proxy.ts`로
+ * 바뀌어서다(export 이름도 `middleware` → `proxy`). 동작과 API는 그대로다.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -35,10 +35,7 @@ import {
  * 실려 오지만 BE는 쿠키가 아니라 Bearer 헤더만 본다. 그 사이를 잇는 자리가
  * 여기다 — `/be`를 BE로 넘기는 rewrites보다 먼저 돌고, 여기서 바꾼 요청 헤더가
  * 그대로 프록시 대상까지 간다. 서버 컴포넌트 fetch는 이 경로를 타지 않고 절대
- * URL로 직접 나가므로 호출부가 토큰을 넘긴다(`getAccessToken`).
- *
- * 안 실으면 조회 응답의 `likedByMe`가 항상 false로 와서, 좋아요를 누른 릴이
- * 다음 페이지로 다시 실려 올 때 하트가 빈 채로 보인다 (KAN-308).
+ * URL로 직접 나가므로 호출부가 토큰을 넘긴다(KAN-308).
  */
 function authorized(request: NextRequest, accessToken: string): NextResponse {
   const headers = new Headers(request.headers);

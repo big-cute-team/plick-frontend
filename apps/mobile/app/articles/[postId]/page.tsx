@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";

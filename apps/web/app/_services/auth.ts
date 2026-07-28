@@ -2,8 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ONBOARDING_ENTRY } from "@/_constants/app";
 import { apiFetch } from "@plick/core/client";
+import { ONBOARDING_ENTRY } from "@/_constants/app";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -24,8 +24,8 @@ interface LoginResponse {
 }
 
 /**
- * 소셜 로그인 시작 서버 액션 (KAN-257) — CSRF 방지 state를 쿠키에 심고
- * 프로바이더 인가 페이지로 리다이렉트한다. 사용자가 동의하면 프로바이더가
+ * 소셜 로그인 시작 서버 액션 (KAN-318, 모바일 KAN-257 이식) — CSRF 방지 state를
+ * 쿠키에 심고 프로바이더 인가 페이지로 리다이렉트한다. 사용자가 동의하면 프로바이더가
  * `/oauth/callback`으로 code를 돌려보내고, 거기서 `login`이 마무리한다.
  *
  * @param provider 카카오/구글 버튼이 넘기는 프로바이더
@@ -92,7 +92,7 @@ export async function login(
 }
 
 /**
- * 로그아웃 서버 액션 — BE에 로그아웃을 알리고 토큰 쿠키를 지운 뒤 홈으로 보낸다(KAN-300).
+ * 로그아웃 서버 액션 — BE에 로그아웃을 알리고 토큰 쿠키를 지운 뒤 홈으로 보낸다.
  * BE 호출이 실패해도 로컬 세션은 반드시 끊는다(쿠키 삭제) — 로그아웃을 못 하는 상태에 갇히지 않게.
  * 토큰은 HttpOnly라 브라우저 JS로 못 지우므로, login과 대칭으로 삭제도 서버에서 한다.
  */

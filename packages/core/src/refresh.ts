@@ -1,14 +1,15 @@
 /**
  * @file 토큰 재발급 fetcher. refresh 토큰을 BE에 넘겨 새 access·refresh 쌍을 받아온다.
  *
- * `auth.ts`(login/logout)와 달리 이 파일은 `"use server"`가 **아니다.** 유일한 소비자가
- * edge에서 도는 `proxy.ts`(옛 `middleware.ts`)라서다 — 서버 액션은 `next/headers`·
- * `next/navigation`에 기대는데 그건 edge에서 안 돈다. 그래서 쿠키 읽기·심기·리다이렉트는
- * 프록시가 자기 API로 하고,
- * 이 파일은 **BE 호출과 봉투 해제만** 하는 순수 함수로 남긴다(edge·서버 어디서든 부를 수 있게).
+ * 각 앱 `_services/auth.ts`(login/logout)와 달리 이 파일은 `"use server"`가 **아니다.**
+ * 유일한 소비자가 edge에서 도는 각 앱 `proxy.ts`(옛 `middleware.ts`)라서다 — 서버 액션은
+ * `next/headers`·`next/navigation`에 기대는데 그건 edge에서 안 돈다. 그래서 쿠키
+ * 읽기·심기·리다이렉트는 프록시가 자기 API로 하고, 이 파일은 **BE 호출과 봉투 해제만**
+ * 하는 순수 함수로 남긴다(edge·서버 어디서든 부를 수 있게). 모바일 `_services/refresh.ts`로
+ * 살다 web 프록시도 같은 계약을 쓰면서 `apiFetch`와 함께 승격했다(KAN-318).
  */
 
-import { apiFetch } from "@/_apis/client";
+import { apiFetch } from "./client";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `TokenResponse` 그대로). access·refresh가 함께 회전된다. */
 interface TokenResponse {

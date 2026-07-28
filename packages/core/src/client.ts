@@ -1,13 +1,20 @@
 /**
- * @file BE fetch 얇은 래퍼. base 선택·JSON 파싱·봉투 해제·에러 정규화만.
- * 도메인 변환은 각 fetcher(login 등)에서 한다.
+ * @file BE fetch 얇은 래퍼 — base 선택·JSON 파싱·봉투 해제·에러 정규화만.
+ * 도메인 변환은 각 앱의 fetcher(login 등)에서 한다. 모바일 `_apis/client.ts`로 살다
+ * web이 두 번째 사용처가 되면서 승격했다(KAN-318, ADR 0011 게이트 C).
  *
  * 토큰은 여기서 찾지 않는다. 서버에서 부를 때는 호출부가 쿠키를 읽어
  * `Authorization` 헤더로 넘기고, 브라우저에서 부를 때는 HttpOnly 쿠키를 못 읽어
- * 넘길 수가 없어서 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
+ * 넘길 수가 없어서 각 앱 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
  */
 
-import { BE_PROXY_PREFIX } from "@/_constants/api";
+/**
+ * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
+ *
+ * 각 앱 `next.config.js`의 rewrites가 이 접두어를 떼고 BE로 넘긴다. `apiFetch`가
+ * base로 쓰고, 각 앱 `proxy.ts`가 이 경로의 요청에만 Bearer 토큰을 실어 준다(KAN-308).
+ */
+export const BE_PROXY_PREFIX = "/be";
 
 /**
  * BE 공통 응답 봉투 — 모든 엔드포인트가 `{ code, message, data }`로 감싸 온다
@@ -36,7 +43,7 @@ export class ApiError extends Error {
  * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
  *
  * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
- * 노출된다. `next.config.js`의 rewrites가 `/be/*`를 BE로 넘겨주므로
+ * 노출된다. 각 앱 `next.config.js`의 rewrites가 `/be/*`를 BE로 넘겨주므로
  * 브라우저는 자기 오리진만 부르면 된다 (KAN-271).
  */
 function baseUrl(): string {

@@ -2,7 +2,7 @@
 
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { commentKeys } from "@/_queries/commentKeys";
 import { createComment } from "@/_services/comment-actions";
 import type { ArticleComment, CommentPage } from "@/_types/comments";

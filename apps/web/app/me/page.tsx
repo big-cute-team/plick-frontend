@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import {
   ChevronMiniIcon,
   HelpCircleIcon,
-  LogoutIcon,
   TeamShieldIcon,
 } from "@plick/ui/icons";
 import { ProfileCard } from "@plick/ui/ProfileCard";
@@ -11,6 +10,7 @@ import { SiteHeader } from "@/_components/SiteHeader";
 import { TEAMS } from "@plick/domain/constants";
 import { CURRENT_USER, NOTIF_COUNT } from "@/_mocks/posts";
 import { APP_VERSION_LABEL } from "@/_constants/me";
+import { LogoutButton } from "./_components/LogoutButton";
 
 /**
  * 데스크톱 마이페이지 (KAN-244) — GNB + 중앙 정렬 좁은 컬럼(max-w-narrow)에
@@ -64,13 +64,7 @@ export default function MyPage() {
               />
             </CardSection>
 
-            <button
-              type="button"
-              className="border-border-strong text-danger rounded-control focus-visible:outline-accent hover:bg-elevate mt-2 flex w-full items-center justify-center gap-2 border py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60"
-            >
-              <LogoutIcon />
-              <span className="text-body font-extrabold">로그아웃</span>
-            </button>
+            <LogoutButton />
 
             <p className="text-caption text-text-4 text-center">
               {APP_VERSION_LABEL}

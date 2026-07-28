@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { TeamCode } from "@plick/domain/types";
-import { ApiError, apiFetch } from "@/_apis/client";
+import { ApiError, apiFetch } from "@plick/core/client";
 import { AUTH_COOKIES, TEAM_IDS } from "@/_constants/api";
 
 /**

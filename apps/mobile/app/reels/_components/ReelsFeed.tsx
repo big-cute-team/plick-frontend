@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/_apis/client";
+import { ApiError } from "@plick/core/client";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelsCarousel } from "@/_hooks/useReelsCarousel";
