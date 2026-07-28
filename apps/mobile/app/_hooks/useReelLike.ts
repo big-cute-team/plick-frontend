@@ -3,8 +3,8 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticleLike } from "@/_hooks/useArticleLike";
-import { reelKeys } from "@/_queries/reelKeys";
-import type { ReelCard, ReelFeedPage } from "@/_types/reels";
+import { reelKeys } from "@plick/core/reelKeys";
+import type { ReelCard, ReelFeedPage } from "@plick/domain/types";
 
 /**
  * 릴 좋아요 토글 (KAN-308) — {@link useArticleLike}에 릴스판 원본 갱신을 물린다.

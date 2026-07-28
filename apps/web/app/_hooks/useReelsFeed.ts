@@ -1,14 +1,15 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import type { InitialReelFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
-import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { reelKeys } from "@plick/core/reelKeys";
 import { getReels } from "@plick/core/reels";
-import type { InitialReelFeed } from "@plick/domain/types";
+import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
- * 릴스 피드 (KAN-276).
+ * 릴스 피드 (KAN-276, web 이식 KAN-323). 모바일 `_hooks/useReelsFeed.ts`와
+ * 동일 구현이다 — 훅은 승격 후보 목록에 없어 앱별로 둔다.
  *
  * 페이지네이션은 커서 기반이다. 다음 페이지 존재 여부를 알려주는 `hasNext`나 총 건수가
  * 없어서 `nextCursor`가 null인지로만 판단한다. `getNextPageParam`이 undefined를 돌려주면
@@ -30,8 +31,8 @@ export function useReelsFeed(initial?: InitialReelFeed) {
     /**
      * 씨앗의 신선도를 서버가 받은 시각으로 못박는다. 안 넘기면 RQ가 캐시 엔트리를
      * 만드는 순간으로 찍어서, 화면에 오래 머문 뒤 이 씨앗이 다시 쓰일 때 묵은
-     * 데이터가 방금 받은 것으로 취급된다. 제 나이를 달아 두면 그런 씨앗은 심자마자
-     * stale로 판정돼 갱신이 걸린다.
+     * 데이터가 방금 받은 것으로 취급돼 갱신이 안 걸린다. 제 나이를 달아 두면 그런
+     * 씨앗은 심자마자 stale로 판정돼 갱신이 걸린다.
      *
      * 기기 시계가 서버보다 뒤처져 있으면 서버 시각이 미래로 보여 영영 신선한 것이
      * 되므로, 지금보다 미래인 값은 지금으로 깎는다.

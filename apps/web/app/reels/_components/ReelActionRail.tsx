@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { formatCount } from "@plick/domain/format";
-import type { FeedPost } from "@plick/domain/types";
-import { ChatIcon, LikeIcon, SaveIcon, SendIcon } from "@plick/ui/icons";
+import type { ReelCard } from "@plick/domain/types";
+import { ChatIcon, LikeIcon, SendIcon } from "@plick/ui/icons";
 
 /**
  * 레일 배경 톤 — 놓이는 바탕에 따라 색을 달리한다.
@@ -23,22 +23,26 @@ const TONE: Record<RailTone, { button: string; chip: string }> = {
 };
 
 /**
- * 릴 액션 레일 — 좋아요·댓글·공유·저장. 각 아이콘이 원형 칩 배경 위에 놓인다.
+ * 릴 액션 레일 — 좋아요·댓글·공유. 각 아이콘이 원형 칩 배경 위에 놓인다.
  *
- * 데스크톱은 카드 밖에 세로로 서고(`ReelCard`에서 flex 형제), 모바일 뷰에선
+ * 데스크톱은 카드 밖에 세로로 서고(`ReelItem`에서 flex 형제), 모바일 뷰에선
  * 사진이 좁아지지 않도록 카드 안 우측에 오버레이한다 — 배치는 `className`으로 제어한다.
+ *
+ * 저장 버튼은 실계약(KAN-323)으로 갈아타면서 뺐다 — BE 응답에 저장 여부가 없다
+ * (모바일 KAN-299와 같은 판단). 좋아요는 응답값을 그리기만 하고 누르는 동작은
+ * 좋아요 뮤테이션 이식 티켓 몫이다.
  *
  * @param className - 래퍼에 덧붙일 클래스(표시·위치 제어: `max-lg:hidden`, `absolute … lg:hidden` 등)
  * @param tone - 바탕 톤(`media`=사진 위 흰색, `surface`=페이지 배경 위 테마색). 기본 `media`.
  * @param onOpenComments - 댓글 버튼 클릭 시 세부 패널을 여는 콜백
  */
 export function ReelActionRail({
-  post,
+  reel,
   className = "",
   tone = "media",
   onOpenComments,
 }: {
-  post: FeedPost;
+  reel: ReelCard;
   className?: string;
   tone?: RailTone;
   onOpenComments?: () => void;
@@ -48,21 +52,16 @@ export function ReelActionRail({
     <div className={`flex flex-col items-center gap-4 pb-2 ${className}`}>
       <RailAction
         tone={t}
-        icon={<LikeIcon size={22} filled={post.liked} />}
-        label={formatCount(post.likeCount)}
+        icon={<LikeIcon size={22} filled={reel.liked} />}
+        label={formatCount(reel.likeCount)}
       />
       <RailAction
         tone={t}
         icon={<ChatIcon size={22} />}
-        label={formatCount(post.commentCount)}
+        label={formatCount(reel.commentCount)}
         onClick={onOpenComments}
       />
       <RailAction tone={t} icon={<SendIcon size={22} />} label="공유" />
-      <RailAction
-        tone={t}
-        icon={<SaveIcon size={22} filled={post.saved} />}
-        label="저장"
-      />
     </div>
   );
 }

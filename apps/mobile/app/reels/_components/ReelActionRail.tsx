@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { formatCount } from "@plick/domain/format";
 import { ChatIcon, LikeIcon, SendIcon } from "@plick/ui/icons";
-import type { ReelCard } from "@/_types/reels";
+import type { ReelCard } from "@plick/domain/types";
 
 /**
  * 릴 우측 액션 레일 — 좋아요·댓글·공유. 저장은 계약에 없어 뺐다 (KAN-299).

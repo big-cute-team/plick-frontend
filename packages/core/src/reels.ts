@@ -1,6 +1,9 @@
 /**
  * @file 릴스 피드 fetcher (KAN-276, `GET /api/v1/reels`).
  *
+ * 모바일 `_services/reels.ts`로 살다 web이 두 번째 사용처가 되면서 승격했다
+ * (KAN-323, ADR 0011 게이트 C). 기사 피드(`articles.ts`)와 같은 자리다.
+ *
  * 서버 컴포넌트(첫 페이지)와 클라 훅(다음 페이지)이 함께 부른다. 그래서 서버
  * 액션(`"use server"`)이 아니라 평범한 모듈이고, base URL 선택은 `apiFetch`가
  * 실행 위치를 보고 알아서 한다.
@@ -13,10 +16,9 @@
  * 만료되면 쿠키가 사라져 토큰 없이 부르게 된다.
  */
 
-import type { TeamCode } from "@plick/domain/types";
-import { apiFetch } from "@plick/core/client";
 import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@plick/domain/constants";
-import type { ReelCard, ReelFeedPage } from "@/_types/reels";
+import type { ReelCard, ReelFeedPage, TeamCode } from "@plick/domain/types";
+import { apiFetch } from "./client";
 
 /** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
 interface ReelsCardResponse {
@@ -96,7 +98,7 @@ function toReelCard(r: ReelsCardResponse): ReelCard {
  * @param size 한 페이지 건수 (1..30)
  * @param accessToken 서버에서 부를 때만 넘긴다 — 응답의 `likedByMe`가 그 유저
  *   기준으로 계산된다(KAN-308). 브라우저에서 부를 때는 쿠키를 못 읽으므로
- *   비우고, 대신 `proxy.ts`가 `/be` 프록시 요청에 같은 헤더를 실어 준다.
+ *   비우고, 대신 각 앱 `proxy.ts`가 `/be` 프록시 요청에 같은 헤더를 실어 준다.
  * @throws {ApiError} 잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
  */
 export async function getReels({
