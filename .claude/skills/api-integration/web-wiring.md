@@ -68,7 +68,7 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
   필드(`timeLabel`, 단일 `team`, `author` 핸들)를 실계약(`publishedAt` ISO, 팀 배열, 닉네임)에 맞춘다.
 - 프로필은 `User.myTeam` 단일에서 `MyProfile.myTeams` 다중으로 바뀐다. `me`와 `me/edit`는
   KAN-319에서 다중으로 전환했다(응원팀 목록 카드, 크레스트 그리드 다중 토글, 프로필 카드
-  보조 줄은 이메일). `onboarding/team`만 단일 팀 전제로 남아 있으니 붙일 때 사용자에게 확인한다.
+  보조 줄은 이메일). `onboarding/team`도 KAN-320에서 다중 토글로 전환 완료(건너뛰기 링크 포함).
 - 계약 공백이 둘 있다. `NOTIF_COUNT`(알림)와 `TRENDING_POSTS`(실시간 인기)는 대응 BE 엔드포인트가 없다.
   숨길지 `articles/hot`으로 대체할지 사용자에게 확인한다.
 - web 릴스는 CSS scroll-snap 뷰어라 모바일 제스처 훅(`useReelsCarousel` 등)은 가져오지 않는다.

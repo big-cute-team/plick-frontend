@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import type { TeamCode } from "@plick/domain/types";
 import { updateMyProfile } from "@/_services/users";
-import { ErrorDialog } from "./ErrorDialog";
+import { ErrorDialog } from "@/_components/ErrorDialog";
 import { FavoriteTeamPicker } from "./FavoriteTeamPicker";
 import { NicknameEditField } from "./NicknameEditField";
 
