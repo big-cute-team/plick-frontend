@@ -123,10 +123,35 @@ BE 코드를 열어 원인을 확정했다. OAuth 인가 코드 그랜트에서 
 호환되고 web만 자기 콜백 주소를 실어 보내면 된다. BE 수정은 사용자가 직접 하기로 했고, 그게 되면
 web `auth.ts`의 login 호출에 `redirectUri`를 추가하는 FE 후속이 따라간다.
 
+## 재시작 후에도 실패 — 이번엔 Redis였다
+
+재시작하면 되겠지 했는데 로그인이 또 실패했다. 다만 에러가 달라져 있었다. dev 로그의 BE 응답이
+"카카오 인가코드 교환에 실패했습니다"에서 "서버 오류가 발생했습니다"(500)로 바뀌었다. 에러가
+바뀌었다는 건 redirect_uri 교환은 통과하기 시작했고 실패 지점이 그 뒤로 이동했다는 뜻이다.
+
+BE의 login 흐름은 인가코드 교환 → 회원 확보(DB) → JWT 발급 → refresh 토큰 저장(Redis) 순서다.
+어디서 죽는지 API로 분리 검증했다. DB만 타는 공개 조회(`GET /articles`)는 200으로 멀쩡했고,
+Redis만 타는 `POST /auth/refresh`(가짜 토큰이면 Redis 정상일 때 401이 와야 한다)는 응답 없이
+타임아웃이 났다. Redis 구간 확정이다. 그런데 로컬 docker의 `plick-redis`는 안팎에서 PONG이
+멀쩡하게 돌아왔다.
+
+정답은 BE `.env`에 있었다. `REDIS_HOST`가 localhost가 아니라 AWS ElastiCache(Valkey) 마스터
+엔드포인트로 박혀 있었다. ElastiCache는 VPC 안에서만 붙는 주소라 로컬 BE의 접속 시도가 하염없이
+걸리고, 로그인 마지막 단계(refresh 저장)가 그 타임아웃에 물려 500으로 떨어진 것이다. 운영 인프라
+작업을 하면서 로컬 `.env`에 운영 값이 들어간 모양새였다. `application-local.yml`의 기본값이
+`localhost:6379`라 REDIS 세 줄을 주석 처리하고 재시작하는 걸로 풀었다. 이 상태였으면 모바일
+로그인도 똑같이 깨져 있었을 텐데, 최근에 로컬 로그인을 밟은 적이 없어 아무도 몰랐던 것이다.
+
+이러고 나서 web 실계정 카카오 로그인이 끝까지 돌았다. 인가 → 콜백 → BE 교환 → 쿠키 심기 →
+홈 착지까지. 진단 순서를 돌아보면 콜백 라우트가 실패 사유를 로그로 구분해 둔 것, 그리고 BE 흐름을
+단계별로 쪼개 어느 의존성이 죽었는지 API로 판별한 게 시간을 아꼈다. "안 된다"는 증상 하나에
+redirect_uri 등록, BE의 단일 redirect_uri 계약, 스프링 env 로딩 시점, Redis 오설정 네 겹이
+겹쳐 있었다.
+
 ## 남긴 것
 
-- BE 패치(login body의 `redirectUri` 선택 필드) 후 web `auth.ts`에 `redirectUri` 전송 추가와
-  실계정 로그인 E2E 재확인. BE `.env`는 3001로 되돌린다.
+- BE 패치(login body의 `redirectUri` 선택 필드) 후 web `auth.ts`에 `redirectUri` 전송 추가.
+  그 전까지 BE `.env`의 redirect가 3000이면 모바일 로그인이, 3001이면 web 로그인이 깨진다.
 - 인증 상수 묶음과 `SocialProvider`의 승격 재검토. ADR 0011 §7에 후보로 올렸다.
 - web 마이페이지는 아직 mock 프로필이다. 로그아웃 버튼만 실제로 동작한다. `GET /users/me` 이식
   티켓에서 로그인 게이트(비로그인 시 유도 카드)와 함께 정리된다.
