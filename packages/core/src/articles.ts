@@ -1,10 +1,9 @@
 /**
- * @file 기사 피드·상세 fetcher (KAN-271 `GET /api/v1/articles`,
- * KAN-283 `GET /api/v1/articles/{articleId}`).
+ * @file 기사 피드·상세·핫이슈 fetcher (KAN-271 `GET /api/v1/articles`,
+ * KAN-283 `GET /api/v1/articles/{articleId}`, KAN-282 `GET /api/v1/articles/hot`).
  *
  * 모바일 `_services/articles.ts`로 살다 web이 두 번째 사용처가 되면서 피드는
- * KAN-321에, 상세는 KAN-322에 승격했다(ADR 0011 게이트 C). 핫이슈 fetcher는
- * 아직 모바일만 쓰므로 그쪽에 남아 있고, web이 붙는 티켓에서 따라 올라온다.
+ * KAN-321에, 상세는 KAN-322에, 핫이슈는 KAN-324에 승격했다(ADR 0011 게이트 C).
  *
  * 서버 컴포넌트(첫 페이지)와 클라 훅(팀 필터 재요청) 양쪽에서 부른다. 그래서
  * 서버 액션(`"use server"`)이 아니라 평범한 모듈이고, base URL 선택은
@@ -12,7 +11,7 @@
  *
  * 익명 허용 공개 API다. 스웨거에는 전역 `bearerAuth`가 걸려 있어 인증이 필요한
  * 것처럼 보이지만 실제로는 토큰 없이 200이 온다. 오히려 만료된 토큰을 실으면
- * 401로 피드 전체가 죽으므로 피드에서는 일부러 토큰을 싣지 않는다(상세만
+ * 401로 피드 전체가 죽으므로 피드와 핫이슈는 일부러 토큰을 싣지 않는다(상세만
  * `likedByMe` 때문에 있을 때 싣는다 — {@link getArticle}).
  */
 
@@ -27,6 +26,7 @@ import type {
   ArticleDetail,
   ArticleFeedPage,
   Filter,
+  HotArticle,
   TeamCode,
 } from "@plick/domain/types";
 import { apiFetch } from "./client";
@@ -132,8 +132,8 @@ export async function getArticles({
  *
  * 목록·핫이슈와 또 다른 세 번째 shape다. 기자가 단일 객체가 아니라 배열이고
  * (대표 순서 정렬, `[0]`이 대표), 원문 링크가 최상위가 아니라 기자마다 달려
- * 오며, `teams` id 배열이 아예 없다. 좋아요·댓글·조회는 BE Noop 구현이라
- * 항상 0·false로 온다.
+ * 오며, `teams` id 배열이 아예 없다. 좋아요·댓글·조회는 KAN-283 때는 BE Noop
+ * 구현이라 항상 0·false였는데 지금은 실집계가 온다(KAN-324 재검증).
  */
 interface ArticleDetailResponse {
   articleSummaryId: number;
@@ -208,4 +208,77 @@ export async function getArticle(
       : undefined,
   );
   return toArticleDetail(detail);
+}
+
+/**
+ * BE 핫이슈 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로).
+ *
+ * 피드 카드와 shape가 다르다. `summary`·`hashtags`가 없고, 이미지가
+ * `mainImageUrl`/`detailImageUrl` 쌍 대신 단일 `imageUrl`이며, reporter가
+ * `{ enName, koName }` 쌍 대신 단일 `name`이다.
+ *
+ * `sourceUrl`은 KAN-282·KAN-284 때는 키 자체가 없었는데 BE가 2026-07-24에
+ * 최상위 필드로 추가했다(KAN-324 재검증). 대표 원문 선정 규칙은 피드와 같고,
+ * 대표 원문이 없으면 null이다. 스웨거 `Reporter` 스키마에 아직 `sourceUrl`이
+ * 보이는 건 springdoc이 이름이 같은 상세·핫이슈 record를 스키마 하나로 합친
+ * 것이고, 핫이슈 `reporter`에는 그 키가 오지 않는다.
+ */
+interface HotCardResponse {
+  articleSummaryId: number;
+  title: string;
+  rumorStage: string | null;
+  publishedAt: string;
+  imageUrl: string | null;
+  sourceUrl: string | null;
+  teams: number[];
+  logoUrl: string | null;
+  reporter: {
+    name: string | null;
+    tier: number | null;
+  } | null;
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
+  likedByMe: boolean;
+}
+
+/** BE → 도메인 경계 변환. 피드 카드와 shape가 달라 `toArticleCard`를 못 쓴다. */
+function toHotArticle(r: HotCardResponse): HotArticle {
+  return {
+    id: String(r.articleSummaryId),
+    title: r.title,
+    stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,
+    publishedAt: r.publishedAt,
+    // 마스터에 없는 팀 id가 섞여 오면 표시할 이름이 없으므로 버린다
+    teams: r.teams
+      .map((id) => TEAM_CODES[id])
+      .filter((code): code is TeamCode => Boolean(code)),
+    imageUrl: r.imageUrl,
+    sourceUrl: r.sourceUrl,
+    reporter: r.reporter?.name
+      ? { name: r.reporter.name, tier: r.reporter.tier ?? null }
+      : null,
+    views: r.viewCount,
+    commentCount: r.commentCount,
+    likeCount: r.likeCount,
+    liked: r.likedByMe,
+  };
+}
+
+/**
+ * 홈 핫이슈 기사 목록. 서버 컴포넌트에서 await 해 쓴다.
+ *
+ * 건수는 BE 기본 5건이다 (`size` 파라미터는 1..10만 유효). 선정은 최근 48시간
+ * 발행분 중 조회수 상위이고 부족하면 최신순 폴백이라, 기사가 아예 없지 않는 한
+ * 빈 배열이 오지 않는다. 페이지네이션은 없다.
+ *
+ * 모바일은 5건을 캐러셀로 넘기고 web은 히어로 1 + 서브 2만 그린다 — 표시 건수는
+ * 표면이 잘라 쓰는 몫이라 fetcher는 BE 기본값을 그대로 돌려준다.
+ *
+ * 피드와 같은 익명 허용 API라 토큰을 싣지 않는다 — 만료 토큰을 실으면
+ * 401 `AUTH_EXPIRED_TOKEN`으로 오히려 죽는다.
+ */
+export async function getHotArticles(): Promise<HotArticle[]> {
+  const cards = await apiFetch<HotCardResponse[]>("/api/v1/articles/hot");
+  return cards.map(toHotArticle);
 }

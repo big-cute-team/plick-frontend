@@ -52,6 +52,15 @@ body {
   --tweet-bg-color-hover: var(--plk-reel-bg);
 }
 
+/* 홈 핫이슈 카드 안의 임베드 (KAN-324) — 카드 가로를 꽉 채운다. react-tweet
+ * 기본 max-width 550px는 좁은 모바일 카드에선 안 걸리지만 데스크톱 히어로
+ * (~750px)에선 걸려서 좌우가 비므로 푼다. 코너 라운드는 카드(rounded-hero)와
+ * 맞춘다 — 기본 12px가 카드 22px와 어긋나 이질감이 있다(모바일 KAN-297과 동일). */
+.hot-embed .react-tweet-theme.react-tweet-theme {
+  max-width: none;
+  border-radius: var(--radius-hero);
+}
+
 /* 릴 트윗 본문·헤더 축소 (KAN-296, KAN-297) — react-tweet 본문은 rem이라
  * 컨테이너 font-size로는 안 줄어든다. 본문 `<p>`를 클래스 부분일치로 잡아 직접
  * 줄이고, 아바타는 고정 px라 변수로 못 줄여 해시가 낀 모듈 클래스를 접미사

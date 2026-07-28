@@ -2,7 +2,7 @@ import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { TweetEmbed } from "@/_components/TweetEmbed";
-import type { HotArticle } from "@/_types/articles";
+import type { HotArticle } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
 
 /**

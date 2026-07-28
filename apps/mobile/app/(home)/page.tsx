@@ -4,8 +4,7 @@ import { HotCarousel } from "./_components/HotCarousel";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { getArticles } from "@plick/core/articles";
-import { getHotArticles } from "@/_services/articles";
+import { getArticles, getHotArticles } from "@plick/core/articles";
 import type { InitialArticleFeed } from "@plick/domain/types";
 
 /**
