@@ -57,6 +57,29 @@ export const TEAM_CODES: Record<number, TeamCode> = Object.fromEntries(
 );
 
 /**
+ * BE 팀 한글 정식 명칭(`teams.name_ko`) → 팀 코드 (KAN-283).
+ *
+ * 기사 상세 응답엔 `teams` id 배열이 없고 해시태그로 팀 한글명만 내려와서,
+ * 이 테이블로 역산한다. 해시태그는 구조적으로 `teams.name_ko` 6종의
+ * 부분집합만 온다(BE `team_tags`가 teams FK 전용이라 인물 태그는 미지원).
+ * 모바일 `_constants/api.ts`에 있던 것을 web 이식(KAN-322)에서 승격했다.
+ *
+ * ⚠️ 값은 도메인 `TEAMS[].name`(아스날·맨유 같은 축약 표기)과 6팀 중 4팀이
+ * 달라 파생시킬 수 없고, `TEAM_IDS`처럼 실제 DB 값을 박아둔 계약 공백이다.
+ * 재시드로 표기가 바뀌면 팀 칩이 조용히 빠지는 걸로 드러난다. BE
+ * `teams.short_name`이 팀 코드와 정확히 일치하므로 해시태그에 코드를 함께
+ * 내려주는 API가 생기면 이 테이블을 걷어낸다.
+ */
+export const TEAM_BY_KO_NAME: Record<string, TeamCode> = {
+  "맨체스터 유나이티드": "MUN",
+  "맨체스터 시티": "MCI",
+  리버풀: "LIV",
+  아스널: "ARS",
+  첼시: "CHE",
+  "토트넘 핫스퍼": "TOT",
+};
+
+/**
  * BE 루머 단계 값 → 도메인 `RumorStage` (KAN-271, KAN-276).
  *
  * 철자가 한 글자 다르다. BE와 DB는 미국식 `RUMOR`, 도메인 타입은 영국식 `RUMOUR`다.
