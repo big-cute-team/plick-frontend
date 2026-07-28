@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { HeartMiniIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { ArticleCard } from "@plick/domain/types";
@@ -73,6 +74,15 @@ export function PostListItem({
               <span>·</span>
             </>
           )}
+          {/* 목록에서는 좋아요를 보여주기만 한다 — 누르는 건 릴스와 기사 세부에서.
+              이웃한 조회·댓글과 달리 글자 없이 하트로만 표시한다 (KAN-308, 모바일과 동일).
+              내가 눌렀는지는 칠하지 않는다 — 목록 응답은 익명으로 받아
+              `liked`가 늘 false다. */}
+          <span className="inline-flex items-center gap-0.75">
+            <HeartMiniIcon />
+            {formatCount(post.likeCount)}
+          </span>
+          <span>·</span>
           <span>조회 {formatCount(post.views)}</span>
           <span>·</span>
           <span>댓글 {post.commentCount}</span>
