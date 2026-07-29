@@ -60,8 +60,8 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
 - `_utils/time.ts` 같은 순수 포맷터 (`formatChangeableAt`은 KAN-319, `formatRelativeTime`은
   KAN-321에서 `@plick/domain/format`으로 승격 완료)
 - 훅(`useArticleFeed`, `useInfiniteScroll`, `useReelsFeed`, `useComments`, `useCreateComment`,
-  `useLikeToggle`·`useArticleLike`·`useReelLike`)은
-  승격하지 않고 앱별 복제로 둔다(KAN-321, KAN-323, KAN-329, KAN-330).
+  `useLikeToggle`·`useArticleLike`·`useReelLike`·`useCommentLike`)은
+  승격하지 않고 앱별 복제로 둔다(KAN-321, KAN-323, KAN-329, KAN-330, KAN-331).
   React 훅이라 core의 순수 모듈 경계 밖이고, 승격분을 다 걷어낸 뒤엔 얇은 껍데기라 복제가 싸다.
   피드 캐시 정책 상수(`_constants/feed.ts`)도 표면별 정책이라 앱별로 둔다.
 
@@ -131,7 +131,7 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
 3. 릴스(피드는 KAN-323 완료).
 4. 인증(로그인, 로그아웃, refresh proxy, oauth callback). redirect_uri 등록을 먼저 받는다.
 5. 프로필과 온보딩(myTeams 화면 확인 포함).
-6. 뮤테이션(좋아요, 댓글 작성, 조회수).
+6. 뮤테이션(좋아요, 댓글 작성, 조회수). 기사·릴 좋아요는 KAN-330, 댓글 좋아요는 KAN-331에서 완료.
 
 엔드포인트 하나가 작업 하나이자 PR 하나인 건 모바일 때와 같다. 티켓이 있으면 브랜치와 커밋에
 Jira 키를 넣고, 없으면 브랜치는 `feature/web-<짧은설명>`, 커밋 메시지는 키 없이 쓴다.
