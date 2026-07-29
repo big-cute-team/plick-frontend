@@ -7,6 +7,7 @@ import { CloseIcon, LinkOutIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
 import { CommentComposer } from "@/_components/CommentComposer";
+import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 
 /**
@@ -26,8 +27,12 @@ import { CommentsHeader } from "@/_components/CommentsHeader";
  * 리플로우 없이 `overflow-hidden`으로 드러난다.
  *
  * 실계약(KAN-323)으로 갈아타면서 기자가 없을 수 있게 됐고(그때는 시각·조회만 한 줄로
- * 남는다), 출처 버튼은 링크가 있을 때만 실제 원문으로 나간다. 댓글 목록은 별도
- * 엔드포인트라 지금은 카운트와 빈 상태만 둔다 — 기사 세부(KAN-322)와 같은 처리다.
+ * 남는다), 출처 버튼은 링크가 있을 때만 실제 원문으로 나간다.
+ *
+ * 댓글(KAN-329): 릴 카드 id가 곧 BE `articleSummaryId`라 기사와 같은 댓글 API를
+ * 쓴다. 패널은 클라에서 열리므로 서버 씨앗 없이 열릴 때 목록을 받는다. 헤더
+ * 카운트는 피드가 준 스냅샷(`reel.commentCount`)에 이 패널에서 단 수를 로컬로
+ * 더한다 — 스냅샷은 방금 단 댓글을 모른다.
  *
  * @param reel - 세부를 보여줄 릴. `null`이면 닫힘(마지막 릴은 닫힘 애니 동안 유지).
  * @param onClose - 닫기 요청 콜백(패널 소유자가 `reel`을 `null`로 만든다)
@@ -42,10 +47,18 @@ export function ReelDetailPanel({
   const open = reel != null;
   /** 닫힘 애니메이션 동안에도 내용이 보이도록 마지막 릴을 유지한다. */
   const [rendered, setRendered] = useState<ReelCard | null>(reel);
+  /** 이 패널에서 등록한 댓글 수 — 피드가 준 카운트 스냅샷에 더해 보여준다. */
+  const [addedComments, setAddedComments] = useState(0);
+  const reelId = reel?.id;
 
   useEffect(() => {
     if (reel) setRendered(reel);
   }, [reel]);
+
+  /* 다른 릴로 갈아타면 앞 릴에서 센 수는 의미가 없다 */
+  useEffect(() => {
+    if (reelId) setAddedComments(0);
+  }, [reelId]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,16 +137,19 @@ export function ReelDetailPanel({
               </div>
 
               <CommentsHeader
-                count={rendered.commentCount}
+                count={rendered.commentCount + addedComments}
                 className="border-border border-t pt-3.5"
               />
 
-              <CommentComposer />
+              <CommentComposer
+                articleId={rendered.id}
+                onPosted={() => setAddedComments((n) => n + 1)}
+              />
 
-              {/* 댓글 목록 — 별도 엔드포인트라 지금은 빈 상태만 둔다 */}
-              <p className="text-body text-text-4 py-8 text-center">
-                아직 댓글이 없어요
-              </p>
+              <CommentList
+                articleId={rendered.id}
+                onPosted={() => setAddedComments((n) => n + 1)}
+              />
             </div>
           </div>
         )}

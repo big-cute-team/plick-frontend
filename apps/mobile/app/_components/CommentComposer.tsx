@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SendMiniIcon } from "@plick/ui/icons";
 import { ApiError } from "@plick/core/client";
-import { COMMENT_MAX_LENGTH } from "@/_constants/comments";
+import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import { useCreateComment } from "@/_hooks/useCreateComment";
 import { useAuth } from "./AuthProvider";
 import { LoginPromptDialog } from "./LoginPromptDialog";

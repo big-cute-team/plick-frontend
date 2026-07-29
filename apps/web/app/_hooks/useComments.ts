@@ -8,7 +8,8 @@ import type { InitialCommentPage } from "@plick/domain/types";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
- * 댓글 목록 (KAN-303). 기사 세부·릴 세부 시트 공용.
+ * 댓글 목록 (KAN-303, web 이식 KAN-329). 기사 세부·릴 세부 패널 공용.
+ * 모바일 `useComments`의 복제다 — 훅은 승격하지 않고 앱별로 둔다.
  *
  * 피드(`useReelsFeed`)와 같은 커서 규약이다 — `nextCursor`가 null인지로만 끝을
  * 판단하고, `getNextPageParam`이 undefined를 돌려줘야 RQ가 마지막 페이지로
@@ -18,7 +19,7 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
  *
  * @param articleId 기사(릴) id
  * @param initial 서버 컴포넌트가 미리 받아 둔 첫 페이지와 그 시각(기사 세부).
- *   릴 시트는 클라에서 열리므로 씨앗 없이 들어와 마운트 때 받는다.
+ *   릴 세부 패널은 클라에서 열리므로 씨앗 없이 들어와 마운트 때 받는다.
  */
 export function useComments(articleId: string, initial?: InitialCommentPage) {
   return useInfiniteQuery({

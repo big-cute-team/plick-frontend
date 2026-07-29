@@ -2,10 +2,10 @@
 
 import type { InfiniteData } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import { commentKeys } from "@plick/core/commentKeys";
+import type { ArticleComment, CommentPage } from "@plick/domain/types";
 import { useLikeToggle } from "@/_hooks/useLikeToggle";
-import { commentKeys } from "@/_queries/commentKeys";
 import { likeComment, unlikeComment } from "@/_services/comment-likes";
-import type { ArticleComment, CommentPage } from "@/_types/comments";
 import type { LikeState } from "@/_types/likes";
 
 /**
