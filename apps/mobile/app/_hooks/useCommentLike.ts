@@ -3,10 +3,13 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { commentKeys } from "@plick/core/commentKeys";
-import type { ArticleComment, CommentPage } from "@plick/domain/types";
+import type {
+  ArticleComment,
+  CommentPage,
+  LikeState,
+} from "@plick/domain/types";
 import { useLikeToggle } from "@/_hooks/useLikeToggle";
 import { likeComment, unlikeComment } from "@/_services/comment-likes";
-import type { LikeState } from "@/_types/likes";
 
 /**
  * 댓글 좋아요 토글 (KAN-309) — {@link useLikeToggle}에 댓글판 원본 갱신을 물린다.

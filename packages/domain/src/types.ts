@@ -373,3 +373,25 @@ export interface InitialCommentPage {
 export type CreateCommentResult =
   | { ok: true; comment: ArticleComment }
   | { ok: false; status: number; code: string; message: string };
+
+/**
+ * 좋아요 한 건의 표시 상태. 낙관적 갱신도 롤백도 이 덩어리를 통째로 바꾼다.
+ *
+ * 기사(릴)와 댓글은 엔드포인트가 다르지만 계약이 같다 — 등록·취소 모두 멱등이고
+ * 응답은 최신 카운트 하나이며 실패 규약도 같다. 그래서 도메인별로 나누지 않는다.
+ */
+export interface LikeState {
+  liked: boolean;
+  likeCount: number;
+}
+
+/**
+ * 좋아요 등록·취소 서버 액션의 결과. 값으로 돌려주는 이유는
+ * {@link CreateCommentResult}와 같다.
+ *
+ * 성공이면 BE가 계산한 최신 좋아요 수가 온다 — 낙관적으로 ±1 한 값을 이걸로
+ * 덮어 다른 사람이 그 사이 누른 것까지 반영한다.
+ */
+export type ToggleLikeResult =
+  | { ok: true; likeCount: number }
+  | { ok: false; status: number; code: string; message: string };

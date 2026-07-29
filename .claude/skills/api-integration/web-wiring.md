@@ -34,8 +34,9 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
   `HotArticle`은 KAN-324, `comments.ts` 전부(`ArticleComment`·`CommentPage`·
   `InitialCommentPage`·`CreateCommentResult`)는 KAN-329에서 승격 완료 —
   `_types/articles.ts`·`comments.ts`는 파일째 소멸했다.
+  `likes.ts`의 `LikeState`·`ToggleLikeResult`는 KAN-330에서 승격 완료 — 파일째 소멸했다.
   `_types/reels.ts`에 남은 `ReelDetailMotion`·`TitleMotion`은 모바일 제스처 상태라 안 올린다.
-  남은 건 `likes.ts`뿐이고 좋아요 뮤테이션을 web에 붙일 때 따라 올라간다)
+  web과 공유하는 계약 타입은 이걸로 다 올라갔다)
 - BE 매핑 상수 `_constants/api.ts`의 `TEAM_IDS`, `TEAM_CODES`, `TEAM_BY_KO_NAME`, `STAGE_BY_BE_VALUE` → `@plick/domain`
   (`TEAM_IDS`는 KAN-319, `TEAM_CODES`·`STAGE_BY_BE_VALUE`는 KAN-321, `TEAM_BY_KO_NAME`은
   KAN-322에서 승격 완료 — `_constants/api.ts`에 남은 건 인증 절뿐이다)
@@ -58,8 +59,9 @@ web이 ADR 0011 게이트 C의 두 번째 실사용처다. 모바일 코드 주�
   `QueryProvider`는 클라 컴포넌트라 앱별로 남긴다)
 - `_utils/time.ts` 같은 순수 포맷터 (`formatChangeableAt`은 KAN-319, `formatRelativeTime`은
   KAN-321에서 `@plick/domain/format`으로 승격 완료)
-- 훅(`useArticleFeed`, `useInfiniteScroll`, `useReelsFeed`, `useComments`, `useCreateComment`)은
-  승격하지 않고 앱별 복제로 둔다(KAN-321, KAN-323, KAN-329).
+- 훅(`useArticleFeed`, `useInfiniteScroll`, `useReelsFeed`, `useComments`, `useCreateComment`,
+  `useLikeToggle`·`useArticleLike`·`useReelLike`)은
+  승격하지 않고 앱별 복제로 둔다(KAN-321, KAN-323, KAN-329, KAN-330).
   React 훅이라 core의 순수 모듈 경계 밖이고, 승격분을 다 걷어낸 뒤엔 얇은 껍데기라 복제가 싸다.
   피드 캐시 정책 상수(`_constants/feed.ts`)도 표면별 정책이라 앱별로 둔다.
 
@@ -112,7 +114,12 @@ ADR 0023이 정확히 이 불일치로 깨진 기록이다.
   리셋해야 한다(KAN-329, ADR 0058).
 - 포털로 body에 뚫는 팝업(`LoginPromptDialog`)은 그대로 유지한다. 릴 패널이 `translateX`로
   미끄러져 `transform`이 걸려 있어 그 안의 `fixed inset-0`은 화면이 아니라 패널만 덮는다.
+- 릴 액션 레일은 데스크톱용·모바일 뷰용으로 두 벌 렌더된다(`lg:hidden`·`max-lg:hidden`). 상태를
+  들거나 팝업을 그리는 훅은 레일이 아니라 `ReelItem`에 둔다 — 레일마다 부르면 로컬 state가 두 벌이
+  되고 어느 쪽이 반응하는지가 뷰포트에 좌우된다(KAN-330, ADR 0060).
 - 화면 검증과 반응형(데스크톱 1280 기준, 330px까지)은 `web-publishing` 스킬을 따른다.
+  상호작용은 브라우저 패널 말고 실제 브라우저로 밟는다 — 패널은 `visibilityState: hidden`에
+  뷰포트 0x0이라 하이드레이션이 진행되지 않아 클릭이 먹지 않는다(KAN-330).
 
 ## 5. 이식 순서
 
