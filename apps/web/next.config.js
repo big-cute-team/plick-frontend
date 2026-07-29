@@ -3,6 +3,15 @@ import { fileURLToPath } from "node:url";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * 빌드인가(`next build`·`next start`). dev 서버는 false다.
+ *
+ * 아래 standalone 설정을 dev에서 켜지 않으려고 가른다 — 이유는 그 주석에 있다.
+ * `next build`가 NODE_ENV를 production으로 두고 config를 읽으므로 CI에서 따로
+ * 넘겨줄 값은 없다.
+ */
+const isBuild = process.env.NODE_ENV === "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /**
@@ -15,12 +24,22 @@ const nextConfig = {
    * 두면 `packages/*`가 추적 범위 밖이라 빠진다. 리포 루트로 올려야 workspace
    * 패키지까지 따라 들어온다.
    *
+   * 빌드일 때만 넣는 이유: `outputFileTracingRoot`는 이름과 달리 빌드 전용이
+   * 아니다. dev 서버도 이 값을 Turbopack 프로젝트 루트로 쓴다
+   * (`setup-dev-bundler.js`: `turbopack.root || outputFileTracingRoot || dir`).
+   * 그러면 감시 범위가 앱 폴더에서 리포 전체로 넓어져 `node_modules`와 양쪽
+   * `.next`(수 GB)까지 들어오고, 자기 dev 캐시 쓰기가 다시 watch 이벤트로
+   * 돌아오는 되먹임이 생겨 dev가 느려진다. `turbopack.root`를 앱 폴더로 좁히는
+   * 반대 방향은 그 아래만 resolve되는 제약이라 `packages/*`를 끊는다 (KAN-330).
+   *
    * 주의: standalone에는 `public/`과 `.next/static/`이 들어가지 않는다. CDN에
    * 따로 올리는 걸 전제한 설계라, 한 서버에서 다 서빙하려면 배포 때 손으로
    * 복사해야 한다. 빠뜨리면 CSS와 이미지가 전부 404로 뜬다.
    */
-  output: "standalone",
-  outputFileTracingRoot: path.join(appDir, "../../"),
+  ...(isBuild && {
+    output: "standalone",
+    outputFileTracingRoot: path.join(appDir, "../../"),
+  }),
 
   /**
    * same-origin BE 프록시 (KAN-271, web은 KAN-318). 브라우저가 `localhost:8080`을
