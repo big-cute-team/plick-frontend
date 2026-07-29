@@ -21,6 +21,12 @@ set -euo pipefail
 : "${SHA:?SHA 환경변수가 필요하다}"
 : "${BUCKET:?BUCKET 환경변수가 필요하다 (배포 아티팩트 S3 버킷)}"
 
+# web과 mobile 배포가 같은 인스턴스에 동시에 들어온다. 디렉터리는 서로 안 겹치지만
+# pm2는 데몬이 없을 때 두 클라이언트가 동시에 스폰을 시도하면 한쪽이 소켓을 기다리며
+# 영원히 매달릴 수 있다. 릴리스 전체가 십몇 초라 통째로 직렬화해도 손해가 없다.
+exec 9>/tmp/plick-release.lock
+flock 9
+
 ROOT="/srv/plick-$APP"
 PM2_NAME="plick-$APP"
 NEW="$ROOT/releases/$SHA"
