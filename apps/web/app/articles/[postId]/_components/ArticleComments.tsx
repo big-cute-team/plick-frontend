@@ -13,7 +13,8 @@ import { CommentsHeader } from "@/_components/CommentsHeader";
  * 서버 컴포넌트(`ArticleMain`)에서 이 덩어리만 클라로 내려온다. 카운트를 여기서
  * 들고 있는 이유: 원본(`article.commentCount`)은 서버가 렌더 때 받은 스냅샷이라
  * 방금 단 댓글이 반영되지 않는다. 등록 성공(원 댓글·답글)마다 로컬로 하나씩
- * 올린다. 답글 입력바는 각 스레드가 인라인으로 연다.
+ * 올리고, 삭제 성공마다 하나씩 내린다(BE 집계가 삭제를 빼고 센다, KAN-333).
+ * 답글 입력바는 각 스레드가 인라인으로 연다.
  *
  * @param articleId 기사 id
  * @param initialCount 서버가 받은 댓글 수 (대댓글 포함, 삭제 제외)
@@ -31,6 +32,7 @@ export function ArticleComments({
 }) {
   const [added, setAdded] = useState(0);
   const bump = () => setAdded((n) => n + 1);
+  const drop = () => setAdded((n) => n - 1);
 
   return (
     <>
@@ -44,6 +46,7 @@ export function ArticleComments({
         articleId={articleId}
         initial={initialComments}
         onPosted={bump}
+        onDeleted={drop}
       />
     </>
   );

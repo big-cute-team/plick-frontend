@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { ApiError } from "@plick/core/client";
 import { avatarInitials, formatCount } from "@plick/domain/format";
 import { formatRelativeTime } from "@plick/domain/format";
 import type { ArticleComment } from "@plick/domain/types";
 import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useCommentLike } from "@/_hooks/useCommentLike";
+import { useDeleteComment } from "@/_hooks/useDeleteComment";
+import { useAuth } from "./AuthProvider";
 import { CommentComposer } from "./CommentComposer";
+import { CommentEditForm } from "./CommentEditForm";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 
 /**
@@ -23,15 +28,18 @@ import { LoginPromptDialog } from "./LoginPromptDialog";
  *
  * @param articleId 이 댓글이 달린 기사(릴) id — 인라인 답글 작성에 쓴다
  * @param onPosted 답글 등록 성공 시 호출 — 호출부가 헤더 카운트를 올리는 데 쓴다
+ * @param onDeleted 댓글(답글) 삭제 성공 시 호출 — 호출부가 헤더 카운트를 내리는 데 쓴다
  */
 export function CommentThread({
   comment,
   articleId,
   onPosted,
+  onDeleted,
 }: {
   comment: ArticleComment;
   articleId: string;
   onPosted?: () => void;
+  onDeleted?: () => void;
 }) {
   const [replying, setReplying] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -44,6 +52,7 @@ export function CommentThread({
         comment={comment}
         articleId={articleId}
         onReply={() => setReplying(true)}
+        onDeleted={onDeleted}
       />
 
       {replying && (
@@ -81,6 +90,7 @@ export function CommentThread({
             comment={reply}
             articleId={articleId}
             reply
+            onDeleted={onDeleted}
           />
         ))}
     </div>
@@ -98,21 +108,34 @@ export function CommentThread({
  * 최상위 아래로 평탄화되므로 화면은 1단까지만 연다(KAN-303, be-verify 확인).
  * 좋아요는 원 댓글과 대댓글이 같은 엔드포인트를 쓰므로 양쪽에 그대로 둔다.
  *
+ * 내 댓글이면 수정·삭제 버튼을 얹는다(KAN-333). 목록 응답에 작성자 식별 필드가
+ * 없어 닉네임으로 대조한다 — 온보딩·프로필 수정에서 BE가 중복 닉네임을 거절하므로
+ * 앱 수준에선 유일하고, 오판해도 BE가 403 `COMMENT_FORBIDDEN`으로 막는다.
+ * 응답에 `isMine` 필드를 넣는 건 BE에 요청할 항목으로 남겨 뒀다.
+ *
  * @param articleId - 이 댓글이 달린 기사(릴) id — 좋아요 캐시 갱신에 쓴다
  * @param reply - 답글이면 들여쓰기 + 작은 아바타로 렌더
  * @param onReply - "답글" 클릭 콜백. 없거나 답글 행이면 버튼을 그리지 않는다
+ * @param onDeleted - 삭제 성공 콜백. 호출부가 헤더 카운트를 내리는 데 쓴다
  */
 function CommentItem({
   comment,
   articleId,
   reply,
   onReply,
+  onDeleted,
 }: {
   comment: ArticleComment;
   articleId: string;
   reply?: boolean;
   onReply?: () => void;
+  onDeleted?: () => void;
 }) {
+  const { nickname } = useAuth();
+  const [editing, setEditing] = useState(false);
+
+  const mine = nickname !== null && comment.nickname === nickname;
+
   return (
     <div className={`flex gap-2.5 ${reply ? "pl-10" : ""}`}>
       <span
@@ -138,6 +161,12 @@ function CommentItem({
           <p className="text-body text-text-4 leading-body">
             삭제된 댓글이에요.
           </p>
+        ) : editing ? (
+          <CommentEditForm
+            comment={comment}
+            articleId={articleId}
+            onClose={() => setEditing(false)}
+          />
         ) : (
           <>
             <p className="text-body text-text-2 leading-body">
@@ -154,11 +183,113 @@ function CommentItem({
                   답글
                 </button>
               )}
+              {mine && (
+                <CommentOwnerActions
+                  comment={comment}
+                  articleId={articleId}
+                  onEdit={() => setEditing(true)}
+                  onDeleted={onDeleted}
+                />
+              )}
             </div>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 내 댓글의 수정·삭제 버튼 묶음 (KAN-333, 모바일과 동시 구현) — 액션 줄의 답글
+ * 버튼 옆에 붙는다. 원 댓글과 대댓글이 같이 쓴다(수정·삭제 모두 같은 엔드포인트).
+ *
+ * 수정은 상위(`CommentItem`)의 편집 모드만 켠다 — 폼과 저장 뮤테이션은
+ * `CommentEditForm` 몫이다. 삭제는 오클릭 방지로 확인 팝업을 먼저 띄우고,
+ * 실패 문구는 팝업 안에 남겨 바로 다시 시도할 수 있게 한다. 토큰 만료
+ * (401 `AUTH_REQUIRED`)만 팝업을 닫고 로그인 유도로 돌린다.
+ *
+ * @param articleId 이 댓글이 달린 기사(릴) id — 목록 캐시 갱신에 쓴다
+ * @param onEdit "수정" 클릭 콜백 — 상위가 본문을 인라인 폼으로 바꾼다
+ * @param onDeleted 삭제 성공 콜백 — 호출부가 헤더 카운트를 내리는 데 쓴다
+ */
+function CommentOwnerActions({
+  comment,
+  articleId,
+  onEdit,
+  onDeleted,
+}: {
+  comment: ArticleComment;
+  articleId: string;
+  onEdit: () => void;
+  onDeleted?: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { mutate, isPending } = useDeleteComment(articleId);
+
+  function handleDelete() {
+    setError(null);
+    mutate(comment.id, {
+      onSuccess: () => {
+        setConfirming(false);
+        onDeleted?.();
+      },
+      onError: (err) => {
+        if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
+          setConfirming(false);
+          setNeedsLogin(true);
+          return;
+        }
+        // BE 메시지가 이미 사용자용 한국어다(예: "본인 댓글만 수정·삭제할 수 있습니다.")
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "댓글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+        );
+      },
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="text-caption text-text-4 hover:text-text-3 focus-visible:outline-accent rounded font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        수정
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setError(null);
+          setConfirming(true);
+        }}
+        className="text-caption text-text-4 hover:text-text-3 focus-visible:outline-accent rounded font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        삭제
+      </button>
+
+      {confirming && (
+        <ConfirmDialog
+          title="댓글을 삭제할까요?"
+          description="삭제한 댓글은 되돌릴 수 없어요."
+          confirmLabel="삭제"
+          pending={isPending}
+          error={error}
+          onConfirm={handleDelete}
+          onClose={() => setConfirming(false)}
+        />
+      )}
+
+      {needsLogin && (
+        <LoginPromptDialog
+          onClose={() => setNeedsLogin(false)}
+          description="댓글 삭제는 로그인한 사용자만 할 수 있어요."
+        />
+      )}
+    </>
   );
 }
 

@@ -122,6 +122,7 @@ export function ReelDetailSheet({
           <CommentList
             articleId={reel.id}
             onPosted={() => setAddedComments((n) => n + 1)}
+            onDeleted={() => setAddedComments((n) => n - 1)}
           />
         </div>
       </div>

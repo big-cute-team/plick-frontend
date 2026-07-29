@@ -149,6 +149,7 @@ export function ReelDetailPanel({
               <CommentList
                 articleId={rendered.id}
                 onPosted={() => setAddedComments((n) => n + 1)}
+                onDeleted={() => setAddedComments((n) => n - 1)}
               />
             </div>
           </div>

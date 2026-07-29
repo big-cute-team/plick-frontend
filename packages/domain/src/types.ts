@@ -375,6 +375,22 @@ export type CreateCommentResult =
   | { ok: false; status: number; code: string; message: string };
 
 /**
+ * 댓글 수정 서버 액션의 결과. 값으로 돌려주는 이유는 {@link CreateCommentResult}와
+ * 같다. 성공이면 BE가 돌려준 수정 반영본 한 건(`isEdited: true`)이 온다.
+ */
+export type UpdateCommentResult =
+  | { ok: true; comment: ArticleComment }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
+ * 댓글 삭제 서버 액션의 결과. BE가 성공 시 `data: null`만 주므로 실을 값이 없다 —
+ * 삭제 후 목록 반영(tombstone)은 클라 캐시가 직접 한다.
+ */
+export type DeleteCommentResult =
+  | { ok: true }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
  * 좋아요 한 건의 표시 상태. 낙관적 갱신도 롤백도 이 덩어리를 통째로 바꾼다.
  *
  * 기사(릴)와 댓글은 엔드포인트가 다르지만 계약이 같다 — 등록·취소 모두 멱등이고
