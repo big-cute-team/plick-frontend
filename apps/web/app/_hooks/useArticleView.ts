@@ -7,7 +7,7 @@ import { useAuth } from "@/_components/AuthProvider";
 /**
  * 이번 브라우저 세션에서 이미 조회를 보낸 기사 id.
  *
- * 모듈 수준에 두는 이유는 릴스 때문이다. 릴은 앞뒤로 넘길 때마다 같은 슬라이드가
+ * 모듈 수준에 두는 이유는 릴스 때문이다. 릴은 앞뒤로 넘길 때마다 같은 릴이
  * 다시 활성이 되고, 기사 세부도 뒤로 갔다 다시 들어올 수 있다. 컴포넌트 안에
  * 두면 그때마다 초기화돼 같은 요청이 반복해서 나간다. 하드 리로드하면 사라지는데,
  * 그게 곧 "이번 세션"의 정의라 의도한 수명이다.
@@ -17,7 +17,8 @@ import { useAuth } from "@/_components/AuthProvider";
 const recorded = new Set<string>();
 
 /**
- * 기사·릴을 봤다고 서버에 기록한다 (KAN-310). 렌더에 관여하지 않는 부수효과 전용 훅이다.
+ * 기사·릴을 봤다고 서버에 기록한다 (모바일 `useArticleView` 복제, KAN-332).
+ * 렌더에 관여하지 않는 부수효과 전용 훅이다.
  *
  * 비로그인이면 아무것도 하지 않는다 — 보호 API라 401만 쌓이고 익명 조회수도 없다.
  * 로그인 여부는 서버가 심어 준 `AuthProvider`로 읽는다(쿠키가 HttpOnly라 클라가
@@ -33,7 +34,7 @@ const recorded = new Set<string>();
  * 오늘 두 번째로 들어온 사람에게 +1을 보여주면 새로고침에서 도로 내려간다.
  *
  * @param articleId 기사(릴) id
- * @param active 지금 보고 있는가. 릴스는 활성 슬라이드가 될 때만 true로 넘긴다.
+ * @param active 지금 보고 있는가. 릴스는 활성 릴일 때만 true로 넘긴다.
  *   기사 세부처럼 화면 자체가 곧 조회인 곳은 기본값(true)을 쓴다
  */
 export function useArticleView(articleId: string, active = true) {
