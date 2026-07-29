@@ -8,6 +8,7 @@ import { SiteHeader } from "@/_components/SiteHeader";
 import { getAccessToken } from "@/_services/session";
 import { ArticleMain } from "./_components/ArticleMain";
 import { ArticleSidebar } from "./_components/ArticleSidebar";
+import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
 /**
  * 데스크톱 기사 세부 페이지 (퍼블리싱 KAN-233, API 연결 KAN-322, 댓글 KAN-329) —
@@ -23,6 +24,9 @@ import { ArticleSidebar } from "./_components/ArticleSidebar";
  * 안 심으면 목록 훅이 마운트되자마자 같은 페이지를 또 받는다(이중 페치).
  * 댓글 fetch만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다 — 목록이
  * 클라에서 다시 받으면서 에러·재시도를 보여준다.
+ *
+ * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
+ * 뒤에 보낸다({@link ArticleViewTracker}).
  *
  * 사이드바(관련·실시간 인기)와 본문 밑 추천 행은 대응 BE 엔드포인트가 아직 없어
  * 자리만 두고 준비 중 문구를 그린다 — 모바일 KAN-283과 같은 원칙으로, 추천
@@ -62,6 +66,8 @@ export default async function ArticleDetailPage({
 
   return (
     <>
+      {/* 진입을 조회로 기록한다 (KAN-332). 그리는 것 없는 클라 경계 */}
+      <ArticleViewTracker articleId={articleResult.value.id} />
       <SiteHeader />
       <main>
         <PageContainer className="pt-6 pb-16">

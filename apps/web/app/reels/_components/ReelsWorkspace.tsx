@@ -7,6 +7,7 @@ import { ApiError } from "@plick/core/client";
 import { reelKeys } from "@plick/core/reelKeys";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useActiveReel } from "@/_hooks/useActiveReel";
+import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { ReelDetailPanel } from "./ReelDetailPanel";
 import { ReelSkeleton } from "./ReelSkeleton";
@@ -52,8 +53,14 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
   } = useReelsFeed(initial);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
+  const activeReel = reels[activeIndex];
   /** 지금 보고 있는 릴 뒤로 남은 장수 */
   const remaining = reels.length - 1 - activeIndex;
+
+  /* 활성 릴이 되면 조회로 기록한다 (KAN-332). 모바일은 릴마다 active prop을 이미
+     들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
+     뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
+  useArticleView(activeReel?.id ?? "", activeReel !== undefined);
 
   useEffect(() => {
     if (
@@ -128,7 +135,7 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
         />
       )}
       <ReelDetailPanel
-        reel={detailOpen ? (reels[activeIndex] ?? null) : null}
+        reel={detailOpen ? (activeReel ?? null) : null}
         onClose={() => setDetailOpen(false)}
       />
     </div>
