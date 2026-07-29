@@ -6,7 +6,10 @@ import { formatRelativeTime } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
+import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
+import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
+import { useReelLike } from "@/_hooks/useReelLike";
 import { ReelActionRail } from "./ReelActionRail";
 
 /**
@@ -33,6 +36,9 @@ import { ReelActionRail } from "./ReelActionRail";
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 로고를
  * 뺀다. 기자도 없을 수 있어 그때는 발행 시각만 남는다.
  *
+ * 좋아요는 여기서 들고 있다 (KAN-330). 레일이 데스크톱·모바일 뷰로 두 벌 붙으므로
+ * 훅과 비로그인 팝업을 이 층에 한 번만 두고 두 레일이 같은 상태를 그린다.
+ *
  * @param reel - 표시할 릴
  * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
  */
@@ -46,6 +52,7 @@ export function ReelItem({
   const cardRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLButtonElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
+  const like = useReelLike(reel);
 
   /** 임베드 영역의 아래선(제목 윗선까지)까지의 거리(px, 카드 바닥 기준) */
   const [embedBottom, setEmbedBottom] = useState(0);
@@ -144,6 +151,7 @@ export function ReelItem({
         {/* 모바일 전용: 레일을 카드 안 우측 하단에 오버레이 */}
         <ReelActionRail
           reel={reel}
+          onLike={like.toggle}
           onOpenComments={onOpenDetail}
           className="absolute right-3 bottom-4 lg:hidden"
         />
@@ -153,9 +161,17 @@ export function ReelItem({
       <ReelActionRail
         reel={reel}
         tone="surface"
+        onLike={like.toggle}
         onOpenComments={onOpenDetail}
         className="max-lg:hidden"
       />
+
+      {like.needsLogin && (
+        <LoginPromptDialog
+          onClose={like.dismissLogin}
+          description={LIKE_LOGIN_PROMPT}
+        />
+      )}
     </div>
   );
 }

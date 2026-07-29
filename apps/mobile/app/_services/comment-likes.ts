@@ -20,8 +20,8 @@
 
 import { cookies } from "next/headers";
 import { ApiError, apiFetch } from "@plick/core/client";
+import type { ToggleLikeResult } from "@plick/domain/types";
 import { AUTH_COOKIES } from "@/_constants/api";
-import type { ToggleLikeResult } from "@/_types/likes";
 
 /** 두 액션이 공유하는 호출부 — 메서드만 다르고 인증·에러 처리가 같다. */
 async function toggleLike(

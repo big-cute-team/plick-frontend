@@ -2,7 +2,7 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { TagChips } from "@plick/ui/TagChips";
-import { HeartMiniIcon, LinkOutIcon, SendIcon } from "@plick/ui/icons";
+import { LinkOutIcon, SendIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { ArticleComments } from "./ArticleComments";
+import { ArticleLikeButton } from "./ArticleLikeButton";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -28,8 +29,9 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * (현재 발행 기사의 기본 상태) 미디어 없이 텍스트만 흐른다. 본문은 문단 배열이
  * 아니라 긴 요약 하나라 줄바꿈으로 갈라 문단을 만든다.
  *
- * 저장 버튼은 뺐다 — BE 계약에 없다(모바일 KAN-283과 같은 판단). 좋아요는 상세
- * 응답값을 그리기만 하고, 누르는 동작은 좋아요 뮤테이션 이식 티켓 몫이다.
+ * 저장 버튼은 뺐다 — BE 계약에 없다(모바일 KAN-283과 같은 판단). 좋아요는
+ * KAN-330에서 눌리게 됐다 — 상세 응답의 `likedByMe`·`likeCount`를 초기값으로 받아
+ * `ArticleLikeButton`(클라 경계)이 토글한다. 이 파일은 서버 컴포넌트로 남는다.
  * 댓글은 KAN-329에서 붙였다 — 헤더·입력바·목록은 클라 경계(`ArticleComments`)로
  * 내려가고, 이 파일은 서버가 미리 받아 둔 첫 페이지를 넘겨주기만 한다.
  *
@@ -121,19 +123,12 @@ export function ArticleMain({
       {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (모바일과 같은 자리) */}
       <SuggestedArticles articles={suggested} />
 
-      {/* 액션 — 좋아요는 아직 표시 전용이라 누른 상태(liked)일 때만 강조색이다 */}
+      {/* 액션 — 좋아요만 클라 경계로 떼어 낸다(누른 상태일 때 강조색) */}
       <div className="border-border mt-4 flex flex-wrap items-center gap-2.5 border-b pb-4">
-        <button
-          type="button"
-          className={`text-body rounded-pill focus-visible:outline-accent flex h-9 items-center gap-1.5 border px-4 font-bold hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 ${
-            article.liked
-              ? "bg-accent-tint border-accent-border text-accent"
-              : "bg-elevate-2 border-border text-text-2"
-          }`}
-        >
-          <HeartMiniIcon size={15} filled={article.liked} />
-          {formatCount(article.likeCount)}
-        </button>
+        <ArticleLikeButton
+          articleId={article.id}
+          initial={{ liked: article.liked, likeCount: article.likeCount }}
+        />
         <button
           type="button"
           className="bg-elevate-2 border-border text-text-2 text-body rounded-pill hover:border-border-strong hover:text-text focus-visible:outline-accent flex h-9 items-center gap-1.5 border px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"

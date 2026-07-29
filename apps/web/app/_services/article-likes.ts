@@ -2,15 +2,16 @@
 
 /**
  * @file 기사 좋아요 등록·취소 서버 액션
- * (KAN-308, `POST`·`DELETE /api/v1/articles/{articleId}/like`).
+ * (KAN-308, web 이식 KAN-330, `POST`·`DELETE /api/v1/articles/{articleId}/like`).
  *
  * 보호 API라 HttpOnly 쿠키의 access 토큰을 Bearer로 실어야 하는데 클라는 그
  * 쿠키를 못 읽으므로 서버 액션을 경유한다. 댓글 작성(`comment-actions.ts`)과
- * 같은 이유·같은 모양이다.
+ * 같은 이유·같은 모양이다. 쿠키 이름이 앱에 박혀 있어 승격하지 않고 모바일
+ * `_services/article-likes.ts`를 복제했다.
  *
  * 티켓 제목은 `GET, DELETE`지만 실제 계약은 `POST, DELETE`다 — 상태 조회 GET은
  * 아예 없고(핸들러가 없어 500이 온다), 초기 좋아요 여부는 기사 조회 응답의
- * `likedByMe`로 받는다.
+ * `likedByMe`로 받는다(모바일 KAN-308에서 확인한 계약, ADR 0044).
  *
  * 두 메서드 모두 멱등이다. 이미 누른 기사에 POST를 또 보내도, 안 누른 기사에
  * DELETE를 보내도 409가 아니라 200에 현재 카운트가 온다. 그래서 낙관적 갱신이

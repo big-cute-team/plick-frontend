@@ -7,14 +7,14 @@ import type { LikeState, ToggleLikeResult } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
 
 /**
- * 좋아요 토글의 공통 뼈대 (KAN-308에서 기사·릴용으로 짜고 KAN-309에서 댓글이
- * 두 번째 사용처가 되면서 떼어냈다). 도메인별 훅(`useArticleLike`·
- * `useCommentLike`)이 서버 액션과 원본 갱신만 물려 쓴다.
+ * 좋아요 토글의 공통 뼈대 (KAN-308, web 이식 KAN-330). 도메인별 훅
+ * (`useArticleLike`)이 서버 액션과 원본 갱신만 물려 쓴다. 훅은 승격 후보 목록에
+ * 없어 모바일 `_hooks/useLikeToggle.ts`를 복제했다.
  *
  * 상태를 이 훅이 들고 있지 않고 `onChange`로 호출부에 되돌려주는 이유는 좋아요의
- * 원본이 화면마다 다른 데 있다. 릴스와 댓글은 쿼리 캐시가 원본이라 캐시를 고쳐야
- * 넘겼다 돌아와도 유지되고, 기사 세부는 서버가 내려준 props가 원본이라 컴포넌트
- * state로 받는다. 훅이 자기 state를 들면 둘 중 하나는 원본과 어긋난다.
+ * 원본이 화면마다 다른 데 있다. 릴스는 무한 쿼리 캐시가 원본이라 캐시를 고쳐야
+ * 스크롤로 벗어났다 돌아와도 유지되고, 기사 세부는 서버가 내려준 props가 원본이라
+ * 컴포넌트 state로 받는다. 훅이 자기 state를 들면 둘 중 하나는 원본과 어긋난다.
  *
  * 낙관적 갱신은 누르는 즉시 `onChange`로 하트를 채우고 카운트를 ±1 한다. 응답이
  * 오면 BE가 계산한 카운트로 덮는다 — 그 사이 다른 사람이 누른 것까지 반영된다.
@@ -91,7 +91,7 @@ export function useLikeToggle({
       mutate(!state.liked);
     },
     isPending,
-    /** 로그인 유도 팝업을 띄워야 하는가 (비로그인 탭 또는 401) */
+    /** 로그인 유도 팝업을 띄워야 하는가 (비로그인 클릭 또는 401) */
     needsLogin,
     dismissLogin: () => setNeedsLogin(false),
   };

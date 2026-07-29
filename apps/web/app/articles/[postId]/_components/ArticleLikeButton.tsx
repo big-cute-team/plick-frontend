@@ -9,10 +9,10 @@ import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useArticleLike } from "@/_hooks/useArticleLike";
 
 /**
- * 기사 세부 좋아요 버튼 (KAN-308) — 본문 밑 액션 줄의 알약 버튼.
+ * 기사 세부 좋아요 버튼 (KAN-308, web 이식 KAN-330) — 본문 밑 액션 줄의 알약 버튼.
  *
  * 눌렀을 때만 강조색이고 기본은 이웃 공유 버튼과 같은 중립 톤이다. 서버 컴포넌트인
- * `ArticleBody`에서 이 버튼만 클라 경계로 떼어 냈다 — 본문 전체를 클라로 내리면
+ * `ArticleMain`에서 이 버튼만 클라 경계로 떼어 냈다 — 본문 전체를 클라로 내리면
  * 문단·추천 카드까지 번들에 실린다.
  *
  * 상태를 여기 state로 든다. 릴스와 달리 기사 상세엔 클라 캐시가 없고 서버가 준
@@ -43,7 +43,7 @@ export function ArticleLikeButton({
           state.liked
             ? "bg-accent-tint border-accent-border text-accent"
             : "bg-elevate-2 border-border text-text-2"
-        } text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70`}
+        } text-body rounded-pill focus-visible:outline-accent flex h-9 items-center gap-1.5 border px-4 font-bold hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2`}
       >
         <HeartMiniIcon size={15} filled={state.liked} />
         {formatCount(state.likeCount)}
