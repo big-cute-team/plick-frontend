@@ -153,7 +153,7 @@ GitHub Actions가 장수 액세스 키 없이 AWS 롤을 빌려 쓰는 신뢰 �
 
 - IAM → 역할 생성 → 웹 자격 증명 → 공급자 `token.actions.githubusercontent.com`,
   Audience `sts.amazonaws.com`
-- GitHub 조직 `big-cute-team`, 리포지토리 `frontend`, 브랜치 `main`.
+- GitHub 조직 `big-cute-team`, 리포지토리 `plick-frontend`, 브랜치 `main`.
   배포가 main에서만 돌므로 main으로 제한한다
 - 역할 이름 `plick-frontend-deploy`, 권한은 아래 인라인 정책으로
 
@@ -450,7 +450,7 @@ pm2 restart plick-mobile --update-env
 
 **Configure AWS credentials 스텝에서 AssumeRole 실패** — 셋 중 하나다. 워크플로에
 `permissions: id-token: write`가 있는지, 배포 롤 신뢰 정책의 조직·리포·브랜치가
-`big-cute-team/frontend`의 `main`과 정확히 일치하는지, ID 제공업체 Audience가
+`big-cute-team/plick-frontend`의 `main`과 정확히 일치하는지, ID 제공업체 Audience가
 `sts.amazonaws.com`인지 순서대로 본다.
 
 **Release 스텝에서 SSM 명령이 Failed** — 스텝 로그에 서버 stdout·stderr가 같이 찍힌다.

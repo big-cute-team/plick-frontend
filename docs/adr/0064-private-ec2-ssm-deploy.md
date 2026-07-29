@@ -31,7 +31,9 @@ EC2가 직접 연결될 필요가 없어진다. SSM은 에이전트가 EC2 안�
 인바운드 포트를 하나도 안 열어도 된다. 보안그룹에서 22번이 아예 없어졌다.
 
 인증은 GitHub OIDC로 했다. IAM에 GitHub의 OIDC 공급자(`token.actions.githubusercontent.com`)를
-등록하고, `big-cute-team/frontend`의 main 브랜치에서만 assume할 수 있는 배포 롤을 만들었다.
+등록하고, `big-cute-team/plick-frontend`의 main 브랜치에서만 assume할 수 있는 배포 롤을 만들었다.
+로컬 git remote가 옛 이름(`frontend`)을 물고 있어서 신뢰 정책에 옛 이름을 넣을 뻔했다.
+리포 이름이 바뀌면 OIDC 토큰의 sub 클레임은 새 이름으로 나오므로 신뢰 정책도 새 이름이어야 한다.
 장수 액세스 키를 시크릿에 넣는 방식은 유출되면 끝이라 처음부터 배제했다. OIDC는 워크플로가
 돌 때마다 GitHub이 서명한 단기 토큰을 STS에 내밀고 몇 분짜리 자격을 받아 오는 구조다.
 워크플로에 `permissions: id-token: write`를 줘야 이 토큰이 발급된다는 걸 잊기 쉽다.
