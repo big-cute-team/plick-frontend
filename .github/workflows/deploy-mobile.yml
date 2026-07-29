@@ -1,0 +1,77 @@
+name: Deploy Mobile
+
+# develop에 모바일 관련 변경이 들어오면 EC2로 배포한다.
+# workflow_dispatch는 코드 변경 없이 다시 돌려야 할 때 쓴다. API_BASE_URL은
+# 빌드 때 산출물에 박히는 값이라, BE 주소가 바뀌면 시크릿만 고치고 여기서 재실행한다.
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "scripts/deploy/**"
+      - ".github/workflows/deploy-mobile.yml"
+  workflow_dispatch:
+
+# 배포는 중간에 끊기면 서버가 어중간한 상태로 남는다. 새 실행이 와도 취소하지 않고 줄 세운다.
+concurrency:
+  group: deploy-mobile
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build · Ship · Reload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 러너(ubuntu x86_64)에서 빌드해야 한다. 산출물에는 sharp 같은 플랫폼 종속
+      # 네이티브 바이너리가 딸려 들어가서, 맥에서 빌드한 걸 올리면 EC2에서 깨진다.
+      - name: Build
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: pnpm --filter mobile build
+
+      # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
+      # 한 서버에서 다 서빙하므로 여기서 채워 넣는다. 빠뜨리면 CSS·이미지가 404다.
+      - name: Assemble standalone
+        run: |
+          cp -r apps/mobile/.next/static apps/mobile/.next/standalone/apps/mobile/.next/static
+          cp -r apps/mobile/public apps/mobile/.next/standalone/apps/mobile/public
+          tar -C apps/mobile/.next/standalone -czf mobile.tar.gz .
+
+      - name: Prepare SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload artifact
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: scp -i ~/.ssh/deploy.pem mobile.tar.gz "ubuntu@$EC2_HOST:/tmp/mobile-${{ github.sha }}.tar.gz"
+
+      # 릴리스 교체·기동·헬스체크·롤백은 서버 쪽 스크립트가 맡는다.
+      # 표준입력으로 흘려보내므로 EC2에 스크립트를 미리 둘 필요가 없다.
+      - name: Release
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: ssh -i ~/.ssh/deploy.pem "ubuntu@$EC2_HOST" "SHA=${{ github.sha }} bash -s" < scripts/deploy/mobile-release.sh
