@@ -11,15 +11,22 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@plick/core": "workspace:*",
+    "@plick/domain": "workspace:*",
     "@plick/ui": "workspace:*",
+    "@tanstack/react-query": "^5.101.4",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "next": "16.2.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-tweet": "^3.3.1",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@plick/eslint-config": "workspace:*",
-    "@plick/typescript-config": "workspace:*",
     "@plick/tokens": "workspace:*",
+    "@plick/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",

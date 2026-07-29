@@ -1,0 +1,76 @@
+import type { ReactNode } from "react";
+import { ChevronMiniIcon, HelpCircleIcon } from "@plick/ui/icons";
+import { ProfileCard } from "@plick/ui/ProfileCard";
+import { SettingRow } from "@plick/ui/SettingRow";
+import { SiteHeader } from "@/_components/SiteHeader";
+import { TEAMS } from "@plick/domain/constants";
+import { getMyProfile } from "@/_services/profile";
+import { APP_VERSION_LABEL } from "@/_constants/me";
+import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
+import { LoginPromptCard } from "./_components/LoginPromptCard";
+import { LogoutButton } from "./_components/LogoutButton";
+
+/**
+ * 데스크톱 마이페이지 (KAN-244 → KAN-319 API 연결) — GNB + 중앙 정렬 좁은 컬럼
+ * (max-w-narrow). 프로필은 `GET /users/me`로 읽는다(모바일 KAN-267과 같은 계약) —
+ * null이면 비로그인/토큰 무효로 보고 로그인 유도 카드. 응원팀은 다중 선택이라
+ * 목록 카드로 보여준다. 프로필 카드의 보조 줄은 실계약에 핸들이 없어 이메일로
+ * 대체한다(카카오 가입은 이메일이 없어 줄을 숨긴다).
+ */
+export default async function MyPage() {
+  const profile = await getMyProfile();
+
+  return (
+    <>
+      <SiteHeader />
+      <main>
+        <div className="max-w-narrow mx-auto w-full px-6 pt-9 pb-22">
+          <h1 className="text-hero text-text tracking-heading font-extrabold">
+            MY
+          </h1>
+
+          <div className="gap-gap-lg flex flex-col pt-5.5">
+            {profile ? (
+              <>
+                <ProfileCard
+                  nickname={profile.nickname ?? "닉네임 미설정"}
+                  handle={profile.email ?? undefined}
+                  href="/me/edit"
+                />
+                <FavoriteTeamsCard
+                  teams={profile.myTeams.map((code) => TEAMS[code])}
+                />
+              </>
+            ) : (
+              <LoginPromptCard />
+            )}
+
+            <CardSection>
+              <SettingRow
+                pressable
+                icon={<HelpCircleIcon />}
+                label="FAQ"
+                trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
+              />
+            </CardSection>
+
+            {profile && <LogoutButton />}
+
+            <p className="text-caption text-text-4 text-center">
+              {APP_VERSION_LABEL}
+            </p>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
+
+/** 설정 줄 하나를 감싸는 카드 섀시 — 이 화면에서만 쓰는 사적 헬퍼. */
+function CardSection({ children }: { children: ReactNode }) {
+  return (
+    <section className="bg-elevate-2 border-border rounded-card overflow-hidden border">
+      {children}
+    </section>
+  );
+}

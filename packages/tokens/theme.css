@@ -28,6 +28,15 @@
   --plk-accent: #2fd97f;
   --plk-on-accent: #08130c;
   --plk-danger: #f87171;
+  /* 상태 보조색 — 루머 단계·기자 티어 배지 (KAN-281). info=파랑, warn=노랑,
+   * confirmed=보라. 루머 단계 넷이 서로 구분되게 accent(초록)까지 넷을 나눠 쓴다. */
+  --plk-info: #60a5fa;
+  --plk-warn: #fbbf24;
+  --plk-confirmed: #a78bfa;
+
+  /* 릴스 배경 — 사진·임베드 뒤를 채우는 단일 색. 릴마다 팀 그라데이션으로
+   * 제각각이던 걸 하나로 통일한다 (KAN-296). 라이트에서 흰색으로 뒤집힌다. */
+  --plk-reel-bg: #151e26;
 
   /* media (기사 썸네일/영상 placeholder) */
   --plk-media-bg: #0b101d;
@@ -36,13 +45,33 @@
   --plk-media-on-dim: rgba(255, 255, 255, 0.55);
   --plk-media-chip: rgba(255, 255, 255, 0.14);
   --plk-media-chip-border: rgba(255, 255, 255, 0.22);
+  /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관, 라이트 오버라이드 없음).
+   * 그라데이션에서는 color-mix(in srgb, var(--plk-scrim) N%, transparent)로 알파를 조절한다. */
+  --plk-scrim: #05080e;
 
   /* accent 파생 (칩/배지 배경·테두리) — accent를 따라 테마 전환 */
   --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 16%, transparent);
   --plk-accent-border: color-mix(in srgb, var(--plk-accent) 40%, transparent);
 
+  /* info·warn·confirmed 파생 — 사용 시점에 var()가 풀려 라이트 오버라이드를 따라간다 */
+  --plk-info-tint: color-mix(in srgb, var(--plk-info) 16%, transparent);
+  --plk-info-border: color-mix(in srgb, var(--plk-info) 40%, transparent);
+  --plk-warn-tint: color-mix(in srgb, var(--plk-warn) 16%, transparent);
+  --plk-warn-border: color-mix(in srgb, var(--plk-warn) 40%, transparent);
+  --plk-confirmed-tint: color-mix(
+    in srgb,
+    var(--plk-confirmed) 16%,
+    transparent
+  );
+  --plk-confirmed-border: color-mix(
+    in srgb,
+    var(--plk-confirmed) 40%,
+    transparent
+  );
+
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
+  --plk-on-kakao: #191919; /* 카카오·구글 등 밝은 브랜드 버튼 위 글자 */
   --plk-team-liv: #c8102e; /* 리버풀 */
   --plk-team-tot: #132257; /* 토트넘 */
   --plk-team-ars: #ef0107; /* 아스날 */
@@ -51,7 +80,13 @@
   --plk-team-mci: #6cabdd; /* 맨시티 */
 }
 
-/* ── 라이트 (오버라이드) ───────────────────────── */
+/* ── 라이트 (오버라이드) ─────────────────────────
+ *
+ * 지금은 잠들어 있는 블록이다. 앱이 <html data-theme="dark"> 고정이고 테마 토글 UI를
+ * 걷어내서(KAN-312 후속) 이 셀렉터에 걸리는 화면이 없다. 남겨 둔 건 나중에 토글을
+ * 되살릴 때 화면을 다시 만들지 않기 위해서다 — 화면은 계속 토큰만 쓰므로 이 블록이
+ * 살아나는 순간 전체 UI가 그대로 전환된다. 색을 새로 추가할 땐 여기에도 짝을 넣는다.
+ */
 :root[data-theme="light"] {
   color-scheme: light;
 
@@ -75,6 +110,12 @@
   --plk-accent: #12a968;
   --plk-on-accent: #ffffff;
   --plk-danger: #e5484d;
+  --plk-info: #2563eb;
+  --plk-warn: #d97706;
+  --plk-confirmed: #7c3aed;
+
+  /* 릴스 배경 — 라이트에선 흰색 (KAN-296) */
+  --plk-reel-bg: #ffffff;
 
   /* media */
   --plk-media-bg: #dfe4ec;
@@ -105,7 +146,11 @@
   --color-accent: var(--plk-accent);
   --color-on-accent: var(--plk-on-accent);
   --color-danger: var(--plk-danger);
+  --color-info: var(--plk-info);
+  --color-warn: var(--plk-warn);
+  --color-confirmed: var(--plk-confirmed);
 
+  --color-reel-bg: var(--plk-reel-bg);
   --color-media: var(--plk-media-bg);
   --color-media-on: var(--plk-media-on);
   --color-media-on-dim: var(--plk-media-on-dim);
@@ -114,8 +159,15 @@
 
   --color-accent-tint: var(--plk-accent-tint);
   --color-accent-border: var(--plk-accent-border);
+  --color-info-tint: var(--plk-info-tint);
+  --color-info-border: var(--plk-info-border);
+  --color-warn-tint: var(--plk-warn-tint);
+  --color-warn-border: var(--plk-warn-border);
+  --color-confirmed-tint: var(--plk-confirmed-tint);
+  --color-confirmed-border: var(--plk-confirmed-border);
 
   --color-kakao: var(--plk-kakao);
+  --color-on-kakao: var(--plk-on-kakao);
   --color-team-liv: var(--plk-team-liv);
   --color-team-tot: var(--plk-team-tot);
   --color-team-ars: var(--plk-team-ars);
@@ -126,9 +178,52 @@
 
 /* 타이포·형태·간격 스케일 (text-body / rounded-card / p-screen 등 유틸 생성) */
 @theme {
+  /* ── 데스크톱 웹(apps/web) 스케일 ─────────────── */
+  /* 콘텐츠 최대폭 (max-w-page) — 피그마 W1 데스크톱 프레임 1200px */
+  --container-page: 1200px;
+  /* 본문 읽기 컬럼 폭 (max-w-read) — 단일 컬럼 리스트/본문(기사 등)의 중앙 정렬 폭.
+   * 피그마 W10 기사 프레임 본문 860px(px-gutter 포함). GNB(max-w-page)보다 좁다. */
+  --container-read: 860px;
+  /* 좁은 단일 컬럼 폭 (max-w-narrow) — 마이·설정처럼 폼/리스트 위주의 중앙 정렬 컬럼.
+   * 피그마 W4 마이 프레임 콘텐츠 288px(0.45 배율) → 640px. read보다 좁다. */
+  --container-narrow: 640px;
+  /* 소셜 인증 카드 폭 (max-w-auth) — 로그인·회원가입의 중앙 카드.
+   * 피그마 W7 회원가입 카드 207px(0.45 배율) → 460px. */
+  --container-auth: 460px;
+  /* 온보딩 카드 폭 (max-w-onboarding) — 닉네임·팀 선택 등 온보딩 단계 카드.
+   * 피그마 W8 닉네임 카드 252px(0.45 배율) → 560px. auth 카드보다 넓다. */
+  --container-onboarding: 560px;
+  /* 페이지 좌우 거터 (px-gutter) — 모바일 px-edge(20)의 데스크톱 대응 */
+  --spacing-gutter: 32px;
+
+  /* 데스크톱 전용 글자 크기 — 행간은 피그마 값 그대로 토큰에 내장 */
+  --text-hero: 26px; /* 핫이슈 히어로 카드 제목 */
+  --text-hero--line-height: 1.3;
+  --text-hero-sm: 18.5px; /* 핫이슈 서브 카드 제목 */
+  --text-hero-sm--line-height: 1.3;
+  --text-section: 20px; /* 섹션 헤딩 (🔥 핫이슈 등) */
+  --text-section--line-height: 1.55;
+  /* GNB 링크·사이드 위젯 제목. 'nav'는 색 토큰(--color-nav)과 충돌해 text-nav가
+   * 색 유틸로도 해석되므로 'gnb'로 명명한다(text-gnb는 순수 폰트 크기). */
+  --text-gnb: 14.5px;
+  --text-gnb--line-height: 1.55;
+  --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
+  --text-tab--line-height: 1.55;
+  /* 기사 세부(W11) 읽기 스케일 — GNB보다 넓은 max-w-page 안 기사 본문 컬럼용 */
+  --text-read-title: 32px; /* 기사 세부 제목 (H1) */
+  --text-read-title--line-height: 1.28;
+  --text-read-title--letter-spacing: -0.5px;
+  --text-read-body: 16.5px; /* 기사 본문 문단 (leading-body-lg·tracking-snug와 함께) */
+
+  /* 데스크톱 헤딩 자간 (히어로·섹션 제목) */
+  --tracking-heading: -0.3px;
+
   /* type scale */
   --text-display: 44px;
   --text-headline: 24px;
+  /* headline은 항상 이 행간·자간과 함께 쓰여 토큰에 내장 (온보딩 제목·릴 제목) */
+  --text-headline--line-height: 1.35;
+  --text-headline--letter-spacing: -0.4px;
   --text-title: 17px;
   --text-body-lg: 15px;
   --text-body: 13.5px;
@@ -140,13 +235,23 @@
   --leading-body-lg: 1.75; /* 기사 본문 */
   --leading-body: 1.55; /* 댓글 본문 */
 
+  /* letter spacing — 자간 미세값도 임의 bracket 값 대신 토큰으로 */
+  --tracking-tight: -0.2px; /* 태그라인·닉네임 (기본 스케일 오버라이드) */
+  --tracking-snug: -0.1px; /* 기사 본문 */
+  --tracking-label: 1px; /* 대문자 칩·스텝 라벨 */
+
   /* radius */
   --radius-badge: 6px;
+  --radius-tile: 10px; /* 설정 리스트 아이콘 칩 */
   --radius-control: 14px;
   --radius-card: 16px; /* input · card */
   --radius-hero: 22px;
   --radius-sheet: 26px;
   --radius-pill: 999px;
+
+  /* 사진 위 요소 가독성 그림자 (릴 액션 레일 등) — 스크림 앵커색 기반 고정 값 */
+  --drop-shadow-media: 0 1px 6px
+    color-mix(in srgb, var(--plk-scrim) 55%, transparent);
 
   /* spacing — 'screen'은 Tailwind 예약어(w-screen 등)라 edge로 명명 */
   --spacing-edge: 20px;

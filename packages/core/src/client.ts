@@ -1,0 +1,95 @@
+/**
+ * @file BE fetch 얇은 래퍼 — base 선택·JSON 파싱·봉투 해제·에러 정규화만.
+ * 도메인 변환은 각 앱의 fetcher(login 등)에서 한다. 모바일 `_apis/client.ts`로 살다
+ * web이 두 번째 사용처가 되면서 승격했다(KAN-318, ADR 0011 게이트 C).
+ *
+ * 토큰은 여기서 찾지 않는다. 서버에서 부를 때는 호출부가 쿠키를 읽어
+ * `Authorization` 헤더로 넘기고, 브라우저에서 부를 때는 HttpOnly 쿠키를 못 읽어
+ * 넘길 수가 없어서 각 앱 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
+ */
+
+/**
+ * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
+ *
+ * 각 앱 `next.config.js`의 rewrites가 이 접두어를 떼고 BE로 넘긴다. `apiFetch`가
+ * base로 쓰고, 각 앱 `proxy.ts`가 이 경로의 요청에만 Bearer 토큰을 실어 준다(KAN-308).
+ */
+export const BE_PROXY_PREFIX = "/be";
+
+/**
+ * BE 공통 응답 봉투 — 모든 엔드포인트가 `{ code, message, data }`로 감싸 온다
+ * (스웨거 `ApiResponse*` 스키마). 성공 시 `code: "OK"`.
+ */
+interface ApiEnvelope<T> {
+  code: string;
+  message: string | null;
+  data: T;
+}
+
+/** BE가 정상 범위 밖 status를 줄 때 던지는 에러 (호출부가 잡아 에러 UI로). */
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    /** BE 에러 코드 (예: `COMMON_INVALID_PARAM`). 응답 파싱 실패 시 HTTP status 문자열. */
+    public code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+/**
+ * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
+ *
+ * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
+ * 노출된다. 각 앱 `next.config.js`의 rewrites가 `/be/*`를 BE로 넘겨주므로
+ * 브라우저는 자기 오리진만 부르면 된다 (KAN-271).
+ */
+function baseUrl(): string {
+  if (typeof window === "undefined") {
+    return process.env.API_BASE_URL ?? "http://localhost:8080";
+  }
+  return BE_PROXY_PREFIX;
+}
+
+/**
+ * BE 엔드포인트를 호출하고 봉투를 벗긴 `data`를 반환한다.
+ *
+ * 토큰을 실은 호출은 서버 데이터 캐시에 넣지 않는다(KAN-308). Next의 데이터 캐시는
+ * 유저 구분 없이 URL 단위로 공유돼서, 한 번 캐시되면 같은 주소를 부른 다른 사람에게
+ * 그대로 나간다 — 좋아요 여부(`likedByMe`)처럼 사람마다 다른 값이 섞이면 남의 상태를
+ * 보게 된다. 기본 캐시 동작에 기대지 않고 인증 호출은 여기서 못박는다.
+ *
+ * @param path `/api/v1/auth/login` 처럼 앞에 슬래시를 포함한 경로
+ * @throws {ApiError} status가 2xx가 아닐 때 — BE 에러 봉투의 code·message를 담는다
+ */
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const res = await fetch(`${baseUrl()}${path}`, {
+    ...init,
+    headers,
+    ...(headers.has("Authorization") ? { cache: "no-store" as const } : {}),
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as Partial<
+      ApiEnvelope<unknown>
+    > | null;
+    throw new ApiError(
+      res.status,
+      body?.code ?? String(res.status),
+      body?.message ?? `${res.status} ${path}`,
+    );
+  }
+
+  const envelope = (await res.json()) as ApiEnvelope<T>;
+  return envelope.data;
+}

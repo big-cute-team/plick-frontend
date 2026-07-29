@@ -1,49 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ComponentType } from "react";
-import { BellIcon, HomeIcon, ReelsIcon, SearchIcon, UserIcon } from "./icons";
-
-type Tab = {
-  href: string;
-  label: string;
-  Icon: ComponentType<{ size?: number }>;
-  match: (p: string) => boolean;
-};
-
-const TABS: Tab[] = [
-  { href: "/", label: "홈", Icon: HomeIcon, match: (p) => p === "/" },
-  {
-    href: "/search",
-    label: "검색",
-    Icon: SearchIcon,
-    match: (p) => p.startsWith("/search"),
-  },
-  {
-    href: "/reels",
-    label: "릴스",
-    Icon: ReelsIcon,
-    match: (p) => p.startsWith("/reels"),
-  },
-  {
-    href: "/alerts",
-    label: "알림",
-    Icon: BellIcon,
-    match: (p) => p.startsWith("/alerts"),
-  },
-  {
-    href: "/me",
-    label: "MY",
-    Icon: UserIcon,
-    match: (p) => p.startsWith("/me"),
-  },
-];
+import { usePathname, useRouter } from "next/navigation";
+import { TABS } from "@/_constants/app";
+import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
+import { useReelsRefresh } from "@/_hooks/useReelsRefresh";
+import { useViewState } from "@/_stores/view-state";
+import type { ScreenKey } from "@/_types/app";
 
 /**
  * 하단 탭 내비게이션.
  *
  * pb에 `safe-area-inset-bottom`을 더해 홈 인디케이터/제스처 영역을 피한다.
+ *
+ * 탭은 두 가지로 동작한다 (KAN-314). 다른 탭으로 가는 건 평범한 이동이고, 그쪽
+ * 화면은 두고 온 상태 그대로 되살아난다(`useViewState`). 지금 있는 탭을 한 번 더
+ * 누르면 이동 대신 그 화면을 맨 위로 올리고 첫 페이지부터 다시 받는다 — 목록을 위로
+ * 쓸어 올리는 수고 없이 새 소식으로 갈아 끼우는, 앱에서 익숙한 손버릇이다.
+ *
+ * 같은 경로로 가는 `Link`는 원래 아무 일도 하지 않으므로, 활성 탭에서는 기본
+ * 동작을 막고 직접 처리한다.
  *
  * @param variant - `"solid"`(기본): bg-nav 배경 + 상단 보더.
  *   `"overlay"`: 릴스처럼 미디어 위에 얹는 그라데이션 스크림 탭(비활성은 흰색 dim).
@@ -54,7 +30,23 @@ export function TabBar({
   variant?: "solid" | "overlay";
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const requestTop = useViewState((state) => state.requestTop);
+  const refreshHome = useHomeRefresh();
+  const refreshReels = useReelsRefresh();
   const overlay = variant === "overlay";
+
+  /** 지금 있는 탭을 다시 눌렀을 때 — 맨 위로 올리고 새로 받는다 */
+  function retap(screen?: ScreenKey) {
+    if (!screen) {
+      // 되돌릴 자리가 없는 화면(MY)은 서버에서 다시 그려 주기만 하면 된다
+      router.refresh();
+      return;
+    }
+    requestTop(screen);
+    void (screen === "home" ? refreshHome() : refreshReels());
+  }
+
   return (
     <nav
       className={
@@ -67,17 +59,22 @@ export function TabBar({
         // 스크림은 이미지 가독성용 고정 값(테마 무관)
         ...(overlay && {
           backgroundImage:
-            "linear-gradient(to bottom, rgba(4,6,11,0) 0%, rgba(4,6,11,0.9) 45%)",
+            "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 90%, transparent) 45%)",
         }),
       }}
     >
       <ul className="flex h-14 items-stretch">
-        {TABS.map(({ href, label, Icon, match }) => {
+        {TABS.map(({ href, label, Icon, match, screen }) => {
           const active = match(pathname);
           return (
             <li key={href} className="flex-1">
               <Link
                 href={href}
+                onClick={(e) => {
+                  if (!active) return;
+                  e.preventDefault();
+                  retap(screen);
+                }}
                 className={`flex h-full flex-col items-center justify-center gap-1 ${
                   active
                     ? "text-accent"
@@ -87,7 +84,7 @@ export function TabBar({
                 } active:opacity-60`}
               >
                 <Icon size={22} />
-                <span className="text-[10px] font-bold">{label}</span>
+                <span className="text-micro font-bold">{label}</span>
               </Link>
             </li>
           );

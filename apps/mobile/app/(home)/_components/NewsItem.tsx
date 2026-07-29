@@ -1,40 +1,76 @@
 import Link from "next/link";
-import { formatCount } from "@/_lib/format";
-import { TEAMS } from "@/_lib/constants";
-import type { FeedPost } from "@/_lib/types";
-import { MediaThumb } from "@/_components/MediaThumb";
+import { formatCount } from "@plick/domain/format";
+import { TEAMS } from "@plick/domain/constants";
+import { MediaThumb } from "@plick/ui/MediaThumb";
+import { HeartMiniIcon } from "@plick/ui/icons";
+import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
+import type { ArticleCard } from "@plick/domain/types";
+import { formatRelativeTime } from "@plick/domain/format";
 
-/** "지금 올라온 소식" 리스트의 한 줄. 탭하면 릴스 딥링크로 이동한다. */
-export function NewsItem({ post }: { post: FeedPost }) {
+/**
+ * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.
+ *
+ * 사진이 null이면 썸네일 자리를 아예 그리지 않고 텍스트가 전체 폭을 쓴다
+ * (KAN-284).
+ *
+ * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
+ * 팀 이름 자리를 비운다. 기자 이름도 원문이 없으면 빠진다.
+ */
+export function NewsItem({ article }: { article: ArticleCard }) {
+  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
+
   return (
     <Link
-      href={`/reels/${post.id}`}
-      className="border-border flex items-start gap-3 border-b py-3 active:opacity-70"
+      href={`/articles/${article.id}`}
+      className="border-border gap-gap flex items-start border-b py-3 active:opacity-70"
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-caption text-icon font-extrabold">
-            {TEAMS[post.team].name}
+          {team && (
+            <span className="text-caption text-icon font-extrabold">
+              {team.name}
+            </span>
+          )}
+          <span className="text-caption text-text-4" suppressHydrationWarning>
+            {formatRelativeTime(article.publishedAt)}
           </span>
-          <span className="text-caption text-text-4">{post.timeLabel}</span>
         </div>
         <h4 className="text-body text-text mt-1 line-clamp-2 leading-snug font-bold">
-          {post.title}
+          {article.title}
         </h4>
         <p className="text-caption text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
-          <span className="text-text-2 font-semibold">
-            {post.reporter.name}
+          {article.reporter && (
+            <>
+              <span className="text-text-2 font-semibold">
+                {article.reporter.name}
+              </span>
+              <span>·</span>
+            </>
+          )}
+          {/* 목록에서는 좋아요를 보여주기만 한다 — 누르는 건 릴스와 기사 세부에서.
+              이웃한 조회·댓글과 달리 글자 없이 하트로만 표시한다 (KAN-308).
+              내가 눌렀는지는 칠하지 않는다 — 목록 응답은 익명으로 받아
+              `liked`가 늘 false다.
+              크기는 아이콘 기본값(13) 그대로 둔다. 캡션 글자(11px)에 맞춰 줄이면
+              선 두께가 1px 아래로 내려가(0.92px) 행마다 픽셀 격자에 다르게 걸려
+              어떤 줄은 하트가 흐리거나 반 픽셀 내려앉은 것처럼 보인다 */}
+          <span className="inline-flex items-center gap-0.75">
+            <HeartMiniIcon />
+            {formatCount(article.likeCount)}
           </span>
           <span>·</span>
-          <span>조회 {formatCount(post.views)}</span>
+          <span>조회 {formatCount(article.views)}</span>
           <span>·</span>
-          <span>댓글 {post.commentCount}</span>
+          <span>댓글 {article.commentCount}</span>
         </p>
       </div>
-      <MediaThumb
-        team={post.team}
-        className="rounded-control size-14 shrink-0"
-      />
+      {article.imageUrl && (
+        <MediaThumb
+          colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
+          imageUrl={article.imageUrl}
+          className="rounded-control size-14 shrink-0"
+        />
+      )}
     </Link>
   );
 }
