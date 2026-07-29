@@ -5,7 +5,10 @@ import { avatarInitials, formatCount } from "@plick/domain/format";
 import { formatRelativeTime } from "@plick/domain/format";
 import type { ArticleComment } from "@plick/domain/types";
 import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
+import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
+import { useCommentLike } from "@/_hooks/useCommentLike";
 import { CommentComposer } from "./CommentComposer";
+import { LoginPromptDialog } from "./LoginPromptDialog";
 
 /**
  * 댓글 한 스레드 — 원 댓글 + (있으면) 접힌 답글들. 기사 세부·릴 세부 패널 공용.
@@ -37,7 +40,11 @@ export function CommentThread({
 
   return (
     <div className="flex flex-col gap-3.75">
-      <CommentItem comment={comment} onReply={() => setReplying(true)} />
+      <CommentItem
+        comment={comment}
+        articleId={articleId}
+        onReply={() => setReplying(true)}
+      />
 
       {replying && (
         <CommentComposer
@@ -69,7 +76,12 @@ export function CommentThread({
 
       {expanded &&
         comment.replies.map((reply) => (
-          <CommentItem key={reply.id} comment={reply} reply />
+          <CommentItem
+            key={reply.id}
+            comment={reply}
+            articleId={articleId}
+            reply
+          />
         ))}
     </div>
   );
@@ -84,18 +96,20 @@ export function CommentThread({
  *
  * 답글 버튼은 원 댓글에만 둔다 — BE가 대댓글의 답글도 막지는 않지만 조회가
  * 최상위 아래로 평탄화되므로 화면은 1단까지만 연다(KAN-303, be-verify 확인).
- * 좋아요는 아직 표시 전용이다 — 댓글 좋아요는 별도 엔드포인트라 그 이식 티켓
- * 몫이고, 비로그인 조회에서는 `liked`가 항상 false로 온다.
+ * 좋아요는 원 댓글과 대댓글이 같은 엔드포인트를 쓰므로 양쪽에 그대로 둔다.
  *
+ * @param articleId - 이 댓글이 달린 기사(릴) id — 좋아요 캐시 갱신에 쓴다
  * @param reply - 답글이면 들여쓰기 + 작은 아바타로 렌더
  * @param onReply - "답글" 클릭 콜백. 없거나 답글 행이면 버튼을 그리지 않는다
  */
 function CommentItem({
   comment,
+  articleId,
   reply,
   onReply,
 }: {
   comment: ArticleComment;
+  articleId: string;
   reply?: boolean;
   onReply?: () => void;
 }) {
@@ -130,16 +144,7 @@ function CommentItem({
               {comment.content}
             </p>
             <div className="flex items-center gap-4 pt-0.5">
-              <span
-                className={`flex items-center gap-1.25 ${
-                  comment.liked ? "text-accent" : "text-text-4"
-                }`}
-              >
-                <HeartMiniIcon size={13} filled={comment.liked} />
-                <span className="text-caption font-semibold">
-                  {formatCount(comment.likeCount)}
-                </span>
-              </span>
+              <CommentLikeButton comment={comment} articleId={articleId} />
               {!reply && onReply && (
                 <button
                   type="button"
@@ -154,5 +159,54 @@ function CommentItem({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 댓글 좋아요 버튼 (KAN-309, web 이식 KAN-331) — 하트 + 카운트. 원 댓글과
+ * 대댓글이 같이 쓴다. 모바일과 같은 동작이고 데스크톱이라 hover·focus 스타일만 얹는다.
+ *
+ * 삭제된 댓글에는 이 버튼이 아예 안 그려진다({@link CommentItem}의 tombstone
+ * 분기). BE는 삭제된 댓글의 좋아요도 200으로 받아 주므로 막는 건 화면 몫이다.
+ *
+ * 비로그인 사용자에게도 카운트는 그대로 보여준다 — BE가 익명 조회에도 실제 값을
+ * 준다. 누르면 요청 없이 로그인 유도 팝업만 뜬다.
+ *
+ * 하트는 13px 기본 크기로 둔다. 선 아이콘이라 더 줄이면 선이 1px 아래로 내려가
+ * 줄마다 픽셀 격자에 다르게 걸려 뭉갠다(ADR 0044).
+ */
+function CommentLikeButton({
+  comment,
+  articleId,
+}: {
+  comment: ArticleComment;
+  articleId: string;
+}) {
+  const like = useCommentLike(articleId, comment);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={like.toggle}
+        aria-pressed={comment.liked}
+        aria-label={comment.liked ? "좋아요 취소" : "좋아요"}
+        className={`${
+          comment.liked ? "text-accent" : "text-text-4"
+        } focus-visible:outline-accent flex items-center gap-1.25 rounded hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2`}
+      >
+        <HeartMiniIcon size={13} filled={comment.liked} />
+        <span className="text-caption font-semibold">
+          {formatCount(comment.likeCount)}
+        </span>
+      </button>
+
+      {like.needsLogin && (
+        <LoginPromptDialog
+          onClose={like.dismissLogin}
+          description={LIKE_LOGIN_PROMPT}
+        />
+      )}
+    </>
   );
 }
