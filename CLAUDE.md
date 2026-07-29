@@ -162,6 +162,9 @@ PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
 
 ## 더 읽을 것 (필요할 때만)
 
+- 배포와 운영(EC2 + ALB, 롤백, 환경변수, 자주 막히는 곳): [docs/deploy.md](docs/deploy.md).
+  판단 근거와 작업 기록은 [ADR 0059](docs/adr/0059-mobile-ec2-deploy.md).
+  배포는 main 푸시에 걸려 있고 `API_BASE_URL`은 빌드 시점에 산출물로 굳는다
 - 레이어 폴더 구조의 배경과 판단: [ADR 0029](docs/adr/0029-layered-architecture-restructure.md)
 - 모바일 화면과 컴포넌트 구현: `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
 - 데스크톱 웹(apps/web) 화면과 컴포넌트 구현: `web-publishing` 스킬(`@plick/ui` 승격 절차 포함)
