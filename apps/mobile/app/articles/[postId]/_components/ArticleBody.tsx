@@ -6,8 +6,11 @@ import { LinkOutIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
-import type { ArticleCard, ArticleDetail } from "@plick/domain/types";
-import type { InitialCommentPage } from "@/_types/comments";
+import type {
+  ArticleCard,
+  ArticleDetail,
+  InitialCommentPage,
+} from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";

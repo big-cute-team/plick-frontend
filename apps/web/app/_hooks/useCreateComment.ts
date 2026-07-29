@@ -8,7 +8,8 @@ import type { ArticleComment, CommentPage } from "@plick/domain/types";
 import { createComment } from "@/_services/comment-actions";
 
 /**
- * 댓글·답글 작성 뮤테이션 (KAN-303). 기사 세부·릴 세부 시트 공용.
+ * 댓글·답글 작성 뮤테이션 (KAN-303, web 이식 KAN-329). 기사 세부·릴 세부 패널 공용.
+ * 모바일 `useCreateComment`의 복제다 — 훅은 승격하지 않고 앱별로 둔다.
  *
  * 낙관적 갱신은 안 한다 — BE가 201로 생성된 댓글 객체를 그대로 돌려주므로
  * 성공 응답을 목록 캐시에 끼워 넣기만 하면 된다. 원 댓글은 맨 앞에(최상위가

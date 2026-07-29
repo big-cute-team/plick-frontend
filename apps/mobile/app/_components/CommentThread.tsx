@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { avatarInitials, formatCount } from "@plick/domain/format";
 import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
+import type { ArticleComment } from "@plick/domain/types";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useCommentLike } from "@/_hooks/useCommentLike";
-import type { ArticleComment } from "@/_types/comments";
 import { formatRelativeTime } from "@plick/domain/format";
 import { CommentComposer } from "./CommentComposer";
 import { LoginPromptDialog } from "./LoginPromptDialog";

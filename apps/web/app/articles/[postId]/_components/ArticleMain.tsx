@@ -5,10 +5,13 @@ import { TagChips } from "@plick/ui/TagChips";
 import { HeartMiniIcon, LinkOutIcon, SendIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
-import type { ArticleCard, ArticleDetail } from "@plick/domain/types";
-import { CommentComposer } from "@/_components/CommentComposer";
-import { CommentsHeader } from "@/_components/CommentsHeader";
+import type {
+  ArticleCard,
+  ArticleDetail,
+  InitialCommentPage,
+} from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
+import { ArticleComments } from "./ArticleComments";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -27,18 +30,23 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *
  * 저장 버튼은 뺐다 — BE 계약에 없다(모바일 KAN-283과 같은 판단). 좋아요는 상세
  * 응답값을 그리기만 하고, 누르는 동작은 좋아요 뮤테이션 이식 티켓 몫이다.
- * 댓글도 별도 엔드포인트라 지금은 카운트와 빈 상태만 둔다.
+ * 댓글은 KAN-329에서 붙였다 — 헤더·입력바·목록은 클라 경계(`ArticleComments`)로
+ * 내려가고, 이 파일은 서버가 미리 받아 둔 첫 페이지를 넘겨주기만 한다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록. BE 추천 API가 아직 없어
  *   기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
+ * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지. 댓글 fetch가
+ *   실패했으면 없이 들어오고, 그때는 목록이 클라에서 직접 받는다.
  */
 export function ArticleMain({
   article,
   suggested = [],
+  initialComments,
 }: {
   article: ArticleDetail;
   suggested?: ArticleCard[];
+  initialComments?: InitialCommentPage;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
@@ -135,14 +143,11 @@ export function ArticleMain({
         </button>
       </div>
 
-      <CommentsHeader count={article.commentCount} className="mt-4" />
-
-      <CommentComposer className="mt-3" />
-
-      {/* 댓글 목록 — 별도 엔드포인트라 지금은 빈 상태만 둔다 */}
-      <p className="text-body text-text-4 py-8 text-center">
-        아직 댓글이 없어요
-      </p>
+      <ArticleComments
+        articleId={article.id}
+        initialCount={article.commentCount}
+        initialComments={initialComments}
+      />
     </article>
   );
 }

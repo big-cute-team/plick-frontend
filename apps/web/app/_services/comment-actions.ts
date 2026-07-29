@@ -8,12 +8,13 @@ import type { CreateCommentResult } from "@plick/domain/types";
 import { AUTH_COOKIES } from "@/_constants/api";
 
 /**
- * 댓글 작성 서버 액션 (KAN-303, `POST /api/v1/articles/{articleId}/comments`).
+ * 댓글 작성 서버 액션 (KAN-303, web 이식 KAN-329,
+ * `POST /api/v1/articles/{articleId}/comments`).
  *
  * 보호 API라 HttpOnly 쿠키의 access 토큰을 Bearer로 실어야 하는데 클라는 그
  * 쿠키를 못 읽으므로 서버 액션을 경유한다. 조회 fetcher(`@plick/core/comments`)와
  * 파일이 갈린 건 `"use server"` 파일이 async 함수만 export할 수 있어서다.
- * 쿠키 이름이 앱에 박혀 있어 이 파일은 승격하지 않고 앱별로 복제한다(KAN-329).
+ * 쿠키 이름이 앱에 박혀 있어 이 파일은 승격하지 않고 모바일 것을 복제했다.
  *
  * 결과는 던지지 않고 값으로 돌려준다 — 서버 액션이 던진 에러는 프로덕션에서
  * 메시지가 가려져 클라가 BE 에러 code로 분기할 수 없다. 클라 훅

@@ -1,24 +1,23 @@
 /**
  * @file 댓글 조회 fetcher (KAN-303, `GET /api/v1/articles/{articleId}/comments`).
  *
- * 서버 컴포넌트(기사 세부 첫 페이지)와 클라 훅(릴 시트·다음 페이지)이 함께
+ * 모바일 `_services/comments.ts`로 살다 web이 두 번째 사용처가 되면서 승격했다
+ * (KAN-329, ADR 0011 게이트 C). 작성(POST)은 쿠키를 읽어야 해 각 앱의 서버
+ * 액션(`_services/comment-actions.ts`)에 남고, 그쪽이 여기 BE 응답 타입과
+ * 경계 변환을 가져다 쓴다.
+ *
+ * 서버 컴포넌트(기사 세부 첫 페이지)와 클라 훅(릴 세부·다음 페이지)이 함께
  * 부르므로 릴스 fetcher처럼 평범한 모듈이다. base URL 선택은 `apiFetch`가
  * 실행 위치를 보고 알아서 한다.
  *
  * 익명 허용 공개 API지만 토큰을 실어야 `likedByMe`가 그 유저 기준으로 온다.
- * KAN-303에서는 댓글 좋아요가 범위 밖이라 일부러 안 실었고, KAN-309에서 붙이면서
- * 실도록 바꿨다. 브라우저에서 부를 때(릴 시트·다음 페이지)는 `proxy.ts`가 `/be`
- * 요청에 Bearer를 심어 주므로 여기서 넘길 게 없고, 서버 컴포넌트가 부를 때만
- * 호출부가 `getAccessToken()`으로 꺼내 넘긴다(기사 상세와 같은 방식, ADR 0044).
- *
- * 작성(POST)은 보호 API라 쿠키를 읽어야 해서 서버 액션으로 분리했다
- * (`comment-actions.ts`). BE 응답 타입과 경계 변환은 두 파일이 같이 쓰므로
- * 여기서 export한다.
+ * 브라우저에서 부를 때는 각 앱 `proxy.ts`가 `/be` 요청에 Bearer를 심어 주므로
+ * 여기서 넘길 게 없고, 서버 컴포넌트가 부를 때만 호출부가 `getAccessToken()`으로
+ * 꺼내 넘긴다(기사 상세와 같은 방식, ADR 0044).
  */
 
-import { apiFetch } from "@plick/core/client";
-import { COMMENTS_PAGE_SIZE } from "@/_constants/comments";
-import type { ArticleComment, CommentPage } from "@/_types/comments";
+import type { ArticleComment, CommentPage } from "@plick/domain/types";
+import { apiFetch } from "./client";
 
 /** BE 응답 댓글 한 건 (be-verify가 실제 응답으로 확인한 그대로). 대댓글도 같은 모양. */
 export interface CommentResponse {
@@ -38,6 +37,18 @@ interface CommentListResponse {
   items: CommentResponse[];
   nextCursor: string | null;
 }
+
+/**
+ * 댓글 본문 최대 글자수. BE 검증(1~500자)과 같은 값이다 — 클라에서 미리 걸어
+ * 400 `COMMON_INVALID_PARAM` 왕복을 줄이고, BE가 최종 검증한다.
+ */
+export const COMMENT_MAX_LENGTH = 500;
+
+/**
+ * 댓글 한 페이지 건수 (BE 기본값과 같다, 상한 30). 첫 화면에 이만큼 보여주고
+ * 나머지는 "댓글 더 보기"로 이어 받는다.
+ */
+export const COMMENTS_PAGE_SIZE = 10;
 
 /** BE → 도메인 경계 변환. 대댓글까지 재귀로 같은 모양으로 내린다. */
 export function toComment(r: CommentResponse): ArticleComment {

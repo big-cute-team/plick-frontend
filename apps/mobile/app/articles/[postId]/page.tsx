@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { getArticle } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
+import { getComments } from "@plick/core/comments";
+import type { InitialCommentPage } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
-import { getComments } from "@/_services/comments";
 import { getAccessToken } from "@/_services/session";
-import type { InitialCommentPage } from "@/_types/comments";
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 import { ArticleViewTracker } from "./_components/ArticleViewTracker";
