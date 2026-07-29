@@ -13,6 +13,17 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# EC2가 프라이빗 서브넷에 있어 러너에서 SSH가 닿지 않는다. OIDC로 AWS 롤을 빌려
+# S3에 산출물을 올리고 SSM Run Command로 서버 쪽 릴리스 스크립트를 실행한다.
+# id-token: write가 OIDC 토큰 발급 권한이다. 이게 없으면 configure-aws-credentials가 실패한다.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  DEPLOY_BUCKET: plick-deploy-artifacts
+
 jobs:
   deploy:
     name: Deploy ${{ matrix.app }}
@@ -60,28 +71,81 @@ jobs:
           cp -r "apps/$APP/public" "apps/$APP/.next/standalone/apps/$APP/public"
           tar -C "apps/$APP/.next/standalone" -czf "$APP.tar.gz" .
 
-      - name: Prepare SSH
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy.pem
-          chmod 600 ~/.ssh/deploy.pem
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
+      # 릴리스 스크립트도 같이 올린다. EC2에 스크립트를 미리 둘 필요가 없고,
+      # 항상 이 커밋의 스크립트가 실행되므로 코드와 스크립트 버전이 어긋나지 않는다.
       - name: Upload artifact
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
           APP: ${{ matrix.app }}
-        run: scp -i ~/.ssh/deploy.pem "$APP.tar.gz" "ubuntu@$EC2_HOST:/tmp/$APP-${{ github.sha }}.tar.gz"
+          SHA: ${{ github.sha }}
+        run: |
+          aws s3 cp "$APP.tar.gz" "s3://$DEPLOY_BUCKET/deploy/$SHA/$APP.tar.gz"
+          aws s3 cp scripts/deploy/release.sh "s3://$DEPLOY_BUCKET/deploy/$SHA/release.sh"
 
-      # 릴리스 교체·기동·헬스체크·롤백은 서버 쪽 스크립트가 맡는다.
-      # 표준입력으로 흘려보내므로 EC2에 스크립트를 미리 둘 필요가 없다.
+      # 릴리스 교체·기동·헬스체크·롤백은 서버 쪽 스크립트(release.sh)가 맡는다.
+      #
+      # SSM Run Command는 root로 실행되는데 pm2 데몬과 /srv 디렉터리는 ubuntu 소유라
+      # sudo -u ubuntu로 내려서 돌린다. -H가 HOME을 /home/ubuntu로 잡아 줘야
+      # pm2가 자기 데몬(~/.pm2)을 제대로 찾는다.
+      #
+      # AWS-RunShellScript는 commands를 셸 스크립트 하나로 이어 붙여 실행하고
+      # 종료 코드는 마지막 명령 것만 본다. set -e를 첫 줄에 두지 않으면 중간 실패가
+      # 묻히므로 반드시 유지한다.
+      #
+      # send-command는 비동기다. get-command-invocation으로 끝날 때까지 폴링하고
+      # 서버 로그를 그대로 받아와, 헬스체크 실패 롤백까지 여기 빨간불로 잇는다.
       - name: Release
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: ssh -i ~/.ssh/deploy.pem "ubuntu@$EC2_HOST" "APP=${{ matrix.app }} SHA=${{ github.sha }} bash -s" < scripts/deploy/release.sh
+          APP: ${{ matrix.app }}
+          SHA: ${{ github.sha }}
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        run: |
+          cat > ssm-params.json <<EOF
+          {
+            "commands": [
+              "set -e",
+              "aws s3 cp s3://$DEPLOY_BUCKET/deploy/$SHA/release.sh /tmp/plick-release-$APP.sh",
+              "sudo -u ubuntu -H env APP=$APP SHA=$SHA BUCKET=$DEPLOY_BUCKET bash /tmp/plick-release-$APP.sh"
+            ]
+          }
+          EOF
+
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "deploy $APP $SHA" \
+            --parameters file://ssm-params.json \
+            --query 'Command.CommandId' --output text)
+
+          STATUS=InProgress
+          for _ in $(seq 1 90); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+              --query 'Status' --output text)
+            case "$STATUS" in
+              Pending|InProgress|Delayed) sleep 5 ;;
+              *) break ;;
+            esac
+          done
+
+          echo "--- 서버 로그 ---"
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query 'StandardOutputContent' --output text
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "--- 서버 stderr ---"
+            aws ssm get-command-invocation \
+              --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+              --query 'StandardErrorContent' --output text
+            echo "SSM 명령 상태: $STATUS"
+            exit 1
+          fi
 
       - name: 배포 확인
         run: echo "https://${{ matrix.domain }} 로 서비스된다"

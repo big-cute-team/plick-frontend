@@ -1,24 +1,34 @@
 #!/usr/bin/env bash
 #
-# EC2에서 도는 릴리스 교체 스크립트. 배포 워크플로가 ssh 표준입력으로 흘려보내
-# 실행하므로, 이 파일이 서버에 존재할 필요는 없다.
+# EC2에서 도는 릴리스 교체 스크립트. 배포 워크플로가 S3에 올려 두고 SSM Run Command로
+# 실행하므로, 이 파일이 서버에 미리 존재할 필요는 없다. 매 배포마다 그 커밋의 스크립트가
+# S3에서 내려와 실행된다.
+#
+# SSM Run Command는 root로 실행되지만 pm2 데몬과 /srv는 ubuntu 소유라, 워크플로가
+# sudo -u ubuntu로 내려서 이 스크립트를 돌린다. 직접 실행할 일이 있어도 ubuntu로 실행한다.
 #
 # web(3000)과 mobile(3001)이 같은 인스턴스에 각각 뜨므로 앱 이름을 받아 동작한다.
 # 디렉터리도 pm2 프로세스도 앱마다 따로라 한쪽 배포가 다른 쪽을 건드리지 않는다.
 #
 # 필요한 환경변수
-#   APP  web 또는 mobile
-#   SHA  릴리스 식별자(커밋 해시)
+#   APP     web 또는 mobile
+#   SHA     릴리스 식별자(커밋 해시)
+#   BUCKET  배포 아티팩트 S3 버킷 이름
 
 set -euo pipefail
 
 : "${APP:?APP 환경변수가 필요하다 (web 또는 mobile)}"
 : "${SHA:?SHA 환경변수가 필요하다}"
+: "${BUCKET:?BUCKET 환경변수가 필요하다 (배포 아티팩트 S3 버킷)}"
 
 ROOT="/srv/plick-$APP"
 PM2_NAME="plick-$APP"
 NEW="$ROOT/releases/$SHA"
 TARBALL="/tmp/$APP-$SHA.tar.gz"
+
+# 산출물은 러너가 S3에 올려 뒀다. 인스턴스 롤의 s3:GetObject 권한으로 내려받는다.
+# 프라이빗 서브넷이지만 S3 게이트웨이 엔드포인트가 있어 NAT 없이도 닿는다.
+aws s3 cp "s3://$BUCKET/deploy/$SHA/$APP.tar.gz" "$TARBALL"
 
 # 되돌릴 대상. readlink는 심볼릭 링크가 가리키는 경로를 그대로 준다.
 # 첫 배포라 current가 없으면 빈 문자열이고, 그때는 롤백할 곳도 없다.
