@@ -59,11 +59,12 @@ description: >-
   (KAN-200 후속 결정 — 웹도 모바일 뷰 대응, **최소 기준선 330px**). 경계는 **`lg`(1024px)**: 그 아래는
   모바일 뷰로 스택.
   - 모바일 뷰 기본 패턴(홈 기준): 다열 그리드 → **1열**(`grid-cols-1 lg:grid-cols-[…]`),
-    사이드바 등 보조 영역은 **숨김**(`hidden lg:flex`, 컴포넌트에 `className` prop을 받아 제어),
-    핫이슈처럼 여러 카드는 **대표 1장만**(서브는 `hidden lg:flex`).
+    사이드바 등 보조 영역은 **숨김**(`hidden lg:flex`, 컴포넌트에 `className` prop을 받아 제어).
+    핫이슈는 모바일과 같은 캐러셀(`@plick/ui` `HotCarousel`)을 그대로 쓰고 카드 비율만
+    `lg:aspect-video`로 낮춘다(KAN-338).
   - GNB: 가로 내비·검색은 `hidden lg:flex`, 대신 **햄버거 `MobileNav`**(`lg:hidden`)로 접는다
     (`@plick/ui/icons`의 `MenuIcon`). 아이콘 클러스터는 스페이서(`flex-1 lg:hidden`)로 우측 정렬.
-  - `h-full`로 형제 높이에 맞추던 요소(핫이슈 히어로)는 1열이 되면 높이 기준이 사라지므로
+  - `h-full`로 형제 높이에 맞추던 요소는 1열이 되면 높이 기준이 사라지므로
     **모바일에서 `aspect-*`를 주고 `lg:h-full`로 되돌린다**.
   - **넘치는 가로 목록**(팀 필터 탭 등)은 330px에서 잘리므로 `overflow-x-auto`로 가로 스크롤
     (스크롤바는 theme.css가 전역으로 숨김 — 모바일 앱 필터와 같은 패턴). 잘려서 접근 불가 = 깨짐.
@@ -87,8 +88,10 @@ description: >-
    - 파일을 `packages/ui/src/<PascalCase>.tsx`로 **이동**(복사 금지 — 사본이 두 개면 감사 대상).
    - 모바일 쪽 import를 `@plick/ui/<파일명>`으로 바꾸는 것까지 **같은 PR**에서 한다.
    - 토큰 유틸만 쓰는 컴포넌트는 그대로 양쪽에서 동작한다(토큰이 공유되므로).
-   - 이미 승격됨(KAN-200): `Logo` `MediaThumb`(colorVar prop)
-     `TeamCrest`(team = `{code, name}` 객체, `/teams/*.webp`는 양쪽 앱 public에 있음) `icons`.
+   - 이미 승격됨: `Logo` `MediaThumb`(colorVar prop)
+     `TeamCrest`(team = `{code, name}` 객체, `/teams/*.webp`는 양쪽 앱 public에 있음) `icons`
+     (이상 KAN-200), `HotCarousel`(카드는 children 주입, `snap-x-carousel`·`no-scrollbar`가
+     앱 globals.css에 있어야 함 — KAN-338).
    - 앱 결합을 일반화한 전례: `MediaThumb`은 팀 코드 대신 `colorVar`를 받는다 — 앱 쪽에서
      `TEAMS[code].colorVar`를 꺼내 넘긴다.
    - 반대로 `AppShell` `ScrollArea` `TabBar` `TopBar`는 모바일 전용 — 승격 금지.

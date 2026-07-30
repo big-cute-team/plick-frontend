@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import { TEAMS } from "@plick/domain/constants";
 import { MediaThumb } from "@plick/ui/MediaThumb";
+import { TeamCrest } from "@plick/ui/TeamCrest";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { ArticleCard } from "@plick/domain/types";
@@ -15,6 +16,9 @@ import { formatRelativeTime } from "@plick/domain/format";
  *
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
  * 팀 이름 자리를 비운다. 기자 이름도 원문이 없으면 빠진다.
+ *
+ * 행 맨 오른쪽에는 대표 팀 로고(`TeamCrest`)를 세로 중앙으로 붙인다(KAN-338).
+ * 팀이 없는 기사는 로고 자리도 그리지 않는다.
  */
 export function NewsItem({ article }: { article: ArticleCard }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
@@ -70,6 +74,9 @@ export function NewsItem({ article }: { article: ArticleCard }) {
           imageUrl={article.imageUrl}
           className="rounded-control size-14 shrink-0"
         />
+      )}
+      {team && (
+        <TeamCrest team={team} size={24} className="shrink-0 self-center" />
       )}
     </Link>
   );

@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CARD_W, GAP, HOT_AUTOPLAY_MS } from "@/_constants/home";
-import type { HotArticle } from "@plick/domain/types";
-import { HotHeroCard } from "./HotHeroCard";
+import { Children, useEffect, useRef, useState, type ReactNode } from "react";
+
+/** 카드 폭 (트랙 폭 대비 비율) — 트랙의 `w-[86%]`와 일치해야 한다 */
+const CARD_W = 0.86;
+
+/** 카드 사이 간격(px) — `gap-2.5`와 일치해야 한다 */
+const GAP = 10;
+
+/** 자동 넘김 간격(ms) — 제목 두 줄을 읽을 시간 (KAN-282) */
+const AUTOPLAY_MS = 4000;
 
 /**
  * 핫이슈 센터 스냅 캐러셀 + 하단 점 인디케이터 + 자동 넘김 (KAN-282).
+ *
+ * 모바일 홈 전용이던 것을 웹 홈이 두 번째 소비자가 되면서 `@plick/ui`로
+ * 승격했다(KAN-338). 카드 렌더는 앱마다 달라(모바일 `HotHeroCard`, 웹 `HotCard`)
+ * children으로 주입받는다 — render prop이 아니라 children인 이유는 서버 컴포넌트
+ * 페이지가 함수를 클라이언트 경계 너머로 넘길 수 없어서다. 카드를 서버에서
+ * 그려 엘리먼트로 넘기면 경계를 그대로 통과한다.
  *
  * 카드 폭 86%, 좌우 스페이서(7% − gap)로 첫/마지막 카드까지 정확히 화면 중앙에
  * 스냅시킨다. 좌우 패딩 방식은 카드 %가 '패딩 뺀 영역' 기준이라 끝단이 중앙까지
@@ -17,9 +29,21 @@ import { HotHeroCard } from "./HotHeroCard";
  * 스와이프를 뺏지 않고, 움직임이 멎은 시점부터 온전한 간격 뒤에 넘어간다.
  * 마지막 카드 다음은 처음으로 되감고, 백그라운드 탭에서는 쉰다.
  *
- * @param articles BE가 주는 핫이슈 N건 — 건수가 유동이라 카드·점 개수가 따라간다
+ * `snap-x-carousel`·`no-scrollbar` 클래스는 각 앱 `globals.css`에 정의돼 있어야
+ * 한다 (Tailwind 유틸이 아닌 커스텀 클래스).
+ *
+ * @param children - 카드 목록. 각 카드는 래퍼(`w-[86%]` + 비율 박스)를 `h-full`로 채운다.
+ * @param cardClassName - 카드 래퍼의 비율 클래스. 기본은 모바일 기하(`aspect-[181/131]`).
+ *   웹은 데스크톱에서 `lg:aspect-video`로 낮춰 카드가 과하게 길어지는 것을 막는다.
  */
-export function HotCarousel({ articles }: { articles: HotArticle[] }) {
+export function HotCarousel({
+  children,
+  cardClassName = "aspect-[181/131]",
+}: {
+  children: ReactNode;
+  cardClassName?: string;
+}) {
+  const cards = Children.toArray(children);
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   /** 타이머 콜백이 스테일 클로저 없이 현재 인덱스를 읽는 통로 */
@@ -32,20 +56,20 @@ export function HotCarousel({ articles }: { articles: HotArticle[] }) {
     if (!el) return;
     const step = el.clientWidth * CARD_W + GAP;
     const i = Math.round(el.scrollLeft / step);
-    const next = Math.max(0, Math.min(articles.length - 1, i));
+    const next = Math.max(0, Math.min(cards.length - 1, i));
     activeRef.current = next;
     setActive(next);
   }
 
   useEffect(() => {
     const el = trackRef.current;
-    if (!el || articles.length < 2) return;
+    if (!el || cards.length < 2) return;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     function schedule() {
       if (timer) clearTimeout(timer);
-      timer = setTimeout(advance, HOT_AUTOPLAY_MS);
+      timer = setTimeout(advance, AUTOPLAY_MS);
     }
 
     function advance() {
@@ -58,7 +82,7 @@ export function HotCarousel({ articles }: { articles: HotArticle[] }) {
       }
       const step = el!.clientWidth * CARD_W + GAP;
       // 마지막 카드 다음은 처음으로 — 티켓이 요구한 되감기 효과
-      const next = (activeRef.current + 1) % articles.length;
+      const next = (activeRef.current + 1) % cards.length;
       el!.scrollTo({ left: next * step, behavior: "smooth" });
       schedule();
     }
@@ -109,7 +133,7 @@ export function HotCarousel({ articles }: { articles: HotArticle[] }) {
       el.removeEventListener("pointerup", pointerRelease);
       el.removeEventListener("scroll", onAnyScroll);
     };
-  }, [articles.length]);
+  }, [cards.length]);
 
   return (
     <div>
@@ -119,20 +143,21 @@ export function HotCarousel({ articles }: { articles: HotArticle[] }) {
         className="snap-x-carousel no-scrollbar flex gap-2.5 overflow-x-auto pb-2"
       >
         <div aria-hidden className="w-[calc(7%-10px)] shrink-0" />
-        {articles.map((article) => (
+        {cards.map((card, i) => (
+          /* 목록이 재정렬되지 않는 정적 렌더라 인덱스 키로 충분하다 */
           <div
-            key={article.id}
-            className="aspect-[181/131] w-[86%] shrink-0 snap-center"
+            key={i}
+            className={`w-[86%] shrink-0 snap-center ${cardClassName}`}
           >
-            <HotHeroCard article={article} />
+            {card}
           </div>
         ))}
         <div aria-hidden className="w-[calc(7%-10px)] shrink-0" />
       </div>
       <div className="flex items-center justify-center gap-1 pt-1">
-        {articles.map((article, i) => (
+        {cards.map((_, i) => (
           <span
-            key={article.id}
+            key={i}
             className={
               i === active
                 ? "bg-accent rounded-pill h-1 w-3"
