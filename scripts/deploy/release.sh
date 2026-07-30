@@ -13,13 +13,15 @@
 # 필요한 환경변수
 #   APP     web 또는 mobile
 #   SHA     릴리스 식별자(커밋 해시)
-#   BUCKET  배포 아티팩트 S3 버킷 이름
+#   BUCKET  배포 아티팩트 S3 버킷 이름 (BE와 공용인 plick-deploy)
+#   PREFIX  버킷 안 팀 접두사 (프론트는 frontend)
 
 set -euo pipefail
 
 : "${APP:?APP 환경변수가 필요하다 (web 또는 mobile)}"
 : "${SHA:?SHA 환경변수가 필요하다}"
 : "${BUCKET:?BUCKET 환경변수가 필요하다 (배포 아티팩트 S3 버킷)}"
+: "${PREFIX:?PREFIX 환경변수가 필요하다 (버킷 안 팀 접두사)}"
 
 # web과 mobile 배포가 같은 인스턴스에 동시에 들어온다. 디렉터리는 서로 안 겹치지만
 # pm2는 데몬이 없을 때 두 클라이언트가 동시에 스폰을 시도하면 한쪽이 소켓을 기다리며
@@ -34,7 +36,7 @@ TARBALL="/tmp/$APP-$SHA.tar.gz"
 
 # 산출물은 러너가 S3에 올려 뒀다. 인스턴스 롤의 s3:GetObject 권한으로 내려받는다.
 # 프라이빗 서브넷이지만 S3 게이트웨이 엔드포인트가 있어 NAT 없이도 닿는다.
-aws s3 cp "s3://$BUCKET/deploy/$SHA/$APP.tar.gz" "$TARBALL"
+aws s3 cp "s3://$BUCKET/$PREFIX/$SHA/$APP.tar.gz" "$TARBALL"
 
 # 되돌릴 대상. readlink는 심볼릭 링크가 가리키는 경로를 그대로 준다.
 # 첫 배포라 current가 없으면 빈 문자열이고, 그때는 롤백할 곳도 없다.
