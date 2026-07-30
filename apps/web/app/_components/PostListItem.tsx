@@ -16,13 +16,13 @@ const VARIANT: Record<
     row: "gap-5 py-5",
     title: "text-title",
     thumb: "rounded-card h-24 w-33",
-    crest: 32,
+    crest: 40,
   },
   article: {
     row: "gap-3.5 py-4",
     title: "text-body-lg",
     thumb: "rounded-control size-21.5",
-    crest: 28,
+    crest: 36,
   },
 };
 

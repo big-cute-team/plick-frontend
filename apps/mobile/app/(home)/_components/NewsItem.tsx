@@ -76,7 +76,7 @@ export function NewsItem({ article }: { article: ArticleCard }) {
         />
       )}
       {team && (
-        <TeamCrest team={team} size={24} className="shrink-0 self-center" />
+        <TeamCrest team={team} size={30} className="shrink-0 self-center" />
       )}
     </Link>
   );
