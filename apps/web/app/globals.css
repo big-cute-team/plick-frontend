@@ -16,6 +16,21 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* 스크롤바 숨김 유틸(특정 영역용) — 홈 핫이슈 캐러셀(@plick/ui HotCarousel)이
+ * 쓴다. 모바일 globals.css와 같은 정의 (KAN-338). */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 가로 스냅 캐러셀 (KAN-338) */
+.snap-x-carousel {
+  scroll-snap-type: x mandatory;
+}
+
 /* 트윗 임베드(react-tweet) — 라이브러리 기본 팔레트 대신 PLick 토큰을 물려
  * 다크/라이트 전환을 자동으로 따라가게 한다 (KAN-284, web 이식 KAN-323).
  * 클래스를 두 번 겹친 건 라이브러리 theme.css의 라이트/다크 셀렉터(특이도 0,1,0)를

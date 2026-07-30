@@ -272,8 +272,8 @@ function toHotArticle(r: HotCardResponse): HotArticle {
  * 발행분 중 조회수 상위이고 부족하면 최신순 폴백이라, 기사가 아예 없지 않는 한
  * 빈 배열이 오지 않는다. 페이지네이션은 없다.
  *
- * 모바일은 5건을 캐러셀로 넘기고 web은 히어로 1 + 서브 2만 그린다 — 표시 건수는
- * 표면이 잘라 쓰는 몫이라 fetcher는 BE 기본값을 그대로 돌려준다.
+ * 모바일·웹 모두 캐러셀로 넘기고(KAN-338) 사이드바 실시간 인기도 같은 데이터를
+ * 쓴다 — 표시 건수는 표면이 잘라 쓰는 몫이라 fetcher는 BE 기본값을 그대로 돌려준다.
  *
  * 피드와 같은 익명 허용 API라 토큰을 싣지 않는다 — 만료 토큰을 실으면
  * 401 `AUTH_EXPIRED_TOKEN`으로 오히려 죽는다.
@@ -281,4 +281,29 @@ function toHotArticle(r: HotCardResponse): HotArticle {
 export async function getHotArticles(): Promise<HotArticle[]> {
   const cards = await apiFetch<HotCardResponse[]>("/api/v1/articles/hot");
   return cards.map(toHotArticle);
+}
+
+/**
+ * 팀태그 기반 관련 기사 (KAN-338). 전용 추천 API가 없어 기사의 대표 팀
+ * (`teams[0]`)으로 팀 필터 목록(`GET /api/v1/articles?teamId=`)을 받아 관련
+ * 기사로 쓴다. 목록에 지금 보는 기사가 섞여 올 수 있어 하나 더 받아 거른 뒤
+ * `count`개로 자른다.
+ *
+ * 팀이 없는 기사는 BE를 부르지 않고 빈 배열을 준다 — 호출부가 빈 상태 문구를
+ * 그린다. 웹 기사 세부 사이드바의 관련 기사와 모바일 "함께 보면 좋은 기사"가
+ * 함께 쓴다.
+ *
+ * @param articleId 지금 보는 기사 id — 목록에서 걸러낸다
+ * @param teams 기사의 팀 태그 (`ArticleDetail.teams`)
+ * @param count 보여줄 건수
+ */
+export async function getRelatedArticles(
+  articleId: string,
+  teams: TeamCode[],
+  count = 5,
+): Promise<ArticleCard[]> {
+  const team = teams[0];
+  if (!team) return [];
+  const page = await getArticles({ team, size: count + 1 });
+  return page.items.filter((a) => a.id !== articleId).slice(0, count);
 }

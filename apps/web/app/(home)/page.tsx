@@ -1,9 +1,10 @@
 import { getArticles, getHotArticles } from "@plick/core/articles";
 import type { InitialArticleFeed } from "@plick/domain/types";
+import { HotCarousel } from "@plick/ui/HotCarousel";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { PostFeed } from "@/_components/PostFeed";
-import { HotIssueGrid } from "./_components/HotIssueGrid";
+import { HotCard } from "./_components/HotCard";
 import { HomeSidebar } from "./_components/HomeSidebar";
 
 /**
@@ -13,14 +14,15 @@ import { HomeSidebar } from "./_components/HomeSidebar";
  * 내려준다 (KAN-321). 클라가 같은 데이터를 또 부르는 이중 페치를 막는 씨앗이고,
  * 팀 탭을 바꾸는 순간부터는 클라가 이어받는다.
  *
- * 핫이슈 그리드는 `GET /api/v1/articles/hot`을 단발로 받아 그대로 내려준다
- * (KAN-324). 클라에서 이어 부를 일이 없어 서버 fetch로 끝낸다.
+ * 핫이슈는 `GET /api/v1/articles/hot`을 단발로 받아 모바일과 같은 캐러셀에
+ * 내려준다 (KAN-324, KAN-338). 클라에서 이어 부를 일이 없어 서버 fetch로 끝낸다.
  *
  * 두 API는 서로 독립이라 병렬로 받고(`allSettled` — `all`은 하나가 reject되면
  * 멀쩡한 섹션까지 길동무가 된다), 한쪽이 실패해도 페이지 전체를 에러로
  * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다. 모바일 홈과 같은 구조다.
  *
- * 사이드바는 아직 목데이터다 — 실시간 인기는 대응 BE 엔드포인트가 없다.
+ * 사이드바의 실시간 인기는 전용 엔드포인트가 없어 핫이슈와 같은 데이터를
+ * prop으로 내려 쓴다(KAN-338) — 추가 fetch가 없다.
  */
 export default async function HomePage() {
   const [hotResult, feedResult] = await Promise.allSettled([
@@ -61,7 +63,17 @@ export default async function HomePage() {
                   아직 핫이슈가 없어요.
                 </p>
               ) : (
-                <HotIssueGrid articles={hot} />
+                /* 모바일 홈과 같은 캐러셀 (KAN-338). 카드 비율만 데스크톱에서
+                   aspect-video로 낮춘다 — 모바일 기하(181/131)를 1200px 컨테이너에
+                   그대로 쓰면 카드가 700px 넘게 길어진다. 트랙에 최대 폭을 걸어
+                   카드(트랙의 86%)가 과하게 커지는 것도 함께 막는다 */
+                <div className="lg:mx-auto lg:max-w-5xl">
+                  <HotCarousel cardClassName="aspect-[181/131] lg:aspect-video">
+                    {hot.map((article) => (
+                      <HotCard key={article.id} article={article} />
+                    ))}
+                  </HotCarousel>
+                </div>
               )}
             </div>
           </section>
@@ -72,7 +84,7 @@ export default async function HomePage() {
             </h2>
             <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
               <PostFeed initial={initial} variant="news" />
-              <HomeSidebar className="hidden lg:flex" />
+              <HomeSidebar articles={hot} className="hidden lg:flex" />
             </div>
           </section>
         </PageContainer>
