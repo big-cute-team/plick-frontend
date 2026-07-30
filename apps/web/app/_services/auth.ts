@@ -12,7 +12,7 @@ import {
   OAUTH_STATE_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
 } from "@/_constants/api";
-import { buildAuthorizeUrl, packOAuthState } from "./oauth";
+import { buildAuthorizeUrl, getRedirectUri, packOAuthState } from "./oauth";
 import type { SocialProvider } from "@/_types/api";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
@@ -57,6 +57,8 @@ export async function startSocialLogin(
  * HttpOnly 쿠키로 심은 뒤 이동시킨다. 신규 유저(`needsOnboarding`)는 온보딩
  * 첫 단계로, 기존 유저는 홈으로 보낸다. 콜백 라우트(`/oauth/callback`)가 부른다.
  * 토큰이 브라우저 JS에 노출되지 않도록 BE 호출·저장을 전부 서버에서 한다.
+ * `redirectUri`는 인가 요청 때 쓴 콜백 주소 그대로다(KAN-341) — BE가 허용목록
+ * 검증 후 프로바이더 토큰 교환에 재사용하므로 다르면 400으로 끊긴다.
  *
  * @param provider state 쿠키에서 복원한 프로바이더
  * @param code 프로바이더가 콜백으로 돌려준 인가 코드
@@ -70,7 +72,7 @@ export async function login(
   try {
     data = await apiFetch<LoginResponse>("/api/v1/auth/login", {
       method: "POST",
-      body: JSON.stringify({ provider, code }),
+      body: JSON.stringify({ provider, code, redirectUri: getRedirectUri() }),
     });
   } catch (e) {
     // 화면엔 공통 문구만 나가므로 실제 실패 사유는 서버 로그로만 남는다
