@@ -105,13 +105,17 @@ jobs:
           SHA: ${{ github.sha }}
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
         run: |
+          # executionTimeout은 서버에서 명령이 매달렸을 때 SSM 에이전트가 끊는 시한이다.
+          # 릴리스는 flock 대기를 포함해도 1~2분이면 끝난다. 아래 폴링 한도(450초)보다
+          # 짧아야 hang이 폴링 시간 안에 실패로 확정된다.
           cat > ssm-params.json <<EOF
           {
             "commands": [
               "set -e",
               "aws s3 cp s3://$DEPLOY_BUCKET/deploy/$SHA/release.sh /tmp/plick-release-$APP.sh",
               "sudo -u ubuntu -H env APP=$APP SHA=$SHA BUCKET=$DEPLOY_BUCKET bash /tmp/plick-release-$APP.sh"
-            ]
+            ],
+            "executionTimeout": ["420"]
           }
           EOF
 
