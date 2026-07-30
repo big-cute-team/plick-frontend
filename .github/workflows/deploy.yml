@@ -20,12 +20,9 @@ permissions:
   id-token: write
   contents: read
 
-# 버킷은 BE와 같이 쓰는 plick-deploy다. 팀별로 최상위 접두사를 나눠 쓰고
-# 프론트 몫이 frontend/다. 키는 frontend/<커밋sha>/{web,mobile}.tar.gz + release.sh.
 env:
   AWS_REGION: ap-northeast-2
-  DEPLOY_BUCKET: plick-deploy
-  DEPLOY_PREFIX: frontend
+  DEPLOY_BUCKET: plick-deploy-artifacts
 
 jobs:
   deploy:
@@ -87,8 +84,8 @@ jobs:
           APP: ${{ matrix.app }}
           SHA: ${{ github.sha }}
         run: |
-          aws s3 cp "$APP.tar.gz" "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/$APP.tar.gz"
-          aws s3 cp scripts/deploy/release.sh "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/release.sh"
+          aws s3 cp "$APP.tar.gz" "s3://$DEPLOY_BUCKET/deploy/$SHA/$APP.tar.gz"
+          aws s3 cp scripts/deploy/release.sh "s3://$DEPLOY_BUCKET/deploy/$SHA/release.sh"
 
       # 릴리스 교체·기동·헬스체크·롤백은 서버 쪽 스크립트(release.sh)가 맡는다.
       #
@@ -115,8 +112,8 @@ jobs:
           {
             "commands": [
               "set -e",
-              "aws s3 cp s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/release.sh /tmp/plick-release-$APP.sh",
-              "sudo -u ubuntu -H env APP=$APP SHA=$SHA BUCKET=$DEPLOY_BUCKET PREFIX=$DEPLOY_PREFIX bash /tmp/plick-release-$APP.sh"
+              "aws s3 cp s3://$DEPLOY_BUCKET/deploy/$SHA/release.sh /tmp/plick-release-$APP.sh",
+              "sudo -u ubuntu -H env APP=$APP SHA=$SHA BUCKET=$DEPLOY_BUCKET bash /tmp/plick-release-$APP.sh"
             ],
             "executionTimeout": ["420"]
           }
