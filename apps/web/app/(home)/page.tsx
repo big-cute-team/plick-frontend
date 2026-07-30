@@ -7,14 +7,6 @@ import { HotIssueGrid } from "./_components/HotIssueGrid";
 import { HomeSidebar } from "./_components/HomeSidebar";
 
 /**
- * 매 요청 서버에서 그린다. 이 페이지는 동적 API(cookies 등)를 안 써서 기본이
- * 빌드 시점 프리렌더인데, 빌드 머신(CI 러너)은 BE 내부 ALB에 못 닿아 서버 fetch
- * 실패 상태가 HTML에 박제된다. 핫이슈는 조회수 기반이라 성공했더라도 빌드 시점
- * 데이터로 굳으면 안 된다 (ADR 0064).
- */
-export const dynamic = "force-dynamic";
-
-/**
  * 데스크톱 홈 — GNB + 핫이슈 그리드 + 소식 리스트/사이드바 2단 (KAN-200).
  *
  * 소식 리스트는 `GET /api/v1/articles`의 전체 탭 첫 페이지를 여기서 미리 받아

@@ -444,10 +444,17 @@ ln -sfn /srv/plick-mobile/releases/<되돌릴sha> /srv/plick-mobile/current && p
 ### 환경변수 바꾸기
 
 런타임 값(`OAUTH_REDIRECT_URI` 등)은 `shared/.env`를 고치고 pm2를 재기동하면 된다.
+단, `--update-env`는 `.env` 파일을 읽는 게 아니라 명령을 실행한 셸의 현재 환경을
+프로세스에 넣는 동작이다. `.env`를 먼저 셸로 불러들여야 한다. 배포 스크립트가 하는
+것과 같은 방식이다.
 
 ```bash
-pm2 restart plick-mobile --update-env
+set -a; . /srv/plick-mobile/shared/.env; set +a; pm2 restart plick-mobile --update-env
 ```
+
+`.env` 소싱 없이 restart만 하면 파일을 고쳐도 프로세스는 옛 값 그대로다. 가장 확실한
+방법은 Actions → Deploy → Run workflow 재실행이다. release.sh가 `.env`를 소싱해서
+재기동한다.
 
 `API_BASE_URL`은 반쪽만 바뀐다. 서버 컴포넌트 fetch는 `.env` + 재기동으로 따라오지만,
 `/be` 프록시 목적지는 빌드 산출물에 굳어 있어 시크릿을 고치고 재배포해야 한다. 값이
@@ -484,9 +491,11 @@ pm2 데몬을 쓴다. SSM 세션에서 `sudo su - ubuntu`를 빼먹고 pm2를 �
 **CSS와 이미지가 전부 404** — standalone 산출물에 `.next/static`과 `public`이 안 들어간
 것이다. 워크플로의 `Assemble standalone` 스텝을 확인한다.
 
-**서버에서 그리는 화면(기사 상세 등)만 비어 있음** — `shared/.env`에 `API_BASE_URL`이
-없어 `localhost:8080` 폴백으로 도는 것이다. 클라 fetch 화면(피드·릴스)은 `/be` 프록시라
-멀쩡해서 더 헷갈린다. `.env`에 넣고 pm2를 재기동한다.
+**서버에서 그리는 화면(홈 핫이슈·기사 상세 등)만 비어 있음** — `shared/.env`에
+`API_BASE_URL`이 없어 `localhost:8080` 폴백으로 도는 것이다. 클라 fetch 화면(피드·릴스)은
+`/be` 프록시라 멀쩡해서 더 헷갈린다. `.env`에 넣고 위 "환경변수 바꾸기"대로 재기동한다.
+`.env`에 있는데도 그대로면 소싱 없이 restart만 한 경우다. `pm2 env <id> | grep API_BASE_URL`로
+프로세스에 실제로 들어갔는지 본다.
 
 **BE 데이터 화면이 전부 비어 있음** — Next EC2에서 BE 내부 ALB로 못 닿는 것이다. SSM
 세션에서 직접 curl로 확인한다. 열에 아홉은 BE ALB 보안그룹에 Next EC2 SG가 안 들어가

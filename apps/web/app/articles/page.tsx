@@ -4,13 +4,6 @@ import { PostFeed } from "@/_components/PostFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
 
 /**
- * 매 요청 서버에서 그린다. 이 페이지는 동적 API(cookies 등)를 안 써서 기본이
- * 빌드 시점 프리렌더인데, 빌드 머신(CI 러너)은 BE 내부 ALB에 못 닿아 씨앗 fetch
- * 실패 상태가 HTML에 박제된다 (ADR 0064).
- */
-export const dynamic = "force-dynamic";
-
-/**
  * 데스크톱 기사 페이지 (KAN-207) — GNB + 중앙 정렬 단일 컬럼(max-w-read)에
  * 제목·부제 + 팀 필터 탭 + 팀별 이적 기사 리스트. 피그마 W10(node 222-2).
  *

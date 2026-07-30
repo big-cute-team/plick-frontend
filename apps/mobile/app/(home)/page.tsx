@@ -8,14 +8,6 @@ import { getArticles, getHotArticles } from "@plick/core/articles";
 import type { InitialArticleFeed } from "@plick/domain/types";
 
 /**
- * 매 요청 서버에서 그린다. 이 페이지는 동적 API(cookies 등)를 안 써서 기본이
- * 빌드 시점 프리렌더인데, 빌드 머신(CI 러너)은 BE 내부 ALB에 못 닿아 서버 fetch
- * 실패 상태가 HTML에 박제된다. 핫이슈는 조회수 기반이라 성공했더라도 빌드 시점
- * 데이터로 굳으면 안 된다 (ADR 0064).
- */
-export const dynamic = "force-dynamic";
-
-/**
  * 홈 화면 — 핫이슈 캐러셀 + 지금 올라온 소식 리스트 (KAN-163).
  *
  * 소식 리스트는 `GET /api/v1/articles`의 전체 탭 첫 페이지를 여기서 미리 받아
