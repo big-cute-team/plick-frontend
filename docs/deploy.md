@@ -201,8 +201,14 @@ ARN 양쪽에 권한을 요구한다. 만든 역할의 ARN을 복사해 둔다. 
 `API_BASE_URL`이 비어 있어도 워크플로는 돈다. `next.config.js`에서 빈 문자열이면
 `http://localhost:8080`으로 폴백하게 해 뒀다. BE를 부르지 않는 화면은 정상으로 뜬다.
 
-이 값이 빌드 시점에 산출물로 굳는다는 점이 중요하다. 나중에 BE 주소가 바뀌면 시크릿을
-고치고 배포를 다시 돌려야 한다. EC2의 `.env`를 고쳐도 반영되지 않는다.
+`API_BASE_URL`은 두 군데서 두 시점에 읽힌다는 점이 중요하다.
+
+- 브라우저 fetch가 타는 `/be` 프록시(rewrites)의 목적지: 빌드 때 시크릿 값이
+  산출물(`routes-manifest.json`)에 문자열로 굳는다. 바꾸려면 시크릿을 고치고 재배포
+- 서버 컴포넌트 fetch의 base: 실행 시점에 EC2의 환경(`shared/.env`)에서 읽는다.
+  `.env`에 없으면 `localhost:8080` 폴백이라 기사 상세 같은 서버 fetch 화면이 빈다
+
+그래서 시크릿과 `shared/.env` 양쪽에 같은 값을 넣어야 한다. `.env` 쪽은 4단계에서 넣는다.
 
 ## 4단계. EC2에 앱 자리 만들기
 
@@ -249,6 +255,7 @@ HOSTNAME=0.0.0.0
 KAKAO_CLIENT_ID=<카카오 client_id>
 GOOGLE_CLIENT_ID=<구글 client_id>
 OAUTH_REDIRECT_URI=https://plick.co.kr/oauth/callback
+API_BASE_URL=http://<BE 내부 ALB DNS 이름>
 ```
 
 `/srv/plick-mobile/shared/.env`
@@ -260,12 +267,15 @@ HOSTNAME=0.0.0.0
 KAKAO_CLIENT_ID=<카카오 client_id>
 GOOGLE_CLIENT_ID=<구글 client_id>
 OAUTH_REDIRECT_URI=https://m.plick.co.kr/oauth/callback
+API_BASE_URL=http://<BE 내부 ALB DNS 이름>
 ```
 
 `HOSTNAME=0.0.0.0`이 빠지면 127.0.0.1에만 묶여서 ALB가 접속하지 못한다. 헬스체크가 전부
 실패하는데 원인이 잘 안 보이니 주의한다.
 
-`API_BASE_URL`은 여기 넣지 않는다. 넣어도 안 먹는다.
+`API_BASE_URL`은 서버 컴포넌트 fetch가 실행 시점에 읽는 값이다(3단계 참고). 시크릿에
+넣은 것과 같은 값을 여기에도 넣는다. 빠지면 `localhost:8080` 폴백이라 기사 상세처럼
+서버에서 그리는 화면이 빈다.
 
 ### pm2 부팅 자동 기동
 
@@ -387,7 +397,8 @@ Route 53 호스팅 영역에서 레코드 두 개를 만든다. ALB를 다시 �
 1. GitHub 시크릿 `API_BASE_URL`에 내부 ALB의 DNS 이름을 넣는다.
    `http://internal-<이름>-<숫자>.ap-northeast-2.elb.amazonaws.com` 형태다
 2. 포트는 ALB 리스너 포트다. BE 앱이 8080이어도 리스너가 80이면 포트를 붙이지 않는다
-3. Actions → Deploy → Run workflow로 재실행한다
+3. 두 앱의 `shared/.env`에도 같은 값을 넣고 `pm2 restart <앱> --update-env` 한다
+4. Actions → Deploy → Run workflow로 재실행한다
 
 프라이빗 IP를 박으면 안 된다. 내부 ALB의 IP도 AWS가 예고 없이 바꾼다. 반드시 DNS 이름을 쓴다.
 그 이름은 VPC 안에서만 풀리므로 Actions 러너에서 접속되지 않는 게 정상이다. 빌드 때는 문자열로
@@ -438,7 +449,9 @@ ln -sfn /srv/plick-mobile/releases/<되돌릴sha> /srv/plick-mobile/current && p
 pm2 restart plick-mobile --update-env
 ```
 
-`API_BASE_URL`은 이 방법으로 안 바뀐다. 시크릿을 고치고 재배포해야 한다.
+`API_BASE_URL`은 반쪽만 바뀐다. 서버 컴포넌트 fetch는 `.env` + 재기동으로 따라오지만,
+`/be` 프록시 목적지는 빌드 산출물에 굳어 있어 시크릿을 고치고 재배포해야 한다. 값이
+바뀌면 둘 다 한다.
 
 ### 오래된 아티팩트 정리
 
@@ -471,8 +484,13 @@ pm2 데몬을 쓴다. SSM 세션에서 `sudo su - ubuntu`를 빼먹고 pm2를 �
 **CSS와 이미지가 전부 404** — standalone 산출물에 `.next/static`과 `public`이 안 들어간
 것이다. 워크플로의 `Assemble standalone` 스텝을 확인한다.
 
-**홈 화면이 비어 있음** — Next EC2에서 BE 내부 ALB로 못 닿는 것이다. SSM 세션에서 직접 curl로
-확인한다. 열에 아홉은 BE ALB 보안그룹에 Next EC2 SG가 안 들어가 있다.
+**서버에서 그리는 화면(기사 상세 등)만 비어 있음** — `shared/.env`에 `API_BASE_URL`이
+없어 `localhost:8080` 폴백으로 도는 것이다. 클라 fetch 화면(피드·릴스)은 `/be` 프록시라
+멀쩡해서 더 헷갈린다. `.env`에 넣고 pm2를 재기동한다.
+
+**BE 데이터 화면이 전부 비어 있음** — Next EC2에서 BE 내부 ALB로 못 닿는 것이다. SSM
+세션에서 직접 curl로 확인한다. 열에 아홉은 BE ALB 보안그룹에 Next EC2 SG가 안 들어가
+있다.
 
 **로그인 성공인데 계속 로그아웃 상태** — http로 접근 중일 가능성이 높다. 인증 쿠키가
 프로덕션에서 `secure: true`라 https가 아니면 브라우저가 버린다.
