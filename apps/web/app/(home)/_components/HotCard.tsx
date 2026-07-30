@@ -4,20 +4,14 @@ import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 
-/** 사이즈별 치수 — 카드 높이, 스크림 박스 패딩(= 어두운 영역 윗선), 제목 스케일. */
-const SIZE = {
-  /** 좌측 히어로 — 우측 서브 스택 높이에 맞춰 늘어난다(그리드 stretch, 피그마 W1) */
-  lg: {
-    box: "aspect-video lg:aspect-auto lg:h-full",
-    pad: "px-6 pt-8 pb-5.5",
-    title: "text-hero",
-  },
-  /** 우측 서브 카드 */
-  sm: { box: "aspect-[9/5]", pad: "px-4 pt-6 pb-4", title: "text-hero-sm" },
-} as const;
-
 /**
  * 핫이슈 카드 — 미디어 위 어두운 스크림 + 흰 텍스트.
+ *
+ * 원래 히어로(lg)/서브(sm) 그리드용 사이즈 변형이 있었지만, 핫이슈 섹션이
+ * 모바일과 같은 캐러셀로 바뀌면서(KAN-338) 단일 스타일로 접었다. 카드 비율은
+ * 캐러셀 래퍼(`HotCarousel`의 `cardClassName`)가 정하고 카드는 `h-full`로
+ * 채운다. lg 미만은 모바일 히어로 카드와 같은 밀도(p-4·`text-title`),
+ * lg 이상은 데스크톱 스케일(px-6·`text-hero`)로 키운다.
  *
  * 실계약(KAN-324)으로 갈아타면서 배경이 팀 컬러 placeholder(`MediaThumb`)에서
  * 릴 공용 단색(`bg-reel-bg`)으로 바뀌었다. 모바일이 KAN-297에서 히어로 카드를
@@ -31,8 +25,7 @@ const SIZE = {
  * (기본 max-width 550px는 globals.css에서 푼다), 세로는 카드 전체 높이 기준으로
  * 작으면 가운데에 서고 크면 위에 붙어 넘친 아래쪽이 잘린다
  * (`justify-content: safe center` + `overflow-hidden`) — 본문 자체를 줄이거나
- * 말줄임하지는 않는다(X Display Requirements). 텍스트 블록 윗선까지만 영역으로
- * 재는 릴 방식(KAN-323)도 시도했지만 전체 높이 가운데가 낫다고 확정했다.
+ * 말줄임하지는 않는다(X Display Requirements).
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고 모바일 히어로와 같은 농도다 —
  * 팀·단계 줄 위까지 확실히 덮어서 임베드 아래쪽이 그 뒤로 자연스럽게 잠긴다
@@ -48,23 +41,13 @@ const SIZE = {
  * 이 링크가 받는다.
  *
  * @param article - 표시할 핫이슈 기사
- * @param size - `lg`는 좌측 히어로, `sm`은 우측 서브 카드
  */
-export function HotCard({
-  article,
-  size,
-}: {
-  article: HotArticle;
-  size: "lg" | "sm";
-}) {
-  const v = SIZE[size];
+export function HotCard({ article }: { article: HotArticle }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   const stage = article.stage ? STAGE_META[article.stage] : null;
 
   return (
-    <div
-      className={`rounded-hero bg-reel-bg relative overflow-hidden transition-opacity hover:opacity-90 ${v.box}`}
-    >
+    <div className="rounded-hero bg-reel-bg relative h-full overflow-hidden transition-opacity hover:opacity-90">
       {article.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴·MediaThumb과 같은 이유)
         <img
@@ -83,7 +66,7 @@ export function HotCard({
 
       {/* pt가 스크림 윗선 — 팀·단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
       <div
-        className={`pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 ${v.pad}`}
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-6 lg:px-6 lg:pt-8 lg:pb-5.5"
         style={{
           backgroundImage:
             "linear-gradient(to top, var(--plk-scrim) 0%, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 60%, color-mix(in srgb, var(--plk-scrim) 78%, transparent) 85%, transparent 100%)",
@@ -105,9 +88,7 @@ export function HotCard({
             )}
           </div>
         )}
-        <h3
-          className={`text-media-on tracking-heading line-clamp-2 font-extrabold ${v.title}`}
-        >
+        <h3 className="text-media-on tracking-heading text-title lg:text-hero line-clamp-2 font-extrabold">
           {article.title}
         </h3>
         <p className="text-caption">

@@ -19,57 +19,6 @@ export interface Team {
 /** 루머 신뢰 단계. */
 export type RumorStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRMED" | "OFFICIAL";
 
-/** 게시물 유형 — 일반/토론/완료 */
-export type ContentType = "GENERAL" | "DEBATE" | "FINISH";
-
-export interface Reporter {
-  name: string;
-  /** 0 = 최상위 신뢰. 표시 등급은 0=S·1=A·2=B·3=C로 매핑한다(KAN-281, ReporterTierBadge). */
-  tier: 0 | 1 | 2 | 3;
-}
-
-/** 토론형 게시물의 투표 블록 (모바일 릴에서 소비, 웹은 미사용) */
-export interface Debate {
-  topic: string;
-  optionA: string;
-  optionB: string;
-  votesA: number;
-  votesB: number;
-  closesLabel: string;
-  myVote?: "A" | "B" | null;
-}
-
-export interface FeedPost {
-  id: string;
-  team: TeamCode;
-  stage: RumorStage;
-  contentType: ContentType;
-  title: string;
-  /** 상세 화면용 요약 (카드·시트 미리보기) */
-  summary: string;
-  /** 기사 세부 본문 문단 목록. 없으면 요약 한 문단으로 대체한다. */
-  body?: string[];
-  /** 상세 시트 해시태그 (`#` 제외한 키워드) */
-  tags?: string[];
-  reporter: Reporter;
-  /** 표시용 상대 시각 (서버 ISO를 FE에서 포맷하지만, mock은 표시 문자열로 보관) */
-  timeLabel: string;
-  views: number;
-  commentCount: number;
-  likeCount: number;
-  liked?: boolean;
-  saved?: boolean;
-  debate?: Debate;
-}
-
-export interface User {
-  nickname: string;
-  /** 핸들 (예: `@kim`) */
-  handle: string;
-  email: string;
-  myTeam: TeamCode;
-}
-
 /**
  * 내 프로필 — `GET /users/me`를 화면 소비 형태로 좁힌 것 (KAN-267).
  * 온보딩 전엔 닉네임이, 카카오 가입이면 이메일이 없다. 응원팀은 다중 선택이라
@@ -102,11 +51,12 @@ export interface ArticleReporter {
 /**
  * 피드 목록의 기사 카드 한 장 (KAN-271, `GET /api/v1/articles`).
  *
- * 위 `FeedPost`는 퍼블리싱 단계에서 BE 목표 shape를 추정해 만든 타입이고, 실제
- * 계약은 그와 여러 군데 어긋난다 — 팀이 다중이고, 단계와 기자 정보가 null일 수
- * 있고, 본문·댓글·토론은 목록 응답에 아예 없다. 그래서 목록 카드는 `FeedPost`를
- * 재사용하지 않고 실제 계약을 그대로 담는다. 모바일 `_types/articles.ts`에 있던
- * 것을 web 이식(KAN-321)에서 승격했다.
+ * 퍼블리싱 단계에서 BE 목표 shape를 추정해 만든 `FeedPost`가 따로 있었지만
+ * 실제 계약과 여러 군데 어긋났다 — 팀이 다중이고, 단계와 기자 정보가 null일 수
+ * 있고, 본문·댓글·토론은 목록 응답에 아예 없다. 그래서 목록 카드는 실제 계약을
+ * 그대로 담고, `FeedPost`는 마지막 소비자(웹 사이드바 목데이터)가 사라지면서
+ * 함께 삭제됐다(KAN-338). 모바일 `_types/articles.ts`에 있던 것을 web
+ * 이식(KAN-321)에서 승격했다.
  */
 export interface ArticleCard {
   /** BE `articleSummaryId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */

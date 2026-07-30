@@ -1,5 +1,5 @@
 /**
- * @file 모바일 앱 전용 타입. 도메인 타입(FeedPost·Comment 등)은 `@plick/domain/types`.
+ * @file 모바일 앱 전용 타입. 도메인 타입(ArticleCard·Comment 등)은 `@plick/domain/types`.
  */
 import type { ComponentType } from "react";
 

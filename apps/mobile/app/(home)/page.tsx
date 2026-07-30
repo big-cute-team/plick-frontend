@@ -1,6 +1,7 @@
 import { AppShell } from "@/_components/AppShell";
+import { HotCarousel } from "@plick/ui/HotCarousel";
 import { HomeScrollArea } from "./_components/HomeScrollArea";
-import { HotCarousel } from "./_components/HotCarousel";
+import { HotHeroCard } from "./_components/HotHeroCard";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
@@ -57,7 +58,11 @@ export default async function HomePage() {
               아직 핫이슈가 없어요.
             </p>
           ) : (
-            <HotCarousel articles={hot} />
+            <HotCarousel>
+              {hot.map((article) => (
+                <HotHeroCard key={article.id} article={article} />
+              ))}
+            </HotCarousel>
           )}
         </section>
 

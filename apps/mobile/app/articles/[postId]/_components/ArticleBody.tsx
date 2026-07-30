@@ -33,8 +33,8 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 좋아요는 KAN-308, 공유는 KAN-312에서 각각 클라 경계 버튼으로 연결했다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
- * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). BE 추천 API가
- *   아직 없어 기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
+ * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). 팀태그 기반
+ *   관련 기사를 받는다(KAN-338). 비어 있으면 카드 대신 빈 문구가 나온다.
  * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지(KAN-303).
  *   실패했으면 undefined — 목록이 클라에서 직접 받는다.
  */
