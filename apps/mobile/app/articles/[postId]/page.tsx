@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { getArticle } from "@plick/core/articles";
+import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
-import type { InitialCommentPage } from "@plick/domain/types";
+import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
@@ -25,8 +25,10 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-310) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 본문 밑 "함께 보면 좋은 기사"(KAN-301)는 UI만 있고 데이터는 비워 둔다 —
- * BE 추천 API가 아직 없다. API가 생기면 여기서 fetch해 `suggested`로 넘긴다.
+ * 본문 밑 "함께 보면 좋은 기사"(KAN-301)는 KAN-338에서 채웠다. 전용 추천 API
+ * 대신 기사의 팀태그로 팀 필터 목록을 받아 자기 자신을 거르고 5개를 보여준다
+ * (`getRelatedArticles`). 팀태그가 필요해 상세를 받은 뒤 이어 받고, 실패해도
+ * 본문은 떠야 해서 빈 목록으로 둔다 — 섹션이 빈 문구를 그린다.
  *
  * 하단 탭바를 여기에도 둔다 (KAN-314). 기사를 읽다가 릴스나 MY로 바로 건너뛰려면
  * 상단 뒤로가기로 홈까지 나갔다 다시 눌러야 했다. 이 화면에서는 어느 탭도 활성이
@@ -66,6 +68,17 @@ export default async function ArticleDetailPage({
       ? { page: commentsResult.value, fetchedAt: Date.now() }
       : undefined;
 
+  // 함께 보면 좋은 기사 — 팀태그가 필요해 상세를 받은 뒤 이어 받는다
+  let suggested: ArticleCard[] = [];
+  try {
+    suggested = await getRelatedArticles(
+      articleResult.value.id,
+      articleResult.value.teams,
+    );
+  } catch (error) {
+    console.error("[article] 함께 보면 좋은 기사 로드 실패:", error);
+  }
+
   return (
     <AppShell>
       {/* 진입을 조회로 기록한다 (KAN-310). 그리는 것 없는 클라 경계 */}
@@ -74,6 +87,7 @@ export default async function ArticleDetailPage({
       <ScrollArea className="pb-section">
         <ArticleBody
           article={articleResult.value}
+          suggested={suggested}
           initialComments={initialComments}
         />
       </ScrollArea>

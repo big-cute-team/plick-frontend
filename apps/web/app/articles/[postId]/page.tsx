@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
-import { getArticle } from "@plick/core/articles";
+import {
+  getArticle,
+  getHotArticles,
+  getRelatedArticles,
+} from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
-import type { InitialCommentPage } from "@plick/domain/types";
+import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { getAccessToken } from "@/_services/session";
@@ -28,9 +32,12 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 사이드바(관련·실시간 인기)와 본문 밑 추천 행은 대응 BE 엔드포인트가 아직 없어
- * 자리만 두고 준비 중 문구를 그린다 — 모바일 KAN-283과 같은 원칙으로, 추천
- * API가 생기기 전까지 목이나 피드 슬라이싱으로 채우지 않는다.
+ * 사이드바는 KAN-338에서 채웠다. 실시간 인기는 홈과 같은 핫이슈 데이터를 상세와
+ * 병렬로 받고, 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
+ * (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고 5개). 실패해도
+ * 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다. 본문 밑 추천 행은
+ * 웹에선 채우지 않기로 해서(사이드바 관련 기사와 중복) 준비 중 문구로 남긴다 —
+ * 모바일 "함께 보면 좋은 기사"는 같은 데이터로 채웠다.
  */
 export default async function ArticleDetailPage({
   params,
@@ -40,9 +47,10 @@ export default async function ArticleDetailPage({
   const { postId } = await params;
   const accessToken = await getAccessToken();
 
-  const [articleResult, commentsResult] = await Promise.allSettled([
+  const [articleResult, commentsResult, hotResult] = await Promise.allSettled([
     getArticle(postId, accessToken),
     getComments(postId, { accessToken }),
+    getHotArticles(),
   ]);
 
   if (articleResult.status === "rejected") {
@@ -64,6 +72,22 @@ export default async function ArticleDetailPage({
       ? { page: commentsResult.value, fetchedAt: Date.now() }
       : undefined;
 
+  const hot = hotResult.status === "fulfilled" ? hotResult.value : null;
+  if (hotResult.status === "rejected") {
+    console.error("[article] 실시간 인기 로드 실패:", hotResult.reason);
+  }
+
+  // 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
+  let related: ArticleCard[] | null = null;
+  try {
+    related = await getRelatedArticles(
+      articleResult.value.id,
+      articleResult.value.teams,
+    );
+  } catch (error) {
+    console.error("[article] 관련 기사 로드 실패:", error);
+  }
+
   return (
     <>
       {/* 진입을 조회로 기록한다 (KAN-332). 그리는 것 없는 클라 경계 */}
@@ -76,7 +100,11 @@ export default async function ArticleDetailPage({
               article={articleResult.value}
               initialComments={initialComments}
             />
-            <ArticleSidebar className="hidden lg:flex" />
+            <ArticleSidebar
+              related={related}
+              hot={hot}
+              className="hidden lg:flex"
+            />
           </div>
         </PageContainer>
       </main>
