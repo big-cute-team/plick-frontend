@@ -7,8 +7,11 @@
 import { OAUTH_AUTHORIZE } from "@/_constants/api";
 import type { SocialProvider } from "@/_types/api";
 
-/** 프로바이더가 code를 돌려보낼 우리 쪽 콜백 주소 — 배포 환경에선 env로 교체한다 */
-function redirectUri(): string {
+/**
+ * 프로바이더가 code를 돌려보낼 우리 쪽 콜백 주소 — 배포 환경에선 env로 교체한다.
+ * 인가 요청(`buildAuthorizeUrl`)과 BE 로그인 본문(KAN-341)이 같은 값을 써야 해서 export한다.
+ */
+export function getRedirectUri(): string {
   return (
     process.env.OAUTH_REDIRECT_URI ?? "http://localhost:3001/oauth/callback"
   );
@@ -32,7 +35,7 @@ export function buildAuthorizeUrl(
   const url = new URL(endpoint);
   url.search = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: redirectUri(),
+    redirect_uri: getRedirectUri(),
     response_type: "code",
     state,
     ...extraParams,
