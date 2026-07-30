@@ -204,16 +204,25 @@ pm2 startup systemd
 
 ### 아티팩트 버킷
 
-콘솔 검색창에 S3 → 버킷 만들기.
+배포 산출물이 사는 곳이다. 우리는 BE와 버킷 하나(`plick-deploy`)를 같이 쓰고 팀별로
+최상위 접두사를 나눈다. 프론트 몫이 `frontend/`이고, 키는
+`frontend/<커밋sha>/{web,mobile}.tar.gz`와 `release.sh`다. S3의 폴더는 실제 디렉터리가
+아니라 키 접두사라, 버킷에 폴더를 미리 만들 필요는 없다. 첫 업로드가 곧 폴더다.
+
+버킷이 이미 있으면 이 단계는 접두사 합의로 끝이다. 새로 만든다면 콘솔 검색창에
+S3 → 버킷 만들기:
 
 - 리전: `ap-northeast-2` (서울)
 - 버킷 네임스페이스: "글로벌 네임스페이스" 선택. ⚠️ 요즘 콘솔은 "계정 리전
   네임스페이스(권장)"를 권하는데, 그쪽은 버킷 주소와 ARN 형식이 달라서 아래
   IAM 정책의 `arn:aws:s3:::버킷명` 표기나 `s3://버킷명/...` CLI 경로와 안 맞는다.
   클래식(글로벌)으로 간다
-- 이름: `plick-deploy-artifacts` (글로벌 유일이라 누가 선점했으면 뒤에 붙여서 짓고,
-  이후 모든 정책과 워크플로의 버킷 이름을 같이 바꾼다)
+- 이름: `plick-deploy` (글로벌 유일이라 누가 선점했으면 다르게 짓고, 이후 모든
+  정책과 워크플로의 버킷 이름을 같이 바꾼다)
 - 객체 소유권 "ACL 비활성화됨(권장)", 퍼블릭 액세스 전체 차단 유지, 나머지 기본값
+
+버킷 이름과 접두사는 `deploy.yml`의 `DEPLOY_BUCKET`·`DEPLOY_PREFIX` env가 단일
+출처다. 바꾸면 IAM 정책 두 개(아래)의 Resource도 같이 바꾼다.
 
 > 📷 버킷 만들기 — 네임스페이스 선택 화면
 
@@ -253,7 +262,7 @@ tarball이 NAT를 통과하며 나가는 처리 요금을 아낀다.
     {
       "Effect": "Allow",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::plick-deploy-artifacts/*"
+      "Resource": "arn:aws:s3:::plick-deploy/frontend/*"
     }
   ]
 }
@@ -302,7 +311,7 @@ AssumeRole이 실패한다.
     {
       "Effect": "Allow",
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::plick-deploy-artifacts/*"
+      "Resource": "arn:aws:s3:::plick-deploy/frontend/*"
     },
     {
       "Effect": "Allow",
@@ -362,7 +371,7 @@ ARN(`arn:aws:iam::<계정ID>:role/plick-frontend-deploy`)을 복사해 둔다.
    전부 404다
 4. OIDC로 배포 롤을 assume한다 (`aws-actions/configure-aws-credentials`).
    워크플로에 `permissions: id-token: write`가 있어야 토큰이 발급된다
-5. tarball과 release.sh를 `s3://버킷/deploy/<커밋sha>/`에 올린다. 스크립트도 매번
+5. tarball과 release.sh를 `s3://plick-deploy/frontend/<커밋sha>/`에 올린다. 스크립트도 매번
    같이 올리므로 EC2에 미리 둘 필요가 없고, 항상 그 커밋의 스크립트가 실행된다
 6. `aws ssm send-command`로 EC2에 명령을 넣는다. 명령 내용은 "S3에서 release.sh를
    받아 ubuntu로 실행해라"
@@ -658,8 +667,9 @@ ln -sfn /srv/plick-mobile/releases/<되돌릴sha> /srv/plick-mobile/current && p
 
 ### 오래된 아티팩트 정리
 
-배포마다 S3 `deploy/<sha>/`에 tarball이 쌓인다. 버킷 → 관리 탭 → 수명 주기 규칙
-생성 → 접두사 `deploy/`에 만료 7일을 걸어 두면 알아서 지워진다. 없어도 동작에는
+배포마다 S3 `frontend/<sha>/`에 tarball이 쌓인다. 버킷 → 관리 탭 → 수명 주기 규칙
+생성 → 접두사 `frontend/`에 만료 7일을 걸어 두면 알아서 지워진다 (공용 버킷이라
+접두사 없이 걸면 BE 몫까지 지워지니 주의). 없어도 동작에는
 문제없고 저장 요금만 조금씩 는다.
 
 ## 자주 막히는 곳 총정리
