@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { AuthCard } from "@/_components/AuthCard";
+
+/** 이 URL이 canonical이다 (KAN-346). 모바일 회원가입의 canonical이 여기를 가리킨다. */
+export const metadata: Metadata = {
+  title: "회원가입",
+  alternates: { canonical: "/signup" },
+};
 
 /** W7 회원가입 — 다크 배경 중앙 카드(로고·태그라인 + 카카오/구글 소셜 가입 + 약관 + 로그인 링크). KAN-246, 피그마 205-2. */
 export default function SignupPage() {
