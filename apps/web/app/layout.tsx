@@ -7,7 +7,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PLick",
-  description: "오늘의 PL 루머를 한 장에",
+  description: "프리미어리그 소식을 릴스로",
 };
 
 /**

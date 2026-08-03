@@ -104,6 +104,10 @@ Step 2가 구조 확장, Step 3이 콘텐츠·운영이다.
 
 ### Step 0. 선결 결정 (개발 전 합의 필요)
 
+> 2026-08-03 결정 완료(KAN-346). 1은 A안(`plick.co.kr` canonical) 확정, 2와 3은 구현됨.
+> 태그라인은 "프리미어리그 소식을 릴스로"로 확정하고 두 앱 메타데이터 description도
+> 이 문구로 통일했다. 기록은 [ADR 0070](adr/0070-seo-step0-site-url-og.md).
+
 1. 대표(canonical) 도메인 결정.
    구글은 2019년부터 모바일 우선 인덱싱이라, 모바일 웹이 주력인 PLick은 `m.plick.co.kr`을
    canonical로 삼는 게 자연스러워 보이지만, m-dot 서브도메인보다 apex 도메인이 브랜드
