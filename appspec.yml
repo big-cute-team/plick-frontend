@@ -1,0 +1,31 @@
+# CodeDeploy 배포 명세. 번들(bundle.zip) 루트에 있어야 에이전트가 찾으므로 리포 루트에 둔다.
+# 번들 전체를 /srv/plick/bundle에 복사한 뒤 훅이 압축 해제·env 생성·기동·검증을 이어 한다.
+# 훅 순서: ApplicationStop → BeforeInstall → (파일 복사) → AfterInstall → ApplicationStart → ValidateService
+# 에이전트는 root로 돌지만 runas: ubuntu로 내려 pm2 데몬 유저 꼬임(v1 함정)을 차단한다.
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /srv/plick/bundle
+file_exists_behavior: OVERWRITE
+hooks:
+  ApplicationStop:
+    - location: scripts/deploy/application_stop.sh
+      timeout: 60
+      runas: ubuntu
+  BeforeInstall:
+    - location: scripts/deploy/before_install.sh
+      timeout: 60
+      runas: ubuntu
+  AfterInstall:
+    - location: scripts/deploy/after_install.sh
+      timeout: 300
+      runas: ubuntu
+  ApplicationStart:
+    - location: scripts/deploy/application_start.sh
+      timeout: 120
+      runas: ubuntu
+  ValidateService:
+    - location: scripts/deploy/validate_service.sh
+      timeout: 180
+      runas: ubuntu

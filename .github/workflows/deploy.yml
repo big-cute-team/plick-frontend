@@ -3,44 +3,40 @@ name: Deploy
 # main은 릴리스 브랜치다. develop에서 main으로 병합되는 순간이 배포 시점이다.
 # workflow_dispatch는 코드 변경 없이 다시 돌려야 할 때 쓴다. API_BASE_URL은
 # 빌드 때 산출물에 박히는 값이라, BE 주소가 바뀌면 시크릿만 고치고 여기서 재실행한다.
+#
+# v2(KAN-344): SSM Run Command 대신 CodeDeploy Blue/Green으로 나간다.
+# 두 앱을 bundle.zip 하나로 묶어 배포 1건을 만든다. 인스턴스가 통째로 교체되는
+# 구조라 앱별로 따로 배포하면 한 ASG를 두 배포가 서로 복제·종료하며 싸우기 때문이다.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# 배포는 중간에 끊기면 서버가 어중간한 상태로 남는다. 새 실행이 와도 취소하지 않고 줄 세운다.
+# 배포는 중간에 끊기면 어중간한 상태로 남는다. 새 실행이 와도 취소하지 않고 줄 세운다.
 concurrency:
   group: deploy
   cancel-in-progress: false
 
-# EC2가 프라이빗 서브넷에 있어 러너에서 SSH가 닿지 않는다. OIDC로 AWS 롤을 빌려
-# S3에 산출물을 올리고 SSM Run Command로 서버 쪽 릴리스 스크립트를 실행한다.
+# OIDC로 AWS 롤을 빌려 S3 업로드와 CodeDeploy 배포 생성을 한다.
 # id-token: write가 OIDC 토큰 발급 권한이다. 이게 없으면 configure-aws-credentials가 실패한다.
 permissions:
   id-token: write
   contents: read
 
-# 버킷은 BE와 같이 쓰는 plick-deploy다. 팀별로 최상위 접두사를 나눠 쓰고
-# 프론트 몫이 frontend/다. 키는 frontend/<커밋sha>/{web,mobile}.tar.gz + release.sh.
+# 버킷은 BE와 같이 쓰는 plick-deploy다. 프론트 몫 접두사가 frontend/이고
+# 키는 frontend/<커밋sha>/bundle.zip 하나다. CodeDeploy 앱·그룹 이름은 리포 하나에
+# 배포 대상 하나라 변수로 빼지 않고 여기 상수로 둔다.
 env:
   AWS_REGION: ap-northeast-2
   DEPLOY_BUCKET: plick-deploy
   DEPLOY_PREFIX: frontend
+  CODEDEPLOY_APP: plick-frontend
+  CODEDEPLOY_GROUP: plick-frontend-dg
 
 jobs:
   deploy:
-    name: Deploy ${{ matrix.app }}
+    name: Deploy bundle
     runs-on: ubuntu-latest
-    strategy:
-      # 두 앱이 같은 인스턴스에 뜨지만 디렉터리도 pm2 프로세스도 따로라 동시에 나가도 된다.
-      # 한쪽이 실패해도 다른 쪽은 자기 롤백을 마치게 fail-fast를 끈다.
-      fail-fast: false
-      matrix:
-        include:
-          - app: web
-            domain: plick.co.kr
-          - app: mobile
-            domain: m.plick.co.kr
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,20 +55,42 @@ jobs:
 
       # 러너(ubuntu x86_64)에서 빌드해야 한다. 산출물에는 sharp 같은 플랫폼 종속
       # 네이티브 바이너리가 딸려 들어가서, 맥에서 빌드한 걸 올리면 EC2에서 깨진다.
-      - name: Build
+      # Launch Template AMI도 같은 이유로 x86_64에 맞춰져 있다.
+      - name: Build web
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-        run: pnpm --filter ${{ matrix.app }} build
+        run: pnpm --filter web build
+
+      - name: Build mobile
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: pnpm --filter mobile build
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
       # 한 서버에서 다 서빙하므로 여기서 채워 넣는다. 빠뜨리면 CSS·이미지가 404다.
       - name: Assemble standalone
-        env:
-          APP: ${{ matrix.app }}
         run: |
-          cp -r "apps/$APP/.next/static" "apps/$APP/.next/standalone/apps/$APP/.next/static"
-          cp -r "apps/$APP/public" "apps/$APP/.next/standalone/apps/$APP/public"
-          tar -C "apps/$APP/.next/standalone" -czf "$APP.tar.gz" .
+          for APP in web mobile; do
+            cp -r "apps/$APP/.next/static" "apps/$APP/.next/standalone/apps/$APP/.next/static"
+            cp -r "apps/$APP/public" "apps/$APP/.next/standalone/apps/$APP/public"
+            tar -C "apps/$APP/.next/standalone" -czf "$APP.tar.gz" .
+          done
+
+      # appspec.yml이 zip 루트에 있어야 에이전트가 찾는다. 디렉터리를 통째로 zip하면
+      # 한 겹 싸이므로 bundle/ 안으로 들어가서 zip한다. 훅 스크립트 경로는 appspec의
+      # location(scripts/deploy/*.sh)과 맞춘다. release.sh는 v1 전용이라 담지 않는다.
+      - name: Assemble bundle
+        run: |
+          mkdir -p bundle/scripts/deploy
+          cp appspec.yml bundle/
+          cp scripts/deploy/application_stop.sh \
+             scripts/deploy/before_install.sh \
+             scripts/deploy/after_install.sh \
+             scripts/deploy/application_start.sh \
+             scripts/deploy/validate_service.sh \
+             bundle/scripts/deploy/
+          cp web.tar.gz mobile.tar.gz bundle/
+          (cd bundle && zip -r ../bundle.zip .)
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -80,79 +98,38 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 릴리스 스크립트도 같이 올린다. EC2에 스크립트를 미리 둘 필요가 없고,
-      # 항상 이 커밋의 스크립트가 실행되므로 코드와 스크립트 버전이 어긋나지 않는다.
-      - name: Upload artifact
+      - name: Upload bundle
         env:
-          APP: ${{ matrix.app }}
+          SHA: ${{ github.sha }}
+        run: aws s3 cp bundle.zip "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/bundle.zip"
+
+      # wait deployment-successful은 15초 간격으로 최대 30분까지 기다리고,
+      # 배포가 실패로 끝나면 non-zero로 빠져 잡이 빨간불이 된다.
+      # ValidateService까지 실패하면 트래픽은 Blue에 남으므로 별도 롤백이 없다.
+      - name: Create deployment
+        id: create-deployment
+        env:
           SHA: ${{ github.sha }}
         run: |
-          aws s3 cp "$APP.tar.gz" "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/$APP.tar.gz"
-          aws s3 cp scripts/deploy/release.sh "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/release.sh"
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name "$CODEDEPLOY_APP" \
+            --deployment-group-name "$CODEDEPLOY_GROUP" \
+            --s3-location "bucket=$DEPLOY_BUCKET,key=$DEPLOY_PREFIX/$SHA/bundle.zip,bundleType=zip" \
+            --description "deploy $SHA" \
+            --query deploymentId --output text)
+          echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
+          echo "배포 생성: $DEPLOYMENT_ID"
+          aws deploy wait deployment-successful --deployment-id "$DEPLOYMENT_ID"
+          echo "배포 성공: $DEPLOYMENT_ID"
 
-      # 릴리스 교체·기동·헬스체크·롤백은 서버 쪽 스크립트(release.sh)가 맡는다.
-      #
-      # SSM Run Command는 root로 실행되는데 pm2 데몬과 /srv 디렉터리는 ubuntu 소유라
-      # sudo -u ubuntu로 내려서 돌린다. -H가 HOME을 /home/ubuntu로 잡아 줘야
-      # pm2가 자기 데몬(~/.pm2)을 제대로 찾는다.
-      #
-      # AWS-RunShellScript는 commands를 셸 스크립트 하나로 이어 붙여 실행하고
-      # 종료 코드는 마지막 명령 것만 본다. set -e를 첫 줄에 두지 않으면 중간 실패가
-      # 묻히므로 반드시 유지한다.
-      #
-      # send-command는 비동기다. get-command-invocation으로 끝날 때까지 폴링하고
-      # 서버 로그를 그대로 받아와, 헬스체크 실패 롤백까지 여기 빨간불로 잇는다.
-      - name: Release
-        env:
-          APP: ${{ matrix.app }}
-          SHA: ${{ github.sha }}
-          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+      # 훅 스크립트 stdout은 러너로 안 온다. 어느 훅에서 죽었는지는 여기 요약으로 보고,
+      # 상세 로그는 CodeDeploy 콘솔의 배포 상세 → 이벤트에서 본다.
+      - name: Deployment failure info
+        if: failure() && steps.create-deployment.outputs.deployment_id != ''
         run: |
-          # executionTimeout은 서버에서 명령이 매달렸을 때 SSM 에이전트가 끊는 시한이다.
-          # 릴리스는 flock 대기를 포함해도 1~2분이면 끝난다. 아래 폴링 한도(450초)보다
-          # 짧아야 hang이 폴링 시간 안에 실패로 확정된다.
-          cat > ssm-params.json <<EOF
-          {
-            "commands": [
-              "set -e",
-              "aws s3 cp s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/release.sh /tmp/plick-release-$APP.sh",
-              "sudo -u ubuntu -H env APP=$APP SHA=$SHA BUCKET=$DEPLOY_BUCKET PREFIX=$DEPLOY_PREFIX bash /tmp/plick-release-$APP.sh"
-            ],
-            "executionTimeout": ["420"]
-          }
-          EOF
-
-          CMD_ID=$(aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --comment "deploy $APP $SHA" \
-            --parameters file://ssm-params.json \
-            --query 'Command.CommandId' --output text)
-
-          STATUS=InProgress
-          for _ in $(seq 1 90); do
-            STATUS=$(aws ssm get-command-invocation \
-              --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
-              --query 'Status' --output text)
-            case "$STATUS" in
-              Pending|InProgress|Delayed) sleep 5 ;;
-              *) break ;;
-            esac
-          done
-
-          echo "--- 서버 로그 ---"
-          aws ssm get-command-invocation \
-            --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
-            --query 'StandardOutputContent' --output text
-
-          if [ "$STATUS" != "Success" ]; then
-            echo "--- 서버 stderr ---"
-            aws ssm get-command-invocation \
-              --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
-              --query 'StandardErrorContent' --output text
-            echo "SSM 명령 상태: $STATUS"
-            exit 1
-          fi
+          aws deploy get-deployment \
+            --deployment-id "${{ steps.create-deployment.outputs.deployment_id }}" \
+            --query 'deploymentInfo.{status:status,errorInformation:errorInformation,overview:deploymentOverview}'
 
       - name: 배포 확인
-        run: echo "https://${{ matrix.domain }} 로 서비스된다"
+        run: echo "https://plick.co.kr · https://m.plick.co.kr 로 서비스된다"
