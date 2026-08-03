@@ -193,14 +193,17 @@ aws/ssm 기본 키로 만들었으면 별도 kms 권한은 필요 없다.
 역할을 만들면 같은 이름의 인스턴스 프로파일이 같이 생긴다. Launch Template에서
 이 프로파일을 고른다.
 
-### ② plick-codedeploy-role (CodeDeploy 서비스용, 신규)
+### ② plick-frontend-codedeploy-role (CodeDeploy 서비스용, 신규)
+
+BE도 CodeDeploy를 쓸 예정이라 서비스 롤 이름에 frontend를 넣어 구분한다. PassRole이
+프론트 인스턴스 롤 하나로 좁혀져 있어 팀별 롤 분리가 IAM 경계도 깔끔하게 유지한다.
 
 CodeDeploy가 Blue/Green에서 ASG를 복제하고 인스턴스를 만들고 지우는 권한.
 IAM → 역할 생성 → AWS 서비스 → CodeDeploy(EC2/온프레미스용).
 
 - `AWSCodeDeployRole` (기본으로 붙는다)
 - `AmazonEC2FullAccess` — Green ASG·인스턴스 생성용. 참조 README와 동일
-- 인라인 정책 (`plick-codedeploy-passrole`) — 새 인스턴스에 ①번 역할을 붙일
+- 인라인 정책 (`plick-frontend-codedeploy-passrole`) — 새 인스턴스에 ①번 역할을 붙일
   권한. 이게 없으면 Green 기동에서 조용히 실패한다:
 
 ```json
@@ -337,7 +340,7 @@ CodeDeploy → 애플리케이션 생성.
 배포 그룹 생성.
 
 - 이름: `plick-frontend-dg`
-- 서비스 역할: `plick-codedeploy-role`
+- 서비스 역할: `plick-frontend-codedeploy-role`
 - 배포 유형: 블루/그린
 - 환경 구성: "Auto Scaling 그룹을 자동으로 복사" → `plick-frontend-asg`
 - 배포 설정: `CodeDeployDefault.AllAtOnce`
