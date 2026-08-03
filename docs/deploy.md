@@ -1,5 +1,13 @@
 # 프라이빗 EC2에 Next.js 프론트 배포하기 (ALB + SSM + GitHub Actions)
 
+> ⚠️ 이 문서는 배포 v1의 기록이다. 지금 운영 중인 배포는 Launch Template + ASG +
+> CodeDeploy Blue/Green의 v2이고, 현행 구조와 운영 절차는
+> [deploy-v2.md](deploy-v2.md)를 본다. v1 경로(단일 EC2 + SSM Run Command)는
+> 2026-08-03에 정리했다. 인스턴스는 종료했고 release.sh는 리포에서 삭제했으며
+> OIDC 롤의 SSM 권한과 `EC2_INSTANCE_ID` 시크릿도 제거했다. 이 글은 ALB·대상
+> 그룹·ACM·Route 53·보안그룹처럼 v2가 그대로 물려받은 기반의 세팅 기록이자,
+> 프라이빗 EC2 한 대에 처음부터 세우는 절차의 참고 자료로 남긴다.
+
 프리미어리그 이적 루머 서비스 PLick의 프론트엔드(web + mobile, Next.js 두 앱)를
 프라이빗 서브넷의 EC2 한 대에 올린 전 과정을 기록한다. 사용자는 퍼블릭 ALB로만
 들어오고, 백엔드 통신은 내부 ALB로만 나가고, EC2에는 퍼블릭 IP도 SSH도 없다.
@@ -627,6 +635,11 @@ curl -s -o /dev/null -w "%{http_code}\n" http://<내부 ALB DNS>/api/v1/articles
 여기까지 확인되면 끝이다. 이후는 운영이다.
 
 ## 운영
+
+> ⚠️ 이 절부터는 v1 기준이라 더 이상 유효하지 않다. 현행 운영(재배포, 롤백,
+> 환경변수 변경, 로그)은 [deploy-v2.md](deploy-v2.md)의 14절을 본다. v2에서는
+> 릴리스 디렉터리와 심볼릭 링크가 없고, 롤백은 이전 sha의 bundle.zip 재배포,
+> 환경변수는 Parameter Store 수정 + 재배포다. 아래는 기록으로만 남긴다.
 
 접속이 필요한 작업은 전부 SSM 세션에서 하고, 세션을 열면 `sudo su - ubuntu`부터
 한다. ssm-user 상태로 pm2를 부르면 ubuntu의 pm2 데몬이 안 보여서 프로세스가 없는

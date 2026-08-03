@@ -3,6 +3,9 @@
   "ui": "tui",
   "globalEnv": [
     "API_BASE_URL",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_WEB_SITE_URL",
+    "NEXT_PUBLIC_MOBILE_SITE_URL",
     "NODE_ENV",
     "KAKAO_CLIENT_ID",
     "GOOGLE_CLIENT_ID",

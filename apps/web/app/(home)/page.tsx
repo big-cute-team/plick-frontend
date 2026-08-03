@@ -1,11 +1,24 @@
+import type { Metadata } from "next";
 import { getArticles, getHotArticles } from "@plick/core/articles";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { HotCarousel } from "@plick/ui/HotCarousel";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { PostFeed } from "@/_components/PostFeed";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { HotCard } from "./_components/HotCard";
 import { HomeSidebar } from "./_components/HomeSidebar";
+
+/**
+ * 이 URL이 canonical이고 대응 모바일 홈을 alternate로 선언한다 (KAN-346) —
+ * 별도 모바일 URL 패턴의 데스크톱 쪽 절반. 모바일 쪽 canonical과 상호 참조다.
+ */
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+    media: { [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/` },
+  },
+};
 
 /**
  * 데스크톱 홈 — GNB + 핫이슈 그리드 + 소식 리스트/사이드바 2단 (KAN-200).

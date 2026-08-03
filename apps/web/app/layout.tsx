@@ -1,13 +1,44 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { QueryProvider } from "@/_queries/QueryProvider";
+import { SITE_URL } from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
 import { isLoggedIn } from "@/_services/session";
 import "./globals.css";
 
+/**
+ * 전 라우트 공통 메타데이터 (KAN-346). 하위 페이지는 title 문자열만 export하면
+ * template이 "… | PLick"으로 감싼다. og:image·og:image:alt는 `app/`의
+ * `opengraph-image.png` 파일 컨벤션이 자동으로 낸다(ADR 0070). canonical은
+ * 페이지마다 경로가 달라 여기 두지 않고 각 페이지가 선언한다 — 이 앱이
+ * canonical 도메인이고(ADR 0070 A안) 대응 모바일 페이지를 alternate로 단다.
+ */
 export const metadata: Metadata = {
-  title: "PLick",
-  description: "오늘의 PL 루머를 한 장에",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "PLick",
+    template: "%s | PLick",
+  },
+  description: "프리미어리그 소식을 릴스로",
+  openGraph: {
+    siteName: "PLick",
+    type: "website",
+    locale: "ko_KR",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+};
+
+/**
+ * 데스크톱도 뷰포트 메타는 있어야 한다 (KAN-346) — 없으면 모바일 기기에서 이
+ * 도메인을 열었을 때 980px 가상 뷰포트로 축소 렌더되고, 모바일 친화성 평가에도
+ * 불리하다. 노치 대응(viewport-fit)은 모바일 앱만의 몫이라 여기선 뺀다.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0b0d12",
 };
 
 /**

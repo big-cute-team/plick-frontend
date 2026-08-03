@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/_components/AuthCard";
 import { getMyProfile } from "@/_services/profile";
+
+/** 이 URL이 canonical이다 (KAN-346). 모바일 로그인의 canonical이 여기를 가리킨다. */
+export const metadata: Metadata = {
+  title: "로그인",
+  alternates: { canonical: "/login" },
+};
 
 /**
  * W6 로그인 — 다크 배경 중앙 카드(로고·태그라인 + 카카오/구글 소셜 로그인 + 회원가입 링크).

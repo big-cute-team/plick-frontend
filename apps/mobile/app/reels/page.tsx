@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/_components/AppShell";
 import { ReelsFeed } from "./_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
+import { WEB_SITE_URL } from "@/_constants/site";
 import { getReels } from "@plick/core/reels";
 import { getAccessToken } from "@/_services/session";
 import type { InitialReelFeed } from "@plick/domain/types";
+
+/** canonical은 데스크톱 릴스다 (KAN-346) — 모바일 홈 canonical과 같은 이유. */
+export const metadata: Metadata = {
+  title: "릴스",
+  alternates: { canonical: `${WEB_SITE_URL}/reels` },
+};
 
 /**
  * 릴스 화면 (KAN-167) — 풀스크린 미디어 위에 탭바를 오버레이로 얹는다.

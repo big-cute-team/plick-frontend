@@ -56,14 +56,23 @@ jobs:
       # 러너(ubuntu x86_64)에서 빌드해야 한다. 산출물에는 sharp 같은 플랫폼 종속
       # 네이티브 바이너리가 딸려 들어가서, 맥에서 빌드한 걸 올리면 EC2에서 깨진다.
       # Launch Template AMI도 같은 이유로 x86_64에 맞춰져 있다.
+      # NEXT_PUBLIC_SITE_URL은 canonical·sitemap용 대표 URL이라 앱마다 다르고(KAN-346),
+      # 비밀이 아닌 공개 도메인이라 시크릿 대신 여기 상수로 박는다. 값이 틀리면
+      # canonical과 sitemap이 통째로 엉뚱한 도메인을 가리키므로 수정 시 재확인한다.
+      # 교차 URL(web의 MOBILE_SITE_URL, mobile의 WEB_SITE_URL)은 m-dot 상호 선언용
+      # (모바일 canonical → 데스크톱, 데스크톱 alternate → 모바일)이라 같은 이유로 상수다.
       - name: Build web
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          NEXT_PUBLIC_SITE_URL: https://plick.co.kr
+          NEXT_PUBLIC_MOBILE_SITE_URL: https://m.plick.co.kr
         run: pnpm --filter web build
 
       - name: Build mobile
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          NEXT_PUBLIC_SITE_URL: https://m.plick.co.kr
+          NEXT_PUBLIC_WEB_SITE_URL: https://plick.co.kr
         run: pnpm --filter mobile build
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).

@@ -45,6 +45,18 @@ export function formatChangeableAt(iso: string): string {
   }).format(new Date(iso));
 }
 
+/**
+ * 메타 description용 말줄임 — max 글자를 넘으면 잘라 "…"를 붙인다 (KAN-346).
+ * 검색 스니펫 권장 길이(160자)에 맞춰 기사 요약을 자를 때 두 앱의
+ * `generateMetadata`가 쓴다.
+ *
+ * @example
+ * truncateText("아주 긴 요약…", 160);
+ */
+export function truncateText(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { AuthScreen } from "@/_components/AuthScreen";
+import { WEB_SITE_URL } from "@/_constants/site";
+
+/** canonical은 데스크톱 회원가입이다 (KAN-346) — 모바일 홈 canonical과 같은 이유. */
+export const metadata: Metadata = {
+  title: "회원가입",
+  alternates: { canonical: `${WEB_SITE_URL}/signup` },
+};
 
 /** A2 회원가입 — 뒤로가기 + 로고·태그라인 + 카카오/구글 소셜 가입 + 약관·로그인 링크 (KAN-175, 피그마 104-6). */
 export default function SignupPage() {
