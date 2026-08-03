@@ -155,6 +155,12 @@ unhealthy가 되고, `API_BASE_URL`은 여전히 두 시점에 읽힌다(빌드 
 → `/be` 프록시 목적지로 산출물에 굳고, 실행 때 이 파라미터 → 서버 컴포넌트
 fetch). 값이 바뀌면 시크릿과 파라미터 양쪽을 고치고 재배포한다.
 
+`NEXT_PUBLIC_SITE_URL`(KAN-346)은 여기 넣지 않는다. NEXT*PUBLIC* 접두사라 빌드
+시점에 산출물로 굳는 순수 빌드 타임 값이고, 비밀이 아닌 공개 도메인이라 시크릿도
+아니다. deploy.yml의 앱별 빌드 스텝에 상수로 박혀 있다(web `https://plick.co.kr`,
+mobile `https://m.plick.co.kr`). ⚠️ 이 값이 틀리면 canonical과 sitemap이 통째로
+엉뚱한 도메인을 가리키므로, 도메인이 바뀌면 deploy.yml을 고치고 재배포한다.
+
 ## 5. IAM 역할 3개
 
 참조 README와 같은 3역할 구조다. 기존 역할을 부수지 않고 새로 만들거나 정책을
@@ -466,7 +472,8 @@ v1 release.sh에서 안 가져가는 것들과 그 이유:
 v1 그대로 두고 잡 구조를 바꾼다. matrix 2잡 → 단일 잡.
 
 1. checkout, pnpm/Node 셋업, `pnpm install --frozen-lockfile`
-2. `API_BASE_URL` 시크릿을 물려 web·mobile 순서로 빌드
+2. `API_BASE_URL` 시크릿과 앱별 `NEXT_PUBLIC_SITE_URL` 상수(KAN-346)를 물려
+   web·mobile 순서로 빌드
 3. 앱별 standalone 조립(`.next/static`·`public` 채워 tar) — v1 스텝 재사용
 4. 번들 조립: `appspec.yml`, `scripts/deploy/*.sh`, `web.tar.gz`, `mobile.tar.gz`를
    한 디렉터리에 모아 zip. ⚠️ appspec.yml이 zip 루트에 있어야 한다. 디렉터리를
