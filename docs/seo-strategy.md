@@ -124,6 +124,10 @@ Step 2가 구조 확장, Step 3이 콘텐츠·운영이다.
 
 ### Step 1. 기술 SEO 기본 (특강 "이것만 하면 구글에 존재는 한다")
 
+> 2026-08-03 코드 몫(1~5) 구현 완료(KAN-346). robots는 AI 크롤러 포함 전체 허용으로
+> 확정했다. 기록은 [ADR 0071](adr/0071-seo-step1-robots-sitemap-metadata.md).
+> 6(Search Console·네이버 등록)과 7(실배포 검증)은 배포 후 운영 작업으로 남는다.
+
 전부 코드 레벨 작업이고 앱당 반나절 규모다. mobile·web 동시 적용.
 
 1. `app/robots.ts` — 전체 Allow, `/api/`·`/oauth/`·`/me/`·`/onboarding/` Disallow,

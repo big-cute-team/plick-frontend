@@ -1,12 +1,50 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
+import { truncateText } from "@plick/domain/format";
 import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
+import { WEB_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
+
+/**
+ * 기사별 고유 메타데이터 (KAN-346) — 기사 하나하나가 롱테일 검색어의 랜딩이라
+ * title·description·OG가 페이지마다 달라야 한다. canonical은 같은 콘텐츠의
+ * 데스크톱 기사 URL이다(별도 모바일 URL 패턴).
+ *
+ * 본문 렌더와 별개로 상세를 한 번 더 부르지만, 메타데이터는 유저 무관이라
+ * 토큰 없이 부른다 — 익명 fetch는 같은 렌더 안에서 중복 제거되고, 토큰을
+ * 실으면 오히려 no-store라 두 번 나간다. 없는 기사는 빈 메타데이터로 두면
+ * 페이지 본문이 notFound()로 떨어진다.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}): Promise<Metadata> {
+  const { postId } = await params;
+  try {
+    const article = await getArticle(postId);
+    const description = truncateText(article.summary, 160);
+    return {
+      title: article.title,
+      description,
+      alternates: { canonical: `${WEB_SITE_URL}/articles/${article.id}` },
+      openGraph: {
+        title: article.title,
+        description,
+        type: "article",
+        publishedTime: article.publishedAt,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 import { ArticleBody } from "./_components/ArticleBody";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 import { ArticleViewTracker } from "./_components/ArticleViewTracker";

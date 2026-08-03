@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/_components/AppShell";
 import { HotCarousel } from "@plick/ui/HotCarousel";
 import { HomeScrollArea } from "./_components/HomeScrollArea";
@@ -5,8 +6,17 @@ import { HotHeroCard } from "./_components/HotHeroCard";
 import { NewsFeed } from "./_components/NewsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
+import { WEB_SITE_URL } from "@/_constants/site";
 import { getArticles, getHotArticles } from "@plick/core/articles";
 import type { InitialArticleFeed } from "@plick/domain/types";
+
+/**
+ * canonical은 데스크톱 홈이다 (KAN-346) — 별도 모바일 URL 패턴에서 모바일
+ * 페이지는 대응 데스크톱 URL을 canonical로 가리켜 시그널을 한 도메인에 모은다.
+ */
+export const metadata: Metadata = {
+  alternates: { canonical: `${WEB_SITE_URL}/` },
+};
 
 /**
  * 홈 화면 — 핫이슈 캐러셀 + 지금 올라온 소식 리스트 (KAN-163).
