@@ -26,11 +26,19 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // 팀 컬러·로고 동적 OG (KAN-351). 라우트 핸들러 URL을 명시한다 — 이유는
+    // `og/route.tsx` 참고
+    openGraph: {
+      title,
+      description,
+      images: [
+        { url: `/teams/${slug}/og`, width: 1200, height: 630, alt: title },
+      ],
+    },
     alternates: {
       canonical: `/teams/${slug}`,
       media: { [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/teams/${slug}` },
     },
-    openGraph: { title, description },
   };
 }
 

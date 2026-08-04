@@ -4,7 +4,9 @@ import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
 import { truncateText } from "@plick/domain/format";
+import { newsArticleJsonLd } from "@plick/domain/jsonld";
 import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
+import { JsonLd } from "@plick/ui/JsonLd";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
@@ -39,6 +41,16 @@ export async function generateMetadata({
         description,
         type: "article",
         publishedTime: article.publishedAt,
+        // 동적 OG는 canonical 도메인(web)이 렌더한다 (KAN-351) — 자산을 두 앱에
+        // 중복 커밋하지 않고, 어느 도메인에서 공유돼도 같은 카드가 나온다
+        images: [
+          {
+            url: `${WEB_SITE_URL}/articles/${article.id}/og`,
+            width: 1200,
+            height: 630,
+            alt: article.title,
+          },
+        ],
       },
     };
   } catch {
@@ -119,6 +131,17 @@ export default async function ArticleDetailPage({
 
   return (
     <AppShell>
+      {/* NewsArticle 구조화 데이터 (KAN-351) — 데스크톱과 같은 값을 싣고 URL도
+          canonical 도메인 기준이다(구글 별도 모바일 URL 가이드) */}
+      <JsonLd
+        data={newsArticleJsonLd({
+          article: articleResult.value,
+          canonicalUrl: `${WEB_SITE_URL}/articles/${articleResult.value.id}`,
+          imageUrl: `${WEB_SITE_URL}/articles/${articleResult.value.id}/og`,
+          siteUrl: WEB_SITE_URL,
+          logoUrl: `${WEB_SITE_URL}/icon.png`,
+        })}
+      />
       {/* 진입을 조회로 기록한다 (KAN-310). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
       <ArticleTopBar />

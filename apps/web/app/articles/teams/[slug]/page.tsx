@@ -24,6 +24,18 @@ export async function generateMetadata({
     title: `${fullName} 기사`,
     description: `${fullName} 이적 기사 모아보기`,
     alternates: { canonical: `/teams/${slug}` },
+    // canonical과 같은 팀 허브의 동적 OG를 그대로 쓴다 (KAN-351) — 이 라우트에
+    // 이미지 파일을 따로 두지 않고 카드도 팀 허브 하나로 모은다
+    openGraph: {
+      images: [
+        {
+          url: `/teams/${slug}/og`,
+          width: 1200,
+          height: 630,
+          alt: `${fullName} 이적 루머`,
+        },
+      ],
+    },
   };
 }
 
