@@ -20,7 +20,12 @@ import type { Filter } from "@plick/domain/types";
 import type { PostListVariant } from "@/_types/app";
 
 type ViewState = {
-  /** surface(홈 소식 리스트·기사 페이지)별 팀 필터 */
+  /**
+   * surface별 팀 필터. KAN-350부터 원본은 URL이다(홈 `/`·`/teams/[slug]`,
+   * 기사 `/articles`·`/articles/teams/[slug]`) — PostFeed가 URL에서 파생한 값을
+   * 여기 동기화해 두고, GNB의 홈·기사 링크(마지막으로 보던 팀 URL로 복귀,
+   * NavItem)와 재클릭 새로고침(useFeedRefresh)이 읽는다.
+   */
   feedFilters: Record<PostListVariant, Filter>;
   setFeedFilter: (surface: PostListVariant, filter: Filter) => void;
   /**

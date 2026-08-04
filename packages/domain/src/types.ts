@@ -12,6 +12,11 @@ export interface Team {
   code: TeamCode;
   /** 한글 표기 (예: 리버풀) */
   name: string;
+  /**
+   * URL용 영문 slug (예: tottenham) — 팀 허브 라우트 `/teams/[slug]`와
+   * sitemap이 쓴다 (KAN-350). 검색 친화적 풀네임 표기라 코드 소문자와 다르다.
+   */
+  slug: string;
   /** theme.css의 팀 컬러 CSS 변수명 (예: --plk-team-liv) */
   colorVar: string;
 }

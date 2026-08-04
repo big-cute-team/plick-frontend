@@ -24,7 +24,12 @@ import type { Filter } from "@plick/domain/types";
 import type { ScreenKey } from "@/_types/app";
 
 type ViewState = {
-  /** 홈 "지금 올라온 소식"의 팀 필터 */
+  /**
+   * 홈 "지금 올라온 소식"의 팀 필터. KAN-350부터 원본은 URL이다
+   * (`/` = 전체, `/teams/[slug]` = 그 팀) — NewsFeed가 URL에서 파생한 값을
+   * 여기 동기화해 두고, 하단 탭의 홈 href(마지막으로 보던 팀 허브로 복귀)와
+   * 당겨서 새로고침(지금 탭만 리셋)이 읽는다.
+   */
   homeFilter: Filter;
   setHomeFilter: (filter: Filter) => void;
   /** 화면별 스크롤 오프셋(px) */

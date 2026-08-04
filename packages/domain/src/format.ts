@@ -2,6 +2,47 @@
  * @file 공용 포맷 유틸 — 수치 축약·아바타 이니셜. 두 앱에 동일 구현으로 복제돼
  * 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
  */
+import { TEAMS, TEAM_BY_SLUG, TEAM_FULL_NAMES } from "./constants";
+import type { Filter } from "./types";
+
+/**
+ * 팀 필터 → 그 필터의 대표 URL 경로 (KAN-350). 전체는 홈(`/`), 팀은 팀 허브
+ * (`/teams/[slug]`)다. 두 앱의 필터 탭 href·history 갱신이 같은 규약을 쓴다.
+ *
+ * @example
+ * teamHubPath("TOT"); // "/teams/tottenham"
+ * teamHubPath("ALL"); // "/"
+ */
+export function teamHubPath(filter: Filter): string {
+  return filter === "ALL" ? "/" : `/teams/${TEAMS[filter].slug}`;
+}
+
+/**
+ * 경로 → 팀 필터 역산 (KAN-350). `/teams/[slug]`면 그 팀, 그 외는 전체다.
+ * 팀 허브가 홈 화면을 그대로 렌더하므로, 피드가 URL 하나로 어느 탭인지
+ * 판단할 때 쓴다. 모르는 slug는 전체로 떨어뜨린다 — 라우트 쪽 검증
+ * (`notFound()`)은 페이지가 따로 한다.
+ *
+ * @example
+ * teamFilterFromPathname("/teams/tottenham"); // "TOT"
+ * teamFilterFromPathname("/"); // "ALL"
+ */
+export function teamFilterFromPathname(pathname: string): Filter {
+  const slug = pathname.match(/^\/teams\/([^/]+)\/?$/)?.[1];
+  return (slug && TEAM_BY_SLUG[slug]) || "ALL";
+}
+
+/**
+ * 팀 허브(홈 surface)의 문서 제목 (KAN-350). 탭 전환이 `history.replaceState`라
+ * 서버 메타데이터가 다시 렌더되지 않으므로, 클라가 `document.title`을 이걸로
+ * 직접 맞춘다. 팀 허브 `generateMetadata`의 title(+ "%s | PLick" 템플릿)과 같은
+ * 문자열이어야 직접 진입과 탭 전환의 제목이 어긋나지 않는다.
+ */
+export function teamHubTitle(filter: Filter): string {
+  return filter === "ALL"
+    ? "PLick"
+    : `${TEAM_FULL_NAMES[filter]} 이적 루머 | PLick`;
+}
 
 /**
  * 수치를 축약 표기로 포맷한다.

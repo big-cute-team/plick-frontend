@@ -7,15 +7,53 @@
  */
 import type { RumorStage, Team, TeamCode } from "./types";
 
-/** 팀 레지스트리 — 코드 → 한글 이름·컬러 토큰 매핑 */
+/** 팀 레지스트리 — 코드 → 한글 이름·URL slug·컬러 토큰 매핑 */
 export const TEAMS: Record<TeamCode, Team> = {
-  LIV: { code: "LIV", name: "리버풀", colorVar: "--plk-team-liv" },
-  TOT: { code: "TOT", name: "토트넘", colorVar: "--plk-team-tot" },
-  ARS: { code: "ARS", name: "아스날", colorVar: "--plk-team-ars" },
-  MUN: { code: "MUN", name: "맨유", colorVar: "--plk-team-mun" },
-  CHE: { code: "CHE", name: "첼시", colorVar: "--plk-team-che" },
-  MCI: { code: "MCI", name: "맨시티", colorVar: "--plk-team-mci" },
+  LIV: {
+    code: "LIV",
+    name: "리버풀",
+    slug: "liverpool",
+    colorVar: "--plk-team-liv",
+  },
+  TOT: {
+    code: "TOT",
+    name: "토트넘",
+    slug: "tottenham",
+    colorVar: "--plk-team-tot",
+  },
+  ARS: {
+    code: "ARS",
+    name: "아스날",
+    slug: "arsenal",
+    colorVar: "--plk-team-ars",
+  },
+  MUN: {
+    code: "MUN",
+    name: "맨유",
+    slug: "manchester-united",
+    colorVar: "--plk-team-mun",
+  },
+  CHE: {
+    code: "CHE",
+    name: "첼시",
+    slug: "chelsea",
+    colorVar: "--plk-team-che",
+  },
+  MCI: {
+    code: "MCI",
+    name: "맨시티",
+    slug: "manchester-city",
+    colorVar: "--plk-team-mci",
+  },
 };
+
+/**
+ * URL slug → 팀 코드 (KAN-350). 팀 허브 라우트 `/teams/[slug]`의 파라미터 검증과
+ * 경로 → 필터 역산에 쓴다. `TEAMS`에서 파생시켜 두 방향이 갈라지지 않게 한다.
+ */
+export const TEAM_BY_SLUG: Record<string, TeamCode> = Object.fromEntries(
+  Object.values(TEAMS).map((team) => [team.slug, team.code]),
+);
 
 /** 팀 필터 순서 (빅6) */
 export const TEAM_ORDER: TeamCode[] = [
@@ -78,6 +116,16 @@ export const TEAM_BY_KO_NAME: Record<string, TeamCode> = {
   첼시: "CHE",
   "토트넘 핫스퍼": "TOT",
 };
+
+/**
+ * `TEAM_BY_KO_NAME`의 역방향 — 팀 코드 → 한글 정식 명칭 (KAN-350).
+ * 팀 허브의 title·h1·description이 쓴다. "토트넘 이적 루머" 같은 팀 검색어의
+ * 랜딩이라 축약 표기(`TEAMS[].name`)가 아니라 풀네임을 노출한다(SEO 전략 Step 2-2).
+ * 위 매핑에서 파생시켜 두 방향이 갈라지지 않게 한다.
+ */
+export const TEAM_FULL_NAMES: Record<TeamCode, string> = Object.fromEntries(
+  Object.entries(TEAM_BY_KO_NAME).map(([name, code]) => [code, name]),
+) as Record<TeamCode, string>;
 
 /**
  * BE 루머 단계 값 → 도메인 `RumorStage` (KAN-271, KAN-276).
