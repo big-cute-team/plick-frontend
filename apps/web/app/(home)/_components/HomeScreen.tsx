@@ -1,9 +1,12 @@
 import { getArticles, getHotArticles } from "@plick/core/articles";
-import { TEAM_FULL_NAMES } from "@plick/domain/constants";
+import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
+import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HotCarousel } from "@plick/ui/HotCarousel";
+import { JsonLd } from "@plick/ui/JsonLd";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { SITE_URL } from "@/_constants/site";
 import { PostFeed } from "@/_components/PostFeed";
 import { HotCard } from "./HotCard";
 import { HomeSidebar } from "./HomeSidebar";
@@ -62,6 +65,18 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           {team !== "ALL" && (
             /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
             <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
+          )}
+          {team !== "ALL" && (
+            /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 서버 렌더된
+               첫 페이지 기사만 ItemList로 싣는다(크롤러가 보는 HTML과 같은 범위) */
+            <JsonLd
+              data={teamCollectionJsonLd({
+                teamFullName: TEAM_FULL_NAMES[team],
+                url: `${SITE_URL}/teams/${TEAMS[team].slug}`,
+                siteUrl: SITE_URL,
+                articles: initial?.page.items ?? [],
+              })}
+            />
           )}
           <section>
             <h2 className="text-section text-text tracking-heading font-extrabold">

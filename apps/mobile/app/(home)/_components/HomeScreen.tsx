@@ -3,7 +3,10 @@ import { HotCarousel } from "@plick/ui/HotCarousel";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { getArticles, getHotArticles } from "@plick/core/articles";
-import { TEAM_FULL_NAMES } from "@plick/domain/constants";
+import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
+import { teamCollectionJsonLd } from "@plick/domain/jsonld";
+import { JsonLd } from "@plick/ui/JsonLd";
+import { WEB_SITE_URL } from "@/_constants/site";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
@@ -58,6 +61,18 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
         {team !== "ALL" && (
           /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
           <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
+        )}
+        {team !== "ALL" && (
+          /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 데스크톱과 같은
+             값을 싣고 URL도 canonical 도메인 기준이다 */
+          <JsonLd
+            data={teamCollectionJsonLd({
+              teamFullName: TEAM_FULL_NAMES[team],
+              url: `${WEB_SITE_URL}/teams/${TEAMS[team].slug}`,
+              siteUrl: WEB_SITE_URL,
+              articles: initial?.page.items ?? [],
+            })}
+          />
         )}
         <section className="pt-3">
           <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">

@@ -27,7 +27,19 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `${WEB_SITE_URL}/teams/${slug}` },
-    openGraph: { title, description },
+    openGraph: {
+      title,
+      description,
+      // 팀 컬러·로고 동적 OG — 기사와 같이 canonical 도메인(web)이 렌더한다 (KAN-351)
+      images: [
+        {
+          url: `${WEB_SITE_URL}/teams/${slug}/og`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
   };
 }
 
