@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { teamHubPath } from "@plick/domain/format";
 import { TABS } from "@/_constants/app";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
 import { useReelsRefresh } from "@/_hooks/useReelsRefresh";
@@ -32,6 +33,13 @@ export function TabBar({
   const pathname = usePathname();
   const router = useRouter();
   const requestTop = useViewState((state) => state.requestTop);
+  /**
+   * 홈 탭의 목적지 — 마지막으로 보던 팀 필터의 URL (KAN-350). 필터가 URL로
+   * 승격되면서(`/teams/[slug]`) 홈 href를 `/`로 고정하면 릴스·기사에 다녀올 때마다
+   * 전체 탭으로 돌아가 버린다. 스토어에 남긴 마지막 필터로 href를 만들어, 홈 탭이
+   * 항상 두고 온 그 화면(같은 URL)으로 되돌린다 — KAN-314의 복원 감각 유지.
+   */
+  const homeHref = teamHubPath(useViewState((state) => state.homeFilter));
   const refreshHome = useHomeRefresh();
   const refreshReels = useReelsRefresh();
   const overlay = variant === "overlay";
@@ -55,7 +63,7 @@ export function TabBar({
           : "border-border bg-nav/95 shrink-0 border-t backdrop-blur-md"
       }
       style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingBottom: "var(--safe-bottom)",
         // 스크림은 이미지 가독성용 고정 값(테마 무관)
         ...(overlay && {
           backgroundImage:
@@ -69,7 +77,7 @@ export function TabBar({
           return (
             <li key={href} className="flex-1">
               <Link
-                href={href}
+                href={screen === "home" ? homeHref : href}
                 onClick={(e) => {
                   if (!active) return;
                   e.preventDefault();

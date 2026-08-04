@@ -1,7 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import type { InitialArticleFeed } from "@plick/domain/types";
+import {
+  teamFilterFromPathname,
+  teamHubPath,
+  teamHubTitle,
+} from "@plick/domain/format";
+import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import {
+  articlesTeamFilterFromPathname,
+  articlesTeamPath,
+  articlesTeamTitle,
+} from "@/_utils/feed-paths";
 import { ApiError } from "@plick/core/client";
 import { articleKeys } from "@plick/core/articleKeys";
 import { PostListItem } from "@/_components/PostListItem";
@@ -25,26 +37,62 @@ const SKELETON_COUNT = 4;
  * 서버 컴포넌트가 미리 받아 `initial`로 내려주므로 첫 렌더에는 스켈레톤이 보이지
  * 않는다.
  *
- * 선택한 탭과 스크롤 위치는 컴포넌트가 아니라 뷰 상태 스토어가 surface별로 들고
- * 있다(모바일 KAN-314와 같은 판단). `useState`에 두면 기사 상세에 들어갔다 나오는
- * 순간 트리가 언마운트되면서 전체 탭으로 돌아가 버리고, 스크롤은 아무도 복원해
- * 주지 않는다({@link useScrollRestore}).
+ * 어느 팀을 보고 있는지는 URL이 정한다 (KAN-350). 홈(news)은 `/`가 전체,
+ * 팀 허브 `/teams/[slug]`가 그 팀이고, 기사(article)는 `/articles`가 전체,
+ * `/articles/teams/[slug]`가 그 팀이다. 탭 선택은 `history.replaceState`로
+ * URL만 바꾼다 — Next가 네이티브 history 갱신을 `usePathname`과 동기화하므로
+ * 서버 왕복도 리마운트도 없이 필터가 따라오고, 기사 상세에서 뒤로 오면 URL이
+ * 필터를 되살린다. push가 아니라 replace인 이유는 탭 선택을 히스토리에 쌓지
+ * 않기 위해서다 — 쌓이면 뒤로가기가 탭 선택 취소가 되어 버린다.
  *
- * @param initial - 서버가 받아 둔 전체 탭 첫 페이지와 그 시각. 서버 fetch가
- *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
+ * 필터를 URL로 옮기기 전(KAN-321)에는 뷰 상태 스토어가 원본이었다(모바일
+ * KAN-314와 같은 판단). 지금 스토어의 `feedFilters`는 GNB의 홈·기사 링크가
+ * 마지막으로 보던 팀 URL로 잇는 기억용으로만 동기화한다({@link NavItem}).
+ *
+ * 스크롤 위치는 두 surface 모두 스토어가 든다({@link useScrollRestore}).
+ *
+ * @param initial - 서버가 받아 둔 `initialTeam` 탭 첫 페이지와 그 시각. 서버
+ *   fetch가 실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
+ * @param initialTeam - `initial`이 어느 탭의 씨앗인지. 목록 라우트는 전체,
+ *   팀 라우트는 그 팀.
  * @param variant - 행 변형(news=홈, article=기사)
  */
 export function PostFeed({
   initial,
+  initialTeam = "ALL",
   variant,
 }: {
   initial?: InitialArticleFeed;
+  initialTeam?: Filter;
   variant: PostListVariant;
 }) {
-  const filter = useViewState((state) => state.feedFilters[variant]);
+  const pathname = usePathname();
   const setFeedFilter = useViewState((state) => state.setFeedFilter);
+  const filter =
+    variant === "news"
+      ? teamFilterFromPathname(pathname)
+      : articlesTeamFilterFromPathname(pathname);
   const queryClient = useQueryClient();
   useScrollRestore(variant);
+
+  /**
+   * URL이 정한 필터를 스토어에 흘려 둔다 — 직접 진입·뒤로가기까지 포함해 GNB
+   * 링크가 항상 지금 보는 탭을 가리키게 한다. 문서 제목도 여기서 맞춘다 —
+   * replaceState는 서버 메타데이터를 다시 렌더하지 않아 탭을 바꿔도 제목이
+   * 이전 페이지 것으로 남는다.
+   */
+  useEffect(() => {
+    setFeedFilter(variant, filter);
+    document.title =
+      variant === "news" ? teamHubTitle(filter) : articlesTeamTitle(filter);
+  }, [variant, filter, setFeedFilter]);
+
+  /** 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다 */
+  function handleChange(next: Filter) {
+    const path =
+      variant === "news" ? teamHubPath(next) : articlesTeamPath(next);
+    window.history.replaceState(null, "", path);
+  }
   const {
     data,
     error,
@@ -56,7 +104,7 @@ export function PostFeed({
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useArticleFeed(filter, initial);
+  } = useArticleFeed(filter, initial, initialTeam);
 
   const sentinelRef = useInfiniteScroll(
     fetchNextPage,
@@ -83,7 +131,8 @@ export function PostFeed({
     <div className="min-w-0">
       <TeamFilterTabs
         value={filter}
-        onChange={(f) => setFeedFilter(variant, f)}
+        onChange={handleChange}
+        hrefFor={variant === "news" ? teamHubPath : articlesTeamPath}
       />
       <div className={variant === "news" ? "pt-1.5 pb-6" : "pt-1.5"}>
         {isPending ? (

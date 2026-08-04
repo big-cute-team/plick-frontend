@@ -8,10 +8,16 @@ import {
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
 import { truncateText } from "@plick/domain/format";
+import { newsArticleJsonLd } from "@plick/domain/jsonld";
 import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
+import { JsonLd } from "@plick/ui/JsonLd";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
+import {
+  MOBILE_ALTERNATE_MEDIA,
+  MOBILE_SITE_URL,
+  SITE_URL,
+} from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
 
 /**
@@ -47,6 +53,16 @@ export async function generateMetadata({
         description,
         type: "article",
         publishedTime: article.publishedAt,
+        // 동적 OG (KAN-351). 파일 컨벤션 자동 배선 대신 라우트 핸들러 URL을
+        // 명시한다 — 이유는 `og/route.tsx` 참고
+        images: [
+          {
+            url: `/articles/${article.id}/og`,
+            width: 1200,
+            height: 630,
+            alt: article.title,
+          },
+        ],
       },
     };
   } catch {
@@ -133,6 +149,16 @@ export default async function ArticleDetailPage({
 
   return (
     <>
+      {/* 기사 리치 결과용 NewsArticle 구조화 데이터 (KAN-351) */}
+      <JsonLd
+        data={newsArticleJsonLd({
+          article: articleResult.value,
+          canonicalUrl: `${SITE_URL}/articles/${articleResult.value.id}`,
+          imageUrl: `${SITE_URL}/articles/${articleResult.value.id}/og`,
+          siteUrl: SITE_URL,
+          logoUrl: `${SITE_URL}/icon.png`,
+        })}
+      />
       {/* 진입을 조회로 기록한다 (KAN-332). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
       <SiteHeader />

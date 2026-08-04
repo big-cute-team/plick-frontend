@@ -21,7 +21,7 @@ export function TopBarShell({
   return (
     <header
       className={`shrink-0 ${className}`}
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      style={{ paddingTop: "var(--safe-top)" }}
     >
       <div className={`px-edge flex h-13 items-center ${innerClassName}`}>
         {children}
