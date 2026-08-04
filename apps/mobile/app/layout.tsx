@@ -56,8 +56,22 @@ export default async function RootLayout({
   const profile = loggedIn ? await getMyProfile().catch(() => null) : null;
 
   return (
-    <html lang="ko" data-theme="dark">
+    <html lang="ko" data-theme="dark" suppressHydrationWarning>
       <head>
+        {/* 안전영역 이중 적용 판별 (globals.css의 --safe-* 변수 참고).
+            뷰포트가 화면 세로 끝까지 닿지 않으면(= 앱셸이 이미 시스템 바 안쪽에
+            웹뷰를 배치) data-inset-viewport를 달아 safe-area 패딩을 0으로 접는다.
+            첫 페인트 전에 돌아야 여백이 접히는 깜빡임이 없어 head 동기 스크립트로 둔다.
+            문턱 24px: edge-to-edge면 차이가 0에 수렴하고, 시스템 바 안쪽이면
+            상태바+내비바 합(약 90px 이상)만큼 차이가 난다.
+            하이드레이션 전에 html 속성을 바꾸므로 위 html 태그에
+            suppressHydrationWarning을 달았다(그 엘리먼트 속성 비교만 끈다). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{if(screen.height-window.innerHeight>24)document.documentElement.setAttribute("data-inset-viewport","")}catch(e){}})()',
+          }}
+        />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css"

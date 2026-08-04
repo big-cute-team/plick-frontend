@@ -20,7 +20,7 @@ export function BottomActionBar({
     <section
       className={`px-edge ${className}`}
       style={{
-        paddingBottom: `max(${base}px, env(safe-area-inset-bottom) + 24px)`,
+        paddingBottom: `max(${base}px, var(--safe-bottom) + 24px)`,
       }}
     >
       {children}
