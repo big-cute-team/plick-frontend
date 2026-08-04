@@ -30,6 +30,8 @@ export interface ReelDetailMotion {
     onPointerUp: () => void;
     onPointerCancel: () => void;
   };
+  /** 본문 스크롤 영역에 다는 ref — 최상단에서 아래로 끄는 터치를 시트 드래그로 넘겨받는다 */
+  scrollGrabRef: (node: HTMLDivElement | null) => void;
   onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
 }
 
