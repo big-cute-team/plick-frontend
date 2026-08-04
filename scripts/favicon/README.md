@@ -9,9 +9,11 @@
 
 ```bash
 cd scripts/favicon
-npm install @resvg/resvg-js
+npm install --prefix . --no-save --no-package-lock @resvg/resvg-js
 node render.mjs
 ```
+
+`--prefix .` 없이 설치하면 npm이 모노레포 루트 package.json까지 올라가 eresolve로 깨진다.
 
 icon.png는 원형 그대로(모서리 투명), apple-icon.png는 iOS가 투명 배경을 검게 칠해 버려서
 다크 토큰 배경을 정사각으로 깔았다. favicon.ico는 스크립트가 BMP 엔트리를 직접 조립한다.
