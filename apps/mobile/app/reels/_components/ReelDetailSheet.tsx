@@ -22,7 +22,8 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 칩·제목은 이 컴포넌트가 그리지 않는다 — 릴에 원래 있던 요소(ReelItem)가
  * 같은 motion 상태로 시트 라인 위까지 따라 올라온다.
  *
- * 닫기: 그랩 존 드래그 다운 또는 X 버튼 → 내려간 뒤 motion이 스스로 언마운트.
+ * 닫기: 그랩 존 드래그 다운, X 버튼, 또는 본문이 최상단일 때 본문 어디서든
+ * 아래로 드래그(KAN-358, 유튜브 쇼츠 방식) → 내려간 뒤 motion이 스스로 언마운트.
  *
  * 댓글(KAN-303): 릴 카드 id가 곧 BE `articleSummaryId`라 기사와 같은 댓글
  * API를 쓴다. 시트는 클라에서 열리므로 서버 씨앗 없이 열릴 때 목록을 받는다.
@@ -88,8 +89,11 @@ export function ReelDetailSheet({
           </button>
         </div>
 
-        {/* 본문·해시태그·댓글 스크롤 영역 */}
-        <div className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6">
+        {/* 본문·해시태그·댓글 스크롤 영역 — 최상단에서 아래로 끌면 시트 드래그로 이어진다 */}
+        <div
+          ref={motion.scrollGrabRef}
+          className="no-scrollbar px-edge flex flex-1 flex-col gap-3.75 overflow-y-auto overscroll-contain pt-3.75 pb-6"
+        >
           <p className="text-body-lg text-text-2 leading-body-lg tracking-snug">
             {reel.summary}
           </p>

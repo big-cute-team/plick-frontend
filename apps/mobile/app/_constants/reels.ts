@@ -7,12 +7,28 @@
 import type { EmblaOptionsType } from "embla-carousel";
 
 /**
+ * 스냅이 목표까지 이 비율(뷰포트 대비 %) 넘게 남아 있으면 새 스와이프를 무시한다 (KAN-358).
+ *
+ * 5% = 카드가 거의 다(19/20) 도착하면 잠금을 푼다. 완전히 멈출 때까지(1px)
+ * 기다리게 하면 Embla 관성 수렴의 꼬리가 길어(지수 감쇠) 연속 넘김이 체감으로
+ * 멈칫거리고, 반대로 너무 일찍(20%) 풀면 연타에 다시 술술 밀려 나간다
+ * (실기기 체감으로 20 → 5 조정).
+ */
+export const REELS_SWIPE_LOCK_THRESHOLD_PERCENT = 5;
+
+/**
  * 릴스 세로 캐러셀(Embla) 옵션 — 딥링크용 `startIndex`만 호출부에서 덧붙인다.
  *
  * - `axis: "y"` 세로 넘김. `align`은 릴이 뷰포트를 꽉 채우므로 사실상 무의미하지만 명시한다.
  * - `skipSnaps: false` 아무리 세게 튕겨도 한 번에 한 장만 넘어간다. 릴스의 기본 감각이다.
  * - `dragThreshold` 이 거리(px)를 넘겨야 드래그로 인정한다. 기본 10보다 낮춰 짧은 플릭도 받는다.
  * - `duration` 스냅 애니메이션 길이(Embla 내부 단위, 기본 25). 낮출수록 빠르게 붙는다.
+ * - `watchDrag` 스냅 애니메이션이 아직 한창일 때 시작한 드래그는 무시한다 (KAN-358).
+ *   Embla는 애니메이션 도중에도 새 드래그를 받아 그 자리에서 이어 끌게 하는데, 그러면
+ *   연달아 튕길 때마다 한 장씩 계속 밀려 나가 원치 않게 여러 장을 넘긴다. 이 콜백은
+ *   포인터가 닿는 순간 한 번 불리고, false를 돌려주면 그 제스처 전체가 드래그로
+ *   인정되지 않는다. 카드가 {@link REELS_SWIPE_LOCK_THRESHOLD_PERCENT} 기준으로
+ *   충분히 도착했으면 다시 받는다.
  * - `watchSlides: false` 슬라이드가 늘어나도 Embla가 스스로 다시 초기화하지 않게 끈다.
  *   기본값(true)이면 컨테이너에 걸린 MutationObserver가 자식이 바뀌는 즉시 `reInit()`을
  *   부르는데, 그 안의 `deActivate()`가 진행 중인 스냅 애니메이션과 드래그 핸들러를
@@ -26,6 +42,14 @@ export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
   skipSnaps: false,
   dragThreshold: 8,
   duration: 22,
+  watchDrag: (embla) => {
+    const engine = embla.internalEngine();
+    const remaining = Math.abs(engine.target.get() - engine.location.get());
+    return (
+      remaining <
+      engine.percentOfView.measure(REELS_SWIPE_LOCK_THRESHOLD_PERCENT)
+    );
+  },
   watchSlides: false,
 };
 
