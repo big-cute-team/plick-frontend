@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { ARTICLES_MAX_PAGE_SIZE, getArticles } from "@plick/core/articles";
+import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { SITE_URL } from "@/_constants/site";
 
 /**
@@ -31,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
+    // 팀 허브 (KAN-350) — 팀 검색어의 랜딩이라 기사 개별 페이지보다 우선순위를 높인다
+    ...TEAM_ORDER.map((code) => ({
+      url: `${SITE_URL}/teams/${TEAMS[code].slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    })),
   ];
 
   try {

@@ -30,7 +30,8 @@ export const TABS: Tab[] = [
     href: "/",
     label: "홈",
     Icon: HomeIcon,
-    match: (p) => p === "/",
+    // 팀 허브(/teams/[slug])는 홈 화면을 팀 필터만 바꿔 그린 것이라 홈 탭이다 (KAN-350)
+    match: (p) => p === "/" || p.startsWith("/teams"),
     screen: "home",
   },
   {

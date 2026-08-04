@@ -20,11 +20,17 @@ import type { InitialArticleFeed } from "@plick/domain/types";
  * undefined를 돌려주면 RQ가 마지막 페이지로 보고 `hasNextPage`를 내린다.
  *
  * @param team 현재 선택된 팀 필터
- * @param initial 서버 컴포넌트가 미리 받아 둔 전체(ALL) 첫 페이지와 그 시각.
- *   같은 데이터를 클라가 또 부르는 이중 페치를 막는 씨앗이라 ALL일 때만 심는다.
+ * @param initial 서버 컴포넌트가 미리 받아 둔 첫 페이지와 그 시각. 같은 데이터를
+ *   클라가 또 부르는 이중 페치를 막는 씨앗이라 그 탭을 보고 있을 때만 심는다.
+ * @param initialTeam `initial`이 어느 탭의 씨앗인지. 홈은 전체, 팀 허브
+ *   (`/teams/[slug]`)는 그 팀의 첫 페이지를 미리 받아 내려준다 (KAN-350).
  */
-export function useArticleFeed(team: Filter, initial?: InitialArticleFeed) {
-  const seed = team === "ALL" ? initial : undefined;
+export function useArticleFeed(
+  team: Filter,
+  initial?: InitialArticleFeed,
+  initialTeam: Filter = "ALL",
+) {
+  const seed = team === initialTeam ? initial : undefined;
 
   return useInfiniteQuery({
     queryKey: articleKeys.feed(team),
