@@ -41,7 +41,10 @@ description: >-
 ## 3. 반응형 (웹뷰 다기기)
 
 - 화면 뼈대는 `AppShell`(= `h-[100dvh]` + `max-w-[480px] mx-auto`) + `ScrollArea`(스크롤 영역) + 필요시 `TopBar`/`TabBar`.
-- 상단바 `pt = env(safe-area-inset-top)`, 하단탭 `pb = env(safe-area-inset-bottom)`.
+- 안전영역은 `env(safe-area-inset-*)`를 직접 쓰지 않고 `var(--safe-top)`/`var(--safe-bottom)`을 쓴다.
+  네이티브 앱셸이 웹뷰를 이미 시스템 바 안쪽에 배치한 경우 layout.tsx의 인라인 스크립트가
+  `data-inset-viewport`로 변수를 0으로 눌러 이중 여백을 막는다(ADR 0075). 상단바 `pt = var(--safe-top)`,
+  하단탭 `pb = var(--safe-bottom)`.
 - **고정 px 폭 지양**: flex·%·가로 스크롤. 넘칠 수 있는 가로 요소는 `overflow-x-auto`.
 - 센터 캐러셀은 **좌우 스페이서**로 첫/마지막까지 중앙 스냅(패딩 % 방식은 끝단이 안 맞음, ADR 0002 §6-2).
 

@@ -63,7 +63,7 @@ export function TabBar({
           : "border-border bg-nav/95 shrink-0 border-t backdrop-blur-md"
       }
       style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingBottom: "var(--safe-bottom)",
         // 스크림은 이미지 가독성용 고정 값(테마 무관)
         ...(overlay && {
           backgroundImage:

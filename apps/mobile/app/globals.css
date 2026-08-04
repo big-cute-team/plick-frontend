@@ -10,6 +10,20 @@ html {
   height: 100%;
   -webkit-text-size-adjust: 100%; /* iOS 가로전환 시 폰트 확대 방지 */
 }
+
+/* 안전영역 변수 — 컴포넌트는 env(safe-area-inset-*)를 직접 쓰지 않고 이 변수를 쓴다.
+ * 네이티브 앱셸이 웹뷰를 이미 시스템 바(상태바·내비바) 안쪽에 배치했는데도
+ * 웹뷰(안드로이드 크로미움)가 safe-area 값을 0이 아니게 보고하면 여백이 이중으로
+ * 얹힌다. layout.tsx의 head 인라인 스크립트가 뷰포트가 화면 끝에 닿는지를 재서
+ * 이미 안쪽이면 html에 data-inset-viewport를 달고, 여기서 변수를 0으로 누른다. */
+html {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+html[data-inset-viewport] {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+}
 body {
   min-height: 100%;
   -webkit-font-smoothing: antialiased;

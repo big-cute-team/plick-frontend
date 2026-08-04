@@ -134,7 +134,7 @@ export function ReelItem({
         reel.sourceUrl && (
           <div
             className="reel-embed absolute inset-x-0 flex flex-col [justify-content:safe_center]"
-            style={{ top: "env(safe-area-inset-top)", bottom: regionBottom }}
+            style={{ top: "var(--safe-top)", bottom: regionBottom }}
           >
             <TweetEmbed url={reel.sourceUrl} layout="reel" />
           </div>
