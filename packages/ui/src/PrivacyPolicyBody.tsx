@@ -65,10 +65,9 @@ export function PrivacyPolicyBody() {
   return (
     <div className="text-body text-text-2 flex flex-col gap-6 leading-relaxed">
       <p>
-        <Todo>운영 주체 명칭(팀명 또는 사업자명)</Todo>(이하
-        &ldquo;운영자&rdquo;)은(는) 프리미어리그 이적 소식 서비스 PLick(이하
-        &ldquo;서비스&rdquo;)을 운영하며, 「개인정보 보호법」 및 관계 법령이
-        정한 바를 준수하여 적법하게 개인정보를 처리하고 안전하게 관리하고
+        팀 기엽대(이하 &ldquo;운영자&rdquo;)는 프리미어리그 이적 소식 서비스
+        PLick(이하 &ldquo;서비스&rdquo;)을 운영하며, 「개인정보 보호법」 및 관계
+        법령이 정한 바를 준수하여 적법하게 개인정보를 처리하고 안전하게 관리하고
         있습니다. 이에 「개인정보 보호법」 제30조에 따라 정보주체에게 개인정보
         처리에 관한 절차 및 기준을 안내하고, 이와 관련한 고충을 신속하고
         원활하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을
@@ -152,11 +151,7 @@ export function PrivacyPolicyBody() {
         <ol className="flex list-decimal flex-col gap-1.5 pl-5">
           <li>
             회원 가입 및 관리, 서비스 제공: 회원 탈퇴 시까지 보유하며, 탈퇴 시
-            지체 없이 파기합니다.{" "}
-            <Todo>
-              탈퇴 후 별도 보존(부정이용 방지 목적의 유예 기간)이 백엔드에
-              있는지 확인 — 있으면 기간과 항목을 명시
-            </Todo>
+            지체 없이 파기합니다.
           </li>
           <li>
             다만, 관계 법령 위반에 따른 수사·조사가 진행 중인 경우에는 해당
@@ -207,12 +202,7 @@ export function PrivacyPolicyBody() {
       <Section id="overseas" title="8. 개인정보의 국외 이전">
         <p>
           운영자는 개인정보를 국내(Amazon Web Services 서울 리전)에 보관하며,
-          개인정보를 국외로 이전하지 않습니다.{" "}
-          <Todo>
-            AWS 리전이 서울(ap-northeast-2)인지, 국외 백업이 없는지 확인 — 국외
-            리전을 쓰면 이 절을 국외 이전 기재사항(이전 국가·항목·방법 등)으로
-            다시 써야 함
-          </Todo>
+          개인정보를 국외로 이전하지 않습니다.
         </p>
       </Section>
 
@@ -307,15 +297,9 @@ export function PrivacyPolicyBody() {
           개인정보 보호책임자를 지정하고 있습니다.
         </p>
         <ul className="flex list-disc flex-col gap-1 pl-5">
-          <li>
-            성명: <Todo>보호책임자 성명</Todo>
-          </li>
-          <li>
-            직위: <Todo>직위(예: 운영자, 대표)</Todo>
-          </li>
-          <li>
-            연락처: <Todo>문의용 이메일 주소</Todo>
-          </li>
+          <li>성명: 김도완</li>
+          <li>직위: 운영자</li>
+          <li>연락처: whoru3918@gmail.com</li>
         </ul>
         <p>
           정보주체는 서비스를 이용하면서 발생한 모든 개인정보 보호 관련 문의,
