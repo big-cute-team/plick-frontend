@@ -25,7 +25,9 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *
  * 실계약(KAN-322)으로 갈아타면서 마크업이 전제하던 게 몇 개 깨졌다. 팀은 단일이
  * 아니라 배열이고 비어 있을 수 있어 첫 팀만 대표로 쓰고 없으면 칩을 그리지
- * 않는다. 기자도 없을 수 있어 그때는 시각·조회만 한 줄로 남는다. 사진이 null이면
+ * 않는다. 기자도 없을 수 있어 그때는 시각·조회만 한 줄로 남는다. 기자 줄은
+ * KAN-365에서 전원 펼침으로 바꿨다 — 이름 옆 인원수를 누르면 기자별 원문 링크
+ * 목록이 열리고, 원문 버튼은 여전히 대표(`reporters[0]`)의 링크다. 사진이 null이면
  * (현재 발행 기사의 기본 상태) 미디어 없이 텍스트만 흐른다. 본문은 문단 배열이
  * 아니라 긴 요약 하나라 줄바꿈으로 갈라 문단을 만든다.
  *
@@ -54,10 +56,12 @@ export function ArticleMain({
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
   const paragraphs = article.summary.split("\n").filter(Boolean);
   const meta = `${formatRelativeTime(article.publishedAt)} · 조회 ${formatCount(article.views)}`;
+  // 원문 버튼은 지금처럼 대표 기자([0])의 링크만 쓴다 (KAN-365)
+  const lead = article.reporters[0] ?? null;
 
-  const sourceLink = article.sourceUrl && (
+  const sourceLink = lead?.sourceUrl && (
     <a
-      href={article.sourceUrl}
+      href={lead.sourceUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="text-label text-accent focus-visible:outline-accent ml-auto flex items-center gap-1 rounded font-bold hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -77,9 +81,10 @@ export function ArticleMain({
         {article.title}
       </h1>
 
-      {article.reporter ? (
+      {lead ? (
         <ReporterLine
-          reporter={article.reporter}
+          reporter={lead}
+          reporters={article.reporters}
           meta={`· ${meta}`}
           className="border-border mt-4 flex-wrap gap-x-2 gap-y-1.5 border-b pb-4"
         >

@@ -9,6 +9,7 @@ import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
+import { useArticleReporters } from "@/_hooks/useArticleReporters";
 import type { ReelCard } from "@plick/domain/types";
 import type { ReelDetailMotion } from "@/_types/reels";
 import { formatRelativeTime } from "@plick/domain/format";
@@ -30,6 +31,11 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 헤더 카운트는 피드가 준 스냅샷(`reel.commentCount`)에 이 시트에서 단 수를
  * 로컬로 더한다 — 스냅샷은 방금 단 댓글을 모른다.
  *
+ * 기자 줄(KAN-365): 피드는 대표 한 명만 주지만 기사엔 기자가 여럿일 수 있다.
+ * 시트가 열리면 기사 상세를 받아({@link useArticleReporters}) 이름 옆 인원수와
+ * 기자별 원문 링크 목록을 붙인다. 받기 전엔 대표 이름만 서고, "출처 원문 보기"는
+ * 지금처럼 피드의 대표 링크(`reel.sourceUrl`)다.
+ *
  * @param reel - 세부를 보여줄 릴
  * @param motion - useReelDetailMotion()이 만든 개폐·드래그 상태 (ReelsFeed 소유)
  */
@@ -42,6 +48,7 @@ export function ReelDetailSheet({
 }) {
   const meta = `· ${formatRelativeTime(reel.publishedAt)} · 조회 ${formatCount(reel.views)}`;
   const [addedComments, setAddedComments] = useState(0);
+  const reporters = useArticleReporters(reel.id);
 
   return (
     <div className="absolute inset-0 z-20">
@@ -70,6 +77,7 @@ export function ReelDetailSheet({
             {reel.reporter ? (
               <ReporterLine
                 reporter={reel.reporter}
+                reporters={reporters}
                 meta={meta}
                 className="pr-11"
               />

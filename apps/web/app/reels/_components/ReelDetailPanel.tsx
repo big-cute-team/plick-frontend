@@ -9,6 +9,7 @@ import { TagChips } from "@plick/ui/TagChips";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
+import { useArticleReporters } from "@/_hooks/useArticleReporters";
 
 /**
  * 릴 세부 패널 (KAN-219, 피그마 W2 기사 세부 219-2, API 연결 KAN-323).
@@ -34,6 +35,11 @@ import { CommentsHeader } from "@/_components/CommentsHeader";
  * 카운트는 피드가 준 스냅샷(`reel.commentCount`)에 이 패널에서 단 수를 로컬로
  * 더한다 — 스냅샷은 방금 단 댓글을 모른다.
  *
+ * 기자 줄(KAN-365): 피드는 대표 한 명만 주지만 기사엔 기자가 여럿일 수 있다.
+ * 패널이 열리면 기사 상세를 받아({@link useArticleReporters}) 이름 옆 인원수와
+ * 기자별 원문 링크 목록을 붙인다. 받기 전엔 대표 이름만 서고, "출처 원문 보기"는
+ * 지금처럼 피드의 대표 링크(`reel.sourceUrl`)다.
+ *
  * @param reel - 세부를 보여줄 릴. `null`이면 닫힘(마지막 릴은 닫힘 애니 동안 유지).
  * @param onClose - 닫기 요청 콜백(패널 소유자가 `reel`을 `null`로 만든다)
  */
@@ -50,6 +56,8 @@ export function ReelDetailPanel({
   /** 이 패널에서 등록한 댓글 수 — 피드가 준 카운트 스냅샷에 더해 보여준다. */
   const [addedComments, setAddedComments] = useState(0);
   const reelId = reel?.id;
+  /* 닫힘 애니 중에도 rendered가 남으니 그 기준으로 받는다 — 캐시가 있어 재요청 없음 */
+  const reporters = useArticleReporters(rendered?.id);
 
   useEffect(() => {
     if (reel) setRendered(reel);
@@ -93,6 +101,7 @@ export function ReelDetailPanel({
               {rendered.reporter ? (
                 <ReporterLine
                   reporter={rendered.reporter}
+                  reporters={reporters}
                   meta={`· ${meta}`}
                   metaClassName="min-w-0 truncate"
                   className="min-w-0 flex-1"

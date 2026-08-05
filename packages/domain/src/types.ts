@@ -54,6 +54,17 @@ export interface ArticleReporter {
 }
 
 /**
+ * 자기 원문 링크를 든 기자 (KAN-365, `GET /api/v1/articles/{articleId}`).
+ *
+ * 상세 응답의 `reporters` 배열 항목이다 — 목록·핫이슈와 달리 상세는 기사 하나에
+ * 기자가 여럿 실리고, 원문 트윗 링크가 최상위 필드가 아니라 기자마다 달려 온다.
+ */
+export interface ArticleSourceReporter extends ArticleReporter {
+  /** 이 기자의 원문 트윗 링크. 실데이터에 비어 오는 행이 있어 null을 허용한다. */
+  sourceUrl: string | null;
+}
+
+/**
  * 피드 목록의 기사 카드 한 장 (KAN-271, `GET /api/v1/articles`).
  *
  * 퍼블리싱 단계에서 BE 목표 shape를 추정해 만든 `FeedPost`가 따로 있었지만
@@ -113,13 +124,13 @@ export interface ArticleDetail {
   teams: TeamCode[];
   /** 대표 이미지. 현재 발행 기사 전건이 null이라 자리를 그리지 않는 게 기본이다. */
   imageUrl: string | null;
-  /** 대표 기자(BE `reporters[0]`). 배열이 비면 null. */
-  reporter: ArticleReporter | null;
   /**
-   * 대표 기자의 원문 트윗 링크. 원문 버튼에 쓴다. 목록과 달리 최상위 필드가
-   * 아니라 기자에게 달려 온다.
+   * 기사에 실린 기자 전원 — BE `reporters` 그대로(대표 순서 정렬, `[0]`이 대표).
+   * 원문 트윗 링크는 최상위 필드가 아니라 기자마다 달려 오고, 원문 버튼은
+   * 대표(`[0]`)의 링크를 쓴다. 빈 배열일 수 있다(그때는 기자 줄이 빠진다).
+   * 단일 대표만 노출하다 KAN-365에서 전원 노출로 바꿨다.
    */
-  sourceUrl: string | null;
+  reporters: ArticleSourceReporter[];
   /**
    * 조회·좋아요·댓글 집계. KAN-283 시점에는 BE 자리 구현(Noop) 때문에 항상 0·false였지만
    * 지금은 요청마다 실집계가 돌아 실값이 온다(KAN-324 재검증). `liked`는 토큰을 실었을

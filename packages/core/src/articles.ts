@@ -143,7 +143,8 @@ interface ArticleDetailResponse {
   reporters: {
     name: string;
     tier: number | null;
-    sourceUrl: string;
+    /** 확인 시점엔 전건 값이 있었지만 tier처럼 비어 올 수 있다고 보고 눕혀 둔다. */
+    sourceUrl: string | null;
   }[];
   publishedAt: string;
   rumorStage: string | null;
@@ -157,10 +158,12 @@ interface ArticleDetailResponse {
 /**
  * BE → 도메인 경계 변환. 상세엔 `teams`가 없어 해시태그의 팀 한글명을
  * 역산한다 — 선수명 등 팀이 아닌 태그는 매핑에 없어 자연히 걸러진다.
+ *
+ * 기자는 배열 전체를 넘긴다(KAN-365) — 화면이 대표(`[0]`)만 쓸지 전원을 펼칠지
+ * 고른다. 실데이터 링크에 뒤공백이 섞여 와서(`"…255 "`) 그대로 href에 넣으면
+ * %20이 붙으므로 여기서 다듬고, 빈 문자열은 null로 눕힌다.
  */
 function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
-  const lead = r.reporters[0] ?? null;
-
   return {
     id: String(r.articleSummaryId),
     title: r.title,
@@ -171,8 +174,11 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
       .map((tag) => TEAM_BY_KO_NAME[tag])
       .filter((code): code is TeamCode => Boolean(code)),
     imageUrl: r.imageUrl,
-    reporter: lead ? { name: lead.name, tier: lead.tier } : null,
-    sourceUrl: lead?.sourceUrl ?? null,
+    reporters: r.reporters.map((rep) => ({
+      name: rep.name,
+      tier: rep.tier,
+      sourceUrl: rep.sourceUrl?.trim() || null,
+    })),
     views: r.viewCount,
     commentCount: r.commentCount,
     likeCount: r.likeCount,
