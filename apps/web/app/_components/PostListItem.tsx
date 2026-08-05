@@ -4,7 +4,7 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
-import type { ArticleCard } from "@plick/domain/types";
+import type { ArticleCard, Filter } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { PostListVariant } from "@/_types/app";
 
@@ -37,18 +37,30 @@ const VARIANT: Record<
  * 팀 이름 자리를 비운다. 기자 이름도 원문이 없으면 빠진다. 사진이 null이면
  * 썸네일 자리를 아예 그리지 않고 텍스트가 전체 폭을 쓴다(모바일 KAN-284와 동일).
  *
+ * 팀 탭을 보고 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 팀 이름·로고로 쓴다
+ * (KAN-368, 모바일과 동일) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다.
+ * 전체 탭은 기존대로 기사의 첫 팀이다.
+ *
  * @param post - 표시할 기사 카드
  * @param variant - 행 변형(news=홈, article=기사)
+ * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  */
 export function PostListItem({
   post,
   variant,
+  filter = "ALL",
 }: {
   post: ArticleCard;
   variant: PostListVariant;
+  filter?: Filter;
 }) {
   const v = VARIANT[variant];
-  const team = post.teams[0] ? TEAMS[post.teams[0]] : null;
+  const team =
+    filter !== "ALL"
+      ? TEAMS[filter]
+      : post.teams[0]
+        ? TEAMS[post.teams[0]]
+        : null;
 
   return (
     <Link

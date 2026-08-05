@@ -72,8 +72,8 @@ export function webSiteJsonLd({
  * 기사 상세의 NewsArticle — 기사 하나하나가 롱테일 검색의 랜딩이라 리치 결과
  * 자격을 여기서 얻는다(SEO 전략 Step 2-3).
  *
- * author는 대표 기자를 Person으로 싣고, 기자가 없는 기사는 서비스(Organization)를
- * 저자로 둔다. publisher는 참조(`@id`)가 아니라 인라인 Organization이다 — 기사
+ * author는 기사에 실린 기자 전원을 Person으로 싣고(KAN-365 전에는 대표 한 명),
+ * 기자가 없는 기사는 서비스(Organization)를 저자로 둔다. publisher는 참조(`@id`)가 아니라 인라인 Organization이다 — 기사
  * 페이지에는 홈의 Organization 노드가 없어서 참조가 닿지 않는다.
  *
  * @param article 기사 상세
@@ -104,9 +104,13 @@ export function newsArticleJsonLd({
     datePublished: article.publishedAt,
     inLanguage: "ko",
     mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
-    author: article.reporter
-      ? [{ "@type": "Person", name: article.reporter.name }]
-      : [{ "@type": "Organization", name: BRAND_NAME, url: siteUrl }],
+    author:
+      article.reporters.length > 0
+        ? article.reporters.map((reporter) => ({
+            "@type": "Person",
+            name: reporter.name,
+          }))
+        : [{ "@type": "Organization", name: BRAND_NAME, url: siteUrl }],
     publisher: {
       "@type": "Organization",
       "@id": organizationId(siteUrl),

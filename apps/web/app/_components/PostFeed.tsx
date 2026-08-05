@@ -154,7 +154,12 @@ export function PostFeed({
         ) : articles.length > 0 ? (
           <>
             {articles.map((post) => (
-              <PostListItem key={post.id} post={post} variant={variant} />
+              <PostListItem
+                key={post.id}
+                post={post}
+                variant={variant}
+                filter={filter}
+              />
             ))}
 
             {isFetchingNextPage && <PostListItemSkeleton variant={variant} />}

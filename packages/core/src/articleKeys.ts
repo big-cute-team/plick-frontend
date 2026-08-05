@@ -11,4 +11,6 @@ export const articleKeys = {
   all: ["articles"] as const,
   /** 팀 필터별 피드 — 탭을 바꾸면 키가 바뀌어 페이지가 각자 캐시된다. */
   feed: (team: Filter) => ["articles", "feed", team] as const,
+  /** 기사 상세 — 릴 세부가 기자 목록을 클라에서 받을 때 쓴다(KAN-365). */
+  detail: (articleId: string) => ["articles", "detail", articleId] as const,
 };

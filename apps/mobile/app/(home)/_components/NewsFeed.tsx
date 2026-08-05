@@ -129,7 +129,7 @@ export function NewsFeed({
         ) : articles.length > 0 ? (
           <>
             {articles.map((article) => (
-              <NewsItem key={article.id} article={article} />
+              <NewsItem key={article.id} article={article} filter={filter} />
             ))}
 
             {isFetchingNextPage && <NewsItemSkeleton />}

@@ -1,8 +1,9 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
+import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
-import { LinkOutIcon, SendIcon } from "@plick/ui/icons";
+import { SendIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type {
@@ -25,7 +26,10 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *
  * 실계약(KAN-322)으로 갈아타면서 마크업이 전제하던 게 몇 개 깨졌다. 팀은 단일이
  * 아니라 배열이고 비어 있을 수 있어 첫 팀만 대표로 쓰고 없으면 칩을 그리지
- * 않는다. 기자도 없을 수 있어 그때는 시각·조회만 한 줄로 남는다. 사진이 null이면
+ * 않는다. 기자도 없을 수 있어 그때는 시각·조회만 한 줄로 남는다. 기자 줄은
+ * KAN-365에서 전원 노출로 바꿨다 — 이름 옆 기자 수를 누르면 기자 목록(표시
+ * 전용)이 열리고, 원문 버튼은 기자가 여럿일 때 기자별 원문 링크 팝오버가
+ * 된다. 사진이 null이면
  * (현재 발행 기사의 기본 상태) 미디어 없이 텍스트만 흐른다. 본문은 문단 배열이
  * 아니라 긴 요약 하나라 줄바꿈으로 갈라 문단을 만든다.
  *
@@ -54,32 +58,33 @@ export function ArticleMain({
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
   const paragraphs = article.summary.split("\n").filter(Boolean);
   const meta = `${formatRelativeTime(article.publishedAt)} · 조회 ${formatCount(article.views)}`;
+  const lead = article.reporters[0] ?? null;
 
-  const sourceLink = article.sourceUrl && (
-    <a
-      href={article.sourceUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-label text-accent focus-visible:outline-accent ml-auto flex items-center gap-1 rounded font-bold hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
-    >
-      <LinkOutIcon size={13} />
-      출처 원문 보기
-    </a>
+  // 기자가 여럿이면 기자별 원문 링크 팝오버, 한 명이면 대표 원문 직행 (KAN-365)
+  const sourceLink = (
+    <SourceLinkButton
+      label="출처 원문 보기"
+      sourceUrl={lead?.sourceUrl ?? null}
+      reporters={article.reporters}
+      className="ml-auto"
+    />
   );
 
   return (
     <article className="min-w-0">
-      {/* 모바일 릴·기사 세부와 같은 배지 줄 — 구단 로고 + 알약 없는 단계 글자 */}
-      <PostBadges team={team} stage={article.stage} crestSize={34} />
+      {/* 배지 줄 — 알약 없는 단계 글자만. 상단 구단 로고는 KAN-368에서 뺐다
+          (모바일 기사 세부와 동일, 릴은 유지) */}
+      <PostBadges team={null} stage={article.stage} />
 
       {/* 제목 */}
       <h1 className="text-read-title text-text mt-3 font-bold">
         {article.title}
       </h1>
 
-      {article.reporter ? (
+      {lead ? (
         <ReporterLine
-          reporter={article.reporter}
+          reporter={lead}
+          reporters={article.reporters}
           meta={`· ${meta}`}
           className="border-border mt-4 flex-wrap gap-x-2 gap-y-1.5 border-b pb-4"
         >
