@@ -25,6 +25,7 @@ import type {
   ArticleCard,
   ArticleDetail,
   ArticleFeedPage,
+  ArticleSourceReporter,
   Filter,
   HotArticle,
   TeamCode,
@@ -143,7 +144,8 @@ interface ArticleDetailResponse {
   reporters: {
     name: string;
     tier: number | null;
-    sourceUrl: string;
+    /** 확인 시점엔 전건 값이 있었지만 tier처럼 비어 올 수 있다고 보고 눕혀 둔다. */
+    sourceUrl: string | null;
   }[];
   publishedAt: string;
   rumorStage: string | null;
@@ -154,13 +156,52 @@ interface ArticleDetailResponse {
   hashtags: string[];
 }
 
+/** x.com 원문 링크의 스테이터스 id. 링크가 없거나 형태가 다르면 null. */
+function tweetId(url: string | null): bigint | null {
+  const id = url?.match(/\/status\/(\d+)/)?.[1];
+  return id ? BigInt(id) : null;
+}
+
+/**
+ * 기자 중복 제거 (KAN-365). 같은 기자가 원문 트윗을 여러 개 내면 상세 응답에
+ * 그 수만큼 행이 오는데, 화면은 기자당 한 행만 보여주므로 이름 기준으로 걷고
+ * 최신 트윗 한 건만 남긴다 — x.com 스테이터스 id는 스노플레이크(시간 순 증가)라
+ * 숫자 비교가 곧 시간 비교다. 둘 중 한쪽이라도 id를 못 읽으면 앞선 행을 둔다.
+ * Map은 같은 키를 덮어써도 삽입 순서를 지키므로 대표(`[0]`)는 그대로 첫 자리다.
+ *
+ * 실데이터 링크에 뒤공백이 섞여 와서(`"…255 "`) 그대로 href에 넣으면 %20이
+ * 붙으므로 여기서 다듬고, 빈 문자열은 null로 눕힌다.
+ */
+function dedupeReporters(
+  reporters: ArticleDetailResponse["reporters"],
+): ArticleSourceReporter[] {
+  const byName = new Map<string, ArticleSourceReporter>();
+  for (const rep of reporters) {
+    const next: ArticleSourceReporter = {
+      name: rep.name,
+      tier: rep.tier,
+      sourceUrl: rep.sourceUrl?.trim() || null,
+    };
+    const prev = byName.get(next.name);
+    if (!prev) {
+      byName.set(next.name, next);
+      continue;
+    }
+    const prevId = tweetId(prev.sourceUrl);
+    const nextId = tweetId(next.sourceUrl);
+    if (prevId != null && nextId != null && nextId > prevId) {
+      byName.set(next.name, next);
+    }
+  }
+  return [...byName.values()];
+}
+
 /**
  * BE → 도메인 경계 변환. 상세엔 `teams`가 없어 해시태그의 팀 한글명을
  * 역산한다 — 선수명 등 팀이 아닌 태그는 매핑에 없어 자연히 걸러진다.
+ * 기자는 중복을 걷어 전원을 넘긴다({@link dedupeReporters}, KAN-365).
  */
 function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
-  const lead = r.reporters[0] ?? null;
-
   return {
     id: String(r.articleSummaryId),
     title: r.title,
@@ -171,8 +212,7 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
       .map((tag) => TEAM_BY_KO_NAME[tag])
       .filter((code): code is TeamCode => Boolean(code)),
     imageUrl: r.imageUrl,
-    reporter: lead ? { name: lead.name, tier: lead.tier } : null,
-    sourceUrl: lead?.sourceUrl ?? null,
+    reporters: dedupeReporters(r.reporters),
     views: r.viewCount,
     commentCount: r.commentCount,
     likeCount: r.likeCount,
