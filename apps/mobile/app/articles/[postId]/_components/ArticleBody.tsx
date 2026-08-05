@@ -1,8 +1,8 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
+import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
-import { LinkOutIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
@@ -29,8 +29,8 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 트윗 임베드 폴백은 KAN-301에서 뺐다 — 본문과 임베드 내용이 겹치고 로딩이
  * 무거워서다. 원문은 기자 라인의 원문 링크로만 연결한다.
  * 팀·단계·기자는 없으면 그 조각만 빠진다. 기자 줄은 대표만 보이던 것을
- * KAN-365에서 전원 펼침으로 바꿨다 — 이름 옆 인원수를 누르면 기자별 원문
- * 링크 목록이 열리고, 원문 버튼은 여전히 대표(`reporters[0]`)의 링크다.
+ * KAN-365에서 전원 노출로 바꿨다 — 이름 옆 기자 수를 누르면 기자 목록(표시
+ * 전용)이 열리고, 원문 버튼은 기자가 여럿일 때 기자별 원문 링크 팝오버가 된다.
  * 서버 컴포넌트 — 댓글 섹션(`ArticleComments`)만 클라 경계로 내려간다(KAN-303).
  * 좋아요는 KAN-308, 공유는 KAN-312에서 각각 클라 경계 버튼으로 연결했다.
  *
@@ -53,19 +53,16 @@ export function ArticleBody({
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
   const paragraphs = article.summary.split("\n").filter(Boolean);
   const meta = `${formatRelativeTime(article.publishedAt)} · 조회 ${formatCount(article.views)}`;
-  // 원문 버튼은 지금처럼 대표 기자([0])의 링크만 쓴다 (KAN-365)
   const lead = article.reporters[0] ?? null;
 
-  const sourceLink = lead?.sourceUrl && (
-    <a
-      href={lead.sourceUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-label text-accent ml-auto flex items-center gap-1 font-bold active:opacity-60"
-    >
-      <LinkOutIcon size={13} />
-      원문
-    </a>
+  // 기자가 여럿이면 기자별 원문 링크 팝오버, 한 명이면 대표 원문 직행 (KAN-365)
+  const sourceLink = (
+    <SourceLinkButton
+      label="원문"
+      sourceUrl={lead?.sourceUrl ?? null}
+      reporters={article.reporters}
+      className="ml-auto"
+    />
   );
 
   return (

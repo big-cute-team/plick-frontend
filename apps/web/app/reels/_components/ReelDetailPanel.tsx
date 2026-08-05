@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
-import { CloseIcon, LinkOutIcon } from "@plick/ui/icons";
+import { CloseIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
+import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
@@ -36,9 +37,9 @@ import { useArticleReporters } from "@/_hooks/useArticleReporters";
  * 더한다 — 스냅샷은 방금 단 댓글을 모른다.
  *
  * 기자 줄(KAN-365): 피드는 대표 한 명만 주지만 기사엔 기자가 여럿일 수 있다.
- * 패널이 열리면 기사 상세를 받아({@link useArticleReporters}) 이름 옆 인원수와
- * 기자별 원문 링크 목록을 붙인다. 받기 전엔 대표 이름만 서고, "출처 원문 보기"는
- * 지금처럼 피드의 대표 링크(`reel.sourceUrl`)다.
+ * 패널이 열리면 기사 상세를 받아({@link useArticleReporters}) 이름 옆 기자 수와
+ * 기자 목록(표시 전용)을 붙이고, "출처 원문 보기"는 기자별 원문 링크 팝오버가
+ * 된다. 받기 전엔 대표 이름만 서고 원문 버튼은 피드의 대표 링크로 직행한다.
  *
  * @param reel - 세부를 보여줄 릴. `null`이면 닫힘(마지막 릴은 닫힘 애니 동안 유지).
  * @param onClose - 닫기 요청 콜백(패널 소유자가 `reel`을 `null`로 만든다)
@@ -132,17 +133,13 @@ export function ReelDetailPanel({
 
               <div className="flex items-center gap-2">
                 <TagChips tags={rendered.hashtags} />
-                {rendered.sourceUrl && (
-                  <a
-                    href={rendered.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent text-label focus-visible:outline-accent ml-auto flex items-center gap-1.25 rounded font-bold hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
-                  >
-                    <LinkOutIcon size={13} />
-                    출처 원문 보기
-                  </a>
-                )}
+                {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365) */}
+                <SourceLinkButton
+                  label="출처 원문 보기"
+                  sourceUrl={rendered.sourceUrl}
+                  reporters={reporters}
+                  className="ml-auto"
+                />
               </div>
 
               <CommentsHeader
