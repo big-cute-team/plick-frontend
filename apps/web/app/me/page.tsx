@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { ChevronMiniIcon, HelpCircleIcon } from "@plick/ui/icons";
+import {
+  ChevronMiniIcon,
+  FileTextIcon,
+  HelpCircleIcon,
+  LockLineIcon,
+} from "@plick/ui/icons";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -47,9 +52,21 @@ export default async function MyPage() {
 
             <CardSection>
               <SettingRow
-                pressable
+                href="/faq"
                 icon={<HelpCircleIcon />}
                 label="FAQ"
+                trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
+              />
+              <SettingRow
+                href="/terms"
+                icon={<FileTextIcon />}
+                label="이용약관"
+                trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
+              />
+              <SettingRow
+                href="/privacy"
+                icon={<LockLineIcon />}
+                label="개인정보처리방침"
                 trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
               />
             </CardSection>
@@ -66,10 +83,10 @@ export default async function MyPage() {
   );
 }
 
-/** 설정 줄 하나를 감싸는 카드 섀시 — 이 화면에서만 쓰는 사적 헬퍼. */
+/** 설정 줄들을 감싸는 카드 섀시 — 이 화면에서만 쓰는 사적 헬퍼. 줄 사이는 구분선. */
 function CardSection({ children }: { children: ReactNode }) {
   return (
-    <section className="bg-elevate-2 border-border rounded-card overflow-hidden border">
+    <section className="bg-elevate-2 border-border rounded-card divide-border divide-y overflow-hidden border">
       {children}
     </section>
   );
