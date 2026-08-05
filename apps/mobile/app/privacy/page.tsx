@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PrivacyPolicyBody } from "@plick/ui/PrivacyPolicyBody";
 import { AppShell } from "@/_components/AppShell";
+import { DocTopBar } from "@/_components/DocTopBar";
 import { ScrollArea } from "@/_components/ScrollArea";
-import { PrivacyTopBar } from "./_components/PrivacyTopBar";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <AppShell>
-      <PrivacyTopBar />
+      <DocTopBar title="개인정보처리방침" />
 
       <ScrollArea>
         <div className="px-edge pt-4 pb-12">

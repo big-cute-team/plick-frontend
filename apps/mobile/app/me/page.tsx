@@ -2,7 +2,12 @@ import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { ChevronMiniIcon, HelpCircleIcon, LockLineIcon } from "@plick/ui/icons";
+import {
+  ChevronMiniIcon,
+  FileTextIcon,
+  HelpCircleIcon,
+  LockLineIcon,
+} from "@plick/ui/icons";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@plick/domain/constants";
 import { getMyProfile } from "@/_services/profile";
@@ -41,9 +46,15 @@ export default async function MyPage() {
 
           <section className="bg-elevate-2 border-border rounded-card divide-border divide-y overflow-hidden border">
             <SettingRow
-              pressable
+              href="/faq"
               icon={<HelpCircleIcon />}
               label="FAQ"
+              trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
+            />
+            <SettingRow
+              href="/terms"
+              icon={<FileTextIcon />}
+              label="이용약관"
               trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
             />
             <SettingRow

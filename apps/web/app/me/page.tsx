@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { ChevronMiniIcon, HelpCircleIcon, LockLineIcon } from "@plick/ui/icons";
+import {
+  ChevronMiniIcon,
+  FileTextIcon,
+  HelpCircleIcon,
+  LockLineIcon,
+} from "@plick/ui/icons";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -47,9 +52,15 @@ export default async function MyPage() {
 
             <CardSection>
               <SettingRow
-                pressable
+                href="/faq"
                 icon={<HelpCircleIcon />}
                 label="FAQ"
+                trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
+              />
+              <SettingRow
+                href="/terms"
+                icon={<FileTextIcon />}
+                label="이용약관"
                 trailing={<ChevronMiniIcon className="text-text-4 shrink-0" />}
               />
               <SettingRow

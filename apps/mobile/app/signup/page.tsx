@@ -18,7 +18,11 @@ export default function SignupPage() {
       backHref="/login"
       terms={
         <p className="text-caption text-text-4 pt-0.5 text-center">
-          가입 시 <span className="underline">이용약관</span> 및{" "}
+          가입 시{" "}
+          <Link href="/terms" className="underline">
+            이용약관
+          </Link>{" "}
+          및{" "}
           <Link href="/privacy" className="underline">
             개인정보처리방침
           </Link>
