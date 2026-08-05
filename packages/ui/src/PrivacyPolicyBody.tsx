@@ -1,22 +1,4 @@
-import type { ReactNode } from "react";
-
-/** 절 제목 + 본문 묶음 — 목차 앵커(id)를 받는다. */
-function Section({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section id={id} className="flex scroll-mt-14 flex-col gap-2">
-      <h2 className="text-body-lg text-text font-extrabold">{title}</h2>
-      {children}
-    </section>
-  );
-}
+import { LegalSection as Section } from "./LegalSection";
 
 /** 목차 항목 정의 — 앵커 id와 제목. Section의 id와 1:1로 맞춘다. */
 const SECTIONS = [
