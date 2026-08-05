@@ -467,6 +467,14 @@ export const HelpCircleIcon = ({ size = 19, ...p }: IconProps) => (
   </svg>
 );
 
+export const LockLineIcon = ({ size = 19, ...p }: IconProps) => (
+  <svg {...base({ size, ...p })}>
+    <rect x="4.5" y="10.5" width="15" height="9" rx="2.5" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    <path d="M12 14v2" />
+  </svg>
+);
+
 export const LogoutIcon = ({ size = 17, ...p }: IconProps) => (
   <svg
     width={size}

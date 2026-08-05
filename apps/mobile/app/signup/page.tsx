@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AuthScreen } from "@/_components/AuthScreen";
 import { WEB_SITE_URL } from "@/_constants/site";
 
@@ -18,7 +19,10 @@ export default function SignupPage() {
       terms={
         <p className="text-caption text-text-4 pt-0.5 text-center">
           가입 시 <span className="underline">이용약관</span> 및{" "}
-          <span className="underline">개인정보처리방침</span>에 동의하게 됩니다
+          <Link href="/privacy" className="underline">
+            개인정보처리방침
+          </Link>
+          에 동의하게 됩니다
         </p>
       }
       switchPrompt="이미 계정이 있으신가요?"
