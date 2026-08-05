@@ -67,8 +67,9 @@ export function ArticleBody({
 
   return (
     <article className="px-edge flex flex-col gap-3.5 pt-1">
-      {/* 릴과 같은 배지 줄 — 구단 로고 + 알약 없는 단계 글자 (KAN-301) */}
-      <PostBadges team={team} stage={article.stage} />
+      {/* 배지 줄 — 알약 없는 단계 글자만 (KAN-301). 상단 구단 로고는 KAN-368에서
+          뺐다(릴은 유지) — 제목 위 로고가 목록 진입 맥락과 겹쳐 자리만 차지해서다 */}
+      <PostBadges team={null} stage={article.stage} />
 
       {/* 제목 */}
       <h1 className="text-headline text-text font-extrabold">

@@ -72,8 +72,9 @@ export function ArticleMain({
 
   return (
     <article className="min-w-0">
-      {/* 모바일 릴·기사 세부와 같은 배지 줄 — 구단 로고 + 알약 없는 단계 글자 */}
-      <PostBadges team={team} stage={article.stage} crestSize={34} />
+      {/* 배지 줄 — 알약 없는 단계 글자만. 상단 구단 로고는 KAN-368에서 뺐다
+          (모바일 기사 세부와 동일, 릴은 유지) */}
+      <PostBadges team={null} stage={article.stage} />
 
       {/* 제목 */}
       <h1 className="text-read-title text-text mt-3 font-bold">

@@ -5,7 +5,7 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
-import type { ArticleCard } from "@plick/domain/types";
+import type { ArticleCard, Filter } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
 
 /**
@@ -19,9 +19,27 @@ import { formatRelativeTime } from "@plick/domain/format";
  *
  * 행 맨 오른쪽에는 대표 팀 로고(`TeamCrest`)를 세로 중앙으로 붙인다(KAN-338).
  * 팀이 없는 기사는 로고 자리도 그리지 않는다.
+ *
+ * 팀 탭을 보고 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 팀 이름·로고로 쓴다
+ * (KAN-368) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다. 전체 탭은
+ * 기존대로 기사의 첫 팀이다.
+ *
+ * @param article - 표시할 기사 카드
+ * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  */
-export function NewsItem({ article }: { article: ArticleCard }) {
-  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
+export function NewsItem({
+  article,
+  filter = "ALL",
+}: {
+  article: ArticleCard;
+  filter?: Filter;
+}) {
+  const team =
+    filter !== "ALL"
+      ? TEAMS[filter]
+      : article.teams[0]
+        ? TEAMS[article.teams[0]]
+        : null;
 
   return (
     <Link
