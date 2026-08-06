@@ -147,6 +147,11 @@ CloudFront→ALB 오리진(origin.plick.co.kr)과 FE 서버→BE 내부 ALB(main
 접미사"라 우리 방향과 일치한다. prod CloudFront를 만들 때 origin.plick.co.kr의
 대상만 plick-alb-pub-prod로 바꿔 쓰면 된다.
 
+이 ADR을 올리면서 하나 더 손봤다. develop 푸시가 곧 배포가 되고 나니 이런 문서만
+있는 PR도 병합될 때마다 인스턴스 교체 배포가 통째로 돈다. 산출물이 안 변하는데
+Blue/Green을 태우는 낭비라, deploy.yml 트리거에 paths-ignore(docs/**, **/\*.md)를
+달아 문서만 바뀐 푸시는 배포를 건너뛰게 했다.
+
 ## 남은 것
 
 - prod VPC 구축: deploy-v2.md와 deploy-v3-cdn.md가 그대로 절차서가 된다.
