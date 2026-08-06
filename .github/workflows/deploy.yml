@@ -1,6 +1,8 @@
 name: Deploy
 
-# main은 릴리스 브랜치다. develop에서 main으로 병합되는 순간이 배포 시점이다.
+# 현 인프라는 개발 환경이고 develop 병합이 배포 시점이다(KAN-376). 실서비스는
+# 별도 VPC에 복제 예정이라, prod 구축 때 main 트리거를 environments 매핑으로 되살린다.
+# 그 전까지 main 푸시는 아무것도 배포하지 않는다.
 # workflow_dispatch는 코드 변경 없이 다시 돌려야 할 때 쓴다. API_BASE_URL은
 # 빌드 때 산출물에 박히는 값이라, BE 주소가 바뀌면 시크릿만 고치고 여기서 재실행한다.
 #
@@ -9,12 +11,13 @@ name: Deploy
 # 구조라 앱별로 따로 배포하면 한 ASG를 두 배포가 서로 복제·종료하며 싸우기 때문이다.
 on:
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
 
 # 배포는 중간에 끊기면 어중간한 상태로 남는다. 새 실행이 와도 취소하지 않고 줄 세운다.
+# prod 배포가 생기면 그룹을 환경별(deploy-dev/deploy-prod)로 가른다.
 concurrency:
-  group: deploy
+  group: deploy-dev
   cancel-in-progress: false
 
 # OIDC로 AWS 롤을 빌려 S3 업로드와 CodeDeploy 배포 생성을 한다.
@@ -69,15 +72,15 @@ jobs:
       - name: Build web
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          NEXT_PUBLIC_SITE_URL: https://plick.co.kr
-          NEXT_PUBLIC_MOBILE_SITE_URL: https://m.plick.co.kr
+          NEXT_PUBLIC_SITE_URL: https://dev.plick.co.kr
+          NEXT_PUBLIC_MOBILE_SITE_URL: https://dev-m.plick.co.kr
         run: pnpm --filter web build
 
       - name: Build mobile
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          NEXT_PUBLIC_SITE_URL: https://m.plick.co.kr
-          NEXT_PUBLIC_WEB_SITE_URL: https://plick.co.kr
+          NEXT_PUBLIC_SITE_URL: https://dev-m.plick.co.kr
+          NEXT_PUBLIC_WEB_SITE_URL: https://dev.plick.co.kr
         run: pnpm --filter mobile build
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
@@ -167,4 +170,4 @@ jobs:
             --query 'deploymentInfo.{status:status,errorInformation:errorInformation,overview:deploymentOverview}'
 
       - name: 배포 확인
-        run: echo "https://plick.co.kr · https://m.plick.co.kr 로 서비스된다"
+        run: echo "https://dev.plick.co.kr · https://dev-m.plick.co.kr 로 서비스된다"
