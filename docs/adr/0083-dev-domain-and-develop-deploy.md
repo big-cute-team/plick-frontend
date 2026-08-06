@@ -110,10 +110,48 @@ sub 조건에 develop을 추가해야 하고, 이건 병합 전에 돼 있어야
 dev 도메인의 검색엔진 차단(noindex)은 이번에 하지 않았다. WAF가 팀 IP 외 전부를
 막고 있어서 크롤러가 아예 접근을 못 한다. WAF 잠금을 푸는 날이 오면 그때 필요해진다.
 
+## 후속: 배관용 이름 두 개도 dev로 (dev-origin, dev-main)
+
+PR을 올리고 나서 배관용 이름들이 눈에 들어왔다. 사용자용 도메인만 dev로 옮겼지
+CloudFront→ALB 오리진(origin.plick.co.kr)과 FE 서버→BE 내부 ALB(main.plick.co.kr)는
+여전히 무접미사였다. 무접미사는 prod 몫으로 비워 둔다는 원칙에 어긋나서 이 둘도
+옮기기로 했다. prod가 없고 사용자도 없는 지금이 제일 싼 시점이다.
+
+방법은 사용자용 도메인 전환과 똑같은 패턴이다. 새 이름을 먼저 만들고(옛 이름은
+그대로 두고), 그 이름을 쓰는 쪽 설정을 바꾼다.
+
+- Route 53에 dev-origin(→퍼블릭 ALB), dev-main(→내부 ALB) A 별칭 레코드 생성.
+  두 이름이 같은 대상을 가리키는 동안 바꾸므로 무중단이다
+- CloudFront 배포 2개의 ALB 오리진 도메인을 dev-origin.plick.co.kr로 교체.
+  콘솔 오리진 드롭다운은 AWS 리소스만 나열하므로 커스텀 도메인은 직접 타이핑해서
+  "사용: ..." 항목을 골라야 한다. 목록의 ALB를 그대로 고르면 기본 DNS 이름이 박혀
+  위에서 설명한 인증서 불일치 502가 재현되니 주의
+- API_BASE_URL을 http://dev-main.plick.co.kr로 교체. 이 값은 두 시점에 읽혀서
+  GitHub 시크릿(빌드 타임)과 Parameter Store 두 파라미터(런타임 .env) 양쪽을
+  고쳐야 한다. 파라미터를 열어 보니 API_BASE_URL 줄이 두 개였고 위엣줄은
+  `http://http://`로 스킴이 겹쳐 깨져 있었다. 중복 키는 로더에 따라 어느 줄이
+  이기는지 달라지므로 한 줄만 남겼다
+
+값 수정이 PR 병합(첫 develop 배포)보다 늦어서 그 배포에는 옛 값이 실렸다. 코드
+변경이 없으니 workflow_dispatch로 재배포해 반영했다. 트리거를 develop으로 바꾼
+뒤라 `gh workflow run deploy.yml --ref develop`처럼 ref를 develop으로 줘야 새
+워크플로 파일이 돈다.
+
+검증은 네 겹으로 했다. dev 도메인 2개 200, canonical이 dev 도메인으로 바뀜(새
+빌드 증거), 홈 피드에 실데이터 SSR 렌더(dev-main 경로 동작 증거), 로그인 버튼
+클릭 시 카카오 인가 URL의 redirect_uri가 dev-m 콜백으로 나가고 카카오가 에러 없이
+로그인 화면을 띄움(콘솔 등록 URI와 일치한다는 증거).
+
+덤으로 CloudFront 오리진 드롭다운에서 plick-alb-pub-prod, plick-alb-pri-prod가
+이미 만들어져 있는 걸 발견했다. BE 쪽 네이밍이 "무접미사 = dev, prod는 -prod
+접미사"라 우리 방향과 일치한다. prod CloudFront를 만들 때 origin.plick.co.kr의
+대상만 plick-alb-pub-prod로 바꿔 쓰면 된다.
+
 ## 남은 것
 
 - prod VPC 구축: deploy-v2.md와 deploy-v3-cdn.md가 그대로 절차서가 된다.
   리소스 이름은 기존 무접미사(=dev)를 두고 prod 쪽에 접미사를 붙인다
+  (ALB는 이미 -prod 접미사로 생성돼 있다)
 - GitHub Environments로 dev/prod 매핑을 만들고 main 트리거 복원
-- OAuth prod 앱 분리, 실도메인 레코드를 prod 배포로 전환(컷오버)
+- OAuth prod 앱 분리, 실도메인·origin·main 레코드를 prod 리소스로 전환(컷오버)
 - 컷오버 후 CLAUDE.md와 배포 문서의 도메인 표기 갱신
