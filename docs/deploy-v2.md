@@ -93,6 +93,11 @@ CodeDeploy
 - VPC, 프라이빗 서브넷 × 2AZ, NAT, S3 게이트웨이 엔드포인트
 - 퍼블릭 ALB + HTTPS 리스너(호스트 헤더 규칙 2개) + ACM 인증서
 - 대상 그룹 `tg-front-web`(3000)·`tg-front-mobile`(3001), 헬스체크 `/api/health`
+  - 등록 취소 지연(deregistration delay)은 기본 300초에서 30초로 낮췄다(KAN-373).
+    ALB는 진행 중 요청이 없어도 이 시간을 다 채우고서야 드레이닝을 끝내서,
+    Blue/Green의 Blue 제거 단계가 배포마다 고정 5분을 먹고 있었다. CloudFront의
+    오리진 응답 타임아웃이 30초라 그보다 오래 사는 요청은 어차피 504로 끊기므로
+    30초면 이론상 최장 요청까지 덮는다
 - 내부 ALB(BE)와 보안그룹 체인
 - S3 버킷 `plick-deploy` (BE와 공용, 프론트 접두사 `frontend/`)
 - GitHub OIDC ID 제공업체(`token.actions.githubusercontent.com`)
