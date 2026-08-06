@@ -492,8 +492,6 @@ CloudFront distributions로 고른다(⚠️ 이 스코프는 us-east-1에서만
 
 ## TODO
 
-- CLAUDE.md "더 읽을 것"의 배포 항목이 아직 v1(docs/deploy.md + ADR 0059)만
-  가리킨다. v2·v3 문서로 갱신한다
 - `/_next/image*` 전용 캐시 비헤이비어 (§6)
 - `public/` 자산 캐시 비헤이비어 (§6)
 - `deploymentId` 도입 검토 (§14)
