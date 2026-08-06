@@ -26,10 +26,15 @@ permissions:
 # 버킷은 BE와 같이 쓰는 plick-deploy다. 프론트 몫 접두사가 frontend/이고
 # 키는 frontend/<커밋sha>/bundle.zip 하나다. CodeDeploy 앱·그룹 이름은 리포 하나에
 # 배포 대상 하나라 변수로 빼지 않고 여기 상수로 둔다.
+#
+# STATIC_BUCKET은 별개다(KAN-373). 배포 아티팩트는 CodeDeploy 에이전트만 읽고
+# 7일 뒤 지워지지만, 정적 자산은 CloudFront가 읽고 세대별로 오래 남아야 한다.
+# 수명 주기와 접근 주체가 달라서 버킷을 섞지 않는다.
 env:
   AWS_REGION: ap-northeast-2
   DEPLOY_BUCKET: plick-deploy
   DEPLOY_PREFIX: frontend
+  STATIC_BUCKET: plick-static
   CODEDEPLOY_APP: plick-frontend
   CODEDEPLOY_GROUP: plick-frontend-dg
 
@@ -77,6 +82,10 @@ jobs:
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
       # 한 서버에서 다 서빙하므로 여기서 채워 넣는다. 빠뜨리면 CSS·이미지가 404다.
+      #
+      # v3(KAN-373)에서 .next/static이 S3로도 올라가지만 이 복사는 남겨 둔다.
+      # CloudFront 비헤이비어가 잘못 걸렸을 때 EC2가 폴백으로 서빙해 주는 안전핀이다.
+      # 전환이 안정된 뒤에 제거를 판단한다(deploy-v3-cdn.md §16 14번).
       - name: Assemble standalone
         run: |
           for APP in web mobile; do
@@ -111,6 +120,23 @@ jobs:
         env:
           SHA: ${{ github.sha }}
         run: aws s3 cp bundle.zip "s3://$DEPLOY_BUCKET/$DEPLOY_PREFIX/$SHA/bundle.zip"
+
+      # 정적 자산을 CloudFront 오리진용 S3에 올린다(KAN-373, deploy-v3-cdn.md §7).
+      # 배포 생성보다 앞에 둔다. CodeDeploy가 트래픽을 신세대로 넘기는 순간부터
+      # 신세대 HTML이 나가는데, 그 HTML이 참조하는 청크가 아직 S3에 없으면 그 구간이
+      # 통째로 404다. 아직 CloudFront가 없어 실제로 읽는 주체는 없지만 순서는 지금 잡는다.
+      #
+      # ⚠️ --delete를 붙이지 않는다. 구세대 청크가 버킷에 남아 있는 것이 이 작업 전체의
+      # 목적이다. 붙이는 순간 v2와 똑같은 세대 간 404가 CloudFront 뒤에서 재현된다.
+      # ⚠️ Cache-Control을 직접 지정한다. Next 서버는 .next/static 응답에 immutable을
+      # 자기가 붙여 주지만 S3는 아무것도 안 붙인다. 파일명이 콘텐츠 해시라 1년 불변이 맞고,
+      # 같은 이유로 무효화(create-invalidation)도 필요 없다.
+      - name: Upload static assets
+        run: |
+          for APP in web mobile; do
+            aws s3 sync "apps/$APP/.next/static" "s3://$STATIC_BUCKET/$APP/_next/static" \
+              --cache-control "public,max-age=31536000,immutable"
+          done
 
       # wait deployment-successful은 15초 간격으로 최대 30분까지 기다리고,
       # 배포가 실패로 끝나면 non-zero로 빠져 잡이 빨간불이 된다.

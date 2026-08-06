@@ -9,7 +9,10 @@ v2 문서와 같은 성격의 "만들기 전의 설계"다. 실제 작업하며 
 고치고, 시행착오 회고는 세션 ADR에 남긴다. 배경과 판단은
 [ADR 0081](adr/0081-cdn-static-split-plan.md)에 있다.
 
-티켓 없이 시작한 작업이라 브랜치는 `feature/deploy-v3-cdn`이다.
+계획을 세운 세션은 티켓 없이 시작해서 브랜치가 `feature/deploy-v3-cdn`이었다.
+실행은 KAN-373([FE] 인프라 구조 개선)으로 티켓이 생겨서 `feature/KAN-373-*`으로 딴다.
+
+진행 상황은 §16 표 기준으로 1~3번(S3 버킷, IAM, deploy.yml)까지 했다.
 
 ## 0. 왜 바꾸나 — v2의 한계
 
@@ -265,7 +268,10 @@ S3가 SigV4 서명 검증에 실패해 403을 뱉는다. 이 비헤이비어는 
 `.github/workflows/deploy.yml`에 업로드 스텝 하나를 추가한다. 다른 파일은
 안 바뀐다. `next.config`도, appspec도, 훅 스크립트도 그대로다.
 
-`Configure AWS credentials` 스텝 뒤, `Upload bundle` 근처에 넣는다.
+`Configure AWS credentials` 스텝 뒤, `Upload bundle` 바로 다음에 넣는다.
+`Create deployment`보다 앞이어야 한다. CodeDeploy가 트래픽을 신세대로 넘기는
+순간부터 신세대 HTML이 나가는데, 그 HTML이 참조하는 청크가 아직 S3에 없으면
+그 구간이 통째로 404다.
 
 ```yaml
 - name: Upload static assets
