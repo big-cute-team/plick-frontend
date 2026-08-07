@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import type { EmblaOptionsType } from "embla-carousel";
 import {
   REELS_CAROUSEL_OPTIONS,
   REELS_REMEASURE_EPSILON,
@@ -31,14 +32,39 @@ import { useViewState } from "@/_stores/view-state";
  *   `activeIndex`는 지금 보고 있는 릴 — 화면 밖 릴 비활성화와 다음 페이지 프리페치에 쓴다.
  */
 export function useReelsCarousel(slideCount: number) {
-  const [viewportRef, embla] = useEmblaCarousel(REELS_CAROUSEL_OPTIONS);
-  const [activeIndex, setActiveIndex] = useState(0);
   /**
    * 되돌릴 자리를 첫 렌더에 미리 떠 둔다. 아래 sync가 마운트하자마자 0을 스토어에
    * 덮어쓰기 때문에, 이펙트 안에서 읽으면 이미 늦다.
    */
   const saved = useRef(useViewState.getState().reelsIndex);
-  const restored = useRef(false);
+
+  /**
+   * 캐러셀을 보던 릴에서 시작시킨다 (KAN-379).
+   *
+   * 예전에는 0번으로 만든 뒤 이펙트에서 `scrollTo(target, true)`로 건너뛰었는데,
+   * 이펙트는 페인트 뒤에 돌아서 그 사이 한 프레임 동안 첫 릴이 보였다 — 릴스에
+   * 돌아올 때마다 엉뚱한 게시물이 0.1초 스쳤다 원래 자리로 돌아오는 증상의
+   * 정체다. `useScrollRestore`가 같은 이유로 `useLayoutEffect`를 쓰는데 캐러셀만
+   * 빠져 있었다. Embla는 옵션의 `startIndex`를 초기화 시점에 읽으므로 아예 그
+   * 자리에서 만들면 중간 프레임이 생기지 않는다.
+   *
+   * 옵션 객체는 한 번 만들어 고정한다 — 매 렌더 새 객체를 넘기면
+   * embla-carousel-react가 옵션이 바뀐 걸로 보고 계속 다시 초기화한다.
+   *
+   * 탭에서 돌아오는 경우엔 쿼리 캐시에 릴이 남아 있어 첫 렌더에 이미 슬라이드가
+   * 있다. 서버 fetch가 실패해 첫 렌더가 0장인 경우만 아래 복원 이펙트가 받는다.
+   */
+  const options = useRef<EmblaOptionsType | null>(null);
+  options.current ??= {
+    ...REELS_CAROUSEL_OPTIONS,
+    startIndex: Math.min(saved.current, Math.max(0, slideCount - 1)),
+  };
+
+  const [viewportRef, embla] = useEmblaCarousel(options.current);
+  const [activeIndex, setActiveIndex] = useState(
+    () => options.current?.startIndex ?? 0,
+  );
+  const restored = useRef(slideCount > 0);
 
   useEffect(() => {
     if (!embla) return;
@@ -55,9 +81,9 @@ export function useReelsCarousel(slideCount: number) {
   }, [embla]);
 
   /**
-   * 보던 릴로 되돌린다. 캐러셀은 슬라이드가 붙은 뒤에야 만들어지므로 옵션의
-   * `startIndex`로는 못 잡는다 — 첫 렌더에는 아직 데이터가 없어 0장이다.
-   * 만들어진 직후 한 번만 건너뛴다(`jump`라 애니메이션 없이 그 자리에서 시작한다).
+   * 첫 렌더에 슬라이드가 0장이었을 때의 복원 — 서버 fetch가 실패해 클라가 직접
+   * 받는 경우다. 그때는 `startIndex`가 0으로 굳었으므로 데이터가 도착한 뒤
+   * 한 번만 건너뛴다(`jump`라 애니메이션 없이 그 자리에서 시작한다).
    *
    * 캐시가 정리돼 릴이 첫 페이지로 줄었으면 그만큼만 되돌린다.
    */

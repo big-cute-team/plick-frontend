@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { RESTORE_MAX_FRAMES } from "@/_constants/app";
 import { useViewState } from "@/_stores/view-state";
 import type { ScreenKey } from "@/_types/app";
 
@@ -41,7 +42,35 @@ export function useScrollRestore(
       if (saved > el.scrollTop) el.scrollTop = saved;
     };
     restore();
-    const retry = requestAnimationFrame(restore);
+
+    /**
+     * 자리를 찾을 때까지 몇 프레임 더 민다 (KAN-379).
+     *
+     * 레이아웃 이펙트 시점에 문서가 아직 짧으면 브라우저가 `scrollTop`을 끝까지만
+     * 깎는다. 그러면 첫 페인트가 엉뚱한 자리(목록 위쪽 다른 기사들)로 나가고,
+     * 콘텐츠가 늘어난 뒤에야 제자리로 튄다 — 돌아올 때마다 다른 기사가 스쳤다
+     * 돌아오는 증상이다. 한 프레임만 재시도하던 걸 도달할 때까지로 늘렸다.
+     * 이미지·임베드가 늦게 자리를 잡아도 그 안에 대개 들어온다.
+     *
+     * `restore`가 아래로만 밀기 때문에(`saved > scrollTop`) 사용자가 더 내려간
+     * 경우를 되돌리지는 않지만, 위로 올리는 중이면 붙잡는 꼴이 된다. 그래서
+     * 손이 닿는 순간 재시도를 접는다.
+     */
+    let tries = RESTORE_MAX_FRAMES;
+    let retry = 0;
+    const step = () => {
+      if (el.scrollTop >= saved || tries-- <= 0) return;
+      restore();
+      retry = requestAnimationFrame(step);
+    };
+    retry = requestAnimationFrame(step);
+
+    const stopRetry = () => {
+      cancelAnimationFrame(retry);
+      tries = 0;
+    };
+    el.addEventListener("touchstart", stopRetry, { passive: true, once: true });
+    el.addEventListener("wheel", stopRetry, { passive: true, once: true });
 
     let frame = 0;
     const onScroll = () => {

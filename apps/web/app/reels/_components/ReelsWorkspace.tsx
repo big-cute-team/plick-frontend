@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
 import { reelKeys } from "@plick/core/reelKeys";
+import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useActiveReel } from "@/_hooks/useActiveReel";
 import { useArticleView } from "@/_hooks/useArticleView";
@@ -84,10 +85,13 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
    * `COMMON_INVALID_PARAM` 코드라 둘을 구분할 방법이 없으므로, 다음 페이지에서
    * 400을 받으면 커서를 버리고 첫 페이지부터 다시 받는다. 같은 커서로 재시도해봐야
    * 계속 400이다. 대신 보던 자리를 잃는다.
+   *
+   * 캐시를 비우지 않고 첫 페이지만 남겨 다시 받는다 (KAN-379) — 비우면 서버가
+   * 내려준 `initial` 씨앗이 다시 심겨 옛 릴이 한 번 스쳤다 간다.
    */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      queryClient.resetQueries({ queryKey: reelKeys.feed() });
+      void restartFeedQuery(queryClient, reelKeys.feed());
       return;
     }
     fetchNextPage();

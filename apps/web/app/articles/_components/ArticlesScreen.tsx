@@ -1,5 +1,6 @@
 import { getArticles } from "@plick/core/articles";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
 import { PostFeed } from "@/_components/PostFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
 
@@ -30,19 +31,27 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
     <>
       <SiteHeader />
       <main>
-        <div className="max-w-read px-gutter mx-auto w-full pt-7 pb-22">
-          <header>
-            <h1 className="text-hero text-text tracking-heading font-extrabold">
-              기사
-            </h1>
-            <p className="text-body text-text-3 mt-1.5 font-semibold">
-              팀별 이적 소식을 모아보세요
-            </p>
-          </header>
-          <div className="pt-4.5">
-            <PostFeed initial={initial} initialTeam={team} variant="article" />
+        {/* 좁은 화면에서 맨 위를 당기면 새로고침 (KAN-379). sticky인 SiteHeader는
+            transform 껍데기 밖에 둬야 해서 본문만 감싼다 */}
+        <FeedPullRefresh surface="article">
+          <div className="max-w-read px-gutter mx-auto w-full pt-7 pb-22">
+            <header>
+              <h1 className="text-hero text-text tracking-heading font-extrabold">
+                기사
+              </h1>
+              <p className="text-body text-text-3 mt-1.5 font-semibold">
+                팀별 이적 소식을 모아보세요
+              </p>
+            </header>
+            <div className="pt-4.5">
+              <PostFeed
+                initial={initial}
+                initialTeam={team}
+                variant="article"
+              />
+            </div>
           </div>
-        </div>
+        </FeedPullRefresh>
       </main>
     </>
   );
