@@ -169,9 +169,13 @@ PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
   [docs/deploy.md](docs/deploy.md)는 v1 기록이지만 ALB·대상 그룹·ACM·Route 53 기반은
   v2가 그대로 물려받았다([ADR 0059](docs/adr/0059-mobile-ec2-deploy.md),
   [ADR 0064](docs/adr/0064-private-ec2-ssm-deploy.md)).
-  배포는 main 푸시에 걸려 있고 `API_BASE_URL`은 빌드 시점에 산출물로 굳는다
-- 정적 자산 CDN 분리(CloudFront + S3) 계획: [docs/deploy-v3-cdn.md](docs/deploy-v3-cdn.md),
-  판단 근거는 [ADR 0081](docs/adr/0081-cdn-static-split-plan.md). 아직 착수 전이다
+  환경은 dev/prod 두 벌이다: develop 푸시 → dev(dev.plick.co.kr·dev-m.plick.co.kr),
+  main 푸시 → prod(plick.co.kr·m.plick.co.kr). 리소스 이름과 경위는
+  [ADR 0084](docs/adr/0084-prod-vpc-frontend-stack.md).
+  `API_BASE_URL`은 빌드 시점에 산출물로 굳는다
+- 정적 자산 CDN 분리(CloudFront + S3): [docs/deploy-v3-cdn.md](docs/deploy-v3-cdn.md),
+  판단 근거는 [ADR 0081](docs/adr/0081-cdn-static-split-plan.md). 적용돼 있고 버킷은
+  환경별 `plick-static-dev`·`plick-static-prod`다
 - 레이어 폴더 구조의 배경과 판단: [ADR 0029](docs/adr/0029-layered-architecture-restructure.md)
 - 모바일 화면과 컴포넌트 구현: `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
 - 데스크톱 웹(apps/web) 화면과 컴포넌트 구현: `web-publishing` 스킬(`@plick/ui` 승격 절차 포함)
