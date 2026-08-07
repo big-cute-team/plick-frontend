@@ -52,9 +52,9 @@ jobs:
       AWS_REGION: ap-northeast-2
       DEPLOY_BUCKET: plick-deploy
       DEPLOY_PREFIX: frontend/${{ github.ref_name == 'main' && 'prod' || 'dev' }}
-      STATIC_BUCKET: ${{ github.ref_name == 'main' && 'plick-static-prod' || 'plick-static' }}
-      CODEDEPLOY_APP: ${{ github.ref_name == 'main' && 'plick-frontend-prod' || 'plick-frontend' }}
-      CODEDEPLOY_GROUP: ${{ github.ref_name == 'main' && 'plick-frontend-dg-prod' || 'plick-frontend-dg' }}
+      STATIC_BUCKET: ${{ github.ref_name == 'main' && 'plick-static-prod' || 'plick-static-dev' }}
+      CODEDEPLOY_APP: ${{ github.ref_name == 'main' && 'plick-frontend-prod' || 'plick-frontend-dev' }}
+      CODEDEPLOY_GROUP: ${{ github.ref_name == 'main' && 'plick-frontend-dg-prod' || 'plick-frontend-dg-dev' }}
       WEB_SITE_URL: ${{ github.ref_name == 'main' && 'https://plick.co.kr' || 'https://dev.plick.co.kr' }}
       MOBILE_SITE_URL: ${{ github.ref_name == 'main' && 'https://m.plick.co.kr' || 'https://dev-m.plick.co.kr' }}
     steps:
