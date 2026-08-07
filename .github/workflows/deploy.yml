@@ -1,20 +1,29 @@
 name: Deploy
 
-# main은 릴리스 브랜치다. develop에서 main으로 병합되는 순간이 배포 시점이다.
-# workflow_dispatch는 코드 변경 없이 다시 돌려야 할 때 쓴다. API_BASE_URL은
-# 빌드 때 산출물에 박히는 값이라, BE 주소가 바뀌면 시크릿만 고치고 여기서 재실행한다.
+# 브랜치-환경 매핑(KAN-377): develop 푸시는 dev 인프라로, main 푸시는 prod 인프라로
+# 나간다. 매핑은 GitHub Environments(dev/prod)로 걸려 있어 API_BASE_URL 시크릿이
+# 환경 단위로 갈리고, 사이트 URL·CodeDeploy 이름·버킷은 아래 job env의 분기 상수다.
+# workflow_dispatch는 코드 변경 없이 다시 돌려야 할 때 쓴다. 실행 ref가 develop이면
+# dev, main이면 prod로 간다. API_BASE_URL은 빌드 때 산출물에 박히는 값이라,
+# BE 주소가 바뀌면 환경 시크릿만 고치고 여기서 재실행한다.
 #
 # v2(KAN-344): SSM Run Command 대신 CodeDeploy Blue/Green으로 나간다.
 # 두 앱을 bundle.zip 하나로 묶어 배포 1건을 만든다. 인스턴스가 통째로 교체되는
 # 구조라 앱별로 따로 배포하면 한 ASG를 두 배포가 서로 복제·종료하며 싸우기 때문이다.
+# docs와 md만 바뀐 푸시는 배포를 건너뛴다. 산출물이 안 변하는데 인스턴스를
+# 통째로 교체하는 낭비를 막는다. 코드가 섞인 푸시는 정상 트리거된다.
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 # 배포는 중간에 끊기면 어중간한 상태로 남는다. 새 실행이 와도 취소하지 않고 줄 세운다.
+# 그룹은 환경별이라 dev와 prod 배포는 서로를 기다리지 않는다.
 concurrency:
-  group: deploy
+  group: deploy-${{ github.ref_name == 'main' && 'prod' || 'dev' }}
   cancel-in-progress: false
 
 # OIDC로 AWS 롤을 빌려 S3 업로드와 CodeDeploy 배포 생성을 한다.
@@ -23,25 +32,31 @@ permissions:
   id-token: write
   contents: read
 
-# 버킷은 BE와 같이 쓰는 plick-deploy다. 프론트 몫 접두사가 frontend/이고
-# 키는 frontend/<커밋sha>/bundle.zip 하나다. CodeDeploy 앱·그룹 이름은 리포 하나에
-# 배포 대상 하나라 변수로 빼지 않고 여기 상수로 둔다.
-#
-# STATIC_BUCKET은 별개다(KAN-373). 배포 아티팩트는 CodeDeploy 에이전트만 읽고
-# 7일 뒤 지워지지만, 정적 자산은 CloudFront가 읽고 세대별로 오래 남아야 한다.
-# 수명 주기와 접근 주체가 달라서 버킷을 섞지 않는다.
-env:
-  AWS_REGION: ap-northeast-2
-  DEPLOY_BUCKET: plick-deploy
-  DEPLOY_PREFIX: frontend
-  STATIC_BUCKET: plick-static
-  CODEDEPLOY_APP: plick-frontend
-  CODEDEPLOY_GROUP: plick-frontend-dg
-
 jobs:
   deploy:
     name: Deploy bundle
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    # 배포 버킷은 BE와 같이 쓰는 plick-deploy다. 프론트 몫 접두사가 frontend/이고
+    # 그 아래를 환경별(dev/·prod/)로 갈라 키가 frontend/<env>/<sha>/bundle.zip이다.
+    # 수명 주기 규칙과 OIDC 롤의 s3 권한이 frontend/* 기준이라 둘 다 그대로 덮는다.
+    #
+    # STATIC_BUCKET은 별개다(KAN-373). 배포 아티팩트는 CodeDeploy 에이전트만 읽고
+    # 7일 뒤 지워지지만, 정적 자산은 CloudFront가 읽고 세대별로 오래 남아야 한다.
+    # 수명 주기와 접근 주체가 달라서 버킷을 섞지 않고, 환경별로도 버킷을 가른다.
+    #
+    # 사이트 URL은 canonical·sitemap용 대표 URL이라 앱·환경마다 다르고(KAN-346),
+    # 비밀이 아닌 공개 도메인이라 시크릿 대신 여기 분기 상수로 박는다. 값이 틀리면
+    # canonical과 sitemap이 통째로 엉뚱한 도메인을 가리키므로 수정 시 재확인한다.
+    env:
+      AWS_REGION: ap-northeast-2
+      DEPLOY_BUCKET: plick-deploy
+      DEPLOY_PREFIX: frontend/${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      STATIC_BUCKET: ${{ github.ref_name == 'main' && 'plick-static-prod' || 'plick-static' }}
+      CODEDEPLOY_APP: ${{ github.ref_name == 'main' && 'plick-frontend-prod' || 'plick-frontend' }}
+      CODEDEPLOY_GROUP: ${{ github.ref_name == 'main' && 'plick-frontend-dg-prod' || 'plick-frontend-dg' }}
+      WEB_SITE_URL: ${{ github.ref_name == 'main' && 'https://plick.co.kr' || 'https://dev.plick.co.kr' }}
+      MOBILE_SITE_URL: ${{ github.ref_name == 'main' && 'https://m.plick.co.kr' || 'https://dev-m.plick.co.kr' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,23 +76,20 @@ jobs:
       # 러너(ubuntu x86_64)에서 빌드해야 한다. 산출물에는 sharp 같은 플랫폼 종속
       # 네이티브 바이너리가 딸려 들어가서, 맥에서 빌드한 걸 올리면 EC2에서 깨진다.
       # Launch Template AMI도 같은 이유로 x86_64에 맞춰져 있다.
-      # NEXT_PUBLIC_SITE_URL은 canonical·sitemap용 대표 URL이라 앱마다 다르고(KAN-346),
-      # 비밀이 아닌 공개 도메인이라 시크릿 대신 여기 상수로 박는다. 값이 틀리면
-      # canonical과 sitemap이 통째로 엉뚱한 도메인을 가리키므로 수정 시 재확인한다.
       # 교차 URL(web의 MOBILE_SITE_URL, mobile의 WEB_SITE_URL)은 m-dot 상호 선언용
-      # (모바일 canonical → 데스크톱, 데스크톱 alternate → 모바일)이라 같은 이유로 상수다.
+      # (모바일 canonical → 데스크톱, 데스크톱 alternate → 모바일)이다.
       - name: Build web
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          NEXT_PUBLIC_SITE_URL: https://plick.co.kr
-          NEXT_PUBLIC_MOBILE_SITE_URL: https://m.plick.co.kr
+          NEXT_PUBLIC_SITE_URL: ${{ env.WEB_SITE_URL }}
+          NEXT_PUBLIC_MOBILE_SITE_URL: ${{ env.MOBILE_SITE_URL }}
         run: pnpm --filter web build
 
       - name: Build mobile
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          NEXT_PUBLIC_SITE_URL: https://m.plick.co.kr
-          NEXT_PUBLIC_WEB_SITE_URL: https://plick.co.kr
+          NEXT_PUBLIC_SITE_URL: ${{ env.MOBILE_SITE_URL }}
+          NEXT_PUBLIC_WEB_SITE_URL: ${{ env.WEB_SITE_URL }}
         run: pnpm --filter mobile build
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
@@ -124,7 +136,7 @@ jobs:
       # 정적 자산을 CloudFront 오리진용 S3에 올린다(KAN-373, deploy-v3-cdn.md §7).
       # 배포 생성보다 앞에 둔다. CodeDeploy가 트래픽을 신세대로 넘기는 순간부터
       # 신세대 HTML이 나가는데, 그 HTML이 참조하는 청크가 아직 S3에 없으면 그 구간이
-      # 통째로 404다. 아직 CloudFront가 없어 실제로 읽는 주체는 없지만 순서는 지금 잡는다.
+      # 통째로 404다.
       #
       # ⚠️ --delete를 붙이지 않는다. 구세대 청크가 버킷에 남아 있는 것이 이 작업 전체의
       # 목적이다. 붙이는 순간 v2와 똑같은 세대 간 404가 CloudFront 뒤에서 재현된다.
@@ -167,4 +179,4 @@ jobs:
             --query 'deploymentInfo.{status:status,errorInformation:errorInformation,overview:deploymentOverview}'
 
       - name: 배포 확인
-        run: echo "https://plick.co.kr · https://m.plick.co.kr 로 서비스된다"
+        run: echo "$WEB_SITE_URL · $MOBILE_SITE_URL 로 서비스된다"
