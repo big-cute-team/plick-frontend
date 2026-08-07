@@ -174,3 +174,102 @@ concurrency 그룹도 deploy-dev/deploy-prod로 갈라서 두 환경의 배포�
   같은 앱을 쓰고 리다이렉트 URI만 실도메인이다
 - 옛 dev 파라미터(/plick/frontend/<앱>/env) 삭제는 옛 번들 만료(7일) 후
 - CLAUDE.md와 배포 문서의 도메인 표기 갱신, deploy-v2.md에 환경 이원화 반영
+
+## OIDC가 두 번 발목을 잡았다: environment sub와 BE 롤 개편
+
+PR을 병합하자 첫 dev 배포가 AssumeRoleWithWebIdentity 거부로 죽었다. 원인은 두 겹이었고
+푸는 데 시행착오를 꽤 썼다.
+
+첫째는 GitHub OIDC의 동작이다. 잡에 environment:를 선언하면 OIDC 토큰의 sub 클레임이
+ref:refs/heads/develop 형태에서 repo:<org>/<repo>:environment:dev 형태로 바뀐다.
+신뢰 정책은 브랜치 형태만 허용하고 있었으니 거부가 맞다. Environments를 도입하는 쪽이
+신뢰 정책도 environment 형태로 같이 바꿔야 한다는 걸 이번에 몸으로 배웠다.
+
+둘째가 진짜 함정이었다. 신뢰 정책을 고쳐도 계속 같은 에러가 났다. 알고 보니 BE 팀원이
+같은 날 IAM 롤 체계를 새 네이밍(plick-front-\*-<env>)으로 엎는 중이었고, GitHub 리포
+시크릿 AWS_DEPLOY_ROLE_ARN을 이미 새 롤(plick-front-github-role-dev)로 바꿔 둔
+상태였다. 우리는 옛 롤(plick-frontend-deploy)의 신뢰 정책을 열심히 고치고 있었는데
+워크플로는 그 롤을 쳐다보지도 않았던 것이다. 롤 목록의 "마지막 활동"이 실패한 assume은
+기록하지 않는다는 것도 이때 알았다. 진단 단서는 "정책을 고쳤는데도 증상이 그대로"와
+"옛 롤에 활동이 안 찍힘"의 조합이었다.
+
+정리는 이렇게 했다. dev/prod 환경 시크릿에 AWS_DEPLOY_ROLE_ARN을 각각 넣어 리포
+시크릿 의존을 끊었다(환경 시크릿이 같은 이름의 리포 시크릿을 덮는다). BE가 만든 dev
+롤은 신뢰 정책만 environment:dev로 고쳐 쓰고, prod 롤(plick-front-github-role-prod)은
+우리가 같은 패턴으로 만들었다. sub에 와일드카드가 없으니 StringLike 대신 StringEquals로
+넣어 콘솔 경고도 없앴다. S3 아티팩트 권한은 dev 롤이 frontend/*인 것과 달리 prod 롤은
+frontend/prod/*로 좁혀서 prod 롤이 dev 번들 자리를 못 건드리게 했다.
+
+## 첫 prod 배포: 성공했는데 Green이 1대뿐이었다
+
+main 병합으로 첫 prod 배포가 돌았고 워크플로는 성공으로 끝났다. curl로 CloudFront에
+직접 붙어(--connect-to로 Host는 실도메인인 채 d2yzxywg4wxdrt.cloudfront.net에 연결)
+홈 200, /api/health 200, 모바일 canonical이 https://plick.co.kr, \_next/static 청크가
+S3 오리진에서 immutable 헤더로 나오는 것까지 확인했다. DNS 컷오버 전에 실도메인 Host로
+검증하는 이 방법은 기억해 둘 만하다. CloudFront 기본 도메인으로 그냥 접근하면 Host가
+d\*.cloudfront.net이라 ALB 호스트 규칙에 안 걸려 404가 나기 때문에, Host를 유지한 채
+연결만 배포로 보내야 한다.
+
+그런데 CodeDeploy 콘솔의 배포 상세를 보니 대체(Green) 인스턴스가 1/2이었다. 한 대는
+BeforeInstall에서 실패했는데 배포 전체는 성공. CodeDeployDefault.AllAtOnce의 최소 정상
+인스턴스 기준이 0이라 한 대만 살아도 배포가 성공 처리되는 것이었다. 실패한 인스턴스는
+EC2로는 "실행 중"이지만 앱이 없고 대상 그룹에서 unhealthy로 트래픽을 안 받는 좀비가
+된다. ASG 상태 확인이 EC2 기준이라 교체도 안 된다.
+
+실패 원인은 user data와 CodeDeploy 에이전트의 경주였다. user data 순서가 "Node·pm2 →
+에이전트 설치 → aws CLI(snap) → /srv/plick 생성"인데, 에이전트는 설치되는 순간부터
+배포를 받을 수 있다. 에이전트가 배포를 먼저 받아버리면 /srv/plick이 아직 없고, 훅은
+ubuntu로 도는데 /srv는 root 소유라 mkdir -p가 권한 거부로 죽는다. Green 두 대 중
+한 대는 user data가 먼저 끝나 성공했고 한 대는 경주에서 졌다. dev에서 여태 안 터진
+건 순전히 운이었다. 실패 인스턴스가 SSM 관리형으로도 등록되지 않은 것(managed: false)이
+부팅이 깨끗하게 안 끝났다는 방증이었다.
+
+해법은 user data에서 에이전트 설치를 맨 마지막으로 옮기는 것. 에이전트가 뜨는 시점에는
+/srv/plick과 aws CLI가 이미 준비돼 있게 된다. deploy-v2.md의 user data도 같은 순서로
+고쳐야 한다(dev LT에도 같은 폭탄이 숨어 있다).
+
+## IAM 롤 이름 통일 (plick-front-\*-<env>)
+
+BE의 개편에 맞춰 프론트 쪽 IAM도 plick-front-\* + 환경 접미사로 통일하기로 했다. IAM
+롤은 개명이 안 되므로 전부 "새로 만들고 → 참조 바꾸고 → 옛것 삭제"다. BE가 이미 dev를
+끝냈고(옛 plick-frontend-ec2-role은 삭제됨) prod는 우리 몫이었다.
+
+- plick-front-ec2-role-prod: BE가 만들어 둔 것에 관리형 2개는 이미 있었고, 파라미터
+  읽기 인라인 정책의 Resource가 /plick/front/prod/_로 미리 적혀 있어서 실제 경로
+  (/plick/frontend/_/prod/env)로 고쳤다. BE는 파라미터 경로까지 front로 바꿀 생각으로
+  쓴 듯한데, 경로 개명은 파라미터 재생성 + 훅 수정 + 재배포가 한 세트라 따로 합의해서
+  하기로 하고 이번엔 롤 이름까지만 갔다
+- plick-front-codedeploy-role-prod: 신규 생성 (AWSCodeDeployRole + AmazonEC2FullAccess
+  - PassRole → plick-front-ec2-role-prod)
+- Launch Template 새 버전에 프로파일 교체와 user data 순서 수정을 같이 담아 Default로
+  승격, 배포 그룹 서비스 롤도 교체. 재배포 한 번으로 검증한다
+- 옛 롤 삭제는 반드시 새 프로파일로 인스턴스가 다 교체된 뒤에 한다. 살아 있는
+  인스턴스가 쓰는 인스턴스 롤을 먼저 지우면 SSM 접속과 롤백이 깨진다
+
+## dev 리소스도 -dev 접미사로: 스택 재구축
+
+롤 정리를 하다 보니 dev 리소스들만 무접미사로 남는 게 걸렸다. "무접미사 = dev"라는
+암묵 규칙은 prod가 생긴 순간부터 혼동의 씨앗이라, 우리 이름이 들어가는 모든 곳에
+-dev를 붙이기로 했다. 네이밍은 IAM만 BE의 plick-front-_를 따르고 나머지는 쓰던
+frontend를 유지한다(prod가 이미 plick-frontend-_-prod라 dev만 맞추면 대칭이 된다).
+
+문제는 AWS에서 이름 변경이 되는 리소스가 거의 없다는 것. LT·ASG·CodeDeploy 앱·대상
+그룹·보안그룹·S3 버킷 전부 재생성만 가능하다. 처음엔 새 스택을 옆에 세워 무중단으로
+갈아타는 순서를 짰는데, dev는 어차피 재배포 한 번이면 살아나는 환경이라 롤백 안전핀
+없이 "지우면서 다시 만드는" 쪽으로 단순화했다. 순서만 지키면 된다: 규칙이 참조하는
+TG는 먼저 대상을 갈아야 지워지고, 인스턴스가 쓰는 SG는 인스턴스가 죽어야 지워진다.
+
+- 새 TG(tg-front-web-dev·tg-front-mobile-dev) 생성 → ALB dev 호스트 규칙의 대상 교체
+  → 옛 TG 삭제 (이 시점부터 dev 다운)
+- 옛 CodeDeploy 앱(plick-frontend)·CodeDeploy\_\* ASG·LT 삭제
+- front-sg-dev 생성, dev 내부 ALB SG(pri-alb-sg)의 인바운드 소스를 옛 FE SG에서
+  교체 후 옛 SG 삭제. 이 교체를 빠뜨리면 새 인스턴스가 BE에 못 붙어 SSR이 빈다
+- 새 LT(plick-frontend-lt-dev, user data는 에이전트 마지막 순서)·ASG
+  (plick-frontend-asg-dev)·CodeDeploy(plick-frontend-dev/plick-frontend-dg-dev) 생성
+- 정적 버킷 plick-static-dev 생성, dev CloudFront 2개의 S3 오리진 교체, OAC 버킷
+  정책. 옛 plick-static은 새 경로로 배포가 확인된 뒤 비우고 삭제한다
+- deploy.yml의 dev 분기 상수 3개(CODEDEPLOY_APP·GROUP·STATIC_BUCKET)를 -dev 이름으로
+  교체하는 PR → 병합 배포로 dev가 새 스택에서 살아난다
+
+prod 재배포(user data 순서 수정 + 새 롤)는 2/2 성공으로 확인됐다. AllAtOnce가 1/2를
+성공으로 치던 그 구멍이 새 user data 순서로 막혔다는 증거다.
