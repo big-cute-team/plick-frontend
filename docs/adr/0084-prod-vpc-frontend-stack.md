@@ -273,3 +273,44 @@ TG는 먼저 대상을 갈아야 지워지고, 인스턴스가 쓰는 SG는 인�
 
 prod 재배포(user data 순서 수정 + 새 롤)는 2/2 성공으로 확인됐다. AllAtOnce가 1/2를
 성공으로 치던 그 구멍이 새 user data 순서로 막혔다는 증거다.
+
+## dev 새 스택 첫 배포: 이번엔 OIDC 롤의 권한 정책이 발목
+
+deploy.yml PR을 병합하자 dev 배포가 정적 업로드에서 AccessDenied로 죽었다. dev OIDC
+롤(plick-front-github-role-dev)의 권한 정책이 옛 이름(plick-static, plick-frontend)을
+가리키고 있었다. 리네이밍 런북을 짜면서 이 롤의 정책 갱신을 빠뜨린 내 실수였다.
+리소스를 개명하면 그 리소스를 ARN으로 참조하는 정책들이 전부 연쇄로 낡는다는 걸
+한 번 더 확인했다.
+
+고치는 과정에서 콘솔 함정을 또 밟았다. 인라인 정책 편집이 "JSON 수정 → 다음 →
+변경 사항 저장"의 2단계인데 마지막 저장을 안 누르면 조용히 날아간다. 저장된 줄
+알고 재실행을 두 번 태웠다가 같은 에러를 두 번 봤다. 반대로 진짜 저장이 된 뒤에는
+이미 돌고 있던 시도가 그대로 성공했는데, IAM 자격 증명 기반 정책은 세션에 굽히는
+게 아니라 매 API 요청 시점에 평가되기 때문이다. 배포 잡이 자격 증명을 이미 받은
+뒤라도 정책만 고치면 다음 S3 호출부터 바로 반영된다.
+
+## 컷오버와 최종 정리
+
+Route 53에 실도메인 A 별칭 2개(plick.co.kr → prod web 배포, m.plick.co.kr → prod
+mobile 배포)를 만들어 컷오버했다. 실도메인 두 개 200, 모바일 canonical이 데스크톱
+실도메인, 정적 청크가 plick-static-prod 경유 immutable로 확인됐다. 사용자가 없던
+죽은 도메인이라 컷오버 자체는 무위험이었다. 내 맥에서 plick.co.kr이 계속 안 풀려서
+잠깐 놀랐는데, 컷오버 전에 브라우저가 받아 둔 NXDOMAIN이 로컬 리졸버에 네거티브
+캐시로 남은 잔상이었다. 권한 네임서버에 직접 물으니(dig @권한NS) 정상이었고 IP로
+직접 붙으니 200이었다.
+
+정리로 지운 것: IAM 옛 롤 4개(plick-frontend-deploy, plick-frontend-codedeploy-role,
+plick-frontend-ec2-role-prod, plick-frontend-codedeploy-role-prod), 옛 dev 파라미터
+2개(/plick/frontend/<앱>/env), plick-static 버킷, 리포 수준 GitHub 시크릿 2개
+(AWS_DEPLOY_ROLE_ARN·API_BASE_URL — 환경 시크릿이 대체). plick-deploy의 옛 키는
+수명 주기가 7일 뒤 지운다.
+
+최종 상태는 이렇다. IAM은 plick-front-{ec2,codedeploy,github}-role-{dev,prod} 6개.
+컴퓨트·배포 리소스는 plick-frontend-{lt,asg}-{dev,prod}와 CodeDeploy
+plick-frontend-{dev,prod}/plick-frontend-dg-{dev,prod}. 대상 그룹 tg-front-{web,mobile}-{dev,prod},
+보안그룹 front-sg-{dev,prod}, 정적 버킷 plick-static-{dev,prod}, 파라미터
+/plick/frontend/{web,mobile}/{dev,prod}/env. 무접미사 리소스는 더 이상 없다.
+
+남은 것은 OAuth prod 앱 분리(카카오·구글 앱을 환경별로 가르고 prod 파라미터의
+client id 교체 후 재배포) 하나다. 지금은 dev와 같은 앱에 실도메인 리다이렉트 URI를
+등록해 쓰고 있어서 동작에는 문제가 없다.

@@ -9,6 +9,37 @@ GitHub Actions가 S3에 산출물을 올린 뒤 SSM Run Command로 서버 쪽 re
 v1 문서가 "다 만든 뒤의 기록"이라면 이 문서는 "만들기 전의 설계"다. 실제 작업하며
 달라지는 건 이 문서를 고치고, 시행착오 회고는 세션 ADR에 남긴다.
 
+## ⚠️ 환경 이원화 이후의 현행 (2026-08-07, KAN-377)
+
+이 문서는 단일 환경 시절의 설계서다. 지금은 같은 구조가 dev와 prod 두 벌이고
+([ADR 0084](adr/0084-prod-vpc-frontend-stack.md)), 아래 본문의 이름들은 환경
+접미사가 붙은 현행 이름으로 읽어야 한다.
+
+| 본문 이름                        | 현행 (dev / prod)                                    |
+| -------------------------------- | ---------------------------------------------------- |
+| `plick-frontend-lt`              | `plick-frontend-lt-dev` / `-prod`                    |
+| `plick-frontend-asg`             | `plick-frontend-asg-dev` / `-prod`                   |
+| `plick-frontend` (CodeDeploy 앱) | `plick-frontend-dev` / `plick-frontend-prod`         |
+| `plick-frontend-dg`              | `plick-frontend-dg-dev` / `-prod`                    |
+| `tg-front-web`·`tg-front-mobile` | 각각 `-dev` / `-prod` 접미사                         |
+| `plick-frontend-ec2-role`        | `plick-front-ec2-role-dev` / `-prod`                 |
+| `plick-frontend-codedeploy-role` | `plick-front-codedeploy-role-dev` / `-prod`          |
+| `plick-frontend-deploy` (OIDC)   | `plick-front-github-role-dev` / `-prod`              |
+| `/plick/frontend/<앱>/env`       | `/plick/frontend/<앱>/dev/env` / `.../prod/env`      |
+| `plick-static`                   | `plick-static-dev` / `plick-static-prod`             |
+| `frontend/<sha>/bundle.zip`      | `frontend/dev/<sha>/...` / `frontend/prod/<sha>/...` |
+
+배포 매핑은 develop 푸시 → dev, main 푸시 → prod다. deploy.yml이 GitHub
+Environments(dev/prod)로 API_BASE_URL 시크릿을 가르고, 나머지 환경별 상수는 잡 env의
+브랜치 분기다. OIDC 신뢰 정책의 sub는 브랜치 형태가 아니라
+`repo:big-cute-team/plick-frontend:environment:<env>` 형태다(environment를 선언한
+잡의 토큰은 sub가 environment 형태로 나온다).
+
+prod의 CloudFront→ALB 구간은 dev(HTTPS + origin 도메인 SNI)와 달리 HTTP:80 +
+`X-Origin-Verify` 시크릿 헤더 + CloudFront 관리형 프리픽스 리스트 SG 구조다.
+훅 스크립트는 DEPLOYMENT_GROUP_NAME의 `-prod` 접미사로 환경을 판별해 파라미터
+경로를 고른다. 상세는 ADR 0084.
+
 ## 0. 왜 바꾸나 — v1의 한계
 
 v1은 동작하지만 구조적 한계가 있다.
@@ -287,13 +318,6 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt-get install -y nodejs ruby-full
 npm install -g pm2
 
-# CodeDeploy 에이전트 (리전 버킷은 S3 게이트웨이 엔드포인트로 닿는다)
-cd /tmp
-curl -O https://aws-codedeploy-ap-northeast-2.s3.ap-northeast-2.amazonaws.com/latest/install
-chmod +x ./install
-./install auto
-systemctl enable codedeploy-agent
-
 # 배포 훅이 Parameter Store를 읽을 때 쓰는 aws CLI
 snap install aws-cli --classic
 
@@ -304,6 +328,16 @@ chown -R ubuntu:ubuntu /srv/plick
 # 재부팅 시 pm2 자동 기동. root user data라 생성된 명령을 손으로 복사할 필요 없이
 # 바로 유닛이 등록된다 (v1에서 출력 복사를 빼먹던 함정이 사라진다)
 env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+
+# CodeDeploy 에이전트는 반드시 맨 마지막에 설치한다 (리전 버킷은 S3 게이트웨이
+# 엔드포인트로 닿는다). 에이전트가 뜨는 순간부터 배포를 받을 수 있어서, 그 전에
+# /srv/plick과 aws CLI가 준비돼 있지 않으면 훅이 경주에서 진다. 실제로 첫 prod
+# 배포에서 Green 2대 중 1대가 BeforeInstall 권한 거부로 죽었다(ADR 0084)
+cd /tmp
+curl -O https://aws-codedeploy-ap-northeast-2.s3.ap-northeast-2.amazonaws.com/latest/install
+chmod +x ./install
+./install auto
+systemctl enable codedeploy-agent
 ```
 
 v1의 "1단계. SSM 세션으로 들어가서 서버 준비"가 통째로 이 스크립트로 바뀐다.
