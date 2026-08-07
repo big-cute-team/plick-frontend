@@ -7,6 +7,7 @@ import { ApiError } from "@plick/core/client";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { articleKeys } from "@plick/core/articleKeys";
+import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { useViewState } from "@/_stores/view-state";
 import {
   teamFilterFromPathname,
@@ -97,10 +98,13 @@ export function NewsFeed({
    * `COMMON_INVALID_PARAM` 코드라 둘을 구분할 방법이 없으므로, 다음 페이지에서
    * 400을 받으면 커서를 버리고 첫 페이지부터 다시 받는다. 같은 커서로 재시도해봐야
    * 계속 400이다.
+   *
+   * 캐시를 비우지 않고 첫 페이지만 남겨 다시 받는다 (KAN-379) — 비우면 서버가
+   * 내려준 `initial` 씨앗이 다시 심겨 옛 목록이 한 번 스쳤다 간다.
    */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      queryClient.resetQueries({ queryKey: articleKeys.feed(filter) });
+      void restartFeedQuery(queryClient, articleKeys.feed(filter));
       return;
     }
     fetchNextPage();

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { syncLikeIntoFeeds } from "@plick/core/like-sync";
 import { formatCount } from "@plick/domain/format";
 import type { LikeState } from "@plick/domain/types";
 import { HeartMiniIcon } from "@plick/ui/icons";
@@ -19,6 +21,9 @@ import { useArticleLike } from "@/_hooks/useArticleLike";
  * props가 원본이라, 낙관적 갱신은 이 state를 고치는 게 곧 화면을 고치는 것이다.
  * 다시 들어오면 서버가 새로 받은 값으로 다시 시작한다.
  *
+ * 같은 값을 캐시된 피드 목록에도 옮겨 적는다 (KAN-379) — 여기서 누르고 목록으로
+ * 돌아가면 목록이 누르기 전 숫자를 그대로 보여주던 걸 맞춘다.
+ *
  * @param articleId 기사 id
  * @param initial 서버가 내려준 최초 좋아요 상태(`likedByMe`·`likeCount`)
  */
@@ -30,7 +35,15 @@ export function ArticleLikeButton({
   initial: LikeState;
 }) {
   const [state, setState] = useState<LikeState>(initial);
-  const like = useArticleLike({ articleId, state, onChange: setState });
+  const queryClient = useQueryClient();
+  const like = useArticleLike({
+    articleId,
+    state,
+    onChange: (next) => {
+      setState(next);
+      syncLikeIntoFeeds(queryClient, articleId, next);
+    },
+  });
 
   return (
     <>

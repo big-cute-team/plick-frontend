@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/_components/AuthProvider";
+import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
 import { SITE_URL } from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
@@ -69,6 +70,10 @@ export default async function RootLayout({
             isLoggedIn={loggedIn}
             nickname={profile?.nickname ?? null}
           >
+            {/* 모바일 전환 배너 (KAN-379) — 화면마다 SiteHeader가 따로 있어
+                여기가 유일한 전역 자리다. sticky 헤더 위에 흐름으로 얹으므로
+                스크롤하면 배너는 올라가고 헤더가 상단에 붙는다 */}
+            <SwitchToMobileBanner />
             {children}
           </AuthProvider>
         </QueryProvider>
