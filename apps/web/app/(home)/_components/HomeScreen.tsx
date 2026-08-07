@@ -4,6 +4,7 @@ import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HotCarousel } from "@plick/ui/HotCarousel";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { SITE_URL } from "@/_constants/site";
@@ -61,62 +62,66 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
     <>
       <SiteHeader />
       <main>
-        <PageContainer className="pt-7 pb-22">
-          {team !== "ALL" && (
-            /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
-            <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
-          )}
-          {team !== "ALL" && (
-            /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 서버 렌더된
+        {/* 좁은 화면에서 맨 위를 당기면 새로고침 (KAN-379). sticky인 SiteHeader는
+            transform 껍데기 밖에 둬야 해서 본문만 감싼다 */}
+        <FeedPullRefresh surface="news">
+          <PageContainer className="pt-7 pb-22">
+            {team !== "ALL" && (
+              /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
+              <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
+            )}
+            {team !== "ALL" && (
+              /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 서버 렌더된
                첫 페이지 기사만 ItemList로 싣는다(크롤러가 보는 HTML과 같은 범위) */
-            <JsonLd
-              data={teamCollectionJsonLd({
-                teamFullName: TEAM_FULL_NAMES[team],
-                url: `${SITE_URL}/teams/${TEAMS[team].slug}`,
-                siteUrl: SITE_URL,
-                articles: initial?.page.items ?? [],
-              })}
-            />
-          )}
-          <section>
-            <h2 className="text-section text-text tracking-heading font-extrabold">
-              🔥 핫이슈
-            </h2>
-            <div className="pt-gap-lg">
-              {hot === null ? (
-                <p className="text-body text-text-4 py-8 text-center">
-                  핫이슈를 불러오지 못했어요.
-                </p>
-              ) : hot.length === 0 ? (
-                <p className="text-body text-text-4 py-8 text-center">
-                  아직 핫이슈가 없어요.
-                </p>
-              ) : (
-                /* 모바일 홈과 같은 캐러셀 (KAN-338). 카드 비율만 데스크톱에서
+              <JsonLd
+                data={teamCollectionJsonLd({
+                  teamFullName: TEAM_FULL_NAMES[team],
+                  url: `${SITE_URL}/teams/${TEAMS[team].slug}`,
+                  siteUrl: SITE_URL,
+                  articles: initial?.page.items ?? [],
+                })}
+              />
+            )}
+            <section>
+              <h2 className="text-section text-text tracking-heading font-extrabold">
+                🔥 핫이슈
+              </h2>
+              <div className="pt-gap-lg">
+                {hot === null ? (
+                  <p className="text-body text-text-4 py-8 text-center">
+                    핫이슈를 불러오지 못했어요.
+                  </p>
+                ) : hot.length === 0 ? (
+                  <p className="text-body text-text-4 py-8 text-center">
+                    아직 핫이슈가 없어요.
+                  </p>
+                ) : (
+                  /* 모바일 홈과 같은 캐러셀 (KAN-338). 카드 비율만 데스크톱에서
                    aspect-video로 낮춘다 — 모바일 기하(181/131)를 1200px 컨테이너에
                    그대로 쓰면 카드가 700px 넘게 길어진다. 트랙에 최대 폭을 걸어
                    카드(트랙의 86%)가 과하게 커지는 것도 함께 막는다 */
-                <div className="lg:mx-auto lg:max-w-5xl">
-                  <HotCarousel cardClassName="aspect-[181/131] lg:aspect-video">
-                    {hot.map((article) => (
-                      <HotCard key={article.id} article={article} />
-                    ))}
-                  </HotCarousel>
-                </div>
-              )}
-            </div>
-          </section>
+                  <div className="lg:mx-auto lg:max-w-5xl">
+                    <HotCarousel cardClassName="aspect-[181/131] lg:aspect-video">
+                      {hot.map((article) => (
+                        <HotCard key={article.id} article={article} />
+                      ))}
+                    </HotCarousel>
+                  </div>
+                )}
+              </div>
+            </section>
 
-          <section className="pt-7.5">
-            <h2 className="text-section text-text tracking-heading font-extrabold">
-              지금 올라온 소식
-            </h2>
-            <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <PostFeed initial={initial} initialTeam={team} variant="news" />
-              <HomeSidebar articles={hot} className="hidden lg:flex" />
-            </div>
-          </section>
-        </PageContainer>
+            <section className="pt-7.5">
+              <h2 className="text-section text-text tracking-heading font-extrabold">
+                지금 올라온 소식
+              </h2>
+              <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <PostFeed initial={initial} initialTeam={team} variant="news" />
+                <HomeSidebar articles={hot} className="hidden lg:flex" />
+              </div>
+            </section>
+          </PageContainer>
+        </FeedPullRefresh>
       </main>
     </>
   );

@@ -14,6 +14,13 @@ export const ONBOARDING_ENTRY = "/onboarding/nickname";
 export const NO_TEAM_COLOR_VAR = "--plk-accent";
 
 /**
+ * 모바일 버전 전환 추천 배너(KAN-379)를 닫았음을 기억하는 localStorage 키.
+ * 한 번 닫으면 이 브라우저에서 다시 띄우지 않는다 — 매 방문 다시 뜨면
+ * 추천이 아니라 잔소리다.
+ */
+export const SWITCH_BANNER_DISMISS_KEY = "plick-switch-banner-dismissed";
+
+/**
  * 기사 피드를 그리는 경로 → 그 화면의 피드 surface (KAN-321).
  * GNB에서 지금 있는 페이지의 링크를 한 번 더 눌렀을 때(모바일 탭 재탭과 같은
  * 손버릇, KAN-314) 어느 피드를 첫 페이지부터 다시 받을지 찾는 데 쓴다.

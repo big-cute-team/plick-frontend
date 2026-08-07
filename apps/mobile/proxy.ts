@@ -18,7 +18,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { BE_PROXY_PREFIX } from "@plick/core/client";
-import { refreshTokens } from "@plick/core/refresh";
+import { refreshTokensShared } from "@plick/core/refresh";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -71,7 +71,13 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    const tokens = await refreshTokens(refreshToken);
+    /**
+     * 재발급은 같은 토큰끼리 한 번으로 묶는다 (KAN-379). access 쿠키가 만료된
+     * 직후에는 요청 여러 개가 동시에 여기 닿는데, BE 재발급이 회전 방식이라
+     * 각자 부르면 하나만 성공하고 나머지는 401 → 아래 catch가 멀쩡한 세션을
+     * 끊어 버린다.
+     */
+    const tokens = await refreshTokensShared(refreshToken);
 
     /**
      * 요청 쿠키에도 심어 이번 네비게이션의 다운스트림 렌더(서버 컴포넌트)가 새 access를 보게 하고,
