@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AvatarField } from "@plick/ui/AvatarField";
 import { AppShell } from "@/_components/AppShell";
@@ -6,6 +7,12 @@ import { getMyProfile } from "@/_services/profile";
 import { EditTopBar } from "./_components/EditTopBar";
 import { InfoCard } from "./_components/InfoCard";
 import { ProfileEditForm } from "./_components/ProfileEditForm";
+
+/** 개인화 화면이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
+export const metadata: Metadata = {
+  title: "프로필 수정",
+  robots: { index: false, follow: false },
+};
 
 /**
  * 프로필 수정 — 마이페이지 프로필 카드 진입 (KAN-173, 피그마 25-6).

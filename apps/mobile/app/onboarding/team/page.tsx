@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
 import { ONBOARDING_ENTRY } from "@/_constants/app";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { TeamStep } from "./_components/TeamStep";
+
+/** 가입 직후 흐름이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
+export const metadata: Metadata = {
+  title: "응원팀 선택",
+  robots: { index: false, follow: false },
+};
 
 /**
  * A6 온보딩 2/2 마이팀 선택 — 닉네임 설정 다음 (KAN-176, 피그마 95-6).

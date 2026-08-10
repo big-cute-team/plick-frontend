@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import {
   ChevronMiniIcon,
@@ -14,6 +15,12 @@ import { APP_VERSION_LABEL } from "@/_constants/me";
 import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
+
+/** 개인화 화면이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
+export const metadata: Metadata = {
+  title: "MY",
+  robots: { index: false, follow: false },
+};
 
 /**
  * 데스크톱 마이페이지 (KAN-244 → KAN-319 API 연결) — GNB + 중앙 정렬 좁은 컬럼

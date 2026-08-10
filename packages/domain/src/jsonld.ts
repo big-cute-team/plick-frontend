@@ -8,13 +8,8 @@
  *
  * 렌더는 `@plick/ui` JsonLd 컴포넌트가 맡는다.
  */
+import { BRAND_DESCRIPTION, BRAND_NAME_EN, BRAND_NAME_KO } from "./brand";
 import type { ArticleCard, ArticleDetail } from "./types";
-
-/** 서비스 표시명 — 메타데이터 title과 같은 값 */
-const BRAND_NAME = "PLick";
-
-/** 태그라인 — 두 앱 루트 메타데이터 description과 같은 문구 (ADR 0070) */
-const BRAND_TAGLINE = "프리미어리그 소식을 릴스로";
 
 /** Organization 노드의 안정 식별자 — 페이지끼리 같은 발행 주체를 가리키게 한다 */
 function organizationId(siteUrl: string): string {
@@ -39,16 +34,19 @@ export function organizationJsonLd({
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": organizationId(siteUrl),
-    name: BRAND_NAME,
+    name: BRAND_NAME_KO,
+    alternateName: BRAND_NAME_EN,
     url: siteUrl,
-    description: BRAND_TAGLINE,
+    description: BRAND_DESCRIPTION,
     logo: { "@type": "ImageObject", url: logoUrl },
   };
 }
 
 /**
  * 사이트 자체를 선언하는 WebSite — 홈에 Organization과 나란히 싣는다.
- * 검색 결과의 사이트명 표기("PLick")를 안정시키는 노드다.
+ * 검색 결과 상단의 사이트명 표기를 정하는 노드다 (KAN-384) — 구글 사이트명
+ * 문서가 이 name을 1순위 소스로 쓴다. 한글 "플릭"을 대표명으로, 영문
+ * "PLick"을 alternateName으로 둬 두 표기 검색을 다 받는다.
  *
  * @param siteUrl canonical 도메인 절대 URL
  */
@@ -61,7 +59,8 @@ export function webSiteJsonLd({
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${siteUrl}/#website`,
-    name: BRAND_NAME,
+    name: BRAND_NAME_KO,
+    alternateName: BRAND_NAME_EN,
     url: siteUrl,
     inLanguage: "ko",
     publisher: { "@id": organizationId(siteUrl) },
@@ -110,11 +109,11 @@ export function newsArticleJsonLd({
             "@type": "Person",
             name: reporter.name,
           }))
-        : [{ "@type": "Organization", name: BRAND_NAME, url: siteUrl }],
+        : [{ "@type": "Organization", name: BRAND_NAME_KO, url: siteUrl }],
     publisher: {
       "@type": "Organization",
       "@id": organizationId(siteUrl),
-      name: BRAND_NAME,
+      name: BRAND_NAME_KO,
       logo: { "@type": "ImageObject", url: logoUrl },
     },
   };

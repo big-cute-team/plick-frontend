@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { FaqBody } from "@plick/ui/FaqBody";
 import { SiteHeader } from "@/_components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "FAQ",
+  description: PAGE_DESCRIPTIONS.faq,
 };
 
 /**

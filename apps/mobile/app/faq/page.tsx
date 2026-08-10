@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { FaqBody } from "@plick/ui/FaqBody";
 import { AppShell } from "@/_components/AppShell";
 import { DocTopBar } from "@/_components/DocTopBar";
@@ -6,6 +7,7 @@ import { ScrollArea } from "@/_components/ScrollArea";
 
 export const metadata: Metadata = {
   title: "FAQ",
+  description: PAGE_DESCRIPTIONS.faq,
 };
 
 /**

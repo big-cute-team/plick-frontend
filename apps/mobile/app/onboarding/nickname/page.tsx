@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
 import { getMyProfile } from "@/_services/profile";
 import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
 import { NicknameStep } from "./_components/NicknameStep";
+
+/** 가입 직후 흐름이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
+export const metadata: Metadata = {
+  title: "닉네임 설정",
+  robots: { index: false, follow: false },
+};
 
 /**
  * A5 온보딩 1/2 닉네임 설정 — 회원가입 직후 진입 (KAN-176, 피그마 96-6).
