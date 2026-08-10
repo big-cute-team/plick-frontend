@@ -31,3 +31,17 @@ const PROD_SITE_URL = "https://m.plick.co.kr";
  * `SITE_URL`이 빌드 타임 리터럴이라 이 비교도 빌드 시점에 확정된다.
  */
 export const IS_PRODUCTION_SITE = SITE_URL === PROD_SITE_URL;
+
+/**
+ * 네이버 서치어드바이저 소유확인 토큰 (KAN-380).
+ *
+ * 구글은 Route 53의 TXT 레코드 하나로 `plick.co.kr`과 모든 서브도메인을 한
+ * 속성에 묶었지만, 네이버는 DNS 방식이 없고 사이트 단위로 등록해서 도메인마다
+ * 토큰이 따로 나온다. 그래서 이 값은 web 앱의 것과 다르다.
+ *
+ * 환경 분기 없이 항상 렌더한다. 네이버가 등록 후에도 주기적으로 태그를 다시
+ * 확인해서, 조건부로 달았다가 빠지면 등록이 해제될 수 있다. dev는 noindex라
+ * 태그가 있어도 색인되지 않는다.
+ */
+export const NAVER_SITE_VERIFICATION =
+  "1afebc90fcc29fdda5f302565e280a229418cc61";
