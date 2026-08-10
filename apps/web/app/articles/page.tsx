@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { ArticlesScreen } from "./_components/ArticlesScreen";
 
 /** 기사 목록은 web 전용 라우트라(모바일 대응 페이지 없음) alternate 없이 canonical만 단다 (KAN-346). */
 export const metadata: Metadata = {
   title: "기사",
-  description: "프리미어리그 팀별 이적 기사 모아보기",
+  description: PAGE_DESCRIPTIONS.articles,
   alternates: { canonical: "/articles" },
 };
 

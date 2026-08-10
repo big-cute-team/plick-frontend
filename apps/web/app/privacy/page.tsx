@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { PrivacyPolicyBody } from "@plick/ui/PrivacyPolicyBody";
 import { SiteHeader } from "@/_components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침",
+  description: PAGE_DESCRIPTIONS.privacy,
 };
 
 /**

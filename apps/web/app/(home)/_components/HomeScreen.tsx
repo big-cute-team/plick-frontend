@@ -1,4 +1,5 @@
 import { getArticles, getHotArticles } from "@plick/core/articles";
+import { homeIntroCopy } from "@plick/domain/brand";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
@@ -71,7 +72,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             <h1 className="sr-only">
               {team !== "ALL"
                 ? `${TEAM_FULL_NAMES[team]} 이적 루머`
-                : "PLick 프리미어리그 이적 루머와 소식"}
+                : "플릭 PLick 프리미어리그 이적 루머와 소식"}
             </h1>
 
             {team !== "ALL" && (
@@ -123,6 +124,17 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                 <PostFeed initial={initial} initialTeam={team} variant="news" />
                 <HomeSidebar articles={hot} className="hidden lg:flex" />
               </div>
+            </section>
+
+            {/* 크롤러블 서비스 소개 (KAN-384) — 홈 본문에 서비스 설명 텍스트가
+                없으면 구글이 description을 버리고 탭바·빈 상태 문구를 긁어
+                스니펫을 만든다. description과 겹치는 문장을 화면에 싣는다 */}
+            <section className="pt-10">
+              <p className="text-caption text-text-4">
+                {homeIntroCopy(
+                  team !== "ALL" ? TEAM_FULL_NAMES[team] : undefined,
+                )}
+              </p>
             </section>
           </PageContainer>
         </FeedPullRefresh>
