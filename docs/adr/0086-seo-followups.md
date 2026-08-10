@@ -123,3 +123,120 @@ Next의 Metadata API는 세그먼트별로 병합되면서 아래쪽이 이긴�
 prod 분기는 조건식 한 줄 위쪽이고 기존 동작 그대로라 별도로 빌드해 보지는 않았다. 배포 후
 `https://plick.co.kr/robots.txt`에 `Sitemap:` 줄이 있고 페이지에 robots 메타가 없는 걸
 확인하는 게 아래 운영 작업(1-7)에 포함된다.
+
+## 2. 캐시 전략 (Step 2-6)
+
+전략 문서에 "기사 상세에 `revalidate` 도입 검토(루트 레이아웃의 쿠키 읽기와의 충돌 정리 필요)"로
+적혀 있던 항목이다. 막상 손대려니 그 "충돌 정리"가 생각보다 큰 이야기였다.
+
+### 왜 페이지를 정적으로 못 만드나
+
+루트 레이아웃이 서버에서 `cookies()`를 읽는다(`isLoggedIn`, `getMyProfile`). Next에서 요청
+쿠키를 읽는 순간 그 렌더는 동적으로 확정된다 — 빌드 시점에 결과를 미리 만들어 둘 수가 없다.
+사람마다 다른 값을 참조하니 당연한 결론이다. 이게 루트 레이아웃에 있으니 그 아래 전 라우트가
+동적이다. 기사 상세에 `export const revalidate = 300`을 적어도 아무 일도 일어나지 않는다.
+
+정적으로 만들려면 셋 중 하나다.
+
+1. 루트 레이아웃에서 쿠키 읽기를 걷어내고 로그인 상태를 클라에서 받아 온다. 첫 페인트에
+   로그인 UI가 비로그인 상태로 잠깐 그려지는 깜빡임이 생긴다.
+2. Next 16의 `cacheComponents`(PPR)로 정적 껍데기와 동적 조각을 나눈다. 쿠키를 읽는 부분만
+   Suspense 경계 안으로 밀어 넣는 작업인데, 인증 시딩·프록시와 얽혀 회귀 범위가 넓다.
+3. 그대로 둔다.
+
+SEO에서 얻으려는 건 크롤러 응답 속도인데, 그 시간의 대부분은 페이지 함수 실행이 아니라 BE
+왕복이다. 그래서 3번을 고르고, 대신 **fetch를 캐시**하는 쪽으로 방향을 틀었다. 인증 구조를
+건드리지 않으면서 크롤러 체감의 대부분을 가져오는 선택이다.
+
+### Next 15부터 fetch 기본값이 no-store다
+
+여기서 먼저 확인한 사실. Next 14까지는 서버 컴포넌트의 `fetch`가 기본으로 캐시됐지만
+(`force-cache`), 15부터 기본이 `no-store`로 바뀌었다. 명시하지 않으면 캐시가 아예 안 산다는
+뜻이라, 우리 코드에서 익명 조회조차 매 요청 BE를 돌고 있었다. 크롤러가 기사 100개를 훑으면
+BE 요청 100번이 그대로 나간다.
+
+### 캐시에 넣어도 되는 요청과 안 되는 요청
+
+Next의 데이터 캐시는 URL 단위로 전 유저가 공유한다. 그래서 `likedByMe`처럼 사람마다 다른 값이
+섞인 응답을 넣으면 남의 상태가 그대로 보인다. KAN-308에서 이미 "토큰을 실은 호출은 `no-store`"로
+못박아 뒀는데, 이번에 그 반대편을 채웠다. 토큰 없는 GET은 유저 무관이므로 캐시에 넣는다.
+
+```ts
+const authorized = headers.has("Authorization");
+const isGet = (init?.method ?? "GET").toUpperCase() === "GET";
+const cacheConfigured = init?.cache !== undefined || init?.next !== undefined;
+const cacheable = !authorized && isGet && !cacheConfigured;
+```
+
+세 조건을 다 건 이유가 각각 있다.
+
+- `authorized`: 위에 쓴 개인화 응답 문제.
+- `isGet`: 로그인·좋아요·조회수 기록 같은 POST는 캐시 대상이 아니다. Next도 자체적으로 GET/HEAD가
+  아니면 캐시하지 않지만, 우리 의도를 코드에 남겨 둔다.
+- `cacheConfigured`: 호출부가 `cache`나 `next`를 직접 넘겼으면 그 뜻을 존중한다. 겹쳐 넘기면
+  Next가 "cache와 revalidate를 둘 다 지정했다"는 충돌로 보고 양쪽을 통째로 무시해 버려서,
+  의도한 no-store가 조용히 풀리는 사고가 난다.
+
+TTL은 60초로 잡았다. 이적 루머 피드에서 1분 지연은 체감이 없고, 크롤러가 기사들을 연달아 훑을 때
+같은 목록 호출이 반복되는 몫을 걷어내기에는 충분하다.
+
+`@plick/core`는 Next에 의존하지 않는 순수 패키지라 `RequestInit`에 Next가 얹는 `next` 속성의
+전역 타입 보강을 못 받는다. 그래서 `NextRequestInit`을 그 파일 안에서 좁게 선언했다. 브라우저
+fetch에서는 모르는 속성이라 그냥 무시된다.
+
+### Next 내부를 열어 보고 알게 된 두 가지
+
+사이트맵이 `force-dynamic`이라, 이 세그먼트 설정이 fetch 옵션까지 덮어쓰는지가 걸렸다. 문서만
+읽고 추측하기 싫어서 `next/dist/server/lib/patch-fetch.js`를 직접 열었다.
+
+```js
+const noFetchConfigAndForceDynamic =
+  !pageFetchCacheMode &&
+  !currentFetchCacheConfig &&
+  !currentFetchRevalidate &&
+  workStore.forceDynamic;
+```
+
+`force-dynamic`이 fetch를 no-store로 낮추는 건 **그 fetch에 아무 캐시 옵션도 없을 때뿐**이다.
+`apiFetch`가 revalidate를 명시하니 사이트맵 안의 기사 목록 호출도 캐시를 탄다. 렌더는 요청마다
+돌면서 데이터만 재사용하는, 이 라우트에 딱 맞는 조합이라 `force-dynamic`을 그대로 뒀다
+(ISR로 바꾸면 CI 빌드 때 BE를 못 불러 기사 없는 사이트맵이 굳는 문제가 생긴다).
+
+그 몇 줄 아래에서 더 중요한 걸 봤다.
+
+```js
+let autoNoCache = Boolean(
+  (hasUnCacheableHeader || isUnCacheableMethod) &&
+  revalidateStore?.revalidate === 0,
+);
+```
+
+`hasUnCacheableHeader`는 `authorization`이나 `cookie` 헤더가 있는 요청을 가리킨다. 그런데 이
+자동 차단은 뒤 조건(`revalidate === 0`)이 같이 참일 때만 걸린다. 즉 **토큰이 실린 fetch에
+revalidate를 명시하면 캐시될 수 있다**. "Authorization이 있으면 Next가 알아서 안 캐시하겠지"라고
+믿고 조건을 느슨하게 짰으면 개인 응답이 공유 캐시에 들어갔을 것이다. KAN-308의 명시적 `no-store`
+가드가 취향이 아니라 필수였다는 게 확인됐다.
+
+### 검증
+
+로컬 BE(8080)를 띄우고 `logging.fetches`를 잠깐 켜서 dev 서버 로그를 직접 봤다(확인 후 제거).
+
+```
+GET /articles/8032 200 in 764ms (application-code: 504ms)
+ │ GET .../api/v1/articles/8032 200 in 98ms (cache hit)
+GET /articles/8032 200 in 68ms (application-code: 56ms)
+ │ GET .../api/v1/articles/8032 200 in 1ms (cache hit)
+ │ GET .../api/v1/articles/8032/comments?size=10 200 in 1ms (cache hit)
+ │ GET .../api/v1/articles?size=6&teamId=1 200 in 1ms (cache hit)
+```
+
+BE 왕복이 98ms에서 1ms로, 페이지 렌더가 764ms에서 65ms로 떨어졌다. 크롤러가 보는 시간이 이
+차이다.
+
+로그인 유저 경로가 안 바뀌었는지도 확인했다. 기사 페이지는 상세·댓글·추천을 전부
+`getAccessToken()` 결과와 함께 부르므로 토큰이 실리고, 그러면 `no-store`로 빠진다. 즉 방금 쓴
+댓글이나 방금 누른 좋아요는 예전처럼 즉시 반영된다. 캐시를 타는 건 토큰 없는 요청 — 비로그인
+방문자와 크롤러뿐이고, 비로그인은 댓글·좋아요 자체가 불가라 60초 지연으로 어긋날 기대가 없다.
+
+format:check, lint, check-types, build 전부 통과. 빌드 결과에서 라우트 구분(정적/동적)도 이전과
+같다 — 동적 판정의 원인은 여전히 쿠키 읽기지 fetch 캐시가 아니기 때문이다.
