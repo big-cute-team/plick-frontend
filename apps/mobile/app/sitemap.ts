@@ -15,10 +15,27 @@ import { SITE_URL } from "@/_constants/site";
 export const dynamic = "force-dynamic";
 
 /**
- * 색인 안전 상한. 사이트맵 규격 한도(50,000 URL)에 닿기 전에 끊는다 —
- * 여기 걸릴 만큼 기사가 쌓이면 사이트맵 인덱스 분할이 선행 과제다(전략 문서 Step 1-2).
+ * 색인 안전 상한. 사이트맵 규격 한도(파일당 50,000 URL)에 정적 라우트 몫을 빼고
+ * 여유를 둔 값이다 (KAN-380에서 5,000에서 올렸다).
+ *
+ * 여기 걸리면 오래된 기사가 사이트맵에서 소리 없이 빠진다. 조용히 잘리는 게 이
+ * 라우트의 제일 위험한 실패 방식이라 아래에서 로그를 남긴다.
  */
-const MAX_ARTICLE_URLS = 5000;
+const MAX_ARTICLE_URLS = 45000;
+
+/**
+ * 인덱스 분할을 검토해야 하는 선. 상한과 별개로 먼저 경고하는 이유는, 이 라우트가
+ * 커서 페이징으로 BE를 한 페이지씩(최대 30건) 걸어오기 때문이다. 기사 수에 비례해
+ * 왕복이 늘어서, 상한에 닿기 한참 전에 응답 시간이 먼저 문제가 된다.
+ *
+ * 값의 근거는 실측이다 (KAN-380). 기사 1,700건이 배포 환경에서 1.8초, 로컬 dev
+ * 서버에서 8초였다. 5,000건이면 배포 환경도 5초를 넘길 것으로 보는데, 사이트맵이
+ * 느리면 크롤러가 가져오기를 포기한다.
+ *
+ * 분할 자체는 BE 선행 작업이 필요하다 — 목록 응답에 총 건수가 없고 페이지 최대가
+ * 30건이라, 커서를 처음부터 다시 걸어오지 않고는 "N번째 조각"을 열 수 없다.
+ */
+const SPLIT_REVIEW_THRESHOLD = 5000;
 
 /**
  * 사이트맵 (KAN-346). `/sitemap.xml`로 컴파일된다.
@@ -62,6 +79,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       count += page.items.length;
       cursor = page.nextCursor;
     } while (cursor && count < MAX_ARTICLE_URLS);
+
+    if (cursor) {
+      console.error(
+        `[sitemap] 상한(${MAX_ARTICLE_URLS})에서 잘렸다 — 이 뒤 기사는 사이트맵에 없다. 인덱스 분할이 필요하다.`,
+      );
+    } else if (count >= SPLIT_REVIEW_THRESHOLD) {
+      console.warn(
+        `[sitemap] 기사 ${count}건. 인덱스 분할 검토선(${SPLIT_REVIEW_THRESHOLD}) 초과 — BE 총 건수 또는 사이트맵 전용 엔드포인트가 선행 과제다.`,
+      );
+    }
   } catch (error) {
     console.error("[sitemap] 기사 목록 로드 실패 — 정적 라우트만 응답:", error);
   }
