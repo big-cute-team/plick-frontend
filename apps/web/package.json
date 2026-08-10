@@ -11,6 +11,7 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@next/third-parties": "16.2.0",
     "@plick/core": "workspace:*",
     "@plick/domain": "workspace:*",
     "@plick/ui": "workspace:*",

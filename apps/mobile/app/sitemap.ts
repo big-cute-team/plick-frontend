@@ -7,6 +7,10 @@ import { SITE_URL } from "@/_constants/site";
  * 빌드 시점이 아니라 요청 시점에 생성한다. 기본값(정적)이면 `next build`가
  * CI 러너에서 BE를 불러 실패하고, 성공해도 기사 목록이 빌드 시점으로 굳는다.
  * 크롤러가 가끔 받아 가는 파일이라 요청마다 BE를 도는 비용은 무시할 수준이다.
+ *
+ * 렌더는 요청마다지만 그 안의 기사 목록 fetch는 데이터 캐시를 탄다 (KAN-380).
+ * `force-dynamic`은 fetch 옵션을 명시하지 않은 호출만 no-store로 낮추는데,
+ * `apiFetch`가 익명 GET에 revalidate를 명시하므로 여기서도 캐시가 산다.
  */
 export const dynamic = "force-dynamic";
 

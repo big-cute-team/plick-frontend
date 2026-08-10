@@ -58,10 +58,14 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
     <AppShell>
       <TopBar />
       <HomeScrollArea>
-        {team !== "ALL" && (
-          /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
-          <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
-        )}
+        {/* 페이지의 h1 — 화면(UX)은 홈과 같아야 해서 양쪽 다 보이지 않게 둔다.
+            팀 허브는 팀 검색어, 홈은 브랜드·카테고리 검색어를 받는 랜딩이다 (KAN-380) */}
+        <h1 className="sr-only">
+          {team !== "ALL"
+            ? `${TEAM_FULL_NAMES[team]} 이적 루머`
+            : "PLick 프리미어리그 이적 루머와 소식"}
+        </h1>
+
         {team !== "ALL" && (
           /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 데스크톱과 같은
              값을 싣고 URL도 canonical 도메인 기준이다 */

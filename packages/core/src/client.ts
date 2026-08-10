@@ -54,6 +54,24 @@ function baseUrl(): string {
 }
 
 /**
+ * Next가 `RequestInit`에 얹는 데이터 캐시 옵션. `@plick/core`는 Next에 의존하지
+ * 않는 순수 패키지라 전역 타입 보강을 받지 못해 여기서 좁게 선언한다.
+ * 브라우저 fetch에서는 알 수 없는 속성이라 그냥 무시된다.
+ */
+type NextRequestInit = RequestInit & {
+  next?: { revalidate?: number | false };
+};
+
+/**
+ * 익명 GET의 서버 데이터 캐시 수명(초) (KAN-380).
+ *
+ * 크롤러 응답 속도를 좌우하는 건 페이지 함수 실행이 아니라 BE 왕복이다. 60초면
+ * 이적 루머 피드의 신선도는 사실상 그대로면서, 크롤러가 기사를 연달아 훑을 때
+ * 같은 목록 호출이 반복되는 몫을 걷어낸다.
+ */
+const ANONYMOUS_GET_REVALIDATE = 60;
+
+/**
  * BE 엔드포인트를 호출하고 봉투를 벗긴 `data`를 반환한다.
  *
  * 토큰을 실은 호출은 서버 데이터 캐시에 넣지 않는다(KAN-308). Next의 데이터 캐시는
@@ -61,22 +79,34 @@ function baseUrl(): string {
  * 그대로 나간다 — 좋아요 여부(`likedByMe`)처럼 사람마다 다른 값이 섞이면 남의 상태를
  * 보게 된다. 기본 캐시 동작에 기대지 않고 인증 호출은 여기서 못박는다.
  *
+ * 반대로 토큰 없는 GET은 유저 무관이라 캐시에 넣는다 (KAN-380). Next 15부터 fetch
+ * 기본값이 no-store라 명시하지 않으면 익명 조회도 매번 BE를 돈다. 크롤러는 항상
+ * 익명이므로 이 분기만으로 크롤 경로가 빨라지고, 로그인 유저 경로는 위 no-store
+ * 그대로다. 호출부가 `cache`나 `next`를 직접 넘겼으면 그 뜻을 존중해 손대지 않는다 —
+ * 겹쳐 넘기면 Next가 충돌로 보고 둘 다 무시한다.
+ *
  * @param path `/api/v1/auth/login` 처럼 앞에 슬래시를 포함한 경로
  * @throws {ApiError} status가 2xx가 아닐 때 — BE 에러 봉투의 code·message를 담는다
  */
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit,
+  init?: NextRequestInit,
 ): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
+  const authorized = headers.has("Authorization");
+  const isGet = (init?.method ?? "GET").toUpperCase() === "GET";
+  const cacheConfigured = init?.cache !== undefined || init?.next !== undefined;
+  const cacheable = !authorized && isGet && !cacheConfigured;
+
   const res = await fetch(`${baseUrl()}${path}`, {
     ...init,
     headers,
-    ...(headers.has("Authorization") ? { cache: "no-store" as const } : {}),
+    ...(authorized ? { cache: "no-store" as const } : {}),
+    ...(cacheable ? { next: { revalidate: ANONYMOUS_GET_REVALIDATE } } : {}),
   });
 
   if (!res.ok) {

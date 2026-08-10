@@ -57,6 +57,10 @@ jobs:
       CODEDEPLOY_GROUP: ${{ github.ref_name == 'main' && 'plick-frontend-dg-prod' || 'plick-frontend-dg-dev' }}
       WEB_SITE_URL: ${{ github.ref_name == 'main' && 'https://plick.co.kr' || 'https://dev.plick.co.kr' }}
       MOBILE_SITE_URL: ${{ github.ref_name == 'main' && 'https://m.plick.co.kr' || 'https://dev-m.plick.co.kr' }}
+      # GA4 측정 ID (KAN-380). 실서비스 빌드에만 넣는다 — dev 빌드는 빈 값이라
+      # 태그가 렌더되지 않아 개발 트래픽이 실서비스 지표에 섞이지 않는다.
+      # 브라우저에 그대로 노출되는 공개 값이라 시크릿이 아니다.
+      GA_ID: ${{ github.ref_name == 'main' && 'G-BF3JX9EDYQ' || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,6 +87,7 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ env.WEB_SITE_URL }}
           NEXT_PUBLIC_MOBILE_SITE_URL: ${{ env.MOBILE_SITE_URL }}
+          NEXT_PUBLIC_GA_ID: ${{ env.GA_ID }}
         run: pnpm --filter web build
 
       - name: Build mobile
@@ -90,6 +95,7 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ env.MOBILE_SITE_URL }}
           NEXT_PUBLIC_WEB_SITE_URL: ${{ env.WEB_SITE_URL }}
+          NEXT_PUBLIC_GA_ID: ${{ env.GA_ID }}
         run: pnpm --filter mobile build
 
       # standalone은 public/과 .next/static/을 담지 않는다(CDN 배포 전제).
