@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { AuthProvider } from "@/_components/AuthProvider";
+import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
 import { IS_PRODUCTION_SITE, SITE_URL } from "@/_constants/site";
@@ -81,6 +83,10 @@ export default async function RootLayout({
             {children}
           </AuthProvider>
         </QueryProvider>
+        {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 이 컴포넌트가
+            스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
+            LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}
+        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   );
