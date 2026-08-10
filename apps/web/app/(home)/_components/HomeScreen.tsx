@@ -66,10 +66,14 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             transform 껍데기 밖에 둬야 해서 본문만 감싼다 */}
         <FeedPullRefresh surface="news">
           <PageContainer className="pt-7 pb-22">
-            {team !== "ALL" && (
-              /* 팀 검색어 랜딩의 h1 — 화면(UX)은 홈과 같아야 해서 보이지 않게 둔다 */
-              <h1 className="sr-only">{TEAM_FULL_NAMES[team]} 이적 루머</h1>
-            )}
+            {/* 페이지의 h1 — 화면(UX)은 홈과 같아야 해서 양쪽 다 보이지 않게 둔다.
+                팀 허브는 팀 검색어, 홈은 브랜드·카테고리 검색어를 받는 랜딩이다 (KAN-380) */}
+            <h1 className="sr-only">
+              {team !== "ALL"
+                ? `${TEAM_FULL_NAMES[team]} 이적 루머`
+                : "PLick 프리미어리그 이적 루머와 소식"}
+            </h1>
+
             {team !== "ALL" && (
               /* 팀 허브 CollectionPage 구조화 데이터 (KAN-351) — 서버 렌더된
                첫 페이지 기사만 ItemList로 싣는다(크롤러가 보는 HTML과 같은 범위) */

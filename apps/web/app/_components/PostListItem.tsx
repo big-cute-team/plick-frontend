@@ -8,21 +8,37 @@ import type { ArticleCard, Filter } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { PostListVariant } from "@/_types/app";
 
+/**
+ * 변형별 밀도와 제목 heading 레벨 (KAN-380).
+ *
+ * heading이 변형마다 다른 건 이 줄이 놓이는 자리가 달라서다. 홈은 "지금 올라온
+ * 소식" h2 섹션 안이라 h3고, 기사 목록은 페이지 h1("기사") 바로 아래라 h2다.
+ * 레벨을 건너뛰면 보조기술이 목차를 못 만든다. 글자 크기는 `title` 클래스가
+ * 정하므로 태그가 바뀌어도 보이는 결과는 같다.
+ */
 const VARIANT: Record<
   PostListVariant,
-  { row: string; title: string; thumb: string; crest: number }
+  {
+    row: string;
+    title: string;
+    thumb: string;
+    crest: number;
+    heading: "h2" | "h3";
+  }
 > = {
   news: {
     row: "gap-5 py-5",
     title: "text-title",
     thumb: "rounded-card h-24 w-33",
     crest: 40,
+    heading: "h3",
   },
   article: {
     row: "gap-3.5 py-4",
     title: "text-body-lg",
     thumb: "rounded-control size-21.5",
     crest: 36,
+    heading: "h2",
   },
 };
 
@@ -55,6 +71,7 @@ export function PostListItem({
   filter?: Filter;
 }) {
   const v = VARIANT[variant];
+  const Title = v.heading;
   const team =
     filter !== "ALL"
       ? TEAMS[filter]
@@ -78,11 +95,11 @@ export function PostListItem({
             {formatRelativeTime(post.publishedAt)}
           </span>
         </div>
-        <h3
+        <Title
           className={`text-text text-title mt-1.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
         >
           {post.title}
-        </h3>
+        </Title>
         <p className="text-caption text-text-3 mt-1.5 flex flex-wrap items-center gap-x-2">
           {post.reporter && (
             <>
