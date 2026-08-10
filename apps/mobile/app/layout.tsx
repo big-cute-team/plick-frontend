@@ -3,7 +3,11 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { QueryProvider } from "@/_queries/QueryProvider";
-import { IS_PRODUCTION_SITE, SITE_URL } from "@/_constants/site";
+import {
+  IS_PRODUCTION_SITE,
+  NAVER_SITE_VERIFICATION,
+  SITE_URL,
+} from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
 import { isLoggedIn } from "@/_services/session";
 import "./globals.css";
@@ -26,6 +30,12 @@ export const metadata: Metadata = {
   },
   description: "프리미어리그 소식을 릴스로",
   robots: IS_PRODUCTION_SITE ? undefined : { index: false, follow: false },
+  // 네이버 서치어드바이저 소유확인 (KAN-380). Metadata API에 네이버 전용 키가
+  // 없어 other로 넣으면 `<meta name="naver-site-verification">`으로 나간다.
+  // 네이버는 사이트 단위 등록이라 web과 토큰이 다르다
+  verification: {
+    other: { "naver-site-verification": NAVER_SITE_VERIFICATION },
+  },
   openGraph: {
     siteName: "PLick",
     type: "website",
