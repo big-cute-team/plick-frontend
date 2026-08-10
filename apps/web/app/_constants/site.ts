@@ -37,3 +37,17 @@ const PROD_SITE_URL = "https://plick.co.kr";
  * `SITE_URL`이 빌드 타임 리터럴이라 이 비교도 빌드 시점에 확정된다.
  */
 export const IS_PRODUCTION_SITE = SITE_URL === PROD_SITE_URL;
+
+/**
+ * 네이버 서치어드바이저 소유확인 토큰 (KAN-380).
+ *
+ * 구글은 Route 53의 TXT 레코드로 도메인 소유를 확인했지만 네이버는 DNS 방식이
+ * 없어 HTML 메타 태그로만 확인한다. 그래서 이 값이 코드에 있어야 한다.
+ * 비밀이 아니라 소유 증명용 공개 문자열이다.
+ *
+ * 환경 분기 없이 항상 렌더한다. 네이버가 등록 후에도 주기적으로 태그를 다시
+ * 확인해서, 조건부로 달았다가 빠지면 등록이 해제될 수 있다. dev는 noindex라
+ * 태그가 있어도 색인되지 않는다.
+ */
+export const NAVER_SITE_VERIFICATION =
+  "92c107dc1eaf27ab9a8bd8536046e5526da52121";
