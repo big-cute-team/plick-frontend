@@ -57,9 +57,11 @@ export function NewsItem({
             {formatRelativeTime(article.publishedAt)}
           </span>
         </div>
-        <h4 className="text-body text-text mt-1 line-clamp-2 leading-snug font-bold">
+        {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
+            보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
+        <h3 className="text-body text-text mt-1 line-clamp-2 leading-snug font-bold">
           {article.title}
-        </h4>
+        </h3>
         <p className="text-caption text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
           {article.reporter && (
             <>

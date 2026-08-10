@@ -19,3 +19,15 @@ export const SITE_URL =
  */
 export const WEB_SITE_URL =
   process.env.NEXT_PUBLIC_WEB_SITE_URL ?? "http://localhost:3000";
+
+/** 실서비스 모바일 도메인. 색인 허용 판정의 기준값이라 리터럴로 둔다. */
+const PROD_SITE_URL = "https://m.plick.co.kr";
+
+/**
+ * 이 빌드가 실서비스용인지 (KAN-380). dev(`dev-m.plick.co.kr`)와 로컬은 false다.
+ *
+ * dev 환경은 prod와 같은 콘텐츠를 서비스하므로 색인되면 중복 콘텐츠로 prod의
+ * 랭킹 시그널을 나눠 갖는다. robots와 루트 메타데이터가 이 값으로 분기한다.
+ * `SITE_URL`이 빌드 타임 리터럴이라 이 비교도 빌드 시점에 확정된다.
+ */
+export const IS_PRODUCTION_SITE = SITE_URL === PROD_SITE_URL;
