@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { AuthCard } from "@/_components/AuthCard";
 
 /** 이 URL이 canonical이다 (KAN-346). 모바일 회원가입의 canonical이 여기를 가리킨다. */
 export const metadata: Metadata = {
   title: "회원가입",
+  description: PAGE_DESCRIPTIONS.signup,
   alternates: { canonical: "/signup" },
 };
 

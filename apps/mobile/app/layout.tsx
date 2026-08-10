@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import {
+  BRAND_DESCRIPTION,
+  BRAND_NAME_KO,
+  BRAND_TITLE,
+  BRAND_TITLE_TEMPLATE,
+} from "@plick/domain/brand";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { QueryProvider } from "@/_queries/QueryProvider";
@@ -14,7 +20,7 @@ import "./globals.css";
 
 /**
  * 전 라우트 공통 메타데이터 (KAN-346). 하위 페이지는 title 문자열만 export하면
- * template이 "… | PLick"으로 감싼다. og:image·og:image:alt는 `app/`의
+ * template이 "… | 플릭 PLick"으로 감싼다. og:image·og:image:alt는 `app/`의
  * `opengraph-image.png` 파일 컨벤션이 자동으로 낸다(ADR 0070). canonical은
  * 페이지마다 경로가 달라 여기 두지 않고 각 페이지가 선언한다 — 모바일은
  * 별도 모바일 URL 패턴대로 데스크톱(`plick.co.kr`) URL을 가리킨다.
@@ -24,11 +30,14 @@ import "./globals.css";
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // title·description은 검색 스니펫의 원문이다 (KAN-384) — 짧은 태그라인만
+  // 두면 구글이 무시하고 화면 텍스트를 긁어 스니펫이 깨진다. 문구는
+  // `@plick/domain/brand`가 web과 단일 출처다
   title: {
-    default: "PLick",
-    template: "%s | PLick",
+    default: BRAND_TITLE,
+    template: BRAND_TITLE_TEMPLATE,
   },
-  description: "프리미어리그 소식을 릴스로",
+  description: BRAND_DESCRIPTION,
   robots: IS_PRODUCTION_SITE ? undefined : { index: false, follow: false },
   // 네이버 서치어드바이저 소유확인 (KAN-380). Metadata API에 네이버 전용 키가
   // 없어 other로 넣으면 `<meta name="naver-site-verification">`으로 나간다.
@@ -37,7 +46,9 @@ export const metadata: Metadata = {
     other: { "naver-site-verification": NAVER_SITE_VERIFICATION },
   },
   openGraph: {
-    siteName: "PLick",
+    // 검색 결과 상단 사이트명을 한글로 (KAN-384) — WebSite JSON-LD name과
+    // 같은 값이어야 구글이 채택한다
+    siteName: BRAND_NAME_KO,
     type: "website",
     locale: "ko_KR",
   },

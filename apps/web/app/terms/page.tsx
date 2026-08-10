@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { TermsBody } from "@plick/ui/TermsBody";
 import { SiteHeader } from "@/_components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "이용약관",
+  description: PAGE_DESCRIPTIONS.terms,
 };
 
 /**

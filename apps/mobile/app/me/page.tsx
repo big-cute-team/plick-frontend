@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
@@ -16,6 +17,12 @@ import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
 import { MyProfileCard } from "./_components/MyProfileCard";
 import { APP_VERSION_LABEL } from "@/_constants/me";
+
+/** 개인화 화면이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
+export const metadata: Metadata = {
+  title: "MY",
+  robots: { index: false, follow: false },
+};
 
 /**
  * MY 마이페이지 — 로그인 여부로 갈린다 (KAN-170·KAN-255, 피그마 26-6).

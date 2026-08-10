@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { redirect } from "next/navigation";
 import { AuthScreen } from "@/_components/AuthScreen";
 import { WEB_SITE_URL } from "@/_constants/site";
@@ -7,6 +8,7 @@ import { getMyProfile } from "@/_services/profile";
 /** canonical은 데스크톱 로그인이다 (KAN-346) — 모바일 홈 canonical과 같은 이유. */
 export const metadata: Metadata = {
   title: "로그인",
+  description: PAGE_DESCRIPTIONS.login,
   alternates: { canonical: `${WEB_SITE_URL}/login` },
 };
 
