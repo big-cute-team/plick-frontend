@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
-import { SITE_URL } from "@/_constants/site";
+import { IS_PRODUCTION_SITE, SITE_URL } from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
 import { isLoggedIn } from "@/_services/session";
 import "./globals.css";
@@ -13,6 +13,9 @@ import "./globals.css";
  * `opengraph-image.png` 파일 컨벤션이 자동으로 낸다(ADR 0070). canonical은
  * 페이지마다 경로가 달라 여기 두지 않고 각 페이지가 선언한다 — 이 앱이
  * canonical 도메인이고(ADR 0070 A안) 대응 모바일 페이지를 alternate로 단다.
+ *
+ * dev 빌드에는 `noindex, nofollow`가 붙는다 (KAN-380). 하위 페이지가 robots를
+ * 따로 선언하지 않으므로 이 한 줄이 전 라우트에 상속된다.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -21,6 +24,7 @@ export const metadata: Metadata = {
     template: "%s | PLick",
   },
   description: "프리미어리그 소식을 릴스로",
+  robots: IS_PRODUCTION_SITE ? undefined : { index: false, follow: false },
   openGraph: {
     siteName: "PLick",
     type: "website",
