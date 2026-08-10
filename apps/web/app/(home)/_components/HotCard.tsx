@@ -53,7 +53,10 @@ export function HotCard({ article }: { article: HotArticle }) {
         <img
           src={article.imageUrl}
           alt=""
-          loading="lazy"
+          /* 캐러셀이 무한 루프용으로 카드를 복제해 두는데, lazy면 옆 칸 복제본이
+             화면에 들어오는 순간에야 받기 시작해 빈 카드가 잠깐 스친다.
+             홈 최상단이라 어차피 첫 화면 이미지다 (KAN-382) */
+          loading="eager"
           className="absolute inset-0 size-full object-cover"
         />
       ) : (
