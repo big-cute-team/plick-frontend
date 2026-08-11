@@ -24,9 +24,9 @@ export async function isLoggedIn(): Promise<boolean> {
  * `likedByMe`가 그 유저 기준으로 계산된다. 안 실으면 항상 false로 와서 좋아요를
  * 누른 뒤 새로고침하면 하트가 빈 채로 카운트만 올라가 있다.
  *
- * 만료된 토큰을 실어 401로 화면 전체가 죽는 걱정은 없다 — access 쿠키의 수명이
- * 곧 토큰 수명이라(`ACCESS_TOKEN_MAX_AGE`) 만료되면 쿠키 자체가 사라져 여기서
- * undefined가 되고, 호출부는 익명으로 부른다.
+ * 만료된 토큰을 실어 401로 화면 전체가 죽는 걱정은 없다 — access 쿠키가 토큰보다
+ * 먼저 만료되므로(`ACCESS_TOKEN_MAX_AGE`) 쿠키가 살아있는 동안 토큰도 유효하고,
+ * 쿠키가 사라지면 여기서 undefined가 되어 호출부는 익명으로 부른다.
  *
  * @returns 로그인 중이면 access 토큰, 아니면 undefined
  */

@@ -55,9 +55,19 @@ export const AUTH_COOKIE_BASE = {
 } as const;
 
 /**
- * access·refresh 쿠키 수명(초). BE 토큰 자체엔 만료 정보가 없어(현재 mock은 불투명 문자열),
- * **쿠키의 소멸을 만료 신호로 삼는다** — access가 짧게 살다 사라지면 `proxy.ts`가 refresh로 갈아낀다.
- * 실제 토큰 TTL이 정해지면 그 값에 맞춘다(인증 봉합점). 지금은 흔한 관례값을 자리로 둔다.
+ * access·refresh 쿠키 수명(초). 쿠키의 소멸을 만료 신호로 삼는다 — access가 먼저 사라지면
+ * `proxy.ts`가 refresh로 갈아낀다. BE 확정값(HS256 JWT, exp 포함): access 1시간, refresh 14일.
+ * access 쿠키는 시계 오차를 감안해 토큰보다 5분 짧은 55분으로 둔다 — 만료 임박 토큰을
+ * Bearer로 실어 401을 맞는 경계 구간을 없애기 위해서다.
  */
-export const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15분
-export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일
+export const ACCESS_TOKEN_MAX_AGE = 60 * 55; // 55분 (BE 토큰 1시간 − 오차 여유 5분)
+export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일 (BE와 동일)
+
+/**
+ * 재발급 경쟁 1회 재시도 가드 쿠키. 프로덕션 FE는 인스턴스 2대라 access 만료 직후
+ * 버스트 요청이 서로 다른 인스턴스에서 같은 refresh 토큰으로 재발급을 불러, 1회용
+ * 회전에서 진 쪽이 401을 받는다. `proxy.ts`는 이때 같은 URL로 1회만 재시도
+ * 리다이렉트하는데 이 쿠키가 그 "1회"를 센다. 수명은 재시도 왕복이면 충분한 15초.
+ */
+export const REFRESH_RETRY_COOKIE = "refreshRetry";
+export const REFRESH_RETRY_MAX_AGE = 15; // 초
