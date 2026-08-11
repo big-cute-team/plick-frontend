@@ -16,6 +16,10 @@ import type { Filter } from "@plick/domain/types";
  * `onChange`에 넘기므로 페이지 이동 없이 기존 필터 UX 그대로다. 새 탭 열기
  * (cmd/ctrl·중클릭)는 가로채지 않고 링크 본연의 동작에 맡긴다.
  *
+ * GNB(h-16) 바로 아래에 붙는다(sticky) — 리스트를 한참 내린 뒤에도 맨 위로
+ * 돌아오지 않고 팀을 바꿀 수 있다. 밑으로 지나가는 리스트가 비치지 않게
+ * 배경(`bg-bg`)을 깐다. top 값은 `SiteHeader` 높이와 짝이다.
+ *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
  * @param hrefFor - 필터 → 이 surface의 URL. 홈은 teamHubPath(기본값),
@@ -42,7 +46,7 @@ export function TeamFilterTabs({
   }
 
   return (
-    <div className="border-border flex gap-5.5 overflow-x-auto border-b">
+    <div className="border-border bg-bg sticky top-16 z-10 flex gap-5.5 overflow-x-auto border-b">
       {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
       {items.map(({ key, label }) => {
         const on = value === key;
