@@ -197,7 +197,7 @@
   --spacing-gutter: 32px;
 
   /* 데스크톱 전용 글자 크기 — 행간은 피그마 값 그대로 토큰에 내장 */
-  --text-hero: 26px; /* 핫이슈 히어로 카드 제목 */
+  --text-hero: 26px; /* 핫이슈 히어로 카드 제목 · 모바일 릴/기사 세부 제목 (KAN-385) */
   --text-hero--line-height: 1.3;
   --text-hero-sm: 18.5px; /* 핫이슈 서브 카드 제목 */
   --text-hero-sm--line-height: 1.3;

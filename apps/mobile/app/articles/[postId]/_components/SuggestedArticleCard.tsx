@@ -26,22 +26,22 @@ export function SuggestedArticleCard({ article }: { article: ArticleCard }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           {team && (
-            <span className="text-caption text-icon font-extrabold">
+            <span className="text-label text-icon font-extrabold">
               {team.name}
             </span>
           )}
           {article.stage && (
-            <span className="text-micro tracking-label text-text-4 font-bold">
+            <span className="text-caption tracking-label text-text-4 font-bold">
               {STAGE_META[article.stage].label}
             </span>
           )}
           {/* 탭하면 이동한다는 단서 — 포털 이슈 카드의 우상단 화살표 */}
           <ChevronMiniIcon size={14} className="text-text-4 ml-auto shrink-0" />
         </div>
-        <h3 className="text-body text-text mt-1 line-clamp-2 leading-snug font-bold">
+        <h3 className="text-body-lg text-text mt-1 line-clamp-2 leading-snug font-bold">
           {article.title}
         </h3>
-        <p className="text-caption text-text-3 mt-1">
+        <p className="text-label text-text-3 mt-1">
           {article.reporter && (
             <span className="text-text-2 font-semibold">
               {article.reporter.name}
@@ -57,7 +57,7 @@ export function SuggestedArticleCard({ article }: { article: ArticleCard }) {
         <MediaThumb
           colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
           imageUrl={article.imageUrl}
-          className="rounded-control size-14 shrink-0"
+          className="rounded-control size-16 shrink-0"
         />
       )}
     </Link>

@@ -80,7 +80,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           />
         )}
         <section className="pt-3">
-          <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">
+          <h2 className="px-edge text-title text-text pb-2 font-extrabold">
             🔥 핫이슈
           </h2>
           {hot === null ? (
@@ -101,7 +101,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
         </section>
 
         <section className="pt-3">
-          <h2 className="px-edge text-body-lg text-text pb-2 font-extrabold">
+          <h2 className="px-edge text-title text-text pb-2 font-extrabold">
             지금 올라온 소식
           </h2>
           <NewsFeed initial={initial} initialTeam={team} />

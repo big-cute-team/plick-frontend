@@ -10,9 +10,9 @@ export function NewsItemSkeleton() {
   return (
     <div className="border-border flex items-start border-b py-3">
       <div className="min-w-0 flex-1">
-        <div className="bg-elevate rounded-pill h-3 w-12" />
-        <div className="bg-elevate rounded-pill mt-2 h-5 w-1/2" />
-        <div className="bg-elevate rounded-pill mt-2 h-3 w-1/2" />
+        <div className="bg-elevate rounded-pill h-3.5 w-12" />
+        <div className="bg-elevate rounded-pill mt-2 h-5.5 w-1/2" />
+        <div className="bg-elevate rounded-pill mt-2 h-3.5 w-1/2" />
       </div>
     </div>
   );

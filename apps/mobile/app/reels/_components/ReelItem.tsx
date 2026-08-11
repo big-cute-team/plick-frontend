@@ -170,7 +170,12 @@ export function ReelItem({
             transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
           }}
         >
-          <PostBadges team={team} stage={reel.stage} />
+          <PostBadges
+            team={team}
+            stage={reel.stage}
+            crestSize={34}
+            stageTextClass="text-label"
+          />
           <button
             ref={titleTextRef}
             type="button"
@@ -179,7 +184,7 @@ export function ReelItem({
             style={{ pointerEvents: titleMotion ? "none" : "auto" }}
           >
             {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
-            <span className="text-headline text-media-on line-clamp-3 font-extrabold">
+            <span className="text-hero tracking-heading text-media-on line-clamp-3 font-extrabold">
               {reel.title}
             </span>
           </button>
@@ -192,13 +197,16 @@ export function ReelItem({
         >
           {reel.reporter && (
             <>
-              <ReporterTierBadge reporter={reel.reporter} />
-              <span className="text-body text-media-on font-bold">
+              <ReporterTierBadge
+                reporter={reel.reporter}
+                sizeClassName="size-6 text-caption"
+              />
+              <span className="text-body-lg text-media-on font-bold">
                 {reel.reporter.name}
               </span>
             </>
           )}
-          <span className="text-label text-media-on-dim">
+          <span className="text-body text-media-on-dim">
             {reel.reporter && "· "}
             <span suppressHydrationWarning>
               {formatRelativeTime(reel.publishedAt)}
