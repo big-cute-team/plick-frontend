@@ -18,12 +18,14 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { BE_PROXY_PREFIX } from "@plick/core/client";
+import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
 import { refreshTokensShared } from "@plick/core/refresh";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
   AUTH_COOKIES,
+  REFRESH_RETRY_COOKIE,
+  REFRESH_RETRY_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
 } from "@/_constants/api";
 
@@ -98,20 +100,39 @@ export async function proxy(request: NextRequest) {
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
     return response;
-  } catch {
+  } catch (e) {
     /**
-     * refresh도 만료/무효 → 세션 종료. 쿠키를 지우고 로그인으로 보낸다. 쿠키가 사라지므로
-     * 리다이렉트된 다음 요청은 refresh 없음 → 위 가드에서 통과, 루프 없다.
+     * 재발급 실패가 곧 세션 만료는 아니다 — 종류를 갈라 처리한다.
      *
-     * 프록시 요청은 리다이렉트하지 않는다 — 응답을 JSON으로 읽는 fetch에 로그인
-     * 페이지 HTML을 물리면 파싱 에러로 죽는다. 쿠키만 지우고 익명으로 통과시켜
-     * 공개 조회는 그대로 뜨게 두고, 보호 API면 BE가 401을 준다.
+     * 401이 아니면(BE 5xx·네트워크) 토큰이 무효라는 증거가 없다. 쿠키를 지우지 않고
+     * 익명으로 통과시켜, BE가 살아난 뒤의 내비게이션이 재발급을 이어받게 한다.
+     *
+     * 401이어도 바로 끊지 않는다. 프로덕션 FE는 인스턴스 2대라 access 만료 직후
+     * 버스트 요청이 서로 다른 인스턴스에서 같은 refresh 토큰으로 재발급을 부르고,
+     * 1회용 회전에서 진 쪽이 401을 받는다 — 세션은 멀쩡하다. 인스턴스 안 동시성은
+     * KAN-379의 공유 재발급이 덮지만, 인스턴스 사이는 메모리가 갈라져 못 덮는다.
+     * - `/be` fetch는 쿠키를 안 지우고 익명 통과. 공개 조회는 뜨고, 보호 API면 BE가
+     *   401을 준다. 조용한 fetch 하나가 세션을 지우던 구멍을 막는다.
+     * - 페이지 요청은 같은 URL로 1회 재시도 리다이렉트. 이긴 형제의 Set-Cookie가
+     *   그사이 브라우저에 저장돼 재시도는 새 access를 달고 통과한다. 가드 쿠키가
+     *   "1회"를 세므로 진짜 만료면 두 번째 401에서 쿠키를 지우고 로그인으로 보낸다.
      */
-    const response = isProxy
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", request.url));
+    const invalid = e instanceof ApiError && e.status === 401;
+    if (!invalid || isProxy) {
+      return NextResponse.next();
+    }
+    if (!request.cookies.has(REFRESH_RETRY_COOKIE)) {
+      const response = NextResponse.redirect(request.nextUrl);
+      response.cookies.set(REFRESH_RETRY_COOKIE, "1", {
+        ...AUTH_COOKIE_BASE,
+        maxAge: REFRESH_RETRY_MAX_AGE,
+      });
+      return response;
+    }
+    const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(AUTH_COOKIES.access);
     response.cookies.delete(AUTH_COOKIES.refresh);
+    response.cookies.delete(REFRESH_RETRY_COOKIE);
     return response;
   }
 }

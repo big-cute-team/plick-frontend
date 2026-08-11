@@ -62,3 +62,12 @@ export const AUTH_COOKIE_BASE = {
  */
 export const ACCESS_TOKEN_MAX_AGE = 60 * 55; // 55분 (BE 토큰 1시간 − 오차 여유 5분)
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일 (BE와 동일)
+
+/**
+ * 재발급 경쟁 1회 재시도 가드 쿠키. 프로덕션 FE는 인스턴스 2대라 access 만료 직후
+ * 버스트 요청이 서로 다른 인스턴스에서 같은 refresh 토큰으로 재발급을 불러, 1회용
+ * 회전에서 진 쪽이 401을 받는다. `proxy.ts`는 이때 같은 URL로 1회만 재시도
+ * 리다이렉트하는데 이 쿠키가 그 "1회"를 센다. 수명은 재시도 왕복이면 충분한 15초.
+ */
+export const REFRESH_RETRY_COOKIE = "refreshRetry";
+export const REFRESH_RETRY_MAX_AGE = 15; // 초
