@@ -49,20 +49,20 @@ export function NewsItem({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           {team && (
-            <span className="text-label text-icon font-extrabold">
+            <span className="text-body text-icon font-extrabold">
               {team.name}
             </span>
           )}
-          <span className="text-label text-text-4" suppressHydrationWarning>
+          <span className="text-body text-text-4" suppressHydrationWarning>
             {formatRelativeTime(article.publishedAt)}
           </span>
         </div>
         {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
             보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
-        <h3 className="text-body-lg text-text mt-1 line-clamp-2 leading-snug font-bold">
+        <h3 className="text-title text-text mt-1 line-clamp-2 leading-snug font-bold">
           {article.title}
         </h3>
-        <p className="text-label text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
+        <p className="text-body text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
           {article.reporter && (
             <>
               <span className="text-text-2 font-semibold">
@@ -92,11 +92,11 @@ export function NewsItem({
         <MediaThumb
           colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
           imageUrl={article.imageUrl}
-          className="rounded-control size-16 shrink-0"
+          className="rounded-control size-18 shrink-0"
         />
       )}
       {team && (
-        <TeamCrest team={team} size={34} className="shrink-0 self-center" />
+        <TeamCrest team={team} size={36} className="shrink-0 self-center" />
       )}
     </Link>
   );
