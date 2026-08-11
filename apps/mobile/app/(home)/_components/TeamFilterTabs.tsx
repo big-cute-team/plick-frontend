@@ -47,7 +47,7 @@ export function TeamFilterTabs({
             href={teamHubPath(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-label shrink-0 border-b-2 pt-1 pb-2 font-bold ${
+            className={`text-title shrink-0 border-b-2 pt-1 pb-2 font-bold ${
               on ? "border-accent text-text" : "text-text-4 border-transparent"
             }`}
           >

@@ -69,10 +69,14 @@ export function ArticleBody({
     <article className="px-edge flex flex-col gap-3.5 pt-1">
       {/* 배지 줄 — 알약 없는 단계 글자만 (KAN-301). 상단 구단 로고는 KAN-368에서
           뺐다(릴은 유지) — 제목 위 로고가 목록 진입 맥락과 겹쳐 자리만 차지해서다 */}
-      <PostBadges team={null} stage={article.stage} />
+      <PostBadges
+        team={null}
+        stage={article.stage}
+        stageTextClass="text-label"
+      />
 
       {/* 제목 */}
-      <h1 className="text-headline text-text font-extrabold">
+      <h1 className="text-hero tracking-heading text-text font-extrabold">
         {article.title}
       </h1>
 
@@ -87,7 +91,7 @@ export function ArticleBody({
         </ReporterLine>
       ) : (
         <div className="flex items-center">
-          <span className="text-label text-text-3">{meta}</span>
+          <span className="text-body text-text-3">{meta}</span>
           {sourceLink}
         </div>
       )}
@@ -105,7 +109,7 @@ export function ArticleBody({
       {paragraphs.map((paragraph, i) => (
         <p
           key={i}
-          className="text-body-lg text-text-2 leading-body-lg tracking-snug"
+          className="text-title text-text-2 leading-body-lg tracking-snug"
         >
           {paragraph}
         </p>

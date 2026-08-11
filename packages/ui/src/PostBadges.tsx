@@ -21,15 +21,18 @@ const STAGE_TEXT: Record<PostStage, string> = {
  * @param team - 팀 코드·이름. 태그된 팀이 없으면 null — 로고를 생략한다.
  * @param stage - 루머 단계. 없으면 글자를 생략한다.
  * @param crestSize - 로고 크기(px). 표면마다 스케일이 달라 앱이 정한다.
+ * @param stageTextClass - 단계 글자 크기 유틸. 로고와 같은 이유로 앱이 정한다.
  */
 export function PostBadges({
   team,
   stage,
   crestSize = 30,
+  stageTextClass = "text-caption",
 }: {
   team: { code: string; name: string } | null;
   stage?: PostStage | null;
   crestSize?: number;
+  stageTextClass?: string;
 }) {
   if (!team && !stage) return null;
   return (
@@ -37,7 +40,7 @@ export function PostBadges({
       {team && <TeamCrest team={team} size={crestSize} />}
       {stage && (
         <span
-          className={`text-caption tracking-label font-extrabold whitespace-nowrap ${STAGE_TEXT[stage]}`}
+          className={`${stageTextClass} tracking-label font-extrabold whitespace-nowrap ${STAGE_TEXT[stage]}`}
         >
           {STAGE_LABEL[stage]}
         </span>

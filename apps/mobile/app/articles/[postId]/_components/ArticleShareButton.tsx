@@ -23,9 +23,9 @@ export function ArticleShareButton({ articleId }: { articleId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="bg-elevate-2 border-border text-text-2 text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70"
+        className="bg-elevate-2 border-border text-text-2 text-body-lg rounded-pill flex h-10 items-center gap-1.5 border px-4 font-bold active:opacity-70"
       >
-        <SendIcon size={15} />
+        <SendIcon size={17} />
         공유
       </button>
 
