@@ -22,7 +22,8 @@ interface TokenResponse {
  *
  * @param refreshToken 현재 refresh 쿠키 값
  * @returns 회전된 access·refresh 쌍
- * @throws {ApiError} refresh 토큰이 만료/무효거나 BE가 2xx가 아닐 때 — 호출부가 잡아 세션을 끊는다
+ * @throws {ApiError} refresh 토큰이 만료/무효거나 BE가 2xx가 아닐 때 — 호출부(proxy)가
+ *   401만 세션 종료로 처리하고 나머지는 통과시킨다
  */
 export async function refreshTokens(
   refreshToken: string,
@@ -70,7 +71,9 @@ const ROTATION_GRACE_MS = 30_000;
  *
  * @param refreshToken 현재 refresh 쿠키 값
  * @returns 회전된 access·refresh 쌍 (형제 요청끼리 같은 값)
- * @throws {ApiError} refresh 토큰이 진짜로 만료/무효일 때 — 호출부가 세션을 끊는다
+ * @throws {ApiError} refresh 토큰이 진짜로 만료/무효일 때 — 호출부(proxy)가 401이면
+ *   1회 재시도 후 세션을 끊는다. 이 dedupe는 인스턴스 안에서만 유효해, 인스턴스
+ *   사이 경쟁은 proxy의 재시도 리다이렉트가 흡수한다
  */
 export async function refreshTokensShared(
   refreshToken: string,
