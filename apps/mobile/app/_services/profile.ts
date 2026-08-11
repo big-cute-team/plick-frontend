@@ -11,7 +11,8 @@ import { ApiError, apiFetch } from "@plick/core/client";
 import type { MyProfile } from "@plick/domain/types";
 import { AUTH_COOKIES } from "@/_constants/api";
 
-/** BE 응답 shape (이 파일 로컬 — 스웨거 `ProfileResponse` 그대로). 온보딩 전엔 닉네임이,
+/** BE 응답 shape (이 파일 로컬 — 스웨거 `ProfileResponse` 그대로). 닉네임은 가입 시 BE가
+ * 자동 부여(plick+숫자)하지만 자동 부여 도입 전 레거시 유저는 null일 수 있고,
  * 카카오 가입이면 이메일이 null로 온다. */
 interface ProfileResponse {
   userId: number;

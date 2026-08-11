@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 /**
  * W8 온보딩 닉네임 설정(1/2) — 다크 배경 중앙 카드로 닉네임을 입력받는다.
  * KAN-247 퍼블리싱, KAN-320 API 연결. 피그마 225-2.
- * 초깃값은 `GET /users/me`의 닉네임 — BE가 자동 닉네임(plick+숫자)을 주면
- * 그대로 채워 시작하고, 아직 null이면 빈 값으로 시작한다.
+ * 초깃값은 `GET /users/me`의 닉네임 — BE가 가입 시 자동 부여한 닉네임
+ * (plick+숫자)을 채워 시작하고, 자동 부여 도입 전 레거시 유저만 null이라 빈 값으로 시작한다.
  */
 export default async function OnboardingNicknamePage() {
   const profile = await getMyProfile();

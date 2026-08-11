@@ -53,9 +53,10 @@ export const AUTH_COOKIE_BASE = {
 } as const;
 
 /**
- * access·refresh 쿠키 수명(초). BE 토큰 자체엔 만료 정보가 없어(현재 mock은 불투명 문자열),
- * **쿠키의 소멸을 만료 신호로 삼는다** — access가 짧게 살다 사라지면 `proxy.ts`가 refresh로 갈아낀다.
- * 실제 토큰 TTL이 정해지면 그 값에 맞춘다(인증 봉합점). 지금은 흔한 관례값을 자리로 둔다.
+ * access·refresh 쿠키 수명(초). 쿠키의 소멸을 만료 신호로 삼는다 — access가 먼저 사라지면
+ * `proxy.ts`가 refresh로 갈아낀다. BE 확정값(HS256 JWT, exp 포함): access 1시간, refresh 14일.
+ * access 쿠키는 시계 오차를 감안해 토큰보다 5분 짧은 55분으로 둔다 — 만료 임박 토큰을
+ * Bearer로 실어 401을 맞는 경계 구간을 없애기 위해서다.
  */
-export const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15분
-export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일
+export const ACCESS_TOKEN_MAX_AGE = 60 * 55; // 55분 (BE 토큰 1시간 − 오차 여유 5분)
+export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 14; // 14일 (BE와 동일)

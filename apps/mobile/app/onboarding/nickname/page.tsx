@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 
 /**
  * A5 온보딩 1/2 닉네임 설정 — 회원가입 직후 진입 (KAN-176, 피그마 96-6).
- * 초깃값은 `GET /users/me`의 닉네임(KAN-267) — BE가 자동 닉네임(plick+숫자)을 주면
- * 그대로 채워 시작하고, 아직 null이면(현 BE) 빈 값으로 시작한다.
+ * 초깃값은 `GET /users/me`의 닉네임(KAN-267) — BE가 가입 시 자동 부여한 닉네임
+ * (plick+숫자)을 채워 시작하고, 자동 부여 도입 전 레거시 유저만 null이라 빈 값으로 시작한다.
  */
 export default async function OnboardingNicknamePage() {
   const profile = await getMyProfile();
