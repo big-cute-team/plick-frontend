@@ -56,9 +56,9 @@ export function ArticleLikeButton({
           state.liked
             ? "bg-accent-tint border-accent-border text-accent"
             : "bg-elevate-2 border-border text-text-2"
-        } text-body rounded-pill flex h-9 items-center gap-1.5 border px-4 font-bold active:opacity-70`}
+        } text-body-lg rounded-pill flex h-10 items-center gap-1.5 border px-4 font-bold active:opacity-70`}
       >
-        <HeartMiniIcon size={15} filled={state.liked} />
+        <HeartMiniIcon size={17} filled={state.liked} />
         {formatCount(state.likeCount)}
       </button>
 

@@ -42,7 +42,7 @@ export function ReelActionRail({
         }}
       />
       <RailAction
-        icon={<LikeIcon size={28} filled={reel.liked} />}
+        icon={<LikeIcon size={32} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}
         onClick={onLike}
         active={reel.liked}
@@ -50,12 +50,12 @@ export function ReelActionRail({
         ariaPressed={reel.liked}
       />
       <RailAction
-        icon={<ChatIcon size={27} />}
+        icon={<ChatIcon size={31} />}
         label={formatCount(reel.commentCount)}
         onClick={onComment}
       />
       <RailAction
-        icon={<SendIcon size={27} />}
+        icon={<SendIcon size={31} />}
         label="공유"
         onClick={onShare}
       />
@@ -96,7 +96,7 @@ function RailAction({
       } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}
-      <span className="text-caption font-semibold">{label}</span>
+      <span className="text-label font-semibold">{label}</span>
     </button>
   );
 }
