@@ -3,12 +3,12 @@ import { HotCarousel } from "@plick/ui/HotCarousel";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { getArticles, getHotArticles } from "@plick/core/articles";
-import { homeIntroCopy } from "@plick/domain/brand";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { WEB_SITE_URL } from "@/_constants/site";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
 import { NewsFeed } from "./NewsFeed";
@@ -109,12 +109,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
 
         {/* 크롤러블 서비스 소개 (KAN-384) — 홈 본문에 서비스 설명 텍스트가
             없으면 구글이 description을 버리고 탭바·빈 상태 문구를 긁어
-            스니펫을 만든다. description과 겹치는 문장을 화면에 싣는다 */}
-        <section className="px-edge pt-6 pb-4">
-          <p className="text-caption text-text-4">
-            {homeIntroCopy(team !== "ALL" ? TEAM_FULL_NAMES[team] : undefined)}
-          </p>
-        </section>
+            스니펫을 만든다. description과 겹치는 문장을 화면에 싣는다.
+            팀 탭 전환을 따라가야 해서 클라 컴포넌트다 */}
+        <HomeIntro />
       </HomeScrollArea>
       <TabBar />
     </AppShell>
