@@ -35,6 +35,13 @@ type ViewState = {
   /** 화면별 스크롤 오프셋(px) */
   scrollTops: Partial<Record<ScreenKey, number>>;
   setScrollTop: (key: ScreenKey, top: number) => void;
+  /**
+   * 홈 팀 탭별 스크롤 오프셋(px). 탭을 떠날 때 NewsFeed가 적어 두고, 이미 봤던
+   * 팀으로 되돌아오면 그 팀에서 보던 자리로 복원한다. `scrollTops.home`은
+   * 화면 단위(홈을 떠났다 돌아올 때) 복원용이라 따로 둔다.
+   */
+  homeTabScrollTops: Partial<Record<Filter, number>>;
+  setHomeTabScrollTop: (filter: Filter, top: number) => void;
   /** 릴스에서 보고 있던 릴의 순번 */
   reelsIndex: number;
   setReelsIndex: (index: number) => void;
@@ -56,6 +63,12 @@ export const useViewState = create<ViewState>((set) => ({
   scrollTops: {},
   setScrollTop: (key, top) =>
     set((state) => ({ scrollTops: { ...state.scrollTops, [key]: top } })),
+
+  homeTabScrollTops: {},
+  setHomeTabScrollTop: (filter, top) =>
+    set((state) => ({
+      homeTabScrollTops: { ...state.homeTabScrollTops, [filter]: top },
+    })),
 
   reelsIndex: 0,
   setReelsIndex: (reelsIndex) => set({ reelsIndex }),

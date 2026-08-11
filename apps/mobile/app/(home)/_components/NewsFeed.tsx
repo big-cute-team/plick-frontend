@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
@@ -69,8 +69,14 @@ export function NewsFeed({
     document.title = teamHubTitle(filter);
   }, [filter, setHomeFilter]);
 
-  /** 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다 */
+  /**
+   * 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다. 떠나는 팀에서
+   * 보던 위치를 적어 둔다(`scrollTops.home`이 스크롤마다 갱신되는 현재 위치다).
+   * 이미 봤던 팀으로 되돌아오면 아래 이펙트가 이 값으로 복원한다.
+   */
   function handleChange(next: Filter) {
+    const state = useViewState.getState();
+    state.setHomeTabScrollTop(filter, state.scrollTops.home ?? 0);
     window.history.replaceState(null, "", teamHubPath(next));
   }
   const {
@@ -90,6 +96,33 @@ export function NewsFeed({
     fetchNextPage,
     hasNextPage && !isFetchingNextPage && !isFetchNextPageError,
   );
+
+  /**
+   * 탭 전환 뒤 스크롤 자리 잡기. 처음 여는 팀(캐시 없음, 스켈레톤부터 시작)은
+   * 맨 위에서 시작하고, 이미 봤던 팀은 그 팀에서 보던 위치로 되돌린다.
+   *
+   * 전환 전 자리에 그대로 두면 안 된다 — 필터가 sticky라 리스트를 한참 내린
+   * 채로도 탭을 바꿀 수 있는데, 새 팀 로딩으로 리스트가 짧아졌다 다시 자라는
+   * 동안 브라우저 스크롤 앵커링이 리스트 끝을 화면에 붙잡아 둬서 감시 요소가
+   * 계속 보이고 다음 페이지 요청이 연쇄로 나간다.
+   *
+   * 마운트 첫 실행은 건너뛴다 — 홈을 떠났다 돌아올 때의 복원은 ScrollArea의
+   * restoreKey("home")가 맡는 다른 층이다.
+   */
+  const requestTop = useViewState((state) => state.requestTop);
+  const listRef = useRef<HTMLDivElement>(null);
+  const prevFilter = useRef(filter);
+  useEffect(() => {
+    if (prevFilter.current === filter) return;
+    prevFilter.current = filter;
+    if (isPending) {
+      requestTop("home");
+      return;
+    }
+    const saved = useViewState.getState().homeTabScrollTops[filter];
+    const scroller = listRef.current?.closest("main");
+    if (saved != null && scroller) scroller.scrollTop = saved;
+  }, [filter, isPending, requestTop]);
 
   const articles = data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -113,7 +146,7 @@ export function NewsFeed({
   return (
     <>
       <TeamFilterTabs value={filter} onChange={handleChange} />
-      <div className="px-edge">
+      <div ref={listRef} className="px-edge">
         {isPending ? (
           Array.from({ length: SKELETON_COUNT }, (_, i) => (
             <NewsItemSkeleton key={i} />
