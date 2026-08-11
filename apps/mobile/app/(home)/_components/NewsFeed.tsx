@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
+import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { articleKeys } from "@plick/core/articleKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
@@ -57,6 +58,7 @@ export function NewsFeed({
   const filter = teamFilterFromPathname(pathname);
   const setHomeFilter = useViewState((state) => state.setHomeFilter);
   const queryClient = useQueryClient();
+  const refreshHome = useHomeRefresh();
 
   /**
    * URL이 정한 필터를 스토어에 흘려 둔다 — 직접 진입·뒤로가기까지 포함해
@@ -70,12 +72,20 @@ export function NewsFeed({
   }, [filter, setHomeFilter]);
 
   /**
-   * 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다. 떠나는 팀에서
-   * 보던 위치를 적어 둔다(`scrollTops.home`이 스크롤마다 갱신되는 현재 위치다).
+   * 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다.
+   *
+   * 지금 있는 팀을 한 번 더 누르면 이동 대신 맨 위로 올리고 첫 페이지부터 다시
+   * 받는다 — 하단 탭 재탭과 같은 손버릇이다. 다른 팀이면 떠나는 팀에서 보던
+   * 위치를 적어 둔다(`scrollTops.home`이 스크롤마다 갱신되는 현재 위치다).
    * 이미 봤던 팀으로 되돌아오면 아래 이펙트가 이 값으로 복원한다.
    */
   function handleChange(next: Filter) {
     const state = useViewState.getState();
+    if (next === filter) {
+      state.requestTop("home");
+      void refreshHome();
+      return;
+    }
     state.setHomeTabScrollTop(filter, state.scrollTops.home ?? 0);
     window.history.replaceState(null, "", teamHubPath(next));
   }
