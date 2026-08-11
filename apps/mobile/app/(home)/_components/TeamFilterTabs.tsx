@@ -16,6 +16,10 @@ import type { Filter } from "@plick/domain/types";
  *
  * 가로 스크롤이라 좁은 화면(폴드 접힘)에서도 넘치지 않는다.
  *
+ * 스크롤 영역 상단에 붙는다(sticky) — 리스트를 한참 내린 뒤에도 맨 위로
+ * 돌아오지 않고 팀을 바꿀 수 있다. 밑으로 지나가는 리스트가 비치지 않게
+ * 배경(`bg-bg`)을 깐다.
+ *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
  */
@@ -38,7 +42,7 @@ export function TeamFilterTabs({
   }
 
   return (
-    <div className="no-scrollbar border-border px-edge flex gap-4 overflow-x-auto border-b">
+    <div className="no-scrollbar border-border px-edge bg-bg sticky top-0 z-10 flex gap-4 overflow-x-auto border-b">
       {items.map(({ key, label }) => {
         const on = value === key;
         return (

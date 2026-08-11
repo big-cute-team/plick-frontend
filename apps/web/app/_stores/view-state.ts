@@ -35,6 +35,18 @@ type ViewState = {
    */
   scrollTops: Partial<Record<PostListVariant, number>>;
   setScrollTop: (surface: PostListVariant, top: number) => void;
+  /**
+   * surface별·팀 탭별 스크롤 오프셋(px). 탭을 떠날 때 PostFeed가 적어 두고,
+   * 이미 봤던 팀으로 되돌아오면 그 팀에서 보던 자리로 복원한다. `scrollTops`는
+   * 화면 단위(피드를 떠났다 돌아올 때) 복원용이라 따로 둔다(모바일
+   * `homeTabScrollTops`와 같은 판단).
+   */
+  feedTabScrollTops: Record<PostListVariant, Partial<Record<Filter, number>>>;
+  setFeedTabScrollTop: (
+    surface: PostListVariant,
+    filter: Filter,
+    top: number,
+  ) => void;
 };
 
 /** 화면별 뷰 상태 스토어 — 앱에서 유일한 zustand 스토어다. */
@@ -49,5 +61,14 @@ export const useViewState = create<ViewState>((set) => ({
   setScrollTop: (surface, top) =>
     set((state) => ({
       scrollTops: { ...state.scrollTops, [surface]: top },
+    })),
+
+  feedTabScrollTops: { news: {}, article: {} },
+  setFeedTabScrollTop: (surface, filter, top) =>
+    set((state) => ({
+      feedTabScrollTops: {
+        ...state.feedTabScrollTops,
+        [surface]: { ...state.feedTabScrollTops[surface], [filter]: top },
+      },
     })),
 }));
