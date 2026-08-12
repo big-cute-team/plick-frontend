@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
+import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelsCarousel } from "@/_hooks/useReelsCarousel";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
@@ -38,6 +39,8 @@ import { ReelStatus } from "./ReelStatus";
  */
 export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
   const motion = useReelDetailMotion();
+  /* 안드로이드 뒤로가기가 릴스를 나가는 대신 세부 시트를 닫는다 (유튜브 쇼츠 방식) */
+  useBackToClose(motion.mounted, motion.requestClose);
   const queryClient = useQueryClient();
   /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{
