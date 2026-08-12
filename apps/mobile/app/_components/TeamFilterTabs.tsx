@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, type MouseEvent } from "react";
-import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
+import { TEAMS } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
+import { FILTER_ORDER } from "@/_constants/team-filter";
 
 /**
  * 팀 필터 탭 (전체 + 빅6) — 제어형: 선택 상태는 부모(NewsFeed)가 소유한다.
@@ -34,10 +35,11 @@ export function TeamFilterTabs({
   onChange: (f: Filter) => void;
   hrefFor?: (f: Filter) => string;
 }) {
-  const items: { key: Filter; label: string }[] = [
-    { key: "ALL", label: "전체" },
-    ...TEAM_ORDER.map((code) => ({ key: code, label: TEAMS[code].name })),
-  ];
+  /* 나열 순서는 좌우 스와이프의 이웃 판정과 공유하는 FILTER_ORDER다 (KAN-388) */
+  const items: { key: Filter; label: string }[] = FILTER_ORDER.map((key) => ({
+    key,
+    label: key === "ALL" ? "전체" : TEAMS[key].name,
+  }));
 
   function intercept(e: MouseEvent<HTMLAnchorElement>, key: Filter) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;

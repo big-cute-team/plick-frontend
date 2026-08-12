@@ -14,7 +14,9 @@ import {
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { NewsItem } from "@/_components/NewsItem";
 import { NewsItemSkeleton } from "@/_components/NewsItemSkeleton";
+import { TeamFeedPreview } from "@/_components/TeamFeedPreview";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
+import { TeamSwipePager } from "@/_components/TeamSwipePager";
 import { MoreArticlesLink } from "./MoreArticlesLink";
 
 /**
@@ -107,36 +109,52 @@ export function NewsFeed({
   return (
     <>
       <TeamFilterTabs value={filter} onChange={handleChange} />
-      <div className="px-edge">
-        {isPending ? (
-          Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <NewsItemSkeleton key={i} />
-          ))
-        ) : isError && articles.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
-            >
-              다시 시도
-            </button>
-          </div>
-        ) : articles.length > 0 ? (
-          <>
-            {articles.map((article) => (
-              <NewsItem key={article.id} article={article} filter={filter} />
-            ))}
-            <MoreArticlesLink variant="footer" />
-          </>
-        ) : (
-          <p className="text-body text-text-4 py-12 text-center">
-            아직 이 팀 소식이 없어요.
-          </p>
+      {/* 리스트를 좌우로 끌면 이웃 팀으로 넘어간다 (KAN-388). 커밋은 탭 클릭과
+          같은 handleChange라 URL·제목·스토어 동기화가 같은 경로를 탄다.
+          미리보기는 진짜 페인과 같게 첫 페이지 몫만 자르고 스켈레톤 개수도
+          맞춰, 교체 순간 픽셀이 이어진다 */}
+      <TeamSwipePager
+        filter={filter}
+        onCommit={handleChange}
+        renderPreview={(team) => (
+          <TeamFeedPreview
+            team={team}
+            skeletonCount={SKELETON_COUNT}
+            limit={ARTICLES_PAGE_SIZE}
+          />
         )}
-      </div>
+      >
+        <div className="px-edge">
+          {isPending ? (
+            Array.from({ length: SKELETON_COUNT }, (_, i) => (
+              <NewsItemSkeleton key={i} />
+            ))
+          ) : isError && articles.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : articles.length > 0 ? (
+            <>
+              {articles.map((article) => (
+                <NewsItem key={article.id} article={article} filter={filter} />
+              ))}
+              <MoreArticlesLink variant="footer" />
+            </>
+          ) : (
+            <p className="text-body text-text-4 py-12 text-center">
+              아직 이 팀 소식이 없어요.
+            </p>
+          )}
+        </div>
+      </TeamSwipePager>
     </>
   );
 }
