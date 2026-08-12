@@ -6,7 +6,7 @@ import type { TeamCode } from "@plick/domain/types";
 import { ErrorDialog } from "@/_components/ErrorDialog";
 import { TeamCrestCard } from "@/_components/TeamCrestCard";
 import { submitOnboarding } from "@/_services/users";
-import { SkipLink } from "@/onboarding/_components/SkipLink";
+import { SkipLink } from "@/_onboarding/_components/SkipLink";
 import { ONBOARDING_TOTAL_STEPS } from "@/_constants/onboarding";
 
 /**

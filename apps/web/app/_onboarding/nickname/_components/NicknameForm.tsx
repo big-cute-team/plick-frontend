@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
-import { SkipLink } from "@/onboarding/_components/SkipLink";
+import { SkipLink } from "@/_onboarding/_components/SkipLink";
 import {
   NICKNAME_MAX_LENGTH,
   ONBOARDING_TOTAL_STEPS,
