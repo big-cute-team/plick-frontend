@@ -16,7 +16,9 @@ import {
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { NewsItem } from "@/_components/NewsItem";
 import { NewsItemSkeleton } from "@/_components/NewsItemSkeleton";
+import { TeamFeedPreview } from "@/_components/TeamFeedPreview";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
+import { TeamSwipePager } from "@/_components/TeamSwipePager";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useArticlesRefresh } from "@/_hooks/useArticlesRefresh";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
@@ -167,68 +169,83 @@ export function ArticlesFeed({
           hrefFor={articlesTeamPath}
         />
       </div>
-      <div ref={listRef} className="px-edge">
-        {isPending ? (
-          Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <NewsItemSkeleton key={i} />
-          ))
-        ) : isError && articles.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
-            >
-              다시 시도
-            </button>
-          </div>
-        ) : articles.length > 0 ? (
-          <>
-            {articles.map((article) => (
-              <NewsItem key={article.id} article={article} filter={filter} />
-            ))}
-
-            {isFetchingNextPage && <NewsItemSkeleton />}
-
-            {isFetchNextPageError && (
-              <div className="py-6 text-center">
-                <p className="text-caption text-text-4">
-                  다음 소식을 불러오지 못했어요.
-                </p>
-                <button
-                  type="button"
-                  onClick={retryNextPage}
-                  className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
-                >
-                  다시 시도
-                </button>
-              </div>
-            )}
-
-            {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다. */}
-            <div ref={sentinelRef} aria-hidden className="h-px" />
-
-            {!hasNextPage && (
-              /* 리스트의 끝 — 홈 HomeIntro와 같은 크롤러블 소개 문구에
-                 마지막 페이지임을 함께 알린다 */
-              <section className="pt-6 pb-4">
-                <p className="text-caption text-text-4">
-                  {articlesOutroCopy(
-                    filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined,
-                  )}{" "}
-                  기사의 마지막 페이지예요.
-                </p>
-              </section>
-            )}
-          </>
-        ) : (
-          <p className="text-body text-text-4 py-12 text-center">
-            아직 이 팀 소식이 없어요.
-          </p>
+      {/* 리스트를 좌우로 끌면 이웃 팀으로 넘어간다 (KAN-388). 커밋은 탭 클릭과
+          같은 handleChange라 떠나는 팀의 스크롤 저장과 위 이펙트의 복원·맨 위
+          이동이 그대로 돈다. targetScrollTop으로 팀별 저장 위치를 넘겨, 봤던
+          팀의 미리보기는 복원될 자리의 내용부터 끌려 들어온다 */}
+      <TeamSwipePager
+        filter={filter}
+        onCommit={handleChange}
+        targetScrollTop={(team) =>
+          useViewState.getState().articlesTabScrollTops[team]
+        }
+        renderPreview={(team) => (
+          <TeamFeedPreview team={team} skeletonCount={SKELETON_COUNT} />
         )}
-      </div>
+      >
+        <div ref={listRef} className="px-edge">
+          {isPending ? (
+            Array.from({ length: SKELETON_COUNT }, (_, i) => (
+              <NewsItemSkeleton key={i} />
+            ))
+          ) : isError && articles.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : articles.length > 0 ? (
+            <>
+              {articles.map((article) => (
+                <NewsItem key={article.id} article={article} filter={filter} />
+              ))}
+
+              {isFetchingNextPage && <NewsItemSkeleton />}
+
+              {isFetchNextPageError && (
+                <div className="py-6 text-center">
+                  <p className="text-caption text-text-4">
+                    다음 소식을 불러오지 못했어요.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={retryNextPage}
+                    className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              )}
+
+              {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다. */}
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+
+              {!hasNextPage && (
+                /* 리스트의 끝 — 홈 HomeIntro와 같은 크롤러블 소개 문구에
+                 마지막 페이지임을 함께 알린다 */
+                <section className="pt-6 pb-4">
+                  <p className="text-caption text-text-4">
+                    {articlesOutroCopy(
+                      filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined,
+                    )}{" "}
+                    기사의 마지막 페이지예요.
+                  </p>
+                </section>
+              )}
+            </>
+          ) : (
+            <p className="text-body text-text-4 py-12 text-center">
+              아직 이 팀 소식이 없어요.
+            </p>
+          )}
+        </div>
+      </TeamSwipePager>
     </>
   );
 }
