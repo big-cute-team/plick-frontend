@@ -32,7 +32,7 @@ export function MoreArticlesLink({
     return (
       <Link
         href={href}
-        className="text-label text-text-4 hover:text-text-2 flex items-center font-bold transition-colors"
+        className="text-label text-accent flex items-center font-bold transition-opacity hover:opacity-80"
       >
         더보기
         <ChevronMiniIcon size={14} />
@@ -43,7 +43,7 @@ export function MoreArticlesLink({
   return (
     <Link
       href={href}
-      className="bg-elevate text-label text-text rounded-control mt-2 flex items-center justify-center gap-0.5 py-3 font-bold transition-opacity hover:opacity-80"
+      className="bg-elevate text-label text-accent rounded-control mt-2 flex items-center justify-center gap-0.5 py-3 font-bold transition-opacity hover:opacity-80"
     >
       {filter === "ALL" ? "기사 더보기" : `${TEAMS[filter].name} 소식 더보기`}
       <ChevronMiniIcon size={14} />

@@ -6,6 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { articleKeys } from "@plick/core/articleKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
+import { articlesOutroCopy } from "@plick/domain/brand";
+import { TEAM_FULL_NAMES } from "@plick/domain/constants";
 import {
   articlesTeamFilterFromPathname,
   articlesTeamPath,
@@ -207,6 +209,19 @@ export function ArticlesFeed({
 
             {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다. */}
             <div ref={sentinelRef} aria-hidden className="h-px" />
+
+            {!hasNextPage && (
+              /* 리스트의 끝 — 홈 HomeIntro와 같은 크롤러블 소개 문구에
+                 마지막 페이지임을 함께 알린다 */
+              <section className="pt-6 pb-4">
+                <p className="text-caption text-text-4">
+                  {articlesOutroCopy(
+                    filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined,
+                  )}{" "}
+                  기사의 마지막 페이지예요.
+                </p>
+              </section>
+            )}
           </>
         ) : (
           <p className="text-body text-text-4 py-12 text-center">

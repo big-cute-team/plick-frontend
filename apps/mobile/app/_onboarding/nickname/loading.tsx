@@ -1,5 +1,5 @@
 import { AppShell } from "@/_components/AppShell";
-import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
+import { OnboardingTopBar } from "@/_onboarding/_components/OnboardingTopBar";
 
 /** 온보딩 1단계 로딩 스켈레톤 — 초기 닉네임 fetch(`GET /users/me`) 동안 자리를 잡아둔다. */
 export default function OnboardingNicknameLoading() {
