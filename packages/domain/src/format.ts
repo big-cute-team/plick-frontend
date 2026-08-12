@@ -2,8 +2,19 @@
  * @file 공용 포맷 유틸 — 수치 축약·아바타 이니셜. 두 앱에 동일 구현으로 복제돼
  * 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
  */
+import { BRAND_TITLE, BRAND_TITLE_TEMPLATE } from "./brand";
 import { TEAMS, TEAM_BY_SLUG, TEAM_FULL_NAMES } from "./constants";
 import type { Filter } from "./types";
+
+/**
+ * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
+ * 아래 문서 제목 헬퍼들이 "… | PLick"을 손으로 복제하다 템플릿("%s | 플릭
+ * PLick")과 어긋나, 탭 전환 직후와 새로고침 후의 제목이 달랐다. 템플릿에서
+ * 파생시키면 다시 벌어질 수 없다.
+ */
+function brandTitle(page: string): string {
+  return BRAND_TITLE_TEMPLATE.replace("%s", page);
+}
 
 /**
  * 팀 필터 → 그 필터의 대표 URL 경로 (KAN-350). 전체는 홈(`/`), 팀은 팀 허브
@@ -35,13 +46,49 @@ export function teamFilterFromPathname(pathname: string): Filter {
 /**
  * 팀 허브(홈 surface)의 문서 제목 (KAN-350). 탭 전환이 `history.replaceState`라
  * 서버 메타데이터가 다시 렌더되지 않으므로, 클라가 `document.title`을 이걸로
- * 직접 맞춘다. 팀 허브 `generateMetadata`의 title(+ "%s | PLick" 템플릿)과 같은
- * 문자열이어야 직접 진입과 탭 전환의 제목이 어긋나지 않는다.
+ * 직접 맞춘다. 서버 렌더 제목(전체 탭은 루트 기본 title, 팀은 팀 허브
+ * `generateMetadata`의 title을 템플릿이 감싼 것)과 같은 문자열이어야 직접
+ * 진입과 탭 전환의 제목이 어긋나지 않는다.
  */
 export function teamHubTitle(filter: Filter): string {
   return filter === "ALL"
-    ? "PLick"
-    : `${TEAM_FULL_NAMES[filter]} 이적 루머 | PLick`;
+    ? BRAND_TITLE
+    : brandTitle(`${TEAM_FULL_NAMES[filter]} 이적 루머`);
+}
+
+/**
+ * 기사 surface의 팀 필터 → URL (KAN-350). 전체는 `/articles`, 팀은
+ * `/articles/teams/[slug]`다. 홈의 팀 허브(`/teams/[slug]`)와 별개 URL인 이유:
+ * 기사 페이지에서 고른 팀을 팀 허브 URL로 바꾸면 새로고침 시 홈 화면으로
+ * 건너뛰어 버린다 — 새로고침해도 기사 surface에 남아야 한다.
+ * web 전용이던 것을 모바일 기사 페이지 신설(KAN-386)에서 승격했다.
+ */
+export function articlesTeamPath(filter: Filter): string {
+  return filter === "ALL"
+    ? "/articles"
+    : `/articles/teams/${TEAMS[filter].slug}`;
+}
+
+/**
+ * 경로 → 기사 surface 팀 필터 역산. `/articles/teams/[slug]`면 그 팀,
+ * `/articles`(및 그 외)는 전체다. `/articles` 접두를 벗기고 홈 surface 파서를
+ * 재사용한다 — slug 판정 규칙이 한 곳에 남는다.
+ */
+export function articlesTeamFilterFromPathname(pathname: string): Filter {
+  if (!pathname.startsWith("/articles")) return "ALL";
+  return teamFilterFromPathname(pathname.slice("/articles".length) || "/");
+}
+
+/**
+ * 기사 surface의 문서 제목. 탭 전환이 `history.replaceState`라 서버 메타데이터가
+ * 다시 렌더되지 않으므로 클라가 `document.title`을 이걸로 직접 맞춘다.
+ * `/articles`·`/articles/teams/[slug]`의 metadata title을 템플릿이 감싼 것과
+ * 같은 문자열이어야 한다.
+ */
+export function articlesTeamTitle(filter: Filter): string {
+  return brandTitle(
+    filter === "ALL" ? "기사" : `${TEAM_FULL_NAMES[filter]} 기사`,
+  );
 }
 
 /**
