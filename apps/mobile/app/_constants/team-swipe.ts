@@ -23,9 +23,10 @@ export const SWIPE_DIRECTION_SLOP = 8;
 /**
  * 손을 뗐을 때 리스트 폭 대비 이 비율 이상 끌려와 있으면 이웃 팀으로 넘긴다.
  * 절반보다 낮게 둔 이유는 플릭 없이 천천히 끌어도 "넘기려던 참"이라는 의도가
- * 이쯤이면 분명해서다.
+ * 이쯤이면 분명해서다. 처음 0.35로 뒀다가 실기기에서 무겁다는 피드백을 받아
+ * 내렸다.
  */
-export const SWIPE_COMMIT_RATIO = 0.35;
+export const SWIPE_COMMIT_RATIO = 0.25;
 
 /**
  * 플릭 판정 속도(px/ms). 거리가 문턱에 못 미쳐도 이 속도 이상으로 튕기면 넘긴다.
@@ -36,8 +37,10 @@ export const SWIPE_FLICK_VELOCITY = 0.4;
 /**
  * 플릭으로 넘기더라도 최소 이 거리(px)는 끌려와 있어야 한다.
  * 속도만 보면 슬롭을 갓 지난 떨림도 플릭으로 오인한다.
+ * 처음 30으로 뒀더니 빠르고 짧은 스와이프가 문턱에 못 미쳐 씹혔다 —
+ * 속도·방향 조건이 이미 오인을 거르므로 슬롭 남짓이면 충분하다.
  */
-export const SWIPE_FLICK_MIN_DISTANCE = 30;
+export const SWIPE_FLICK_MIN_DISTANCE = 10;
 
 /**
  * 끝 탭(전체·마지막 팀)에서 더 끌 때 콘텐츠가 밀리는 최대 거리(px).
