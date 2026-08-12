@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/_components/AppShell";
 import { ONBOARDING_ENTRY } from "@/_constants/app";
-import { OnboardingTopBar } from "@/onboarding/_components/OnboardingTopBar";
+import { OnboardingTopBar } from "@/_onboarding/_components/OnboardingTopBar";
 import { TeamStep } from "./_components/TeamStep";
 
 /** 가입 직후 흐름이라 색인 가치가 없다 — robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */

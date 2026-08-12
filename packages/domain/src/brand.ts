@@ -69,3 +69,17 @@ export function homeIntroCopy(teamFullName?: string): string {
   }
   return "플릭(PLick)은 프리미어리그 이적 루머와 오피셜 이적 소식을 릴스처럼 넘겨보는 축구 뉴스 서비스예요. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티까지 EPL 팀별 이적설과 핫이슈, 팬 반응을 한곳에서 확인해 보세요.";
 }
+
+/**
+ * 기사 목록 끝의 크롤러블 마무리 문구 — 무한스크롤이 마지막 페이지에 닿았을 때
+ * 리스트 아래에 싣는다. 홈의 {@link homeIntroCopy}처럼 이 페이지가 무엇인지
+ * 설명하는 본문 텍스트를 두는 몫이다.
+ *
+ * @param teamFullName 팀별 기사면 팀 정식 명칭, 전체 기사면 생략
+ */
+export function articlesOutroCopy(teamFullName?: string): string {
+  if (teamFullName) {
+    return `${teamFullName}의 이적 루머와 오피셜 소식을 모은 페이지예요.`;
+  }
+  return "프리미어리그 팀별 이적 루머와 오피셜 소식을 모은 페이지예요.";
+}

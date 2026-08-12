@@ -11,6 +11,7 @@ import { SiteHeader } from "@/_components/SiteHeader";
 import { SITE_URL } from "@/_constants/site";
 import { PostFeed } from "@/_components/PostFeed";
 import { HotCard } from "./HotCard";
+import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeSidebar } from "./HomeSidebar";
 
@@ -118,12 +119,17 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             </section>
 
             <section className="pt-7.5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-section text-text tracking-heading font-extrabold">
-                  지금 올라온 소식
-                </h2>
-                {/* 첫 페이지 밖 기사는 기사 페이지가 맡는다 (KAN-386) */}
-                <MoreArticlesLink variant="header" />
+              {/* 아래 리스트/사이드바 그리드와 같은 템플릿을 헤더 행에도 적용한다 —
+                  더보기 링크가 컨테이너 우측 끝(사이드바 위)이 아니라 리스트 열의
+                  우측 끝에 정렬되게 한다. 자식이 하나라 사이드바 열은 비어 있다 */}
+              <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-section text-text tracking-heading font-extrabold">
+                    지금 올라온 소식
+                  </h2>
+                  {/* 첫 페이지 밖 기사는 기사 페이지가 맡는다 (KAN-386) */}
+                  <MoreArticlesLink variant="header" />
+                </div>
               </div>
               <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <PostFeed initial={initial} initialTeam={team} variant="news" />
@@ -138,6 +144,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             <HomeIntro />
           </PageContainer>
         </FeedPullRefresh>
+
+        {/* SEO 푸터 — 모바일 홈과 같은 판단. 당겨서 새로고침 transform 밖에 둬
+            풀 제스처에 딸려 움직이지 않는다 */}
+        <HomeFooter />
       </main>
     </>
   );

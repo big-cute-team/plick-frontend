@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BottomActionBar } from "@/_components/BottomActionBar";
 import { PrimaryButton } from "@/_components/PrimaryButton";
 import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
-import { SkipLink } from "@/onboarding/_components/SkipLink";
+import { SkipLink } from "@/_onboarding/_components/SkipLink";
 import { NicknameField } from "./NicknameField";
 
 /**
