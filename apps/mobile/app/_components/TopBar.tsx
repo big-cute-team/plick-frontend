@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { Logo } from "@plick/ui/Logo";
 import { TopBarShell } from "./TopBarShell";
 import { TopBarMenu } from "./TopBarMenu";
 
 /**
  * 상단 크롬 (로고 + 햄버거 메뉴).
+ *
+ * 로고는 웹 GNB와 같은 관용으로 어디서든 홈으로 가는 링크다.
  *
  * 알림 아이콘은 걷어냈다 (KAN-297) — 알림 기능이 없어 자리만 차지했다.
  * 테마 토글도 걷어냈다 — 앱을 다크 고정으로 돌렸다. 라이트 토큰은 `theme.css`에
@@ -18,7 +21,9 @@ export function TopBar() {
       className="border-border bg-nav/90 relative z-50 border-b backdrop-blur-md"
       innerClassName="justify-between"
     >
-      <Logo height={18} />
+      <Link href="/" className="active:opacity-70">
+        <Logo height={18} />
+      </Link>
       <TopBarMenu />
     </TopBarShell>
   );

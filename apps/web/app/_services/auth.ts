@@ -3,7 +3,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { apiFetch } from "@plick/core/client";
-import { ONBOARDING_ENTRY } from "@/_constants/app";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -19,7 +18,7 @@ import type { SocialProvider } from "@/_types/api";
 interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  /** true면 신규 자동가입 유저 — 온보딩(닉네임→마이팀) 2단계로 보낸다 */
+  /** true면 신규 자동가입 유저. 온보딩 흐름을 내려서 지금은 읽지 않는다 — BE가 계속 주는 필드라 shape만 유지한다. */
   needsOnboarding: boolean;
 }
 
@@ -54,8 +53,9 @@ export async function startSocialLogin(
 
 /**
  * 소셜 로그인 마무리 — 프로바이더가 준 인가 code를 BE에 넘겨 토큰을 받고
- * HttpOnly 쿠키로 심은 뒤 이동시킨다. 신규 유저(`needsOnboarding`)는 온보딩
- * 첫 단계로, 기존 유저는 홈으로 보낸다. 콜백 라우트(`/oauth/callback`)가 부른다.
+ * HttpOnly 쿠키로 심은 뒤 홈으로 보낸다. 콜백 라우트(`/oauth/callback`)가 부른다.
+ * 신규 유저를 온보딩으로 보내던 분기는 온보딩 흐름을 내리면서 뺐다 — BE가
+ * 가입 시 닉네임을 자동 부여하므로 온보딩 없이도 서비스 이용에 지장이 없다.
  * 토큰이 브라우저 JS에 노출되지 않도록 BE 호출·저장을 전부 서버에서 한다.
  * `redirectUri`는 인가 요청 때 쓴 콜백 주소 그대로다(KAN-341) — BE가 허용목록
  * 검증 후 프로바이더 토큰 교환에 재사용하므로 다르면 400으로 끊긴다.
@@ -90,7 +90,7 @@ export async function login(
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
 
-  redirect(data.needsOnboarding ? ONBOARDING_ENTRY : "/");
+  redirect("/");
 }
 
 /**

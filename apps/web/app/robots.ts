@@ -13,10 +13,11 @@ import { IS_PRODUCTION_SITE, SITE_URL } from "@/_constants/site";
  * 맡는다 — 여기서 `Disallow: /`로 크롤을 막아 버리면 크롤러가 그 noindex를 읽지
  * 못해, 외부 링크로 발견된 URL이 내용 없이 색인된 채 남는다.
  *
- * `/me`·`/onboarding`은 disallow에서 뺐다 (KAN-384). 원래 `/me/`로 막았는데
- * robots 규격상 트레일링 슬래시가 `/me` 자체를 못 막아 마이페이지가 색인됐고,
- * 색인 제거는 어차피 크롤을 허용해야 페이지의 noindex를 읽고 이뤄진다 — 위
- * dev와 같은 원리다. 그래서 두 경로는 페이지 메타데이터의 noindex가 맡는다.
+ * `/me`는 disallow에서 뺐다 (KAN-384). 원래 `/me/`로 막았는데 robots 규격상
+ * 트레일링 슬래시가 `/me` 자체를 못 막아 마이페이지가 색인됐고, 색인 제거는
+ * 어차피 크롤을 허용해야 페이지의 noindex를 읽고 이뤄진다 — 위 dev와 같은
+ * 원리다. 그래서 페이지 메타데이터의 noindex가 맡는다. 같은 이유로 뺐던
+ * `/onboarding`은 이후 라우트 자체를 내렸다(`app/_onboarding`).
  */
 export default function robots(): MetadataRoute.Robots {
   const rules = {
