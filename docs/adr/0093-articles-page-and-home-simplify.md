@@ -177,9 +177,19 @@ transform을 걷어낸 뒤에도 축소된 반응형 화면에서 sticky 블록 
 클릭해도 scrollLeft가 0 그대로였다. behavior를 auto로 강제 호출하니 정확히 움직이는 걸로
 로직을 확인했다(60.5px 이동, 완전 노출). IntersectionObserver와 같은 계열의 한계다.
 
+## 후속: document.title과 서버 title 템플릿 정합화
+
+검증 중에 발견한 기존 문제도 이 브랜치에서 정리했다. `teamHubTitle`·`articlesTeamTitle`이
+"… | PLick"을 손으로 복제하고 있었는데, 두 앱 layout의 `title.template`은
+"%s | 플릭 PLick"이다. 그래서 탭 전환 직후 제목("기사 | PLick")과 새로고침 후
+제목("기사 | 플릭 PLick")이 달랐고, 홈 전체 탭은 헬퍼가 "PLick"을 넣는데 서버 기본 title은
+"플릭 PLick / 프리미어리그 소식을 릴스로"라 더 벌어졌다.
+
+고치면서 문자열을 다시 복제하지 않았다. `brand.ts`의 `BRAND_TITLE`과
+`BRAND_TITLE_TEMPLATE`에서 파생시키는 `brandTitle()`을 두고 헬퍼들이 그걸 쓰게 했다.
+템플릿이 바뀌면 헬퍼가 자동으로 따라오니 같은 어긋남이 재발할 수 없다. 브라우저로 홈·기사
+양쪽에서 서버 렌더 제목과 탭 전환 제목이 문자까지 같은 걸 확인했다.
+
 ## 남은 것
 
-- 탭 전환 시 클라가 맞추는 `document.title`("… | PLick")과 서버 title 템플릿
-  ("%s | 플릭 PLick")이 미묘하게 다른 기존 문제를 발견했다. 이번 범위가 아니라 별도 작업으로
-  분리했다.
 - 기사 탭 아이콘은 시안 없이 그린 것이라 디자인이 나오면 교체될 수 있다.
