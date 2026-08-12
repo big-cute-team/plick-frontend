@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
@@ -45,8 +45,28 @@ export function TeamFilterTabs({
     onChange(key);
   }
 
+  /**
+   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386, 모바일과 같은 판단).
+   * 좁은 폭에서 반쯤 잘린 탭을 클릭해도 그대로 잘려 있어 어디를 골랐는지 안
+   * 보인다. `value` 변화에 반응하므로 클릭이든 URL 직접 진입이든 다 잡고,
+   * `nearest`라 이미 다 보이는 탭에는 아무 일도 하지 않는다.
+   */
+  const listRef = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
+  useEffect(() => {
+    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
+      behavior: mounted.current ? "smooth" : "auto",
+      block: "nearest",
+      inline: "nearest",
+    });
+    mounted.current = true;
+  }, [value]);
+
   return (
-    <div className="border-border bg-bg sticky top-16 z-10 flex gap-5.5 overflow-x-auto border-b">
+    <div
+      ref={listRef}
+      className="border-border bg-bg sticky top-16 z-10 flex gap-5.5 overflow-x-auto border-b"
+    >
       {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
       {items.map(({ key, label }) => {
         const on = value === key;

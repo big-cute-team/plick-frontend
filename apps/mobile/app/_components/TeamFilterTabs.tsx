@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
@@ -45,8 +45,29 @@ export function TeamFilterTabs({
     onChange(key);
   }
 
+  /**
+   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386). 좁은 화면에서는 끝쪽
+   * 탭이 반쯤 잘린 채 클릭되는데, 그대로 두면 선택돼 놓고 여전히 잘려 있어
+   * 어디를 골랐는지 안 보인다. 클릭이든 URL 직접 진입이든 `value`가 정하므로
+   * 클릭 핸들러가 아니라 value 변화에 반응한다. `nearest`라 이미 다 보이는
+   * 탭에는 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
+   */
+  const listRef = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
+  useEffect(() => {
+    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
+      behavior: mounted.current ? "smooth" : "auto",
+      block: "nearest",
+      inline: "nearest",
+    });
+    mounted.current = true;
+  }, [value]);
+
   return (
-    <div className="no-scrollbar border-border px-edge bg-bg sticky top-0 z-10 flex gap-4 overflow-x-auto border-b">
+    <div
+      ref={listRef}
+      className="no-scrollbar border-border px-edge bg-bg sticky top-0 z-10 flex gap-4 overflow-x-auto border-b"
+    >
       {items.map(({ key, label }) => {
         const on = value === key;
         return (
