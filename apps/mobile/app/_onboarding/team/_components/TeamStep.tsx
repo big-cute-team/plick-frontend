@@ -7,7 +7,7 @@ import { ErrorDialog } from "@/_components/ErrorDialog";
 import { PrimaryButton } from "@/_components/PrimaryButton";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { submitOnboarding } from "@/_services/users";
-import { SkipLink } from "@/onboarding/_components/SkipLink";
+import { SkipLink } from "@/_onboarding/_components/SkipLink";
 import { TeamSelectGrid } from "./TeamSelectGrid";
 
 /**

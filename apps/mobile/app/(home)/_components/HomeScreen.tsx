@@ -8,6 +8,7 @@ import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { WEB_SITE_URL } from "@/_constants/site";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
@@ -117,6 +118,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             스니펫을 만든다. description과 겹치는 문장을 화면에 싣는다.
             팀 탭 전환을 따라가야 해서 클라 컴포넌트다 */}
         <HomeIntro />
+
+        {/* SEO 푸터 (KAN-386 후속) — 홈 리스트가 유한해져 생긴 바닥에 내부 링크를 모은다 */}
+        <HomeFooter />
       </HomeScrollArea>
       <TabBar />
     </AppShell>

@@ -3,6 +3,9 @@
  *
  * 글자는 `currentColor`(text-text)로 테마 전환되고, i 위 점만 accent 토큰을 쓴다.
  *
+ * aria-label은 "플릭 PLick"이다 — 검색엔진이 로고 대체텍스트를 브랜딩 신호로
+ * 읽으므로 WebSite JSON-LD name(플릭)과 같은 한글 표기를 앞세운다.
+ *
  * @param height - 렌더 높이(px). 폭은 원본 비율로 계산된다.
  */
 export function Logo({ height = 18 }: { height?: number }) {
@@ -15,7 +18,7 @@ export function Logo({ height = 18 }: { height?: number }) {
       fill="none"
       className="text-text block"
       role="img"
-      aria-label="PLick"
+      aria-label="플릭 PLick"
     >
       <path
         d="M8.22051 10.4064V0.766837H10.6916V8.40602H14.6453V10.4064H8.22051Z"

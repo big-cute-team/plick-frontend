@@ -48,8 +48,10 @@ export function NewsItem({
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
+          {/* 팀명·기자명은 제목보다 어두운 text-3로 눌러 둔다 — 굵기로만 구분해
+              리스트에서 밝게 남는 글자는 기사 제목 하나가 되게 한다 */}
           {team && (
-            <span className="text-body text-icon font-extrabold">
+            <span className="text-body text-text-3 font-extrabold">
               {team.name}
             </span>
           )}
@@ -65,9 +67,7 @@ export function NewsItem({
         <p className="text-body text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
           {article.reporter && (
             <>
-              <span className="text-text-2 font-semibold">
-                {article.reporter.name}
-              </span>
+              <span className="font-semibold">{article.reporter.name}</span>
               <span>·</span>
             </>
           )}
