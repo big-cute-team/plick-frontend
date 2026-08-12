@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@plick/core/client";
+import { ARTICLES_PAGE_SIZE } from "@plick/core/articles";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
-import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { articleKeys } from "@plick/core/articleKeys";
-import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { useViewState } from "@/_stores/view-state";
 import {
   teamFilterFromPathname,
@@ -16,19 +12,32 @@ import {
   teamHubTitle,
 } from "@plick/domain/format";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
-import { NewsItem } from "./NewsItem";
-import { NewsItemSkeleton } from "./NewsItemSkeleton";
-import { TeamFilterTabs } from "./TeamFilterTabs";
-
-/** 첫 로딩에 보여줄 자리 개수 — 한 페이지 건수보다 적게 둬 화면을 덜 채운다. */
-const SKELETON_COUNT = 4;
+import { NewsItem } from "@/_components/NewsItem";
+import { NewsItemSkeleton } from "@/_components/NewsItemSkeleton";
+import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
+import { MoreArticlesLink } from "./MoreArticlesLink";
 
 /**
- * "지금 올라온 소식" 섹션 — 팀 필터 + 무한스크롤 리스트.
+ * 스켈레톤 자리 개수 — 노출 건수와 같게 둔다 (KAN-386). 팀 전환으로 스켈레톤이
+ * 리스트를 대신하는 동안 문서가 짧아지면 브라우저가 scrollTop을 깎아 화면이
+ * 위로 딸려 올라간다. 행 높이가 비슷한 자리를 같은 개수로 깔아 수축을 막는다.
+ */
+const SKELETON_COUNT = ARTICLES_PAGE_SIZE;
+
+/**
+ * "지금 올라온 소식" 섹션 — 팀 필터 + 첫 페이지 고정 리스트.
+ *
+ * KAN-386에서 무한스크롤을 걷어냈다. 홈은 첫 페이지(10건)만 보여주고 끝까지
+ * 내려보는 경험은 더보기 링크가 가리키는 기사 페이지(`/articles`)가 맡는다.
+ * 무한스크롤 시절에는 팀을 바꿀 때 스크롤을 강제로 옮겨야 했다 — 리스트가
+ * 짧아졌다 자라는 동안 스크롤 앵커링이 감시 요소를 화면에 붙잡아 다음 페이지
+ * 요청이 연쇄로 나갔다. 리스트가 첫 페이지 고정이 되면서 그 보정이 통째로
+ * 필요 없어졌고, 이제 팀을 바꿔도 스크롤은 그 자리 그대로다.
  *
  * 필터는 화면에서 거르지 않고 BE `teamId`로 넘겨 팀별 최신순 목록을 새로 받는다
  * (KAN-271). 선택 탭 첫 페이지는 서버가 미리 받아 `initial`로 내려주므로 첫
- * 렌더에는 스켈레톤이 보이지 않고, 리스트 끝에 닿으면 커서로 다음 페이지를 잇는다.
+ * 렌더에는 스켈레톤이 보이지 않는다. 쿼리키가 기사 페이지와 같아 캐시를 공유하고,
+ * 기사 페이지에서 여러 페이지를 쌓아 뒀어도 여기서는 첫 페이지 몫만 잘라 그린다.
  *
  * 어느 팀을 보고 있는지는 URL이 정한다 (KAN-350). 홈(`/`)이 전체, 팀 허브
  * (`/teams/[slug]`)가 그 팀이다. 탭 선택은 `history.replaceState`로 URL만 바꾼다 —
@@ -36,11 +45,6 @@ const SKELETON_COUNT = 4;
  * 리마운트도 없이 필터가 따라온다. push가 아니라 replace인 이유는 탭 선택을
  * 히스토리에 쌓지 않기 위해서다 — 쌓으면 뒤로가기가 탭 선택 취소가 되어 버려
  * 기존 뒤로가기 감각(홈에서 뒤로 = 앱 이탈)이 깨진다.
- *
- * URL에 담기 전(KAN-314)에는 zustand가 필터의 원본이었다 — 기사·릴스에 다녀오면
- * 트리가 언마운트되어 `useState`가 초기화되는 문제 때문이다. 지금은 URL이 그 역할을
- * 대신하고(뒤로가기가 URL을 되살린다), 스토어의 `homeFilter`는 하단 탭의 홈 href를
- * 지금 보던 팀 허브로 잇는 기억용으로만 동기화한다({@link TabBar}).
  *
  * @param initial 서버 컴포넌트가 받아 둔 `initialTeam` 탭 첫 페이지와 그 시각.
  *   서버 fetch가 실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를
@@ -57,7 +61,6 @@ export function NewsFeed({
   const pathname = usePathname();
   const filter = teamFilterFromPathname(pathname);
   const setHomeFilter = useViewState((state) => state.setHomeFilter);
-  const queryClient = useQueryClient();
   const refreshHome = useHomeRefresh();
 
   /**
@@ -72,91 +75,39 @@ export function NewsFeed({
   }, [filter, setHomeFilter]);
 
   /**
-   * 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다.
+   * 탭 선택 — URL만 바꾸면 위의 파생이 필터·쿼리를 갈아 끼운다. 스크롤은
+   * 건드리지 않는다 (KAN-386) — 진입 직후 누르면 밑으로, 내려서 누르면 위로
+   * 튀던 문제의 답은 "안 움직이는 것"이었고, 리스트가 첫 페이지 고정이라
+   * 그래도 되는 상태가 됐다.
    *
-   * 지금 있는 팀을 한 번 더 누르면 이동 대신 맨 위로 올리고 첫 페이지부터 다시
-   * 받는다 — 하단 탭 재탭과 같은 손버릇이다. 다른 팀이면 떠나는 팀에서 보던
-   * 위치를 적어 둔다(`scrollTops.home`이 스크롤마다 갱신되는 현재 위치다).
-   * 이미 봤던 팀으로 되돌아오면 아래 이펙트가 이 값으로 복원한다.
+   * 지금 있는 팀을 한 번 더 누르면 맨 위로 올리고 첫 페이지부터 다시 받는다 —
+   * 하단 탭 재탭과 같은 손버릇이라 이때만 명시적으로 움직인다.
    */
   function handleChange(next: Filter) {
-    const state = useViewState.getState();
     if (next === filter) {
-      state.requestTop("home");
+      useViewState.getState().requestTop("home");
       void refreshHome();
       return;
     }
-    state.setHomeTabScrollTop(filter, state.scrollTops.home ?? 0);
     window.history.replaceState(null, "", teamHubPath(next));
   }
-  const {
-    data,
-    error,
-    isPending,
-    isError,
-    isFetching,
-    isFetchingNextPage,
-    isFetchNextPageError,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-  } = useArticleFeed(filter, initial, initialTeam);
 
-  const sentinelRef = useInfiniteScroll(
-    fetchNextPage,
-    hasNextPage && !isFetchingNextPage && !isFetchNextPageError,
+  const { data, isPending, isError, isFetching, refetch } = useArticleFeed(
+    filter,
+    initial,
+    initialTeam,
   );
 
-  /**
-   * 탭 전환 뒤 스크롤 자리 잡기. 처음 여는 팀(캐시 없음, 스켈레톤부터 시작)은
-   * 맨 위에서 시작하고, 이미 봤던 팀은 그 팀에서 보던 위치로 되돌린다.
-   *
-   * 전환 전 자리에 그대로 두면 안 된다 — 필터가 sticky라 리스트를 한참 내린
-   * 채로도 탭을 바꿀 수 있는데, 새 팀 로딩으로 리스트가 짧아졌다 다시 자라는
-   * 동안 브라우저 스크롤 앵커링이 리스트 끝을 화면에 붙잡아 둬서 감시 요소가
-   * 계속 보이고 다음 페이지 요청이 연쇄로 나간다.
-   *
-   * 마운트 첫 실행은 건너뛴다 — 홈을 떠났다 돌아올 때의 복원은 ScrollArea의
-   * restoreKey("home")가 맡는 다른 층이다.
-   */
-  const requestTop = useViewState((state) => state.requestTop);
-  const listRef = useRef<HTMLDivElement>(null);
-  const prevFilter = useRef(filter);
-  useEffect(() => {
-    if (prevFilter.current === filter) return;
-    prevFilter.current = filter;
-    if (isPending) {
-      requestTop("home");
-      return;
-    }
-    const saved = useViewState.getState().homeTabScrollTops[filter];
-    const scroller = listRef.current?.closest("main");
-    if (saved != null && scroller) scroller.scrollTop = saved;
-  }, [filter, isPending, requestTop]);
-
-  const articles = data?.pages.flatMap((page) => page.items) ?? [];
-
-  /**
-   * 커서는 서버가 발급한 값이라 상하면 400으로 온다. 잘못된 파라미터와 같은
-   * `COMMON_INVALID_PARAM` 코드라 둘을 구분할 방법이 없으므로, 다음 페이지에서
-   * 400을 받으면 커서를 버리고 첫 페이지부터 다시 받는다. 같은 커서로 재시도해봐야
-   * 계속 400이다.
-   *
-   * 캐시를 비우지 않고 첫 페이지만 남겨 다시 받는다 (KAN-379) — 비우면 서버가
-   * 내려준 `initial` 씨앗이 다시 심겨 옛 목록이 한 번 스쳤다 간다.
-   */
-  function retryNextPage() {
-    if (error instanceof ApiError && error.status === 400) {
-      void restartFeedQuery(queryClient, articleKeys.feed(filter));
-      return;
-    }
-    fetchNextPage();
-  }
+  /* 기사 페이지와 캐시를 공유하므로 여러 페이지가 쌓여 있을 수 있다 — 홈 몫만 자른다 */
+  const articles = (data?.pages.flatMap((page) => page.items) ?? []).slice(
+    0,
+    ARTICLES_PAGE_SIZE,
+  );
 
   return (
     <>
       <TeamFilterTabs value={filter} onChange={handleChange} />
-      <div ref={listRef} className="px-edge">
+      <div className="px-edge">
         {isPending ? (
           Array.from({ length: SKELETON_COUNT }, (_, i) => (
             <NewsItemSkeleton key={i} />
@@ -178,26 +129,7 @@ export function NewsFeed({
             {articles.map((article) => (
               <NewsItem key={article.id} article={article} filter={filter} />
             ))}
-
-            {isFetchingNextPage && <NewsItemSkeleton />}
-
-            {isFetchNextPageError && (
-              <div className="py-6 text-center">
-                <p className="text-caption text-text-4">
-                  다음 소식을 불러오지 못했어요.
-                </p>
-                <button
-                  type="button"
-                  onClick={retryNextPage}
-                  className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
-                >
-                  다시 시도
-                </button>
-              </div>
-            )}
-
-            {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다. */}
-            <div ref={sentinelRef} aria-hidden className="h-px" />
+            <MoreArticlesLink variant="footer" />
           </>
         ) : (
           <p className="text-body text-text-4 py-12 text-center">

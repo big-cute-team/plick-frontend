@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
@@ -45,8 +45,31 @@ export function TeamFilterTabs({
     onChange(key);
   }
 
+  /**
+   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386, 모바일과 같은 판단).
+   * 좁은 폭에서 반쯤 잘린 탭을 클릭해도 그대로 잘려 있어 어디를 골랐는지 안
+   * 보인다. `value` 변화에 반응하므로 클릭이든 URL 직접 진입이든 다 잡고,
+   * `nearest`라 이미 다 보이는 탭에는 아무 일도 하지 않는다.
+   */
+  const listRef = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
+  useEffect(() => {
+    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
+      behavior: mounted.current ? "smooth" : "auto",
+      block: "nearest",
+      inline: "nearest",
+    });
+    mounted.current = true;
+  }, [value]);
+
   return (
-    <div className="border-border bg-bg sticky top-16 z-10 flex gap-5.5 overflow-x-auto border-b">
+    <div
+      ref={listRef}
+      /* top-[63px] = GNB(h-16) - 1px: 소수점 스크롤 위치에서 sticky 레이어와
+         콘텐츠 레이어의 픽셀 반올림이 어긋나 GNB와의 사이에 실금이 비친다
+         (KAN-386). 1px 겹친 부분은 GNB(z-40)가 위에서 덮는다 */
+      className="border-border bg-bg sticky top-[63px] z-10 flex gap-5.5 overflow-x-auto border-b"
+    >
       {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
       {items.map(({ key, label }) => {
         const on = value === key;
@@ -56,7 +79,7 @@ export function TeamFilterTabs({
             href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-tab focus-visible:outline-accent shrink-0 border-b-2 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
+            className={`text-tab focus-visible:outline-accent shrink-0 scroll-mx-6 border-b-2 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
               on
                 ? "border-accent text-text font-extrabold"
                 : "text-text-4 hover:text-text-2 border-transparent font-semibold"

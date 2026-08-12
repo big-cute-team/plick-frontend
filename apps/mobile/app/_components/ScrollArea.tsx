@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PULL_TRANSITION } from "@/_constants/pull-refresh";
 import { usePullToRefresh } from "@/_hooks/usePullToRefresh";
 import { useScrollRestore } from "@/_hooks/useScrollRestore";
@@ -37,6 +37,34 @@ export function ScrollArea({
   useScrollRestore(ref, restoreKey);
   const { distance, dragging, refreshing } = usePullToRefresh(ref, onRefresh);
 
+  /**
+   * transform 스타일은 제스처가 도는 동안만 단다 (KAN-386, 웹 FeedPullRefresh와
+   * 같은 판단). 늘 달아 두면 `translateY(0)`이어도 조상에 transform이 있다는
+   * 사실만으로 안쪽 sticky(팀 탭·기사 헤더 블록)가 컴포지터 고정을 잃고 메인
+   * 스레드에서 따라가느라, 빠른 스크롤 프레임마다 한 박자 늦어 위에 틈이
+   * 번쩍인다. 손을 뗀 뒤 제자리로 돌아가는 애니메이션 동안은 스타일이 남아야
+   * 하므로(안 그러면 툭 끊긴다) `settling`으로 그 구간을 붙잡았다가 전환 시간이
+   * 지나면 뗀다.
+   */
+  const active = distance > 0;
+  const [settling, setSettling] = useState(false);
+  const wasActive = useRef(false);
+
+  useEffect(() => {
+    if (wasActive.current && !active) setSettling(true);
+    wasActive.current = active;
+  }, [active]);
+
+  /**
+   * 복귀 전환(PULL_TRANSITION 260ms)이 끝날 때까지만 스타일을 유지한다.
+   * transitionend는 탭 전환 등으로 빠질 수 있어 시간으로 정리한다.
+   */
+  useEffect(() => {
+    if (!settling) return;
+    const id = setTimeout(() => setSettling(false), 400);
+    return () => clearTimeout(id);
+  }, [settling]);
+
   return (
     <main
       ref={ref}
@@ -45,12 +73,18 @@ export function ScrollArea({
       {onRefresh ? (
         /* 당길 때 콘텐츠째 밀어 내리는 껍데기. 손가락이 닿아 있는 동안은
            전환을 끄고 그대로 따라가고, 떼는 순간부터 애니메이션으로 돌아간다.
-           transform이 걸려 있어 이 요소가 스피너의 절대배치 기준이 된다 */
+           relative는 스피너의 절대배치 기준 — transform이 벗겨진 평상시에도
+           기준이 바뀌지 않게 늘 둔다 */
         <div
-          style={{
-            transform: `translateY(${distance}px)`,
-            transition: dragging ? "none" : PULL_TRANSITION,
-          }}
+          className="relative"
+          style={
+            active || settling
+              ? {
+                  transform: `translateY(${distance}px)`,
+                  transition: dragging ? "none" : PULL_TRANSITION,
+                }
+              : undefined
+          }
         >
           <PullSpinner distance={distance} refreshing={refreshing} />
           {children}

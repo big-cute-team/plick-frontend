@@ -32,16 +32,28 @@ type ViewState = {
    */
   homeFilter: Filter;
   setHomeFilter: (filter: Filter) => void;
+  /**
+   * 기사 페이지의 팀 필터 (KAN-386). 홈과 같은 판단 — 원본은 URL이고
+   * (`/articles` = 전체, `/articles/teams/[slug]` = 그 팀) ArticlesFeed가
+   * 여기 동기화해 두면, 하단 탭의 기사 href(마지막으로 보던 팀으로 복귀)와
+   * 당겨서 새로고침이 읽는다.
+   */
+  articlesFilter: Filter;
+  setArticlesFilter: (filter: Filter) => void;
   /** 화면별 스크롤 오프셋(px) */
   scrollTops: Partial<Record<ScreenKey, number>>;
   setScrollTop: (key: ScreenKey, top: number) => void;
   /**
-   * 홈 팀 탭별 스크롤 오프셋(px). 탭을 떠날 때 NewsFeed가 적어 두고, 이미 봤던
-   * 팀으로 되돌아오면 그 팀에서 보던 자리로 복원한다. `scrollTops.home`은
-   * 화면 단위(홈을 떠났다 돌아올 때) 복원용이라 따로 둔다.
+   * 기사 페이지 팀 탭별 스크롤 오프셋(px). 탭을 떠날 때 ArticlesFeed가 적어
+   * 두고, 이미 봤던 팀으로 되돌아오면 그 팀에서 보던 자리로 복원한다.
+   * `scrollTops.articles`는 화면 단위(기사 페이지를 떠났다 돌아올 때)
+   * 복원용이라 따로 둔다.
+   *
+   * 홈에는 이 층이 없다 (KAN-386). 홈 리스트가 첫 페이지 고정으로 짧아지면서
+   * 팀 전환 때 스크롤을 건드리지 않게 됐고, 그러면 팀별로 기억할 위치도 없다.
    */
-  homeTabScrollTops: Partial<Record<Filter, number>>;
-  setHomeTabScrollTop: (filter: Filter, top: number) => void;
+  articlesTabScrollTops: Partial<Record<Filter, number>>;
+  setArticlesTabScrollTop: (filter: Filter, top: number) => void;
   /** 릴스에서 보고 있던 릴의 순번 */
   reelsIndex: number;
   setReelsIndex: (index: number) => void;
@@ -60,20 +72,23 @@ export const useViewState = create<ViewState>((set) => ({
   homeFilter: "ALL",
   setHomeFilter: (homeFilter) => set({ homeFilter }),
 
+  articlesFilter: "ALL",
+  setArticlesFilter: (articlesFilter) => set({ articlesFilter }),
+
   scrollTops: {},
   setScrollTop: (key, top) =>
     set((state) => ({ scrollTops: { ...state.scrollTops, [key]: top } })),
 
-  homeTabScrollTops: {},
-  setHomeTabScrollTop: (filter, top) =>
+  articlesTabScrollTops: {},
+  setArticlesTabScrollTop: (filter, top) =>
     set((state) => ({
-      homeTabScrollTops: { ...state.homeTabScrollTops, [filter]: top },
+      articlesTabScrollTops: { ...state.articlesTabScrollTops, [filter]: top },
     })),
 
   reelsIndex: 0,
   setReelsIndex: (reelsIndex) => set({ reelsIndex }),
 
-  topTicks: { home: 0, reels: 0 },
+  topTicks: { home: 0, reels: 0, articles: 0 },
   requestTop: (key) =>
     set((state) => ({
       topTicks: { ...state.topTicks, [key]: state.topTicks[key] + 1 },

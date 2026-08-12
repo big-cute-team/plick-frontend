@@ -34,22 +34,27 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
         {/* 좁은 화면에서 맨 위를 당기면 새로고침 (KAN-379). sticky인 SiteHeader는
             transform 껍데기 밖에 둬야 해서 본문만 감싼다 */}
         <FeedPullRefresh surface="article">
-          <div className="max-w-read px-gutter mx-auto w-full pt-7 pb-22">
-            <header>
-              <h1 className="text-hero text-text tracking-heading font-extrabold">
-                기사
-              </h1>
-              <p className="text-body text-text-3 mt-1.5 font-semibold">
-                팀별 이적 소식을 모아보세요
-              </p>
-            </header>
-            <div className="pt-4.5">
-              <PostFeed
-                initial={initial}
-                initialTeam={team}
-                variant="article"
-              />
-            </div>
+          <div className="max-w-read px-gutter mx-auto w-full pb-22">
+            {/* 제목 블록은 PostFeed가 팀 탭과 한 덩어리로 GNB 아래 sticky
+                고정한다 (KAN-386) — 리스트를 내려도 제목·부제·탭이 남는다.
+                위 여백(pt-7)도 블록 안에 있어야 고정 중에 틈이 비치지 않는다 */}
+            <PostFeed
+              initial={initial}
+              initialTeam={team}
+              variant="article"
+              header={
+                /* 서버가 prop으로 넘기는 JSX는 직렬화되며 정적 자식 표시를
+                   잃어 React가 key를 요구한다 (모바일과 같은 사정) */
+                <header key="articles-header" className="pt-7 pb-4.5">
+                  <h1 className="text-hero text-text tracking-heading font-extrabold">
+                    지금 올라온 소식
+                  </h1>
+                  <p className="text-body text-text-3 mt-1.5 font-semibold">
+                    팀별 이적 소식을 모아보세요
+                  </p>
+                </header>
+              }
+            />
           </div>
         </FeedPullRefresh>
       </main>

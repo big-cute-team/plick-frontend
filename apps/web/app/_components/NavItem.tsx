@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { teamHubPath } from "@plick/domain/format";
+import { articlesTeamPath, teamHubPath } from "@plick/domain/format";
 import { FEED_SURFACE_BY_PATH } from "@/_constants/app";
 import { useFeedRefresh } from "@/_hooks/useFeedRefresh";
 import { useViewState } from "@/_stores/view-state";
-import { articlesTeamPath } from "@/_utils/feed-paths";
 
 /**
  * GNB 링크 하나 — 현재 경로와 일치하면 accent 필(pill)로 표시한다.

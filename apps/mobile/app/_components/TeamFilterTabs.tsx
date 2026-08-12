@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
@@ -22,13 +22,17 @@ import type { Filter } from "@plick/domain/types";
  *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
+ * @param hrefFor - 필터 → 앵커 href. 기본은 홈 surface(팀 허브)이고, 기사
+ *   페이지가 자기 URL 체계(`/articles/teams/[slug]`)를 넘긴다 (KAN-386).
  */
 export function TeamFilterTabs({
   value,
   onChange,
+  hrefFor = teamHubPath,
 }: {
   value: Filter;
   onChange: (f: Filter) => void;
+  hrefFor?: (f: Filter) => string;
 }) {
   const items: { key: Filter; label: string }[] = [
     { key: "ALL", label: "전체" },
@@ -41,17 +45,41 @@ export function TeamFilterTabs({
     onChange(key);
   }
 
+  /**
+   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386). 좁은 화면에서는 끝쪽
+   * 탭이 반쯤 잘린 채 클릭되는데, 그대로 두면 선택돼 놓고 여전히 잘려 있어
+   * 어디를 골랐는지 안 보인다. 클릭이든 URL 직접 진입이든 `value`가 정하므로
+   * 클릭 핸들러가 아니라 value 변화에 반응한다. `nearest`라 이미 다 보이는
+   * 탭에는 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
+   */
+  const listRef = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
+  useEffect(() => {
+    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
+      behavior: mounted.current ? "smooth" : "auto",
+      block: "nearest",
+      inline: "nearest",
+    });
+    mounted.current = true;
+  }, [value]);
+
   return (
-    <div className="no-scrollbar border-border px-edge bg-bg sticky top-0 z-10 flex gap-4 overflow-x-auto border-b">
+    <div
+      ref={listRef}
+      /* -top-px: 소수점 스크롤 위치에서 sticky 레이어와 콘텐츠 레이어의 픽셀
+         반올림이 어긋나 위에 실금이 비친다 (KAN-386). 1px 위로 겹쳐 배경으로
+         덮는다 — 넘친 1px는 스크롤 영역이 잘라낸다 */
+      className="no-scrollbar border-border px-edge bg-bg sticky -top-px z-10 flex gap-4 overflow-x-auto border-b"
+    >
       {items.map(({ key, label }) => {
         const on = value === key;
         return (
           <a
             key={key}
-            href={teamHubPath(key)}
+            href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-title shrink-0 border-b-2 pt-1 pb-2 font-bold ${
+            className={`text-title shrink-0 scroll-mx-6 border-b-2 pt-1 pb-2 font-bold ${
               on ? "border-accent text-text" : "text-text-4 border-transparent"
             }`}
           >

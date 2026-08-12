@@ -42,6 +42,21 @@ export const ReelsIcon = (p: IconProps) => (
   </svg>
 );
 
+/**
+ * 기사 탭 — 신문 형태 (KAN-386). 피그마 시안 없이 하단 탭 세트(Home·Reels·User)의
+ * 기하(24 그리드·1.8 스트로크)에 맞춰 직접 그렸다. 본지(왼쪽 면 + 헤드라인
+ * 두 줄)와 접힌 옆면으로 신문을 나타낸다.
+ */
+export const NewsIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M16 20H6a2.5 2.5 0 0 1-2.5-2.5V5A1.5 1.5 0 0 1 5 3.5h9.5A1.5 1.5 0 0 1 16 5z" />
+    <path d="M16 8h3a1.5 1.5 0 0 1 1.5 1.5v8A2.5 2.5 0 0 1 18 20h-2" />
+    <path d="M7 8h5.5" />
+    <path d="M7 11.75h5.5" />
+    <path d="M7 15.5h3.5" />
+  </svg>
+);
+
 export const BellIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
