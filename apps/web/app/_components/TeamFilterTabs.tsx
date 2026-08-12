@@ -76,7 +76,7 @@ export function TeamFilterTabs({
             href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-tab focus-visible:outline-accent shrink-0 border-b-2 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
+            className={`text-tab focus-visible:outline-accent shrink-0 scroll-mx-6 border-b-2 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
               on
                 ? "border-accent text-text font-extrabold"
                 : "text-text-4 hover:text-text-2 border-transparent font-semibold"
