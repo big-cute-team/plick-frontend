@@ -220,8 +220,10 @@ export function PostFeed({
     <div className="min-w-0">
       {header ? (
         /* 제목 블록과 탭을 한 덩어리로 GNB(h-16) 아래 고정한다 (KAN-386). 탭
-           자체의 sticky는 이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 무해하다 */
-        <div className="bg-bg sticky top-16 z-10">
+           자체의 sticky는 이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 무해하다.
+           top-[63px](GNB - 1px)는 소수점 스크롤의 픽셀 반올림 실금을 GNB 밑에
+           1px 겹쳐 덮는 몫이다 */
+        <div className="bg-bg sticky top-[63px] z-10">
           {header}
           {tabs}
         </div>

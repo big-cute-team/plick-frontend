@@ -65,7 +65,10 @@ export function TeamFilterTabs({
   return (
     <div
       ref={listRef}
-      className="border-border bg-bg sticky top-16 z-10 flex gap-5.5 overflow-x-auto border-b"
+      /* top-[63px] = GNB(h-16) - 1px: 소수점 스크롤 위치에서 sticky 레이어와
+         콘텐츠 레이어의 픽셀 반올림이 어긋나 GNB와의 사이에 실금이 비친다
+         (KAN-386). 1px 겹친 부분은 GNB(z-40)가 위에서 덮는다 */
+      className="border-border bg-bg sticky top-[63px] z-10 flex gap-5.5 overflow-x-auto border-b"
     >
       {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
       {items.map(({ key, label }) => {

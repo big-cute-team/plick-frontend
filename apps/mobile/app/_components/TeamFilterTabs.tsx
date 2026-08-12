@@ -66,7 +66,10 @@ export function TeamFilterTabs({
   return (
     <div
       ref={listRef}
-      className="no-scrollbar border-border px-edge bg-bg sticky top-0 z-10 flex gap-4 overflow-x-auto border-b"
+      /* -top-px: 소수점 스크롤 위치에서 sticky 레이어와 콘텐츠 레이어의 픽셀
+         반올림이 어긋나 위에 실금이 비친다 (KAN-386). 1px 위로 겹쳐 배경으로
+         덮는다 — 넘친 1px는 스크롤 영역이 잘라낸다 */
+      className="no-scrollbar border-border px-edge bg-bg sticky -top-px z-10 flex gap-4 overflow-x-auto border-b"
     >
       {items.map(({ key, label }) => {
         const on = value === key;

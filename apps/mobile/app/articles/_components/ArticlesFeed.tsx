@@ -155,8 +155,9 @@ export function ArticlesFeed({
   return (
     <>
       {/* 제목 블록과 탭을 한 덩어리로 고정한다 (KAN-386). 탭 자체의 sticky는
-          이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 그대로 둬도 무해하다 */}
-      <div className="bg-bg sticky top-0 z-10">
+          이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 그대로 둬도 무해하다.
+          -top-px는 소수점 스크롤 위치의 픽셀 반올림 실금을 덮는 몫이다 */}
+      <div className="bg-bg sticky -top-px z-10">
         {header}
         <TeamFilterTabs
           value={filter}
