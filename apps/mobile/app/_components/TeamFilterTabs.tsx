@@ -22,13 +22,17 @@ import type { Filter } from "@plick/domain/types";
  *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
+ * @param hrefFor - 필터 → 앵커 href. 기본은 홈 surface(팀 허브)이고, 기사
+ *   페이지가 자기 URL 체계(`/articles/teams/[slug]`)를 넘긴다 (KAN-386).
  */
 export function TeamFilterTabs({
   value,
   onChange,
+  hrefFor = teamHubPath,
 }: {
   value: Filter;
   onChange: (f: Filter) => void;
+  hrefFor?: (f: Filter) => string;
 }) {
   const items: { key: Filter; label: string }[] = [
     { key: "ALL", label: "전체" },
@@ -48,7 +52,7 @@ export function TeamFilterTabs({
         return (
           <a
             key={key}
-            href={teamHubPath(key)}
+            href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
             className={`text-title shrink-0 border-b-2 pt-1 pb-2 font-bold ${

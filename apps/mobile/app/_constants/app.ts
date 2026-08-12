@@ -1,7 +1,7 @@
 /**
  * @file 모바일 앱 전용 상수. 도메인 상수(TEAMS 등)는 `@plick/domain/constants`.
  */
-import { HomeIcon, ReelsIcon, UserIcon } from "@plick/ui/icons";
+import { HomeIcon, NewsIcon, ReelsIcon, UserIcon } from "@plick/ui/icons";
 import type { Tab } from "@/_types/app";
 
 /**
@@ -56,6 +56,16 @@ export const TABS: Tab[] = [
     // 팀 허브(/teams/[slug])는 홈 화면을 팀 필터만 바꿔 그린 것이라 홈 탭이다 (KAN-350)
     match: (p) => p === "/" || p.startsWith("/teams"),
     screen: "home",
+  },
+  {
+    href: "/articles",
+    label: "기사",
+    Icon: NewsIcon,
+    // 기사 세부(/articles/123)도 기사 탭으로 빛낸다 — 웹 GNB와 같은 판정.
+    // 다만 세부에서 탭을 누르는 건 재탭이 아니라 목록 복귀라 surface를 좁힌다
+    match: (p) => p.startsWith("/articles"),
+    surface: (p) => p === "/articles" || p.startsWith("/articles/teams"),
+    screen: "articles",
   },
   {
     href: "/reels",

@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { ArticlesScreen } from "./_components/ArticlesScreen";
 
-/** 기사 목록은 web 전용 라우트라(모바일 대응 페이지 없음) alternate 없이 canonical만 단다 (KAN-346). */
+/**
+ * 이 URL이 canonical이고 대응 모바일 기사 목록을 alternate로 선언한다
+ * (KAN-346·KAN-386) — 모바일에 기사 페이지가 생기면서 홈과 같은 상호 참조
+ * 규약을 따른다.
+ */
 export const metadata: Metadata = {
   title: "기사",
   description: PAGE_DESCRIPTIONS.articles,
-  alternates: { canonical: "/articles" },
+  alternates: {
+    canonical: "/articles",
+    media: { [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/articles` },
+  },
 };
 
 /**
