@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { NICKNAME_MAX_LENGTH } from "@plick/domain/constants";
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
 import { SkipLink } from "@/_onboarding/_components/SkipLink";
-import {
-  NICKNAME_MAX_LENGTH,
-  ONBOARDING_TOTAL_STEPS,
-} from "@/_constants/onboarding";
+import { ONBOARDING_TOTAL_STEPS } from "@/_constants/onboarding";
 
 /**
  * W8 온보딩 닉네임 설정 카드 — 스텝 표시(1/2) + 제목 + 닉네임 입력(글자수 카운터·
@@ -69,7 +67,7 @@ export function NicknameForm({ initial = "" }: { initial?: string }) {
                 value={nickname}
                 onChange={(e) => handleChange(e.target.value)}
                 maxLength={NICKNAME_MAX_LENGTH}
-                placeholder="닉네임 입력"
+                placeholder={`한글·영문·숫자 1~${NICKNAME_MAX_LENGTH}자`}
                 aria-label="닉네임"
                 className="text-body-lg text-text placeholder:text-text-4 min-w-0 flex-1 bg-transparent font-bold outline-none"
               />

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NICKNAME_MAX_LENGTH } from "@plick/domain/constants";
 import { formatChangeableAt } from "@plick/domain/format";
 import { useNicknameCheck } from "@/_hooks/useNicknameCheck";
-import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 
 /**
@@ -58,7 +58,7 @@ export function NicknameEditField({
       <div className="flex items-baseline gap-1.5">
         <span className="text-tab text-text font-extrabold">닉네임 변경</span>
         <span className="text-caption text-text-4">
-          7일마다 한 번 바꿀 수 있어요
+          {`한글·영문·숫자 1~${NICKNAME_MAX_LENGTH}자 · 7일마다 한 번`}
         </span>
       </div>
 
@@ -96,7 +96,12 @@ export function NicknameEditField({
           {formatChangeableAt(changeableAt)}까지는 닉네임을 바꿀 수 없어요
         </p>
       ) : (
-        <NicknameCheckNotice result={result} />
+        <>
+          <p className="text-caption text-text-4 px-1">
+            공백 없이 써야 하고, ㅋㅋ처럼 자음·모음만으로는 지을 수 없어요
+          </p>
+          <NicknameCheckNotice result={result} />
+        </>
       )}
     </div>
   );

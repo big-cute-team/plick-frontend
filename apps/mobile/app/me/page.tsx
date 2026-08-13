@@ -12,6 +12,7 @@ import {
 import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@plick/domain/constants";
 import { getMyProfile } from "@/_services/profile";
+import { DeleteAccountButton } from "./_components/DeleteAccountButton";
 import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
@@ -72,7 +73,12 @@ export default async function MyPage() {
             />
           </section>
 
-          {profile && <LogoutButton />}
+          {profile && (
+            <>
+              <LogoutButton />
+              <DeleteAccountButton />
+            </>
+          )}
 
           <p className="text-caption text-text-4 text-center">
             {APP_VERSION_LABEL}

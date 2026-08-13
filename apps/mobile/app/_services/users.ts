@@ -45,9 +45,11 @@ export async function submitOnboarding(
       }
       if (
         e.code === "USER_NICKNAME_DUPLICATED" ||
-        e.code === "USER_NICKNAME_FORBIDDEN"
+        e.code === "USER_NICKNAME_FORBIDDEN" ||
+        e.code === "COMMON_INVALID_PARAM"
       ) {
-        // BE 문구가 이미 사용자용 한국어라 그대로 보여주고, 되돌아갈 길만 덧붙인다
+        // BE 문구가 이미 사용자용 한국어라 그대로 보여주고, 되돌아갈 길만 덧붙인다.
+        // COMMON_INVALID_PARAM은 허용 문자 위반(KAN-391) — 클라 선제 검사를 우회해도 잡힌다.
         return { error: `${e.message} 이전 단계에서 닉네임을 바꿔주세요.` };
       }
     }
@@ -96,9 +98,11 @@ export async function updateMyProfile(
       if (
         e.code === "USER_NICKNAME_COOLDOWN" ||
         e.code === "USER_NICKNAME_DUPLICATED" ||
-        e.code === "USER_NICKNAME_FORBIDDEN"
+        e.code === "USER_NICKNAME_FORBIDDEN" ||
+        e.code === "COMMON_INVALID_PARAM"
       ) {
-        // BE 문구가 이미 사용자용 한국어라 그대로 보여준다(온보딩과 같은 방식)
+        // BE 문구가 이미 사용자용 한국어라 그대로 보여준다(온보딩과 같은 방식).
+        // COMMON_INVALID_PARAM은 허용 문자 위반(KAN-391) — 클라 선제 검사를 우회해도 잡힌다.
         return { error: e.message };
       }
     }
@@ -129,7 +133,51 @@ export async function checkNickname(
     );
     return { available };
   } catch (e) {
+    if (e instanceof ApiError && e.code === "COMMON_INVALID_PARAM") {
+      // 허용 문자 위반 400 (KAN-391) — 훅이 선제 검사하지만, 우회하면 BE 문구를 그대로 보여준다
+      return { error: e.message };
+    }
     console.error("[nickname-check] 확인 실패:", e);
     return { error: "확인에 실패했어요. 잠시 후 다시 시도해 주세요." };
   }
+}
+
+/**
+ * 회원탈퇴 서버 액션 (KAN-391) — `DELETE /api/v1/users/me`를 부르고 성공하면
+ * 토큰 쿠키를 지운 뒤 홈으로 보낸다.
+ *
+ * 성공 시 토큰 폐기는 필수다. 서버는 무상태 JWT라 이미 발급된 access 토큰을 강제로
+ * 무효화할 수 없어서, 쿠키를 남기면 만료(최대 1시간)까지 API 호출이 계속 성공한다.
+ * 리프레시 재발급은 서버가 401로 차단하므로 그 이상 연장되지는 않는다.
+ *
+ * 로그아웃(`auth.ts`)과 달리 BE 호출이 실패하면 쿠키를 지우지 않는다 — 탈퇴가 안 된
+ * 계정에서 세션만 끊으면 사용자는 탈퇴가 된 줄 알게 된다. 실패를 값으로 돌려주고
+ * 팝업을 열어 둔 채 다시 시도하게 한다.
+ *
+ * @returns 실패 시 팝업이 보여줄 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ */
+export async function deleteAccount(): Promise<{ error: string } | undefined> {
+  const jar = await cookies();
+  const accessToken = jar.get(AUTH_COOKIES.access)?.value;
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  try {
+    await apiFetch<null>("/api/v1/users/me", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      redirect("/login"); // 토큰 만료/무효 — 세션이 끊긴 것이므로 로그인부터
+    }
+    console.error("[delete-account] 탈퇴 실패:", e);
+    return { error: "탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요." };
+  }
+
+  jar.delete(AUTH_COOKIES.access);
+  jar.delete(AUTH_COOKIES.refresh);
+
+  redirect("/");
 }
