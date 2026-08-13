@@ -18,6 +18,7 @@ import {
   SWIPE_FLICK_VELOCITY,
   SWIPE_SETTLE_TIMEOUT_MS,
   SWIPE_SETTLE_TRANSITION,
+  SWIPE_VELOCITY_WINDOW_MS,
 } from "@/_constants/team-swipe";
 import { damp } from "@/_utils/damp";
 
@@ -144,9 +145,12 @@ export function useTeamSwipePager({
     let candidate: Filter | null = null;
     let candidateTop = 0;
     let offset = 0;
-    let lastX = 0;
-    let lastT = 0;
-    let velocity = 0;
+    /**
+     * 최근 {@link SWIPE_VELOCITY_WINDOW_MS} 구간의 이동 샘플. 릴리즈 때 창
+     * 전체 기울기로 플릭 속도를 잰다 — 마지막 두 이벤트로만 재면 릴리즈 직전
+     * 감속과 웹뷰의 이벤트 배칭에 속아 빠른 플릭도 느리게 측정된다.
+     */
+    let samples: { x: number; t: number }[] = [];
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
 
     const neighborOf = (dir: 1 | -1): Filter | null =>
@@ -206,9 +210,7 @@ export function useTeamSwipePager({
       swiping = false;
       startX = touch.clientX;
       startY = touch.clientY;
-      lastX = touch.clientX;
-      lastT = e.timeStamp;
-      velocity = 0;
+      samples = [{ x: touch.clientX, t: e.timeStamp }];
     };
 
     const onMove = (e: TouchEvent) => {
@@ -250,10 +252,13 @@ export function useTeamSwipePager({
       // [Intervention] 경고를 쌓는다 — 취소할 수 있는 것만 취소한다
       if (e.cancelable) e.preventDefault();
 
-      const dt = e.timeStamp - lastT;
-      if (dt > 0) velocity = (touch.clientX - lastX) / dt;
-      lastX = touch.clientX;
-      lastT = e.timeStamp;
+      samples.push({ x: touch.clientX, t: e.timeStamp });
+      while (
+        samples.length > 2 &&
+        e.timeStamp - samples[0]!.t > SWIPE_VELOCITY_WINDOW_MS
+      ) {
+        samples.shift();
+      }
 
       const raw = touch.clientX - startX;
       // 왼쪽으로 끌면(raw<0) 순서상 다음 팀이 오른쪽에서 들어온다
@@ -299,6 +304,14 @@ export function useTeamSwipePager({
       }
       swiping = false;
       armed = false;
+
+      /* 창 안 첫 샘플에서 마지막 샘플까지의 평균 기울기가 플릭 속도다 */
+      const first = samples[0];
+      const last = samples[samples.length - 1];
+      const velocity =
+        first && last && last.t > first.t
+          ? (last.x - first.x) / (last.t - first.t)
+          : 0;
 
       const commit =
         !cancelled &&
