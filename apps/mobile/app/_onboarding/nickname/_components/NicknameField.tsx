@@ -54,7 +54,7 @@ export function NicknameField({
           disabled={!trimmed || pending}
           className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-14 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
         >
-          {pending ? "확인 중…" : "중복확인"}
+          {pending ? "검사 중…" : "닉네임 검사"}
         </button>
       </div>
 

@@ -82,7 +82,7 @@ export function NicknameForm({ initial = "" }: { initial?: string }) {
               disabled={!trimmed || pending}
               className="bg-elevate-2 border-border text-text-3 rounded-card text-body hover:bg-elevate focus-visible:outline-accent h-13.5 shrink-0 border px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-70 disabled:opacity-40"
             >
-              {pending ? "확인 중…" : "중복확인"}
+              {pending ? "검사 중…" : "닉네임 검사"}
             </button>
           </div>
 
