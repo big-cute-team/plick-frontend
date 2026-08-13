@@ -12,6 +12,7 @@ import { SiteHeader } from "@/_components/SiteHeader";
 import { TEAMS } from "@plick/domain/constants";
 import { getMyProfile } from "@/_services/profile";
 import { APP_VERSION_LABEL } from "@/_constants/me";
+import { DeleteAccountButton } from "./_components/DeleteAccountButton";
 import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
 import { LogoutButton } from "./_components/LogoutButton";
@@ -78,7 +79,12 @@ export default async function MyPage() {
               />
             </CardSection>
 
-            {profile && <LogoutButton />}
+            {profile && (
+              <>
+                <LogoutButton />
+                <DeleteAccountButton />
+              </>
+            )}
 
             <p className="text-caption text-text-4 text-center">
               {APP_VERSION_LABEL}

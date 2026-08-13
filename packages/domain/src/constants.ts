@@ -152,3 +152,21 @@ export const STAGE_META: Record<RumorStage, { label: string }> = {
   CONFIRMED: { label: "CONFIRMED" },
   OFFICIAL: { label: "OFFICIAL" },
 };
+
+/**
+ * 닉네임 최대 길이 (KAN-391) — 입력 카운터·maxLength·형식 검사 공용.
+ * BE 검증값(1~12자)을 복사한 계약 상수다. 두 앱 `_constants/onboarding.ts`에
+ * 10자로 복제돼 있던 것을 BE가 12자로 확정하면서 승격했다.
+ */
+export const NICKNAME_MAX_LENGTH = 12;
+
+/**
+ * 닉네임 허용 형식 (KAN-391) — 완성형 한글·영문 대소문자·숫자만, 1~{max}자.
+ * 공백·특수문자·이모지·자모(ㅅㅂ 같은 초성)는 BE가 400 `COMMON_INVALID_PARAM`으로
+ * 거절하므로 클라가 같은 규칙으로 선제 검사한다(UX용 — 최종 판정은 항상 서버.
+ * 욕설·사칭어 목록은 서버만 안다). `NICKNAME_MAX_LENGTH`에서 파생시켜
+ * 두 값이 갈라지지 않게 한다.
+ */
+export const NICKNAME_PATTERN = new RegExp(
+  `^[가-힣a-zA-Z0-9]{1,${NICKNAME_MAX_LENGTH}}$`,
+);
