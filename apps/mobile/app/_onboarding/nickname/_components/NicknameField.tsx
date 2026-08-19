@@ -1,8 +1,8 @@
 "use client";
 
+import { NICKNAME_MAX_LENGTH } from "@plick/domain/constants";
 import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 import type { NicknameCheckResult } from "@/_hooks/useNicknameCheck";
-import { NICKNAME_MAX_LENGTH } from "@/_constants/onboarding";
 
 /**
  * 닉네임 입력 필드 — accent 보더 인풋 + 글자수 카운터 + 중복확인 버튼 (KAN-269).
@@ -40,7 +40,8 @@ export function NicknameField({
             onChange={(e) => onChange(e.target.value)}
             maxLength={NICKNAME_MAX_LENGTH}
             aria-label="닉네임"
-            className="text-body-lg text-text min-w-0 flex-1 bg-transparent font-bold outline-none"
+            placeholder={`한글·영문·숫자 1~${NICKNAME_MAX_LENGTH}자`}
+            className="text-body-lg text-text placeholder:text-text-4 min-w-0 flex-1 bg-transparent font-bold outline-none placeholder:font-semibold"
           />
           <span className="text-label text-text-4 font-semibold">
             {value.length}/{NICKNAME_MAX_LENGTH}
@@ -53,7 +54,7 @@ export function NicknameField({
           disabled={!trimmed || pending}
           className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-14 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
         >
-          {pending ? "확인 중…" : "중복확인"}
+          {pending ? "검사 중…" : "닉네임 검사"}
         </button>
       </div>
 

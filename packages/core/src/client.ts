@@ -33,6 +33,8 @@ export class ApiError extends Error {
     /** BE 에러 코드 (예: `COMMON_INVALID_PARAM`). 응답 파싱 실패 시 HTTP status 문자열. */
     public code: string,
     message: string,
+    /** 에러 봉투의 `data` — 대부분 null이지만 `AUTH_REJOIN_RESTRICTED`의 `rejoinableAt`처럼 부가 정보를 실어 온다 (KAN-393). */
+    public data: unknown = null,
   ) {
     super(message);
     this.name = "ApiError";
@@ -117,6 +119,7 @@ export async function apiFetch<T>(
       res.status,
       body?.code ?? String(res.status),
       body?.message ?? `${res.status} ${path}`,
+      body?.data ?? null,
     );
   }
 
