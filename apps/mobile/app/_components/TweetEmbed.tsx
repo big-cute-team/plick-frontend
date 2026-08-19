@@ -34,7 +34,10 @@ function withoutMedia(tweet: Tweet): Tweet {
  * 데이터는 자체 프록시(`/api/tweet/[id]`)에서 받는다 — react-tweet의 기본
  * 엔드포인트(react-tweet.vercel.app)는 공용 rate limit을 탄다. 로딩 중이거나
  * 실패하면 아무것도 그리지 않아 뒤의 MediaThumb 그라데이션이 placeholder
- * 역할을 이어받는다.
+ * 역할을 이어받는다. reel 레이아웃만 예외다 — 뒤가 단색 릴 배경뿐이라 실패가
+ * 확정되면(원문 삭제, 트윗 링크 아님, API 장애) 배경 가운데에 안내 문구를
+ * 세운다. useTweet이 재시도 없이(shouldRetryOnError: false) error를 확정해
+ * 줘서 로딩과 구분된다.
  *
  * `layout="flow"`면 박스를 채우는 대신 문서 흐름에 자연 높이로 선다 — 기사
  * 세부 본문처럼 고정 프레임 없이 임베드만 꽉 차게 보여줄 자리용. 다만 카드가
@@ -64,7 +67,7 @@ export function TweetEmbed({
     HTMLDivElement,
     HTMLDivElement
   >();
-  const { data } = useTweet(
+  const { data, error } = useTweet(
     id ?? undefined,
     id ? `/api/tweet/${id}` : undefined,
   );
@@ -87,12 +90,20 @@ export function TweetEmbed({
     return () => observer.disconnect();
   }, [layout, flowHideMedia, data]);
 
-  if (!id) return null;
-
   if (layout === "reel") {
-    if (!data) return null;
-    return <EmbeddedTweet tweet={data} />;
+    if (data) return <EmbeddedTweet tweet={data} />;
+    /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
+    if (!id || error || data === null) {
+      return (
+        <p className="text-body text-text-4 text-center">
+          원문이 삭제됐거나 불러오지 못했어요
+        </p>
+      );
+    }
+    return null;
   }
+
+  if (!id) return null;
 
   if (layout === "flow") {
     if (!data) return null;

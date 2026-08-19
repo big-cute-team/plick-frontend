@@ -79,7 +79,8 @@ export function ReelItem({
         className="bg-reel-bg rounded-hero relative aspect-[9/16] h-full w-auto max-w-full min-w-0 overflow-hidden"
       >
         {/* 사진이 있으면 카드를 가득 덮는다. 없으면 원문 트윗 임베드가 자리를
-            대신하고, 트윗도 로드 전이거나 실패하면 릴 배경색이 그대로 남는다 */}
+            대신하고, 로드 전에는 릴 배경색이 그대로 남고 실패가 확정되면
+            배경 가운데 안내 문구가 선다 */}
         {reel.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- 릴 배경 이미지 호스트가 유동이라 next/image 대신 일반 img (MediaThumb과 같은 이유)
           <img
