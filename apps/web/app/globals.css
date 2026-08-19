@@ -61,8 +61,12 @@ body {
 
 /* 릴 안의 임베드 카드는 릴 배경(--plk-reel-bg)에 맞춰 배경을 통일한다 —
  * 카드가 바탕과 한 색으로 경계 없이 이어진다 (KAN-296).
- * 부모(.reel-embed) + 이중 클래스로 특이도를 올려 위 기본값을 확실히 이긴다. */
+ * 부모(.reel-embed) + 이중 클래스로 특이도를 올려 위 기본값을 확실히 이긴다.
+ * max-width도 푼다 — 데스크톱 릴 카드는 창이 크면 폭이 550px를 넘는데,
+ * react-tweet 기본 max-width 550px에 걸리면 임베드가 왼쪽에 붙고 오른쪽이
+ * 빈다. 릴 임베드는 카드 전폭이 의도다(.hot-embed와 동일, KAN-324). */
 .reel-embed .react-tweet-theme.react-tweet-theme {
+  max-width: none;
   --tweet-bg-color: var(--plk-reel-bg);
   --tweet-bg-color-hover: var(--plk-reel-bg);
 }

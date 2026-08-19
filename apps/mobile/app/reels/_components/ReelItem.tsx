@@ -119,7 +119,8 @@ export function ReelItem({
       className="bg-reel-bg relative h-full w-full shrink-0 basis-full overflow-hidden"
     >
       {/* 사진이 있으면 릴을 가득 덮는다. 없으면 원문 트윗 임베드가 자리를 대신하고,
-          트윗도 로드 전이거나 실패하면 통일 배경색이 그대로 남는다 (KAN-296).
+          로드 전에는 통일 배경색이 그대로 남고 실패가 확정되면 배경 가운데
+          안내 문구가 선다 (KAN-296).
           이 미디어 층은 맨 뒤 고정 레이어다 — 세부 시트가 열려도 아무 반응 없이
           제자리에 그대로 있고, 시트와 도킹된 제목이 그 위를 덮는다. */}
       {reel.imageUrl ? (
