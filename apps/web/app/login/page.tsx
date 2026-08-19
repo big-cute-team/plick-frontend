@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
+import { loginErrorMessage } from "@plick/domain/format";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/_components/AuthCard";
 import { getMyProfile } from "@/_services/profile";
@@ -16,18 +17,20 @@ export const metadata: Metadata = {
  * KAN-246, 피그마 206-2. 이미 로그인된 세션이면 홈으로 보낸다(KAN-320) — 쿠키 존재가
  * 아니라 `GET /users/me`로 세션이 실제로 유효한지 확인한다. 만료·무효 토큰이면 null이라
  * 로그인 화면이 그대로 열린다.
+ * `?error=`는 OAuth 콜백 실패(`oauth`)와 탈퇴 후 7일 재가입 제한(`rejoin`, KAN-393)을
+ * 구분한다 — rejoin은 `?until=`(재가입 가능 시각)까지 문구에 싣는다.
  */
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; until?: string }>;
 }) {
   const profile = await getMyProfile();
   if (profile) {
     redirect("/");
   }
 
-  const { error } = await searchParams;
+  const { error, until } = await searchParams;
 
   return (
     <AuthCard
@@ -37,11 +40,7 @@ export default async function LoginPage({
       footerPrompt="처음이신가요?"
       footerLinkLabel="회원가입"
       footerHref="/signup"
-      errorMessage={
-        error === "oauth"
-          ? "소셜 로그인에 실패했어요. 다시 시도해 주세요."
-          : undefined
-      }
+      errorMessage={loginErrorMessage(error, until)}
     />
   );
 }

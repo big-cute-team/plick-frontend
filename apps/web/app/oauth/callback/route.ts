@@ -15,6 +15,16 @@ import { parseOAuthState } from "@/_services/oauth";
 /** 검증 실패·BE 실패 공통 착지 — 로그인 화면이 `?error=oauth`를 읽어 안내를 띄운다 */
 const FAILURE_PATH = "/login?error=oauth";
 
+/**
+ * 탈퇴 후 7일 재가입 제한 착지 (KAN-393) — 재시도 안내가 아니라 재가입 가능
+ * 시각을 보여줘야 해서 공통 실패와 분리한다. `until`은 BE `rejoinableAt`이다.
+ */
+function rejoinRestrictedPath(until: string | null): string {
+  return until
+    ? `/login?error=rejoin&until=${encodeURIComponent(until)}`
+    : "/login?error=rejoin";
+}
+
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const code = params.get("code");
@@ -44,5 +54,8 @@ export async function GET(request: NextRequest) {
   }
 
   const result = await login(stored.provider, code);
+  if (result && "rejoinRestrictedUntil" in result) {
+    redirect(rejoinRestrictedPath(result.rejoinRestrictedUntil ?? null));
+  }
   if (result?.error) redirect(FAILURE_PATH);
 }

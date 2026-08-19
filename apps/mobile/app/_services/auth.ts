@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { apiFetch } from "@plick/core/client";
+import { ApiError, apiFetch } from "@plick/core/client";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -60,14 +60,21 @@ export async function startSocialLogin(
  * `redirectUri`는 인가 요청 때 쓴 콜백 주소 그대로다(KAN-341) — BE가 허용목록
  * 검증 후 프로바이더 토큰 교환에 재사용하므로 다르면 400으로 끊긴다.
  *
+ * 탈퇴 후 7일이 안 지난 계정이면 BE가 403 `AUTH_REJOIN_RESTRICTED`를 준다(KAN-393).
+ * 재시도해도 소용없는 실패라 공통 문구에 합치지 않고 `rejoinRestrictedUntil`로
+ * 구분해 돌려준다 — 콜백이 재가입 가능 시각 안내로 보낸다.
+ *
  * @param provider state 쿠키에서 복원한 프로바이더
  * @param code 프로바이더가 콜백으로 돌려준 인가 코드
- * @returns 실패 시 호출부가 처리할 에러 메시지. 성공 시 redirect라 반환하지 않는다.
+ * @returns 실패 시 호출부가 처리할 에러 메시지. 재가입 제한이면 `rejoinRestrictedUntil`
+ *   (BE `rejoinableAt`, 응답에 없으면 null)을 함께 준다. 성공 시 redirect라 반환하지 않는다.
  */
 export async function login(
   provider: SocialProvider,
   code: string,
-): Promise<{ error: string } | undefined> {
+): Promise<
+  { error: string; rejoinRestrictedUntil?: string | null } | undefined
+> {
   let data: LoginResponse;
   try {
     data = await apiFetch<LoginResponse>("/api/v1/auth/login", {
@@ -75,6 +82,11 @@ export async function login(
       body: JSON.stringify({ provider, code, redirectUri: getRedirectUri() }),
     });
   } catch (e) {
+    if (e instanceof ApiError && e.code === "AUTH_REJOIN_RESTRICTED") {
+      const rejoinableAt = (e.data as { rejoinableAt?: string } | null)
+        ?.rejoinableAt;
+      return { error: e.message, rejoinRestrictedUntil: rejoinableAt ?? null };
+    }
     // 화면엔 공통 문구만 나가므로 실제 실패 사유는 서버 로그로만 남는다
     console.error("[oauth] BE login 실패:", e);
     return { error: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." };

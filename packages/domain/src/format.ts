@@ -134,6 +134,33 @@ export function formatChangeableAt(iso: string): string {
 }
 
 /**
+ * 로그인 화면의 `?error=` 안내 문구 (KAN-393). `oauth`는 소셜 로그인 공통 실패,
+ * `rejoin`은 탈퇴 후 7일 재가입 제한(403 `AUTH_REJOIN_RESTRICTED`)이다.
+ * rejoin은 `until`(BE `rejoinableAt`, KST ISO)을 받아 언제부터 다시 가입할 수
+ * 있는지까지 보여주고, 값이 없거나 깨졌으면 시각 없는 7일 안내로 떨어뜨린다.
+ * 일반 실패 문구와 분리하는 이유: 재가입 제한은 재시도해도 소용없는 실패라
+ * "다시 시도해 주세요"로 안내하면 사용자가 헤맨다. web·mobile 로그인 페이지가
+ * 같은 문구를 쓰도록 여기 둔다.
+ *
+ * @param error 로그인 페이지 `?error=` 값
+ * @param until 로그인 페이지 `?until=` 값 (rejoin일 때 재가입 가능 시각)
+ */
+export function loginErrorMessage(
+  error: string | undefined,
+  until: string | undefined,
+): string | undefined {
+  if (error === "rejoin") {
+    return until && !Number.isNaN(Date.parse(until))
+      ? `탈퇴한 계정이에요. ${formatChangeableAt(until)}부터 다시 가입할 수 있어요.`
+      : "탈퇴한 계정이에요. 탈퇴 후 7일이 지나야 다시 가입할 수 있어요.";
+  }
+  if (error === "oauth") {
+    return "소셜 로그인에 실패했어요. 다시 시도해 주세요.";
+  }
+  return undefined;
+}
+
+/**
  * 메타 description용 말줄임 — max 글자를 넘으면 잘라 "…"를 붙인다 (KAN-346).
  * 검색 스니펫 권장 길이(160자)에 맞춰 기사 요약을 자를 때 두 앱의
  * `generateMetadata`가 쓴다.
