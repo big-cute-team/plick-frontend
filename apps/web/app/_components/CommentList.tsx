@@ -42,20 +42,9 @@ export function CommentList({
 
   const comments = data?.pages.flatMap((page) => page.items) ?? [];
 
+  /* 로딩 중엔 아무것도 그리지 않는다 — 스켈레톤은 릴 전환마다 깜빡여 뺐다 (KAN-329 후속) */
   if (isPending) {
-    return (
-      <div className="flex animate-pulse flex-col gap-3.75 py-1">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex gap-2.5">
-            <div className="bg-elevate size-8 shrink-0 rounded-full" />
-            <div className="flex flex-1 flex-col gap-1.5 pt-0.5">
-              <div className="bg-elevate rounded-pill h-3 w-24" />
-              <div className="bg-elevate rounded-pill h-4 w-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+    return null;
   }
 
   if (isError && comments.length === 0) {
