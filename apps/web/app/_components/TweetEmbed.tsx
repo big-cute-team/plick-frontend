@@ -18,21 +18,31 @@ import { tweetIdFromUrl } from "@/_utils/tweet";
  * 자연 높이·전폭으로 세운다 — 원문을 사진째 보여주는 게 목적이다.
  *
  * 데이터는 자체 프록시(`/api/tweet/[id]`)에서 받는다 — react-tweet의 기본
- * 엔드포인트(react-tweet.vercel.app)는 공용 rate limit을 탄다. 로딩 중이거나
- * 실패하면 아무것도 그리지 않아 릴 배경색이 그대로 남는다.
+ * 엔드포인트(react-tweet.vercel.app)는 공용 rate limit을 탄다. 로딩 중에는
+ * 아무것도 그리지 않아 릴 배경색이 그대로 남고, 실패가 확정되면(원문 삭제,
+ * 트윗 링크 아님, API 장애) 배경 가운데에 안내 문구만 세운다 — useTweet이
+ * 재시도 없이(shouldRetryOnError: false) error를 확정해 줘서 로딩과 구분된다.
  *
  * 임베드 내부 링크·액션(답글·마음·프로필)은 전역 CSS에서 전부 꺼뒀다
  * (globals.css) — 임베드는 읽기 전용 미디어고, 클릭은 항상 우리 화면이 받는다.
  *
- * @param url 원문 트윗 링크(`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
+ * @param url 원문 트윗 링크(`sourceUrl`). 트윗 링크가 아니면 안내 문구를 세운다.
  */
 export function TweetEmbed({ url }: { url: string }) {
   const id = tweetIdFromUrl(url);
-  const { data } = useTweet(
+  const { data, error } = useTweet(
     id ?? undefined,
     id ? `/api/tweet/${id}` : undefined,
   );
 
-  if (!id || !data) return null;
-  return <EmbeddedTweet tweet={data} />;
+  if (data) return <EmbeddedTweet tweet={data} />;
+  /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
+  if (!id || error || data === null) {
+    return (
+      <p className="text-body text-text-4 text-center">
+        원문이 삭제됐거나 불러오지 못했어요
+      </p>
+    );
+  }
+  return null;
 }
