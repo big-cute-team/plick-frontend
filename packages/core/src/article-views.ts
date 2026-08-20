@@ -29,9 +29,13 @@ import { apiFetch } from "./client";
  * 없다 — 다음 조회 때 반영된다(각 앱 `useArticleView` 주석).
  *
  * @param articleId 기사(릴) id — BE는 int64 정수를 기대한다
- * @throws {ApiError} 비로그인·만료는 401 `AUTH_REQUIRED`·`AUTH_EXPIRED_TOKEN`,
- *   없거나 미발행인 기사는 404 `ARTICLE_NOT_FOUND`, 정수가 아닌 id는
- *   400 `COMMON_INVALID_PARAM`. 전부 호출부가 삼킨다.
+ * @throws {ApiError} 비로그인·만료·형식 불량은 401 `AUTH_REQUIRED`·
+ *   `AUTH_EXPIRED_TOKEN`·`AUTH_INVALID_TOKEN`, 없거나 미발행인 기사는
+ *   404 `ARTICLE_NOT_FOUND`, 정수가 아닌 id는 400 `COMMON_INVALID_PARAM`.
+ *   전부 호출부가 삼킨다. 403이 보이면 앱 에러가 아니라 BE CorsFilter 거절이다 —
+ *   브라우저 POST에 실린 Origin이 BE `CORS_ALLOWED_ORIGINS`에 없는 경우로,
+ *   body가 봉투 아닌 plain text(`Invalid CORS request`)라 code가 `"403"`으로
+ *   폴백된다. 로컬에서 웹(:3000)만 나면 BE `.env`의 허용 목록부터 본다.
  */
 export async function recordArticleView(articleId: string): Promise<void> {
   await apiFetch<void>(
