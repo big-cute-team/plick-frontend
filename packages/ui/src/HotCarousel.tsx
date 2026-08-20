@@ -165,6 +165,15 @@ export function HotCarousel({
    * 한 벌의 폭(`count * step`)만큼 이동시키면 같은 카드가 같은 자리에 오므로
    * 애니메이션 도중이어도 화면은 한 픽셀도 달라지지 않는다. 그래서 반올림 없이
    * 소수점 위치 그대로 더하고 뺀다.
+   *
+   * 경계 비교에는 1px 여유를 둔다. step이 소수점 폭이라 span도 소수점인데,
+   * 브라우저는 scrollLeft 대입을 디바이스 픽셀로 양자화해서(예: span 4453.2를
+   * 대입하면 4453.0으로 읽힌다) 가운데 벌 첫 칸이 span보다 반 픽셀쯤 아래에
+   * 앉는다. 엄격 비교면 그 자리를 '벌 밖'으로 오판해 pointerdown(hold)마다 한
+   * 벌을 접고, 화면은 그대로지만 포인터 밑의 DOM은 복제본으로 바뀌어 down과
+   * up의 target이 달라진다 — click이 공통 조상(트랙)에서 발화해 카드 링크의
+   * 첫 클릭이 먹히던 원인이다. 정당한 접기는 한 벌(수천 px) 단위라 1px 여유로
+   * 잃는 것은 없다.
    */
   const fold = useCallback(
     (el: HTMLDivElement) => {
@@ -173,11 +182,11 @@ export function HotCarousel({
       if (span <= 0) return;
       let pos = el.scrollLeft;
       let shift = 0;
-      while (pos < span) {
+      while (pos < span - 1) {
         pos += span;
         shift += count;
       }
-      while (pos >= span * 2) {
+      while (pos >= span * 2 - 1) {
         pos -= span;
         shift -= count;
       }
