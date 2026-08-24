@@ -16,6 +16,7 @@ export default function SignupPage() {
       tagline="간편하게 가입하고 팀 소식을 받아보세요"
       kakaoLabel="카카오로 회원가입"
       googleLabel="구글로 회원가입"
+      appleLabel="Apple로 회원가입"
       terms
       footerPrompt="이미 계정이 있으신가요?"
       footerLinkLabel="로그인"

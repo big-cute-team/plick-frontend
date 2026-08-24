@@ -72,6 +72,8 @@
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
   --plk-on-kakao: #191919; /* 카카오·구글 등 밝은 브랜드 버튼 위 글자 */
+  --plk-apple: #000000; /* Sign in with Apple 버튼 배경 (HIG 지정) */
+  --plk-on-apple: #ffffff; /* 애플 버튼 위 글자·로고 */
   --plk-team-liv: #c8102e; /* 리버풀 */
   --plk-team-tot: #132257; /* 토트넘 */
   --plk-team-ars: #ef0107; /* 아스날 */
@@ -168,6 +170,8 @@
 
   --color-kakao: var(--plk-kakao);
   --color-on-kakao: var(--plk-on-kakao);
+  --color-apple: var(--plk-apple);
+  --color-on-apple: var(--plk-on-apple);
   --color-team-liv: var(--plk-team-liv);
   --color-team-tot: var(--plk-team-tot);
   --color-team-ars: var(--plk-team-ars);

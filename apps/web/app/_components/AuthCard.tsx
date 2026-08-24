@@ -12,6 +12,7 @@ import { SocialLoginActions } from "./SocialLoginActions";
  * @param tagline - 로고 아래 한 줄 소개
  * @param kakaoLabel - 카카오 버튼 문구
  * @param googleLabel - 구글 버튼 문구
+ * @param appleLabel - 애플 버튼 문구 (KAN-395)
  * @param terms - 약관 동의 문구 노출 여부(회원가입만 true)
  * @param footerPrompt - 하단 안내 문구("이미 계정이 있으신가요?" 등)
  * @param footerLinkLabel - 하단 전환 링크 문구("로그인"/"회원가입")
@@ -22,6 +23,7 @@ export function AuthCard({
   tagline,
   kakaoLabel,
   googleLabel,
+  appleLabel,
   terms = false,
   footerPrompt,
   footerLinkLabel,
@@ -31,6 +33,7 @@ export function AuthCard({
   tagline: string;
   kakaoLabel: string;
   googleLabel: string;
+  appleLabel: string;
   terms?: boolean;
   footerPrompt: string;
   footerLinkLabel: string;
@@ -50,6 +53,7 @@ export function AuthCard({
         <SocialLoginActions
           kakaoLabel={kakaoLabel}
           googleLabel={googleLabel}
+          appleLabel={appleLabel}
           initialError={errorMessage}
         />
 
