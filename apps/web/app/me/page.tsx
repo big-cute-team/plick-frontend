@@ -28,7 +28,7 @@ export const metadata: Metadata = {
  * (max-w-narrow). 프로필은 `GET /users/me`로 읽는다(모바일 KAN-267과 같은 계약) —
  * null이면 비로그인/토큰 무효로 보고 로그인 유도 카드. 응원팀은 다중 선택이라
  * 목록 카드로 보여준다. 프로필 카드의 보조 줄은 실계약에 핸들이 없어 이메일로
- * 대체한다(카카오 가입은 이메일이 없어 줄을 숨긴다).
+ * 대체한다(카카오·애플 가입은 이메일이 없어 줄을 숨긴다).
  */
 export default async function MyPage() {
   const profile = await getMyProfile();
