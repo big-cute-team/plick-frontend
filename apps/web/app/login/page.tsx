@@ -37,6 +37,7 @@ export default async function LoginPage({
       tagline="축구 이적 뉴스, 팬 반응까지 한 번에"
       kakaoLabel="카카오로 로그인"
       googleLabel="구글로 로그인"
+      appleLabel="Apple로 로그인"
       footerPrompt="처음이신가요?"
       footerLinkLabel="회원가입"
       footerHref="/signup"

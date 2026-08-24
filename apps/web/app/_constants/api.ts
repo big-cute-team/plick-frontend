@@ -8,10 +8,19 @@
 import type { SocialProvider } from "@/_types/api";
 
 /**
- * 프로바이더별 OAuth 인가 엔드포인트와 고정 파라미터 (KAN-257).
+ * 프로바이더별 OAuth 인가 엔드포인트와 고정 파라미터 (KAN-257, KAN-395 APPLE 추가).
  * 환경마다 달라지는 client_id·redirect_uri는 env로 읽는다 — 조립은 `oauth.ts`.
  *
- * `extraParams` — 프로바이더가 추가로 요구하는 고정 쿼리 (구글은 scope 필수).
+ * `extraParams` — 프로바이더가 추가로 요구하는 고정 쿼리.
+ * - 구글: `scope` 필수. `prompt=select_account`은 이전에 고른 계정이 남아 있어도
+ *   계정 선택 창을 다시 띄운다(KAN-395) — 로그아웃 뒤 다른 계정으로 재로그인하려는데
+ *   같은 세션으로 자동 통과되던 문제 해결.
+ * - 카카오: `prompt=login`은 카카오톡·카카오계정 세션이 살아 있어도 로그인 창을 다시
+ *   띄운다(KAN-395, 같은 이유).
+ * - 애플(KAN-395): scope 없이 `response_type=code`만 보내 GET 콜백으로 돌아온다 —
+ *   scope를 붙이면 `response_mode=form_post`가 강제돼 콜백이 POST로 바뀐다. 유저
+ *   식별은 BE가 code 교환으로 받는 id_token의 sub로 해결한다.
+ *   애플은 HTTPS 콜백만 받으므로 로컬에선 인가 왕복이 성립하지 않는다(dev 배포에서 검증).
  */
 export const OAUTH_AUTHORIZE: Record<
   SocialProvider,
@@ -20,12 +29,17 @@ export const OAUTH_AUTHORIZE: Record<
   KAKAO: {
     endpoint: "https://kauth.kakao.com/oauth/authorize",
     clientIdEnv: "KAKAO_CLIENT_ID",
-    extraParams: {},
+    extraParams: { prompt: "login" },
   },
   GOOGLE: {
     endpoint: "https://accounts.google.com/o/oauth2/v2/auth",
     clientIdEnv: "GOOGLE_CLIENT_ID",
-    extraParams: { scope: "openid email" },
+    extraParams: { scope: "openid email", prompt: "select_account" },
+  },
+  APPLE: {
+    endpoint: "https://appleid.apple.com/auth/authorize",
+    clientIdEnv: "APPLE_CLIENT_ID",
+    extraParams: {},
   },
 };
 

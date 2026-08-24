@@ -3,5 +3,5 @@
  * 도메인 타입(ArticleCard·MyProfile 등)은 `@plick/domain/types`.
  */
 
-/** 소셜 로그인 프로바이더 — BE `/api/v1/auth/login`의 `provider` 값 */
-export type SocialProvider = "KAKAO" | "GOOGLE";
+/** 소셜 로그인 프로바이더 — BE `/api/v1/auth/login`의 `provider` 값 (KAN-395: APPLE 추가) */
+export type SocialProvider = "KAKAO" | "GOOGLE" | "APPLE";
