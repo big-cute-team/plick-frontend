@@ -26,7 +26,7 @@ export type RumorStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRMED" | "OFFICIAL";
 
 /**
  * 내 프로필 — `GET /users/me`를 화면 소비 형태로 좁힌 것 (KAN-267).
- * 온보딩 전엔 닉네임이, 카카오 가입이면 이메일이 없다. 응원팀은 다중 선택이라
+ * 온보딩 전엔 닉네임이, 카카오·애플 가입이면 이메일이 없다. 응원팀은 다중 선택이라
  * 배열 그대로 두고, BE 팀 항목을 팀 코드로만 좁힌다(각 앱 `_services/profile.ts`).
  * 모바일 `_types/api.ts`에 있던 것을 web 이식(KAN-319)에서 승격했다.
  */
