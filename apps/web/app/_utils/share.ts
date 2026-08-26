@@ -1,16 +1,11 @@
 /**
- * @file 링크 공유 유틸 (KAN-312) — 공유할 주소 조립과 클립보드 복사.
+ * @file 링크 공유 유틸 (KAN-312, web 이식 KAN-349) — 공유할 주소 조립과 클립보드 복사.
+ * 모바일 `_utils/share.ts`와 동일 구현이다.
  */
 
-/** 공유할 기사 세부 페이지 경로. 절대 주소는 {@link shareUrl}이 만든다. */
-export function articleSharePath(articleId: string): string {
-  return `/articles/${articleId}`;
-}
-
 /**
- * 공유할 릴 딥링크 경로 (KAN-349). 처음(KAN-312)엔 릴에도 기사 경로를 줬다 —
- * 그때는 특정 릴을 가리키는 주소가 없었다. `/reels/[postId]`가 생기면서 릴은
- * 릴로 떨어지게 바꿨다. 받은 사람이 같은 릴 화면에서 이어 본다.
+ * 공유할 릴 딥링크 경로 (KAN-349). 받은 사람이 같은 릴 화면(`/reels/[postId]`)에서
+ * 이어 본다.
  */
 export function reelSharePath(reelId: string): string {
   return `/reels/${reelId}`;
@@ -19,13 +14,13 @@ export function reelSharePath(reelId: string): string {
 /**
  * 경로를 공유용 절대 주소로 만든다.
  *
- * 도메인을 env로 박지 않고 `location.origin`을 쓴다. 이 앱은 배포된 URL을
- * 웹뷰로 감싸 스토어에 올릴 예정이라(티켓 3번), 웹뷰가 띄운 origin이 곧 공유
- * 대상 origin이다. env로 박으면 로컬·프리뷰에서 배포 도메인이 복사돼 딴 데로 샌다.
+ * 도메인을 env로 박지 않고 `location.origin`을 쓴다(ADR 0047) — 지금 보고 있는
+ * origin이 곧 공유 대상 origin이다. env로 박으면 로컬·프리뷰에서 배포 도메인이
+ * 복사돼 딴 데로 샌다.
  *
  * ⚠️ `location`을 읽으므로 브라우저에서만 부른다(마운트 뒤 이벤트 핸들러나 effect).
  *
- * @param path 앱 내 경로 (`/articles/1`, `/reels/1`)
+ * @param path 앱 내 경로 (`/reels/1`)
  */
 export function shareUrl(path: string): string {
   return `${window.location.origin}${path}`;
@@ -35,12 +30,11 @@ export function shareUrl(path: string): string {
  * 텍스트를 기기 클립보드에 넣는다. 성공 여부를 돌려준다.
  *
  * 먼저 표준 `navigator.clipboard`를 쓰고, 없거나 거절당하면 옛 방식으로 폴백한다.
- * 폴백이 필요한 이유는 웹뷰다 — Clipboard API는 보안 컨텍스트(https 또는
- * localhost)에서만 존재하고, 안드로이드 WebView는 그마저도 호스트 앱이
- * 권한을 열어 줘야 동작한다. 그 자리에서 API가 통째로 없거나 promise가
- * reject되는데, `document.execCommand("copy")`는 같은 웹뷰에서도 대개 살아 있다.
+ * Clipboard API는 보안 컨텍스트(https 또는 localhost)에서만 존재해서 http 접속이나
+ * 권한 거부 자리에서 promise가 reject되는데, `document.execCommand("copy")`는
+ * 그런 자리에서도 대개 살아 있다.
  *
- * 둘 다 실패하면 false다. 부르는 쪽이 "길게 눌러 복사" 안내로 떨어뜨린다 —
+ * 둘 다 실패하면 false다. 부르는 쪽이 "직접 복사" 안내로 떨어뜨린다 —
  * 화면에 주소 원문을 늘 보여 주는 이유이기도 하다.
  */
 export async function copyText(text: string): Promise<boolean> {

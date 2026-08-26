@@ -40,6 +40,7 @@ const TONE: Record<RailTone, { button: string; chip: string }> = {
  * @param tone - 바탕 톤(`media`=사진 위 흰색, `surface`=페이지 배경 위 테마색). 기본 `media`.
  * @param onLike - 하트 클릭 시 호출
  * @param onOpenComments - 댓글 버튼 클릭 시 세부 패널을 여는 콜백
+ * @param onShare - 공유 버튼 클릭 시 호출 (링크 공유 팝업 열기, KAN-349)
  */
 export function ReelActionRail({
   reel,
@@ -47,12 +48,14 @@ export function ReelActionRail({
   tone = "media",
   onLike,
   onOpenComments,
+  onShare,
 }: {
   reel: ReelCard;
   className?: string;
   tone?: RailTone;
   onLike?: () => void;
   onOpenComments?: () => void;
+  onShare?: () => void;
 }) {
   const t = TONE[tone];
   return (
@@ -72,7 +75,12 @@ export function ReelActionRail({
         label={formatCount(reel.commentCount)}
         onClick={onOpenComments}
       />
-      <RailAction tone={t} icon={<SendIcon size={22} />} label="공유" />
+      <RailAction
+        tone={t}
+        icon={<SendIcon size={22} />}
+        label="공유"
+        onClick={onShare}
+      />
     </div>
   );
 }

@@ -7,9 +7,11 @@ import type { ReelCard } from "@plick/domain/types";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
+import { ShareDialog } from "@/_components/ShareDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useReelLike } from "@/_hooks/useReelLike";
+import { reelSharePath } from "@/_utils/share";
 import { ReelActionRail } from "./ReelActionRail";
 
 /**
@@ -38,6 +40,8 @@ import { ReelActionRail } from "./ReelActionRail";
  *
  * 좋아요는 여기서 들고 있다 (KAN-330). 레일이 데스크톱·모바일 뷰로 두 벌 붙으므로
  * 훅과 비로그인 팝업을 이 층에 한 번만 두고 두 레일이 같은 상태를 그린다.
+ * 공유 팝업(KAN-349)도 같은 이유로 이 층에 있다 — 릴 딥링크(`/reels/[postId]`)
+ * 주소를 보여 주고 복사시킨다.
  *
  * @param reel - 표시할 릴
  * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
@@ -53,6 +57,7 @@ export function ReelItem({
   const titleRef = useRef<HTMLButtonElement>(null);
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
   const like = useReelLike(reel);
+  const [shareOpen, setShareOpen] = useState(false);
 
   /** 임베드 영역의 아래선(제목 윗선까지)까지의 거리(px, 카드 바닥 기준) */
   const [embedBottom, setEmbedBottom] = useState(0);
@@ -154,6 +159,7 @@ export function ReelItem({
           reel={reel}
           onLike={like.toggle}
           onOpenComments={onOpenDetail}
+          onShare={() => setShareOpen(true)}
           className="absolute right-3 bottom-4 lg:hidden"
         />
       </div>
@@ -164,6 +170,7 @@ export function ReelItem({
         tone="surface"
         onLike={like.toggle}
         onOpenComments={onOpenDetail}
+        onShare={() => setShareOpen(true)}
         className="max-lg:hidden"
       />
 
@@ -171,6 +178,14 @@ export function ReelItem({
         <LoginPromptDialog
           onClose={like.dismissLogin}
           description={LIKE_LOGIN_PROMPT}
+        />
+      )}
+
+      {/* 릴은 릴 딥링크로 공유한다 (KAN-349) — 받은 사람이 같은 릴에서 이어 본다 */}
+      {shareOpen && (
+        <ShareDialog
+          path={reelSharePath(reel.id)}
+          onClose={() => setShareOpen(false)}
         />
       )}
     </div>
