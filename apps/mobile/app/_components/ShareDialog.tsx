@@ -5,15 +5,15 @@ import { createPortal } from "react-dom";
 import { CheckIcon, CloseIcon } from "@plick/ui/icons";
 import { COPY_FALLBACK_NOTICE } from "@/_constants/share";
 import { useCopyLink } from "@/_hooks/useCopyLink";
-import { articleShareUrl } from "@/_utils/share";
+import { shareUrl } from "@/_utils/share";
 
 /**
  * 링크 공유 팝업 (KAN-312) — 기사 세부와 릴스의 공유 버튼이 함께 쓴다.
  *
  * 티켓대로 네이티브 공유 시트가 아니라 주소를 눈으로 보여 주고 복사 버튼을 다는
- * 팝업이다. 릴스에서 열어도 릴 주소가 아니라 기사 세부 주소를 준다
- * ({@link articleShareUrl}) — 링크를 받은 사람이 커서 피드의 특정 릴이 아니라
- * 읽을 수 있는 기사 페이지로 떨어지게 하려는 것이다.
+ * 팝업이다. 무엇을 공유할지는 호출부가 경로로 정한다 — 기사 세부는
+ * `articleSharePath`, 릴은 `reelSharePath`(KAN-349, 받은 사람이 같은 릴
+ * 화면으로 떨어진다).
  *
  * `LoginPromptDialog`와 같은 스크림 + 카드 관용에 같은 이유로 body 포털을 쓴다.
  * 릴스 액션 레일엔 `drop-shadow` 필터가 걸려 있는데, 필터가 걸린 조상은
@@ -22,21 +22,21 @@ import { articleShareUrl } from "@/_utils/share";
  *
  * 주소는 마운트 뒤에 만든다. `location.origin`은 서버 렌더에 없다.
  *
- * @param articleId 공유할 기사(=릴) id
+ * @param path 공유할 앱 내 경로 — 절대 주소는 여기서 origin을 붙여 만든다
  * @param onClose X 버튼 또는 스크림 탭으로 닫을 때
  */
 export function ShareDialog({
-  articleId,
+  path,
   onClose,
 }: {
-  articleId: string;
+  path: string;
   onClose: () => void;
 }) {
   /* 포털 대상(document)도 origin도 서버 렌더엔 없다. 마운트 뒤에만 그린다 */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const url = mounted ? articleShareUrl(articleId) : "";
+  const url = mounted ? shareUrl(path) : "";
   const { status, copy } = useCopyLink(url);
 
   if (!mounted) return null;
@@ -77,7 +77,7 @@ export function ShareDialog({
           링크 공유
         </p>
         <p className="text-label text-text-3 mt-2 text-center">
-          이 링크를 복사해 기사를 공유해 보세요.
+          이 링크를 복사해 공유해 보세요.
         </p>
 
         {/* 주소 원문 — 복사가 막힌 웹뷰에서 길게 눌러 직접 집어갈 수 있게 늘 보여준다.

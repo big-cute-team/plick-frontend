@@ -5,6 +5,7 @@ import {
   FileTextIcon,
   HelpCircleIcon,
   LockLineIcon,
+  UserRoundIcon,
 } from "@plick/ui/icons";
 import { ProfileCard } from "@plick/ui/ProfileCard";
 import { SettingRow } from "@plick/ui/SettingRow";
@@ -59,6 +60,17 @@ export default async function MyPage() {
             )}
 
             <CardSection>
+              {/* 차단 목록은 로그인 사용자에게만 있는 개인 데이터라 조건부로 넣는다 (KAN-411) */}
+              {profile && (
+                <SettingRow
+                  href="/me/blocked"
+                  icon={<UserRoundIcon size={19} />}
+                  label="차단 목록"
+                  trailing={
+                    <ChevronMiniIcon className="text-text-4 shrink-0" />
+                  }
+                />
+              )}
               <SettingRow
                 href="/faq"
                 icon={<HelpCircleIcon />}

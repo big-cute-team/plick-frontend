@@ -2,12 +2,22 @@
  * @file 링크 공유 유틸 (KAN-312) — 공유할 주소 조립과 클립보드 복사.
  */
 
+/** 공유할 기사 세부 페이지 경로. 절대 주소는 {@link shareUrl}이 만든다. */
+export function articleSharePath(articleId: string): string {
+  return `/articles/${articleId}`;
+}
+
 /**
- * 공유할 기사 세부 페이지 주소.
- *
- * 릴스에서 눌러도 같은 주소를 만든다 — 릴과 기사가 같은 `articleSummaryId`
- * 체계라(KAN-310 조회 기록이 같은 이유) 릴 id를 그대로 기사 경로에 붙이면 된다.
- * 릴스는 커서 피드라 특정 릴을 가리키는 주소 자체가 없기도 하다.
+ * 공유할 릴 딥링크 경로 (KAN-349). 처음(KAN-312)엔 릴에도 기사 경로를 줬다 —
+ * 그때는 특정 릴을 가리키는 주소가 없었다. `/reels/[postId]`가 생기면서 릴은
+ * 릴로 떨어지게 바꿨다. 받은 사람이 같은 릴 화면에서 이어 본다.
+ */
+export function reelSharePath(reelId: string): string {
+  return `/reels/${reelId}`;
+}
+
+/**
+ * 경로를 공유용 절대 주소로 만든다.
  *
  * 도메인을 env로 박지 않고 `location.origin`을 쓴다. 이 앱은 배포된 URL을
  * 웹뷰로 감싸 스토어에 올릴 예정이라(티켓 3번), 웹뷰가 띄운 origin이 곧 공유
@@ -15,10 +25,10 @@
  *
  * ⚠️ `location`을 읽으므로 브라우저에서만 부른다(마운트 뒤 이벤트 핸들러나 effect).
  *
- * @param articleId 기사(=릴) id
+ * @param path 앱 내 경로 (`/articles/1`, `/reels/1`)
  */
-export function articleShareUrl(articleId: string): string {
-  return `${window.location.origin}/articles/${articleId}`;
+export function shareUrl(path: string): string {
+  return `${window.location.origin}${path}`;
 }
 
 /**

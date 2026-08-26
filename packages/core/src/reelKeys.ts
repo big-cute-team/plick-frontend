@@ -12,4 +12,10 @@ export const reelKeys = {
    * 모두가 같은 최신순 목록 하나를 본다.
    */
   feed: () => ["reels", "feed"] as const,
+  /**
+   * 특정 릴에서 시작하는 딥링크 피드 (KAN-349). 진입 릴 id별로 캐시를 분리한다 —
+   * `feed()`와 섞으면 탭 피드의 첫 페이지(최신순 머리)가 앵커 페이지로 바뀌어
+   * 탭으로 돌아왔을 때 엉뚱한 릴부터 보인다.
+   */
+  anchor: (postId: string) => ["reels", "anchor", postId] as const,
 };

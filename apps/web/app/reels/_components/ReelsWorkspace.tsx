@@ -9,6 +9,7 @@ import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useActiveReel } from "@/_hooks/useActiveReel";
 import { useArticleView } from "@/_hooks/useArticleView";
+import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { ReelDetailPanel } from "./ReelDetailPanel";
 import { ReelSkeleton } from "./ReelSkeleton";
@@ -33,10 +34,22 @@ import { ReelViewer } from "./ReelViewer";
  * 끝에 감시 요소를 두지 않는 이유는 릴 한 장이 뷰어를 통째로 채워, 그 자리가
  * 보일 때면 이미 마지막 릴에 도착해 있기 때문이다.
  *
+ * 지금 보고 있는 릴은 주소창에 되비춘다 (KAN-349, {@link useReelUrlSync}) — 피드
+ * 페이지든 딥링크 진입이든 URL이 항상 `/reels/{보고 있는 릴}`이 되어, 새로고침은
+ * 그 릴에서 다시 시작하고 주소 복사는 그 릴을 공유한다.
+ *
  * @param initial - 서버가 받아 둔 첫 페이지와 그 시각. 서버 fetch가 실패했으면
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
+ * @param anchorId - 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 그 릴에서
+ *   시작하는 별도 캐시의 피드가 된다.
  */
-export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
+export function ReelsWorkspace({
+  initial,
+  anchorId,
+}: {
+  initial?: InitialReelFeed;
+  anchorId?: string;
+}) {
   const [detailOpen, setDetailOpen] = useState(false);
   const { activeIndex, registerReel } = useActiveReel();
   const queryClient = useQueryClient();
@@ -51,10 +64,11 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useReelsFeed(initial);
+  } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
   const activeReel = reels[activeIndex];
+  useReelUrlSync(activeReel?.id);
   /** 지금 보고 있는 릴 뒤로 남은 장수 */
   const remaining = reels.length - 1 - activeIndex;
 
@@ -63,22 +77,23 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
      뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
   useArticleView(activeReel?.id ?? "", activeReel !== undefined);
 
+  /**
+   * `isFetchingNextPage`가 아니라 `isFetching`으로 막는다 — 다음 페이지뿐 아니라
+   * 첫 페이지 refetch 중에도 프리페치를 꺼야 한다 (KAN-404). 커서 400 복구
+   * ({@link retryNextPage})가 첫 페이지를 다시 받는 동안 이 이펙트가 살아나면,
+   * 캐시에 남은 옛 첫 페이지의 죽은 커서로 fetchNextPage를 쏘고 그 기본
+   * cancelRefetch가 복구 refetch를 취소해 400 루프에 갇힌다.
+   */
   useEffect(() => {
     if (
       hasNextPage &&
-      !isFetchingNextPage &&
+      !isFetching &&
       !isFetchNextPageError &&
       remaining <= REELS_PREFETCH_AHEAD
     ) {
       fetchNextPage();
     }
-  }, [
-    remaining,
-    hasNextPage,
-    isFetchingNextPage,
-    isFetchNextPageError,
-    fetchNextPage,
-  ]);
+  }, [remaining, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage]);
 
   /**
    * 커서는 서버가 발급한 값이라 상하면 400으로 온다. 잘못된 파라미터와 같은
@@ -91,7 +106,10 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
    */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      void restartFeedQuery(queryClient, reelKeys.feed());
+      void restartFeedQuery(
+        queryClient,
+        anchorId ? reelKeys.anchor(anchorId) : reelKeys.feed(),
+      );
       return;
     }
     fetchNextPage();

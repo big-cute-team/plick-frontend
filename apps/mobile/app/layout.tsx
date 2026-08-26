@@ -108,6 +108,7 @@ export default async function RootLayout({
         <QueryProvider>
           <AuthProvider
             isLoggedIn={loggedIn}
+            userId={profile?.userId ?? null}
             nickname={profile?.nickname ?? null}
           >
             {children}

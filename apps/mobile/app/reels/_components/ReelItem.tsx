@@ -12,6 +12,7 @@ import { useReelLike } from "@/_hooks/useReelLike";
 import type { ReelCard } from "@plick/domain/types";
 import type { TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
+import { reelSharePath } from "@/_utils/share";
 import { formatRelativeTime } from "@plick/domain/format";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
@@ -230,8 +231,12 @@ export function ReelItem({
         />
       )}
 
+      {/* 릴은 릴 딥링크로 공유한다 (KAN-349) — 받은 사람이 같은 릴에서 이어 본다 */}
       {shareOpen && (
-        <ShareDialog articleId={reel.id} onClose={() => setShareOpen(false)} />
+        <ShareDialog
+          path={reelSharePath(reel.id)}
+          onClose={() => setShareOpen(false)}
+        />
       )}
     </section>
   );
