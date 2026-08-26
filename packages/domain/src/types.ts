@@ -31,6 +31,8 @@ export type RumorStage = "RUMOUR" | "IN_PROGRESS" | "CONFIRMED" | "OFFICIAL";
  * 모바일 `_types/api.ts`에 있던 것을 web 이식(KAN-319)에서 승격했다.
  */
 export interface MyProfile {
+  /** BE `userId`. 내 댓글 판별(작성자 id 대조)에 쓴다 — KAN-411에서 추가. */
+  userId: number;
   nickname: string | null;
   email: string | null;
   /** 닉네임을 다시 바꿀 수 있는 시각(ISO, KST 오프셋) — null이면 지금 바로 변경 가능.
@@ -290,6 +292,12 @@ export interface InitialReelFeed {
 export interface ArticleComment {
   /** BE `commentId`. 라우트에 안 쓰여 숫자 그대로 둔다. */
   id: number;
+  /**
+   * 작성자 유저 id — `GET /users/me`의 `userId`와 같은 체계 (KAN-411에서 BE가
+   * 추가). 내 댓글 판별과 차단 대상 식별에 쓴다. 삭제·차단 마스킹 댓글에도
+   * 원본 그대로 유지된다.
+   */
+  userId: number;
   /** 작성자 표시명. BE가 닉네임 하나만 준다(아바타·핸들 없음). 삭제돼도 유지된다. */
   nickname: string;
   /** 본문. 삭제된 댓글(tombstone)이면 null — `isDeleted`와 짝으로 분기한다. */
@@ -303,6 +311,19 @@ export interface ArticleComment {
    * 단 `commentCount` 집계에서는 빠져서 헤더 숫자와 목록 행수가 다를 수 있다.
    */
   isDeleted: boolean;
+  /**
+   * 운영자 블라인드 여부 (KAN-411). 신고를 운영자가 부적절 판정하면 서게 되고,
+   * 모두에게 원문 대신 안내 문구를 보여야 한다. 판정은 어드민 몫이라 화면은
+   * 표시 분기만 한다.
+   */
+  isBlinded: boolean;
+  /**
+   * 내가 차단한 사용자의 댓글인지 (KAN-411). 서버가 목록에서 빼지 않고 이
+   * 플래그 + 마스킹된 `content`("차단한 사용자의 댓글입니다")로 내려준다 —
+   * 화면은 클라 필터링 없이 이 플래그로 안내 문구만 그린다. 토큰을 안 실은
+   * 조회에서는 항상 false다.
+   */
+  isBlocked: boolean;
   likeCount: number;
   /** 내가 좋아요를 눌렀는지. 토큰을 안 실은 조회에서는 항상 false다. */
   liked: boolean;
@@ -377,4 +398,44 @@ export interface LikeState {
  */
 export type ToggleLikeResult =
   | { ok: true; likeCount: number }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
+ * 댓글 신고 사유 (KAN-411, `POST /api/v1/comments/{commentId}/report`).
+ * BE enum 문자열 그대로다 — 화면 라벨 매핑은 `COMMENT_REPORT_REASONS`(constants).
+ */
+export type CommentReportReason =
+  | "SPAM"
+  | "ABUSE"
+  | "HARASSMENT"
+  | "SEXUAL"
+  | "ETC";
+
+/**
+ * 댓글 신고 서버 액션의 결과. BE가 성공 시 `data: null`만 주므로 실을 값이 없고,
+ * 값으로 돌려주는 이유는 {@link CreateCommentResult}와 같다. 처리(블라인드 판정)는
+ * 운영자 몫이라 신고해도 댓글 표시는 그대로다.
+ */
+export type ReportCommentResult =
+  | { ok: true }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
+ * 차단 목록 한 건 — `GET /api/v1/users/me/blocks`의 실계약 (KAN-411, be-verify
+ * 확인). 페이지네이션 없는 순수 배열로 오고 프로필 이미지 필드는 없다.
+ */
+export interface BlockedUser {
+  userId: number;
+  nickname: string;
+  /** 차단한 시각 ISO-8601 (KST 오프셋 포함). 최근 차단순 정렬의 기준. */
+  blockedAt: string;
+}
+
+/**
+ * 사용자 차단·해제 서버 액션의 결과. 두 동작 모두 성공 응답이 `data: null`이고
+ * 실패 규약도 같아 좋아요({@link ToggleLikeResult})처럼 하나로 쓴다.
+ * 재차단·미차단 해제 모두 200(멱등)이라 실패는 사실상 인증·네트워크뿐이다.
+ */
+export type ToggleBlockResult =
+  | { ok: true }
   | { ok: false; status: number; code: string; message: string };

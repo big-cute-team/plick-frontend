@@ -134,6 +134,22 @@ export function formatChangeableAt(iso: string): string {
 }
 
 /**
+ * 연도까지 있는 날짜 포맷 — "2026년 8월 26일". 차단 목록의 차단 시각(KAN-411)처럼
+ * 오래 남는 기록에 쓴다 — 상대 시각은 몇 달 지나면 정보가 없다. 기기 시간대와
+ * 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.
+ *
+ * @param iso ISO-8601 문자열 (예: "2026-08-26T14:35:10+09:00")
+ */
+export function formatDateKo(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
+/**
  * 로그인 화면의 `?error=` 안내 문구 (KAN-393). `oauth`는 소셜 로그인 공통 실패,
  * `rejoin`은 탈퇴 후 7일 재가입 제한(403 `AUTH_REJOIN_RESTRICTED`)이다.
  * rejoin은 `until`(BE `rejoinableAt`, KST ISO)을 받아 언제부터 다시 가입할 수

@@ -5,7 +5,7 @@
  * 동일 값으로 복제돼 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
  * 앱 전용 상수(GNB 링크 등)는 각 앱 `app/_lib/constants.ts`에 남는다.
  */
-import type { RumorStage, Team, TeamCode } from "./types";
+import type { CommentReportReason, RumorStage, Team, TeamCode } from "./types";
 
 /** 팀 레지스트리 — 코드 → 한글 이름·URL slug·컬러 토큰 매핑 */
 export const TEAMS: Record<TeamCode, Team> = {
@@ -170,3 +170,19 @@ export const NICKNAME_MAX_LENGTH = 12;
 export const NICKNAME_PATTERN = new RegExp(
   `^[가-힣a-zA-Z0-9]{1,${NICKNAME_MAX_LENGTH}}$`,
 );
+
+/**
+ * 댓글 신고 사유 선택지 (KAN-411) — BE enum 값과 화면 라벨 매핑. 표시 순서도
+ * 이 배열 순서다. 잘못된 값은 BE가 400 `COMMON_INVALID_PARAM`으로 거절하므로
+ * 화면은 이 목록 밖의 값을 만들지 않는다.
+ */
+export const COMMENT_REPORT_REASONS: {
+  value: CommentReportReason;
+  label: string;
+}[] = [
+  { value: "SPAM", label: "스팸" },
+  { value: "ABUSE", label: "욕설" },
+  { value: "HARASSMENT", label: "괴롭힘" },
+  { value: "SEXUAL", label: "음란" },
+  { value: "ETC", label: "기타" },
+];

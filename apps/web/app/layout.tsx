@@ -94,6 +94,7 @@ export default async function RootLayout({
         <QueryProvider>
           <AuthProvider
             isLoggedIn={loggedIn}
+            userId={profile?.userId ?? null}
             nickname={profile?.nickname ?? null}
           >
             {/* 모바일 전환 배너 (KAN-379) — 화면마다 SiteHeader가 따로 있어

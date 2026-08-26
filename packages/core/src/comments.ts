@@ -22,12 +22,18 @@ import { apiFetch } from "./client";
 /** BE 응답 댓글 한 건 (be-verify가 실제 응답으로 확인한 그대로). 대댓글도 같은 모양. */
 export interface CommentResponse {
   commentId: number;
+  /** 작성자 유저 id (KAN-411 추가) — `/users/me`의 `userId`와 같은 체계. */
+  userId: number;
   nickname: string;
-  /** 삭제된 댓글이면 null */
+  /** 삭제된 댓글이면 null. 차단한 사용자의 댓글이면 마스킹 문구로 치환돼 온다. */
   content: string | null;
   createdAt: string;
   isEdited: boolean;
   isDeleted: boolean;
+  /** 운영자 블라인드 여부 (KAN-411) */
+  isBlinded: boolean;
+  /** 내가 차단한 사용자의 댓글인지 (KAN-411). 익명 조회에서는 항상 false. */
+  isBlocked: boolean;
   likeCount: number;
   likedByMe: boolean;
   replies: CommentResponse[];
@@ -54,11 +60,14 @@ export const COMMENTS_PAGE_SIZE = 10;
 export function toComment(r: CommentResponse): ArticleComment {
   return {
     id: r.commentId,
+    userId: r.userId,
     nickname: r.nickname,
     content: r.content,
     createdAt: r.createdAt,
     isEdited: r.isEdited,
     isDeleted: r.isDeleted,
+    isBlinded: r.isBlinded,
+    isBlocked: r.isBlocked,
     likeCount: r.likeCount,
     liked: r.likedByMe,
     replies: r.replies.map(toComment),
