@@ -63,22 +63,23 @@ export function ReelsWorkspace({ initial }: { initial?: InitialReelFeed }) {
      뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
   useArticleView(activeReel?.id ?? "", activeReel !== undefined);
 
+  /**
+   * `isFetchingNextPage`가 아니라 `isFetching`으로 막는다 — 다음 페이지뿐 아니라
+   * 첫 페이지 refetch 중에도 프리페치를 꺼야 한다 (KAN-404). 커서 400 복구
+   * ({@link retryNextPage})가 첫 페이지를 다시 받는 동안 이 이펙트가 살아나면,
+   * 캐시에 남은 옛 첫 페이지의 죽은 커서로 fetchNextPage를 쏘고 그 기본
+   * cancelRefetch가 복구 refetch를 취소해 400 루프에 갇힌다.
+   */
   useEffect(() => {
     if (
       hasNextPage &&
-      !isFetchingNextPage &&
+      !isFetching &&
       !isFetchNextPageError &&
       remaining <= REELS_PREFETCH_AHEAD
     ) {
       fetchNextPage();
     }
-  }, [
-    remaining,
-    hasNextPage,
-    isFetchingNextPage,
-    isFetchNextPageError,
-    fetchNextPage,
-  ]);
+  }, [remaining, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage]);
 
   /**
    * 커서는 서버가 발급한 값이라 상하면 400으로 온다. 잘못된 파라미터와 같은
