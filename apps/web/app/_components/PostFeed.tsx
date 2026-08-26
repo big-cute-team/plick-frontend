@@ -148,11 +148,18 @@ export function PostFeed({
     refetch,
   } = useArticleFeed(filter, initial, initialTeam);
 
+  /**
+   * `isFetchingNextPage`가 아니라 `isFetching`으로 막는다 — 다음 페이지뿐 아니라
+   * 첫 페이지 refetch 중에도 트리거를 꺼야 한다 (KAN-404). 커서 400 복구
+   * ({@link retryNextPage})가 첫 페이지를 다시 받는 동안 트리거가 살아나면,
+   * 캐시에 남은 옛 첫 페이지의 죽은 커서로 fetchNextPage를 쏘고 그 기본
+   * cancelRefetch가 복구 refetch를 취소해 400 루프에 갇힌다.
+   */
   const sentinelRef = useInfiniteScroll(
     fetchNextPage,
     variant === "article" &&
       hasNextPage &&
-      !isFetchingNextPage &&
+      !isFetching &&
       !isFetchNextPageError,
   );
 
