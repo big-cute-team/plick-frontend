@@ -41,9 +41,11 @@ const SPLIT_REVIEW_THRESHOLD = 5000;
  * 사이트맵 (KAN-346). `/sitemap.xml`로 컴파일된다.
  *
  * 정적 라우트에 BE 기사 전건(`/articles/{id}`)을 커서 페이징으로 이어 붙인다.
- * lastModified는 발행 시각이다. BE가 죽어 있으면 기사 없이 정적 라우트만
- * 내려보낸다 — 사이트맵이 500이면 크롤러가 사이트 전체를 의심하므로 실패를
- * 삼키고 부분 응답을 준다.
+ * 릴 딥링크(`/reels/{id}`, KAN-349)도 같은 걸음에 싣는다 — 릴과 기사가 같은
+ * `articleSummaryId` 체계라 목록을 따로 걸을 필요가 없다. 기사가 콘텐츠 정본이라
+ * 우선순위는 기사보다 낮춘다. lastModified는 발행 시각이다. BE가 죽어 있으면
+ * 기사 없이 정적 라우트만 내려보낸다 — 사이트맵이 500이면 크롤러가 사이트 전체를
+ * 의심하므로 실패를 삼키고 부분 응답을 준다.
  *
  * 로그인·마이·온보딩은 robots에서 막거나 색인 가치가 없어 싣지 않는다.
  * 릴스 피드(`/reels`)는 색인 담당이 아니라 탐색 진입점이지만(전략 문서 리스크 4)
@@ -76,8 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: new Date(article.publishedAt),
           priority: 0.8,
         });
+        entries.push({
+          url: `${SITE_URL}/reels/${article.id}`,
+          lastModified: new Date(article.publishedAt),
+          priority: 0.5,
+        });
       }
-      count += page.items.length;
+      // 기사당 URL이 두 개(기사 + 릴)라 상한 판정도 URL 수로 센다
+      count += page.items.length * 2;
       cursor = page.nextCursor;
     } while (cursor && count < MAX_ARTICLE_URLS);
 
@@ -87,7 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       );
     } else if (count >= SPLIT_REVIEW_THRESHOLD) {
       console.warn(
-        `[sitemap] 기사 ${count}건. 인덱스 분할 검토선(${SPLIT_REVIEW_THRESHOLD}) 초과 — BE 총 건수 또는 사이트맵 전용 엔드포인트가 선행 과제다.`,
+        `[sitemap] 기사·릴 URL ${count}건. 인덱스 분할 검토선(${SPLIT_REVIEW_THRESHOLD}) 초과 — BE 총 건수 또는 사이트맵 전용 엔드포인트가 선행 과제다.`,
       );
     }
   } catch (error) {

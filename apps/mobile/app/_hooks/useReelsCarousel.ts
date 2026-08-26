@@ -28,15 +28,18 @@ import { useViewState } from "@/_stores/view-state";
  * 릴 데이터는 쿼리 캐시에 남아 있으므로 몇 번째였는지만 기억하면 그 자리로 되돌아간다.
  *
  * @param slideCount 지금 렌더된 슬라이드 수. 이 값이 바뀌면 다시 잰다.
+ * @param remember 보던 릴 순번을 뷰 상태 스토어에 남기고 되돌릴지 (기본 true).
+ *   딥링크 피드(KAN-349)는 false — 진입 릴(0번)에서 시작해야 하고, 탭 피드와 목록이
+ *   달라서 순번을 스토어에 쓰면 탭 피드의 복원 자리를 오염시킨다.
  * @returns `viewportRef`는 `overflow-hidden` 뷰포트에, 그 안에 슬라이드를 담는 컨테이너를 둔다.
  *   `activeIndex`는 지금 보고 있는 릴 — 화면 밖 릴 비활성화와 다음 페이지 프리페치에 쓴다.
  */
-export function useReelsCarousel(slideCount: number) {
+export function useReelsCarousel(slideCount: number, remember = true) {
   /**
    * 되돌릴 자리를 첫 렌더에 미리 떠 둔다. 아래 sync가 마운트하자마자 0을 스토어에
    * 덮어쓰기 때문에, 이펙트 안에서 읽으면 이미 늦다.
    */
-  const saved = useRef(useViewState.getState().reelsIndex);
+  const saved = useRef(remember ? useViewState.getState().reelsIndex : 0);
 
   /**
    * 캐러셀을 보던 릴에서 시작시킨다 (KAN-379).
@@ -71,14 +74,14 @@ export function useReelsCarousel(slideCount: number) {
     const sync = () => {
       const index = embla.selectedScrollSnap();
       setActiveIndex(index);
-      useViewState.getState().setReelsIndex(index);
+      if (remember) useViewState.getState().setReelsIndex(index);
     };
     sync();
     embla.on("select", sync).on("reInit", sync);
     return () => {
       embla.off("select", sync).off("reInit", sync);
     };
-  }, [embla]);
+  }, [embla, remember]);
 
   /**
    * 첫 렌더에 슬라이드가 0장이었을 때의 복원 — 서버 fetch가 실패해 클라가 직접

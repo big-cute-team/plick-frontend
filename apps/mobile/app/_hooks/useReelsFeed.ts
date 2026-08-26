@@ -4,7 +4,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 import { reelKeys } from "@plick/core/reelKeys";
-import { getReels } from "@plick/core/reels";
+import { getReels, getReelsFrom } from "@plick/core/reels";
 import type { InitialReelFeed } from "@plick/domain/types";
 
 /**
@@ -17,11 +17,18 @@ import type { InitialReelFeed } from "@plick/domain/types";
  *
  * @param initial 서버 컴포넌트가 미리 받아 둔 첫 페이지와 그 시각.
  *   같은 데이터를 클라가 또 부르는 이중 페치를 막는 씨앗이다.
+ * @param anchorId 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 첫 페이지를
+ *   `GET /reels/{id}`로 받아 그 릴부터 시작하고, 이후 페이지는 응답 커서로 기존
+ *   피드를 이어 간다. 캐시 키도 앵커별로 분리된다 — 탭 피드와 섞이지 않는다.
  */
-export function useReelsFeed(initial?: InitialReelFeed) {
+export function useReelsFeed(initial?: InitialReelFeed, anchorId?: string) {
   return useInfiniteQuery({
-    queryKey: reelKeys.feed(),
-    queryFn: ({ pageParam }) => getReels({ cursor: pageParam }),
+    queryKey: anchorId ? reelKeys.anchor(anchorId) : reelKeys.feed(),
+    /* 커서가 없는 요청이 곧 첫 페이지다 — 앵커 모드는 그 첫 페이지만 딥링크로 받는다 */
+    queryFn: ({ pageParam }) =>
+      pageParam === null && anchorId
+        ? getReelsFrom(anchorId)
+        : getReels({ cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     initialData: initial

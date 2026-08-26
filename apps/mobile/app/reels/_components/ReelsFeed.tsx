@@ -6,6 +6,7 @@ import { ApiError } from "@plick/core/client";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
 import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
+import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
 import { useReelsCarousel } from "@/_hooks/useReelsCarousel";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { reelKeys } from "@plick/core/reelKeys";
@@ -34,10 +35,22 @@ import { ReelStatus } from "./ReelStatus";
  * 개폐·드래그 상태(motion)는 여기서 소유 — 시트와 릴의 칩·제목이 같은 상태를
  * 공유해야 하나의 요소처럼 함께 오르내린다.
  *
+ * 지금 보고 있는 릴은 주소창에 되비춘다 (KAN-349, {@link useReelUrlSync}) — 탭
+ * 피드든 딥링크 진입이든 URL이 항상 `/reels/{보고 있는 릴}`이 되어, 새로고침은
+ * 그 릴에서 다시 시작하고 주소 복사는 그 릴을 공유한다.
+ *
  * @param initial 서버 컴포넌트가 받아 둔 첫 페이지와 그 시각. 서버 fetch가 실패했으면
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
+ * @param anchorId 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 그 릴에서
+ *   시작하는 별도 캐시의 피드가 되고, 탭 피드의 보던-릴 복원은 하지 않는다.
  */
-export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
+export function ReelsFeed({
+  initial,
+  anchorId,
+}: {
+  initial?: InitialReelFeed;
+  anchorId?: string;
+}) {
   const motion = useReelDetailMotion();
   /* 안드로이드 뒤로가기가 릴스를 나가는 대신 세부 시트를 닫는다 (유튜브 쇼츠 방식) */
   useBackToClose(motion.mounted, motion.requestClose);
@@ -58,14 +71,17 @@ export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useReelsFeed(initial);
+  } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
   /** 릴 뒤에 붙는 자리(스피너 또는 재시도)도 슬라이드 한 장이다 */
   const trailingSlide = isFetchNextPageError || hasNextPage;
   const { viewportRef, activeIndex } = useReelsCarousel(
     reels.length + (trailingSlide ? 1 : 0),
+    /* 딥링크는 진입 릴(0번)에서 시작 — 탭 피드의 보던-릴 순번을 읽지도 쓰지도 않는다 */
+    !anchorId,
   );
+  useReelUrlSync(reels[activeIndex]?.id);
   /** 지금 보고 있는 릴 뒤로 남은 장수 */
   const remaining = reels.length - 1 - activeIndex;
 
@@ -98,7 +114,10 @@ export function ReelsFeed({ initial }: { initial?: InitialReelFeed }) {
    */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      void restartFeedQuery(queryClient, reelKeys.feed());
+      void restartFeedQuery(
+        queryClient,
+        anchorId ? reelKeys.anchor(anchorId) : reelKeys.feed(),
+      );
       return;
     }
     fetchNextPage();

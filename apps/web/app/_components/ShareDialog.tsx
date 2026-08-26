@@ -8,22 +8,20 @@ import { useCopyLink } from "@/_hooks/useCopyLink";
 import { shareUrl } from "@/_utils/share";
 
 /**
- * 링크 공유 팝업 (KAN-312) — 기사 세부와 릴스의 공유 버튼이 함께 쓴다.
+ * 링크 공유 팝업 (KAN-312, web 이식 KAN-349) — 릴의 공유 버튼이 쓴다.
  *
- * 티켓대로 네이티브 공유 시트가 아니라 주소를 눈으로 보여 주고 복사 버튼을 다는
- * 팝업이다. 무엇을 공유할지는 호출부가 경로로 정한다 — 기사 세부는
- * `articleSharePath`, 릴은 `reelSharePath`(KAN-349, 받은 사람이 같은 릴
- * 화면으로 떨어진다).
+ * 모바일과 같은 주소 확인 + 복사 버튼 팝업이고, `LoginPromptDialog`와 같은
+ * 스크림 + 카드 관용이다. 데스크톱이라 hover·focus-visible을 얹었다.
+ * 무엇을 공유할지는 호출부가 경로로 정한다(릴은 `reelSharePath`).
  *
- * `LoginPromptDialog`와 같은 스크림 + 카드 관용에 같은 이유로 body 포털을 쓴다.
- * 릴스 액션 레일엔 `drop-shadow` 필터가 걸려 있는데, 필터가 걸린 조상은
- * `position: fixed`의 기준 상자가 돼서 그 안에 두면 `inset-0`이 화면이 아니라
- * 레일에 맞는다. body 밑으로 옮기면 어디서 부르든 화면 전체를 덮는다.
+ * body로 포털을 뚫는다 — 릴 카드·세부 패널 안은 `transform`이 걸린 조상이 될 수
+ * 있고, 그러면 `position: fixed`의 기준 상자가 어긋난다(`LoginPromptDialog`와
+ * 같은 이유).
  *
  * 주소는 마운트 뒤에 만든다. `location.origin`은 서버 렌더에 없다.
  *
  * @param path 공유할 앱 내 경로 — 절대 주소는 여기서 origin을 붙여 만든다
- * @param onClose X 버튼 또는 스크림 탭으로 닫을 때
+ * @param onClose X 버튼 또는 스크림 클릭으로 닫을 때
  */
 export function ShareDialog({
   path,
@@ -48,7 +46,7 @@ export function ShareDialog({
       aria-modal="true"
       aria-labelledby="share-dialog-title"
     >
-      {/* 스크림 — 탭하면 닫는다 */}
+      {/* 스크림 — 클릭하면 닫는다 */}
       <button
         type="button"
         aria-label="닫기"
@@ -65,7 +63,7 @@ export function ShareDialog({
           type="button"
           aria-label="닫기"
           onClick={onClose}
-          className="text-icon absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
+          className="text-icon hover:bg-elevate focus-visible:outline-accent absolute top-3 right-3 flex size-8.5 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           <CloseIcon size={18} />
         </button>
@@ -80,8 +78,8 @@ export function ShareDialog({
           이 링크를 복사해 공유해 보세요.
         </p>
 
-        {/* 주소 원문 — 복사가 막힌 웹뷰에서 길게 눌러 직접 집어갈 수 있게 늘 보여준다.
-            `select-all`이라 한 번만 눌러도 전체가 잡힌다 */}
+        {/* 주소 원문 — 복사가 막힌 환경에서 드래그해 직접 집어갈 수 있게 늘 보여준다.
+            `select-all`이라 한 번만 클릭해도 전체가 잡힌다 */}
         <p className="bg-elevate-2 border-border rounded-control text-label text-text-2 mt-4 border px-3.5 py-3 break-all select-all">
           {url}
         </p>
@@ -89,7 +87,7 @@ export function ShareDialog({
         <button
           type="button"
           onClick={copy}
-          className="bg-accent text-on-accent rounded-control text-body mt-3 flex w-full items-center justify-center gap-1.5 py-3 font-extrabold active:opacity-60"
+          className="bg-accent text-on-accent rounded-control text-body focus-visible:outline-accent mt-3 flex w-full items-center justify-center gap-1.5 py-3 font-extrabold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-80"
         >
           {status === "copied" && <CheckIcon size={14} />}
           {status === "copied" ? "복사했어요" : "링크 복사"}

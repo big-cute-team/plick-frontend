@@ -125,3 +125,37 @@ export async function getReels({
     nextCursor: page.nextCursor,
   };
 }
+
+/**
+ * 특정 릴에서 시작하는 피드 한 페이지 (KAN-349, `GET /api/v1/reels/{postId}`).
+ *
+ * 공유 링크(`/reels/[postId]`) 진입용이다. `items[0]`이 그 릴이고 이후가 원문 발행
+ * 시각 최신순의 다음 릴들이다 — 순서는 로그인 여부와 무관하게 전역 동일하고,
+ * `likedByMe`만 토큰 기준으로 채워진다. 이어보기는 응답의 `nextCursor`를 그대로
+ * {@link getReels}에 넘긴다. 딥링크 엔드포인트가 아니라 기존 피드로 이어 간다.
+ *
+ * @param postId 앵커 릴 id (`articleSummaryId`)
+ * @param size 한 페이지 건수 (1..30) — 피드와 같은 상한이다
+ * @param accessToken 서버에서 부를 때만 — {@link getReels}와 같은 규약
+ * @throws {ApiError} 없는·미발행 릴은 404 `ARTICLE_NOT_FOUND`,
+ *   정수가 아닌 id는 400 `COMMON_INVALID_PARAM`으로 온다
+ */
+export async function getReelsFrom(
+  postId: string,
+  {
+    size = REELS_PAGE_SIZE,
+    accessToken,
+  }: { size?: number; accessToken?: string } = {},
+): Promise<ReelFeedPage> {
+  const page = await apiFetch<ReelsFeedResponse>(
+    `/api/v1/reels/${postId}?${new URLSearchParams({ size: String(size) })}`,
+    accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined,
+  );
+
+  return {
+    items: page.items.map(toReelCard),
+    nextCursor: page.nextCursor,
+  };
+}
