@@ -37,6 +37,7 @@ interface ProfileTeamResponse {
  */
 function toMyProfile(r: ProfileResponse): MyProfile {
   return {
+    userId: r.userId,
     nickname: r.nickname,
     email: r.email,
     nicknameChangeableAt: r.nicknameChangeableAt,

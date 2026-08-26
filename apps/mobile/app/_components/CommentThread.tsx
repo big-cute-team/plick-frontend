@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ApiError } from "@plick/core/client";
 import { avatarInitials, formatCount } from "@plick/domain/format";
-import { ChevronMiniIcon, HeartMiniIcon } from "@plick/ui/icons";
+import { ChevronMiniIcon, HeartMiniIcon, MoreIcon } from "@plick/ui/icons";
 import type { ArticleComment } from "@plick/domain/types";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
+import { useBlockUser } from "@/_hooks/useBlockUser";
 import { useCommentLike } from "@/_hooks/useCommentLike";
 import { useDeleteComment } from "@/_hooks/useDeleteComment";
 import { formatRelativeTime } from "@plick/domain/format";
@@ -14,6 +16,7 @@ import { CommentComposer } from "./CommentComposer";
 import { CommentEditForm } from "./CommentEditForm";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { LoginPromptDialog } from "./LoginPromptDialog";
+import { ReportCommentDialog } from "./ReportCommentDialog";
 
 /**
  * 댓글 한 스레드 — 원 댓글 + (있으면) 접힌 답글들. 기사 세부·릴 세부 시트 공용.
@@ -106,10 +109,14 @@ export function CommentThread({
  * 최상위 아래로 평탄화되므로 화면은 1단까지만 연다(KAN-303, be-verify 확인).
  * 좋아요는 원 댓글과 대댓글이 같은 엔드포인트를 쓰므로 양쪽에 그대로 둔다.
  *
- * 내 댓글이면 수정·삭제 버튼을 얹는다(KAN-333). 목록 응답에 작성자 식별 필드가
- * 없어 닉네임으로 대조한다 — 온보딩·프로필 수정에서 BE가 중복 닉네임을 거절하므로
- * 앱 수준에선 유일하고, 오판해도 BE가 403 `COMMENT_FORBIDDEN`으로 막는다.
- * 응답에 `isMine` 필드를 넣는 건 BE에 요청할 항목으로 남겨 뒀다.
+ * 내 댓글이면 수정·삭제 버튼을(KAN-333), 남의 댓글이면 신고·차단 ⋯ 메뉴를
+ * (KAN-411) 얹는다. 내 댓글 판별은 작성자 `userId` 대조다 — KAN-411에서 BE가
+ * 댓글에 작성자 id를 실어 주면서 닉네임 대조를 교체했다(닉네임은 변경 가능한
+ * 값이라 대조 근거로 약했다). 오판해도 BE가 403 `COMMENT_FORBIDDEN`으로 막는다.
+ *
+ * 차단한 사용자의 댓글(`isBlocked`)과 운영자 블라인드 댓글(`isBlinded`)은
+ * tombstone처럼 본문 자리에 안내 문구만 남기고 액션 줄을 감춘다 — 서버가
+ * 목록에서 빼지 않고 플래그로 내려주므로(be-verify 확인) 표시는 화면 몫이다.
  *
  * @param articleId - 이 댓글이 달린 기사(릴) id — 좋아요 캐시 갱신에 쓴다
  * @param reply - 답글이면 들여쓰기 + 작은 아바타로 렌더
@@ -129,10 +136,10 @@ function CommentItem({
   onReply?: () => void;
   onDeleted?: () => void;
 }) {
-  const { nickname } = useAuth();
+  const { userId: myUserId } = useAuth();
   const [editing, setEditing] = useState(false);
 
-  const mine = nickname !== null && comment.nickname === nickname;
+  const mine = myUserId !== null && comment.userId === myUserId;
 
   return (
     <div className={`flex gap-2.5 ${reply ? "pl-10" : ""}`}>
@@ -159,6 +166,14 @@ function CommentItem({
           <p className="text-body text-text-4 leading-body">
             삭제된 댓글이에요.
           </p>
+        ) : comment.isBlocked ? (
+          <p className="text-body text-text-4 leading-body">
+            차단한 사용자의 댓글이에요.
+          </p>
+        ) : comment.isBlinded ? (
+          <p className="text-body text-text-4 leading-body">
+            블라인드된 댓글이에요.
+          </p>
         ) : editing ? (
           <CommentEditForm
             comment={comment}
@@ -181,13 +196,15 @@ function CommentItem({
                   답글
                 </button>
               )}
-              {mine && (
+              {mine ? (
                 <CommentOwnerActions
                   comment={comment}
                   articleId={articleId}
                   onEdit={() => setEditing(true)}
                   onDeleted={onDeleted}
                 />
+              ) : (
+                <CommentMoreActions comment={comment} />
               )}
             </div>
           </>
@@ -288,6 +305,174 @@ function CommentOwnerActions({
         />
       )}
     </>
+  );
+}
+
+/**
+ * 남의 댓글의 ⋯ 메뉴 (KAN-411) — 신고·차단 진입점. 원 댓글과 대댓글이 같이 쓴다.
+ *
+ * ⋯을 누르면 신고하기·차단하기를 담은 액션 팝업이 뜬다. 드롭다운이 아니라
+ * 중앙 카드인 이유: 댓글은 스크롤 컨테이너(`ScrollArea`·릴 세부 시트) 안이라
+ * 행 옆에 `absolute`로 펼치면 컨테이너 가장자리에서 잘리고, 잘리지 않게
+ * 포털로 빼면 앵커 좌표 추적이 필요해진다. 기존 팝업 관용(스크림 + 중앙 카드,
+ * body 포털)이 어디서 열어도 안전하다.
+ *
+ * 비로그인이면 팝업 대신 로그인 유도를 띄운다(좋아요 버튼과 같은 관용 —
+ * 버튼은 보여주되 요청 없이 막는다). 내 댓글에는 이 메뉴가 아예 안 그려지므로
+ * (mine 분기) 셀프 신고·차단은 화면에서 성립하지 않고, 오판은 BE가
+ * 400(`COMMENT_SELF_REPORT`·`USER_BLOCK_SELF`)으로 막는다.
+ *
+ * 차단 확인은 `ConfirmDialog` 재사용 — 실패 문구를 팝업 안에 남겨 재시도할 수
+ * 있게 하고, 토큰 만료(401)만 팝업을 닫고 로그인 유도로 돌린다(삭제와 같은
+ * 관용). 차단 성공 시 캐시 반영은 `useBlockUser`가 한다.
+ */
+function CommentMoreActions({ comment }: { comment: ArticleComment }) {
+  const { isLoggedIn } = useAuth();
+  const [dialog, setDialog] = useState<"none" | "menu" | "report" | "block">(
+    "none",
+  );
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
+  const block = useBlockUser();
+
+  function handleBlock() {
+    setBlockError(null);
+    block.mutate(comment.userId, {
+      onSuccess: () => setDialog("none"),
+      onError: (err) => {
+        if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
+          setDialog("none");
+          setNeedsLogin(true);
+          return;
+        }
+        // BE 메시지가 이미 사용자용 한국어다(예: "차단할 사용자를 찾을 수 없습니다.")
+        setBlockError(
+          err instanceof ApiError
+            ? err.message
+            : "차단하지 못했어요. 잠시 후 다시 시도해 주세요.",
+        );
+      },
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => (isLoggedIn ? setDialog("menu") : setNeedsLogin(true))}
+        aria-label="댓글 신고·차단"
+        aria-haspopup="dialog"
+        className="text-text-4 active:opacity-60"
+      >
+        <MoreIcon size={14} />
+      </button>
+
+      {dialog === "menu" && (
+        <CommentActionsDialog
+          onReport={() => setDialog("report")}
+          onBlock={() => {
+            setBlockError(null);
+            setDialog("block");
+          }}
+          onClose={() => setDialog("none")}
+        />
+      )}
+
+      {dialog === "report" && (
+        <ReportCommentDialog
+          commentId={comment.id}
+          onClose={() => setDialog("none")}
+          onAuthRequired={() => {
+            setDialog("none");
+            setNeedsLogin(true);
+          }}
+        />
+      )}
+
+      {dialog === "block" && (
+        <ConfirmDialog
+          title="이 사용자를 차단할까요?"
+          description={`${comment.nickname}님의 댓글이 모든 화면에서 가려져요. MY의 차단 목록에서 해제할 수 있어요.`}
+          confirmLabel="차단"
+          pending={block.isPending}
+          error={blockError}
+          onConfirm={handleBlock}
+          onClose={() => setDialog("none")}
+        />
+      )}
+
+      {needsLogin && (
+        <LoginPromptDialog
+          onClose={() => setNeedsLogin(false)}
+          description="신고·차단은 로그인한 사용자만 할 수 있어요."
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * ⋯이 여는 액션 선택 팝업 — 신고하기·차단하기·취소 세 줄. 스크림 + 중앙 카드
+ * + body 포털 관용은 `ConfirmDialog`와 같다(이유는 {@link CommentMoreActions}).
+ */
+function CommentActionsDialog({
+  onReport,
+  onBlock,
+  onClose,
+}: {
+  onReport: () => void;
+  onBlock: () => void;
+  onClose: () => void;
+}) {
+  /* 포털 대상(document)은 서버 렌더에 없다. 마운트 뒤에만 그려 hydration을 맞춘다 */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-8"
+      role="dialog"
+      aria-modal="true"
+      aria-label="댓글 신고·차단"
+    >
+      {/* 스크림 — 탭하면 닫는다 */}
+      <button
+        type="button"
+        aria-label="닫기"
+        onClick={onClose}
+        className="absolute inset-0"
+        style={{
+          backgroundColor:
+            "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
+        }}
+      />
+
+      <div className="bg-bg border-border rounded-card divide-border relative w-full max-w-72 divide-y overflow-hidden border">
+        <button
+          type="button"
+          onClick={onReport}
+          className="text-body text-text w-full py-3.5 font-bold active:opacity-60"
+        >
+          신고하기
+        </button>
+        <button
+          type="button"
+          onClick={onBlock}
+          className="text-body text-danger w-full py-3.5 font-bold active:opacity-60"
+        >
+          차단하기
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-body text-text-3 w-full py-3.5 font-bold active:opacity-60"
+        >
+          취소
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }
 

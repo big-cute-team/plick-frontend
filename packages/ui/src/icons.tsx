@@ -82,6 +82,19 @@ export const MenuIcon = (p: IconProps) => (
 );
 
 /**
+ * 더보기(⋯) — 댓글 신고·차단 메뉴 트리거 (KAN-411). 피그마에 시안이 없어
+ * 하단 탭 세트의 24 그리드에 맞춰 직접 그린 기하 아이콘이다(MenuIcon과 같은
+ * 경위). 점은 선이 아니라 면이라 stroke 대신 fill로 채운다.
+ */
+export const MoreIcon = (p: IconProps) => (
+  <svg {...base(p)} stroke="none" fill="currentColor">
+    <circle cx="5" cy="12" r="1.9" />
+    <circle cx="12" cy="12" r="1.9" />
+    <circle cx="19" cy="12" r="1.9" />
+  </svg>
+);
+
+/**
  * 릴스 액션 레일 아이콘 — 피그마 D5(node 77-6) 벡터를 그대로 사용.
  *
  * viewBox·패스·선 굵기가 피그마 노드 원본(0.55 배율 프레임 기준 단위)이라
