@@ -1,0 +1,78 @@
+"use client";
+
+import Link from "next/link";
+import { VoteCard } from "@plick/ui/VoteCard";
+import type { InitialDebateList } from "@plick/domain/types";
+import { useDebates } from "@/_hooks/useDebates";
+
+/** 첫 로딩에 보여줄 자리 개수 — 카드가 커서 기사 리스트보다 적게 둔다. */
+const SKELETON_COUNT = 3;
+
+/**
+ * 데스크톱 토론 리스트 본체 (KAN-418, 시안 W13) — 투표 카드 리스트.
+ * 모바일 `DebatesFeed`의 웹 이식이다 — 카드는 표시 전용이고 누르면 소속 기사
+ * 상세로 간다.
+ *
+ * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다.
+ */
+export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
+  const { data, isPending, isError, isFetching, refetch } = useDebates(initial);
+  const debates = data ?? [];
+
+  return (
+    <section>
+      <h2 className="text-body-lg text-text pb-3.5 font-extrabold">
+        🔥 지금 뜨거운 투표
+      </h2>
+
+      {isPending ? (
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <DebateCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="py-16 text-center">
+          <p className="text-body text-text-4">토론을 불러오지 못했어요.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="bg-elevate text-label text-text rounded-control hover:bg-elevate-2 mt-3 px-4 py-2 font-bold disabled:opacity-50"
+          >
+            다시 시도
+          </button>
+        </div>
+      ) : debates.length > 0 ? (
+        <ul className="flex flex-col gap-4">
+          {debates.map((debate) => (
+            <li key={debate.id}>
+              <Link
+                href={`/articles/${debate.articleId}`}
+                className="focus-visible:outline-accent block transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <VoteCard debate={debate} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-body text-text-4 py-16 text-center">
+          아직 열린 토론이 없어요.
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** 투표 카드 자리 스켈레톤 — 배지·질문·트랙 2개의 실루엣이다. */
+function DebateCardSkeleton() {
+  return (
+    <div className="bg-elevate rounded-card flex animate-pulse flex-col gap-3 p-4">
+      <div className="bg-elevate rounded-badge h-4 w-16" />
+      <div className="bg-elevate rounded-control h-5 w-3/4" />
+      <div className="bg-elevate-2 rounded-control h-11" />
+      <div className="bg-elevate-2 rounded-control h-11" />
+    </div>
+  );
+}

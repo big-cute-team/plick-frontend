@@ -140,6 +140,8 @@ interface ArticleDetailResponse {
   articleSummaryId: number;
   title: string;
   summary: string;
+  /** 게시물 표시 형태 (KAN-418) — "GENERAL" | "DEBATE" | "FINISH". */
+  contentType: string | null;
   imageUrl: string | null;
   reporters: {
     name: string;
@@ -206,6 +208,11 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
     id: String(r.articleSummaryId),
     title: r.title,
     summary: r.summary,
+    // 모르는 값이 와도 화면이 마감 처리로 튀지 않게 GENERAL로 떨어뜨린다
+    contentType:
+      r.contentType === "DEBATE" || r.contentType === "FINISH"
+        ? r.contentType
+        : "GENERAL",
     stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,
     publishedAt: r.publishedAt,
     teams: r.hashtags

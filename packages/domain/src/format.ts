@@ -193,6 +193,70 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 /**
+ * 토론 마감까지 남은 시간 표기 (KAN-418) — "6시간 남음" 식. 시안 T1·V3 카드
+ * 우상단 표기다. `closesAt`은 표시용 힌트라(마감 판정 실기준은 기사
+ * `contentType`) 지났으면 "마감"으로만 눕히고, null이면 표기 자체를 생략하도록
+ * null을 준다.
+ *
+ * @param closesAt 마감 시각 ISO (KST 오프셋) 또는 null(무기한)
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ * @example
+ * formatDebateTimeLeft("2026-08-27T23:59:00+09:00"); // "7시간 남음"
+ */
+export function formatDebateTimeLeft(
+  closesAt: string | null,
+  now: Date = new Date(),
+): string | null {
+  if (!closesAt) return null;
+  const at = new Date(closesAt);
+  if (Number.isNaN(at.getTime())) return null;
+
+  const left = at.getTime() - now.getTime();
+  if (left <= 0) return "마감";
+  if (left < MINUTE) return "곧 마감";
+  if (left < HOUR) return `${Math.floor(left / MINUTE)}분 남음`;
+  if (left < DAY) return `${Math.floor(left / HOUR)}시간 남음`;
+  return `${Math.floor(left / DAY)}일 남음`;
+}
+
+/**
+ * 토론 마감 시각 표기 (KAN-418) — 투표 후 메타 라인의 "오늘 23:59 마감"에서
+ * 시각 부분. KST 기준 같은 날이면 "오늘 23:59", 다른 날이면 "8월 30일 23:59"다.
+ * 기기 시간대와 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.
+ *
+ * @param closesAt 마감 시각 ISO (KST 오프셋)
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ */
+export function formatDebateCloseAt(
+  closesAt: string,
+  now: Date = new Date(),
+): string {
+  const at = new Date(closesAt);
+  if (Number.isNaN(at.getTime())) return "";
+
+  const kstDay = (d: Date) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      dateStyle: "short",
+    }).format(d);
+  const time = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(at);
+
+  if (kstDay(at) === kstDay(now)) return `오늘 ${time}`;
+
+  const date = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+  }).format(at);
+  return `${date} ${time}`;
+}
+
+/**
  * ISO 시각을 상대 표기("2분 전")로 바꾼다. 하루를 넘기면 날짜로 떨어뜨린다 (KAN-271).
  *
  * BE 값에 이미 KST 오프셋(+09:00)이 박혀 있으므로 추가 타임존 보정을 넣으면

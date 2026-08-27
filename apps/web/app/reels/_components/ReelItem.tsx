@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
+import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
@@ -124,7 +125,13 @@ export function ReelItem({
               "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
           }}
         >
-          <PostBadges team={team} stage={reel.stage} />
+          <PostBadges
+            team={team}
+            stage={reel.stage}
+            /* 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 모바일 T2와 동일).
+               마감(FINISH) 릴은 BE가 debate를 null로 내려 자연히 빠진다 */
+            extra={reel.debate ? <DebateLiveChip /> : null}
+          />
           <button
             ref={titleRef}
             type="button"

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { articlesTeamPath, teamHubPath } from "@plick/domain/format";
 import { TABS } from "@/_constants/app";
 import { useArticlesRefresh } from "@/_hooks/useArticlesRefresh";
+import { useDebatesRefresh } from "@/_hooks/useDebatesRefresh";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
 import { useReelsRefresh } from "@/_hooks/useReelsRefresh";
 import { useViewState } from "@/_stores/view-state";
@@ -48,6 +49,7 @@ export function TabBar({
   const refreshHome = useHomeRefresh();
   const refreshReels = useReelsRefresh();
   const refreshArticles = useArticlesRefresh();
+  const refreshDebates = useDebatesRefresh();
   const overlay = variant === "overlay";
 
   /** 지금 있는 탭을 다시 눌렀을 때 — 맨 위로 올리고 새로 받는다 */
@@ -62,7 +64,9 @@ export function TabBar({
       ? refreshHome()
       : screen === "articles"
         ? refreshArticles()
-        : refreshReels());
+        : screen === "debate"
+          ? refreshDebates()
+          : refreshReels());
   }
 
   /** 탭의 목적지 — 피드 탭은 마지막으로 보던 팀 URL, 나머지는 고정 경로 */

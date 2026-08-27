@@ -19,6 +19,7 @@
 import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@plick/domain/constants";
 import type { ReelCard, ReelFeedPage, TeamCode } from "@plick/domain/types";
 import { apiFetch } from "./client";
+import { toDebate, type DebateResponse } from "./debates";
 
 /** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
 interface ReelsCardResponse {
@@ -43,6 +44,10 @@ interface ReelsCardResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /** 게시물 표시 형태 (KAN-418) — "GENERAL" | "DEBATE" | "FINISH". */
+  contentType: string | null;
+  /** 이 릴에 붙은 토론 (KAN-418). 토론 없는 게시물과 마감(FINISH)은 null이다. */
+  debate: DebateResponse | null;
 }
 
 interface ReelsFeedResponse {
@@ -88,6 +93,12 @@ function toReelCard(r: ReelsCardResponse): ReelCard {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    // 모르는 값이 와도 화면이 마감 처리로 튀지 않게 GENERAL로 떨어뜨린다
+    contentType:
+      r.contentType === "DEBATE" || r.contentType === "FINISH"
+        ? r.contentType
+        : "GENERAL",
+    debate: r.debate ? toDebate(r.debate) : null,
   };
 }
 

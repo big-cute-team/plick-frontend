@@ -47,6 +47,25 @@ body {
   scroll-snap-align: start;
 }
 
+/* 릴스 "토론 중" 칩의 번쩍임 (KAN-418, 시안 T2) — accent 글로우가 퍼졌다
+ * 잦아들기를 반복해 틴트 배지들 사이에서 살아 있는 신호로 읽히게 한다.
+ * 색은 토큰(--plk-accent)만 쓴다. */
+.debate-live-chip {
+  animation: debate-live 1.4s ease-in-out infinite;
+}
+@keyframes debate-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--plk-accent) 65%, transparent);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 12px 3px
+      color-mix(in srgb, var(--plk-accent) 45%, transparent);
+    filter: brightness(1.18);
+  }
+}
+
 /* 트윗 임베드(react-tweet) — 라이브러리 기본 팔레트 대신 PLick 토큰을 물려
  * 다크/라이트 전환을 자동으로 따라가게 한다 (KAN-284).
  * 클래스를 두 번 겹친 건 라이브러리 theme.css의 라이트/다크 셀렉터(특이도 0,1,0)를

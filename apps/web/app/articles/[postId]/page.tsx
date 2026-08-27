@@ -7,9 +7,14 @@ import {
 } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
+import { getArticleDebate } from "@plick/core/debates";
 import { truncateText } from "@plick/domain/format";
 import { newsArticleJsonLd } from "@plick/domain/jsonld";
-import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
+import type {
+  ArticleCard,
+  Debate,
+  InitialCommentPage,
+} from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -106,11 +111,15 @@ export default async function ArticleDetailPage({
   const { postId } = await params;
   const accessToken = await getAccessToken();
 
-  const [articleResult, commentsResult, hotResult] = await Promise.allSettled([
-    getArticle(postId, accessToken),
-    getComments(postId, { accessToken }),
-    getHotArticles(),
-  ]);
+  const [articleResult, commentsResult, hotResult, debateResult] =
+    await Promise.allSettled([
+      getArticle(postId, accessToken),
+      getComments(postId, { accessToken }),
+      getHotArticles(),
+      // 투표형 게시물인지는 이 호출이 판별한다 (KAN-418) — 토론 없는 기사는
+      // null이 온다. 토큰을 실어야 `myVote`가 이 유저 기준으로 온다
+      getArticleDebate(postId, accessToken ? { accessToken } : undefined),
+    ]);
 
   if (articleResult.status === "rejected") {
     const error = articleResult.reason;
@@ -134,6 +143,14 @@ export default async function ArticleDetailPage({
   const hot = hotResult.status === "fulfilled" ? hotResult.value : null;
   if (hotResult.status === "rejected") {
     console.error("[article] 실시간 인기 로드 실패:", hotResult.reason);
+  }
+
+  // 토론 조회만 실패하면 페이지를 죽이지 않고 투표 카드 없이 내려보낸다 —
+  // 댓글 씨앗과 같은 판단이다
+  const debate: Debate | null =
+    debateResult.status === "fulfilled" ? debateResult.value : null;
+  if (debateResult.status === "rejected") {
+    console.error("[article] 토론 로드 실패:", debateResult.reason);
   }
 
   // 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
@@ -168,6 +185,7 @@ export default async function ArticleDetailPage({
             <ArticleMain
               article={articleResult.value}
               initialComments={initialComments}
+              debate={debate}
             />
             <ArticleSidebar
               related={related}

@@ -114,6 +114,11 @@ export interface ArticleCard {
 export interface ArticleDetail {
   /** BE `articleSummaryId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */
   id: string;
+  /**
+   * 게시물 표시 형태 (KAN-418). FINISH면 이 기사의 토론이 마감된 것이다 —
+   * 토론 응답에는 상태가 없어 투표 카드의 마감 판정을 이 값으로 한다.
+   */
+  contentType: ArticleContentType;
   /** 파싱이 어긋나 원문 트윗 전문이 그대로 들어온 행이 있다(이모지·URL 포함). */
   title: string;
   /** 긴 요약(`summary_detail`). 본문 필드가 따로 없어 이게 본문 문단이다. */
@@ -254,7 +259,104 @@ export interface ReelCard {
   liked: boolean;
   /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
   hashtags: string[];
+  /**
+   * 게시물 표시 형태 (KAN-418). FINISH면 마감된 토론이 붙은 릴이다 — 그때
+   * `debate`가 null로 오므로(아래 참고) 마감 결과를 보여주려면 이 값을 보고
+   * 기사 토론을 따로 불러야 한다.
+   */
+  contentType: ArticleContentType;
+  /**
+   * 이 릴에 붙은 토론 (KAN-418). 릴스는 목록 응답에 토론이 통째로 인라인돼
+   * 별도 조회가 없다 — 기사 상세가 `GET /articles/{id}/debate`를 따로 부르는
+   * 것과 다르다. 토론 없는 게시물과 마감(FINISH) 게시물은 null이다.
+   */
+  debate: Debate | null;
 }
+
+/**
+ * 게시물 표시 형태 (KAN-418, BE `article_summaries.content_type` enum 그대로).
+ *
+ * DEBATE가 열린 토론, FINISH가 마감된 토론이다 — 토론의 열림/마감 판정 실기준은
+ * `closesAt` 시각이 아니라 이 값이다(BE `DebateService` 확인). 마감(FINISH)
+ * 기사는 토론 리스트에서 빠지고 릴스 카드의 `debate`도 null로 온다.
+ */
+export type ArticleContentType = "GENERAL" | "DEBATE" | "FINISH";
+
+/**
+ * 투표 선택지 식별자 (KAN-418, BE enum 문자열 그대로).
+ * BE `debates` 테이블이 선택지를 A/B 두 컬럼으로 고정해 두 개뿐이다.
+ */
+export type VoteOption = "OPTION_A" | "OPTION_B";
+
+/**
+ * 토론(투표) 한 건 (KAN-418, `GET /api/v1/articles/{articleId}/debate` ·
+ * `GET /api/v1/reels`의 `debate` 필드).
+ *
+ * 기사 하나에 토론이 최대 하나 붙는 구조다. 마감 여부는 이 응답에 없다 —
+ * 실기준이 기사의 {@link ArticleContentType}(FINISH = 마감)이기 때문으로,
+ * 기사 상세가 자기 `contentType`으로 판정해 화면에 넘긴다. 리스트·릴스에는
+ * 열린 토론만 오므로 판정할 일 자체가 없다.
+ */
+export interface Debate {
+  /** BE `debateId`. 투표 엔드포인트의 path 파라미터라 문자열로 담는다. */
+  id: string;
+  /** 투표 질문 (예: "6,000만 유로, 디오망드에 지를 만한가?") */
+  topic: string;
+  optionA: string;
+  optionB: string;
+  /**
+   * 마감 시각 ISO-8601 (KST 오프셋). null이면 남은 시간 표기를 생략한다.
+   * 표시용 힌트일 뿐 마감 판정 기준이 아니다 — BE는 목록 필터도 투표 차단도
+   * 기사 `contentType`으로만 본다.
+   */
+  closesAt: string | null;
+  voteCountA: number;
+  voteCountB: number;
+  /** 내 투표. 비로그인·미투표면 null. 결과 공개는 이 값(또는 마감)이 게이트다. */
+  myVote: VoteOption | null;
+}
+
+/**
+ * 토론 리스트 한 건 (KAN-418, `GET /api/v1/debates`).
+ *
+ * 리스트 전용으로 소속 기사 id가 붙는다 — 카드 클릭 시 기사 상세로 보내는 데
+ * 쓴다. 팀·기사 제목 같은 부가 정보는 응답에 없다(리스트 카드가 질문만 보여주는
+ * 이유). 페이지네이션 없는 순수 배열로 온다.
+ */
+export interface DebateListItem extends Debate {
+  /** 소속 기사 id — 릴스·기사의 `articleSummaryId`와 같은 체계를 문자열로. */
+  articleId: string;
+}
+
+/**
+ * 서버 컴포넌트가 미리 받아 클라 캐시에 심을 토론 리스트.
+ *
+ * 시각을 같이 묶는 이유는 {@link InitialArticleFeed}와 같다.
+ */
+export interface InitialDebateList {
+  items: DebateListItem[];
+  /** 서버가 응답을 받은 시각(epoch ms). 캐시 신선도의 기준점. */
+  fetchedAt: number;
+}
+
+/**
+ * 투표 후 집계 상태. 낙관적 갱신도 롤백도 이 덩어리를 통째로 바꾼다 —
+ * 좋아요의 {@link LikeState}와 같은 역할이다.
+ */
+export interface DebateVoteState {
+  voteCountA: number;
+  voteCountB: number;
+  myVote: VoteOption | null;
+}
+
+/**
+ * 투표 서버 액션의 결과. 값으로 돌려주는 이유는 {@link CreateCommentResult}와
+ * 같다. 성공이면 BE가 계산한 최신 집계가 온다 — 낙관적으로 옮긴 카운트를 이걸로
+ * 덮어 다른 사람 표까지 반영한다. 재투표는 에러가 아니라 입장 변경이다.
+ */
+export type VoteDebateResult =
+  | { ok: true; result: DebateVoteState }
+  | { ok: false; status: number; code: string; message: string };
 
 /**
  * 릴스 커서 페이지네이션 한 페이지.
