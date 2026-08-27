@@ -8,4 +8,6 @@ export const debateKeys = {
   all: ["debates"] as const,
   /** 토론 리스트 — BE에 필터·페이지네이션이 없어 파라미터 없는 단일 키다. */
   list: () => ["debates", "list"] as const,
+  /** 기사별 토론 — 릴 세부가 마감(FINISH) 릴의 결과를 클라에서 받을 때 쓴다. */
+  article: (articleId: string) => ["debates", "article", articleId] as const,
 };

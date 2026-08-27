@@ -7,10 +7,12 @@ import { CloseIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
+import { VoteCard } from "@plick/ui/VoteCard";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
+import { useArticleDebate } from "@/_hooks/useArticleDebate";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 
 /**
@@ -60,6 +62,11 @@ export function ReelDetailPanel({
   const reelId = reel?.id;
   /* 닫힘 애니 중에도 rendered가 남으니 그 기준으로 받는다 — 캐시가 있어 재요청 없음 */
   const reporters = useArticleReporters(rendered?.id);
+  /* 마감(FINISH) 릴은 피드의 debate가 null이라 결과를 따로 받는다 (KAN-418).
+     마감이면 투표한 적 없어도 결과가 바로 보이고 상호작용은 없다 */
+  const closedDebate = useArticleDebate(
+    rendered?.contentType === "FINISH" ? rendered.id : undefined,
+  );
 
   useEffect(() => {
     if (reel) setRendered(reel);
@@ -144,10 +151,13 @@ export function ReelDetailPanel({
               </div>
 
               {/* 투표 카드 — 태그 행과 댓글 사이 (KAN-418, 모바일 시트와 같은
-                  자리). 패널은 릴을 갈아타도 마운트가 유지되므로 key로 릴마다
-                  카드 상태를 새로 시작한다 */}
-              {rendered.debate && (
+                  자리). 열린 토론은 피드 인라인을 그대로, 마감 릴은 위에서 따로
+                  받은 결과를 표시 전용으로 그린다. 패널은 릴을 갈아타도 마운트가
+                  유지되므로 key로 릴마다 카드 상태를 새로 시작한다 */}
+              {rendered.debate ? (
                 <DebateVoteCard key={rendered.id} debate={rendered.debate} />
+              ) : (
+                closedDebate && <VoteCard debate={closedDebate} closed />
               )}
 
               <CommentsHeader

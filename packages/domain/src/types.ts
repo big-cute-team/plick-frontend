@@ -260,9 +260,15 @@ export interface ReelCard {
   /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
   hashtags: string[];
   /**
+   * 게시물 표시 형태 (KAN-418). FINISH면 마감된 토론이 붙은 릴이다 — 그때
+   * `debate`가 null로 오므로(아래 참고) 마감 결과를 보여주려면 이 값을 보고
+   * 기사 토론을 따로 불러야 한다.
+   */
+  contentType: ArticleContentType;
+  /**
    * 이 릴에 붙은 토론 (KAN-418). 릴스는 목록 응답에 토론이 통째로 인라인돼
    * 별도 조회가 없다 — 기사 상세가 `GET /articles/{id}/debate`를 따로 부르는
-   * 것과 다르다. 토론 없는 게시물은 null이 기본이다.
+   * 것과 다르다. 토론 없는 게시물과 마감(FINISH) 게시물은 null이다.
    */
   debate: Debate | null;
 }

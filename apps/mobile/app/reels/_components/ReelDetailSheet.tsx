@@ -6,11 +6,13 @@ import { ReporterLine } from "@plick/ui/ReporterLine";
 import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
 import { formatCount } from "@plick/domain/format";
+import { VoteCard } from "@plick/ui/VoteCard";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
+import { useArticleDebate } from "@/_hooks/useArticleDebate";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 import type { ReelCard } from "@plick/domain/types";
 import type { ReelDetailMotion } from "@/_types/reels";
@@ -51,6 +53,11 @@ export function ReelDetailSheet({
   const meta = `· ${formatRelativeTime(reel.publishedAt)} · 조회 ${formatCount(reel.views)}`;
   const [addedComments, setAddedComments] = useState(0);
   const reporters = useArticleReporters(reel.id);
+  /* 마감(FINISH) 릴은 피드의 debate가 null이라 결과를 따로 받는다 (KAN-418).
+     마감이면 투표한 적 없어도 결과가 바로 보이고 상호작용은 없다 */
+  const closedDebate = useArticleDebate(
+    reel.contentType === "FINISH" ? reel.id : undefined,
+  );
 
   return (
     <div className="absolute inset-0 z-20">
@@ -119,10 +126,15 @@ export function ReelDetailSheet({
             />
           </div>
 
-          {/* 투표 카드 — 태그 행과 댓글 사이 (KAN-418, 시안 V3). 릴은 피드
-              응답에 토론이 인라인이라 별도 조회 없이 그대로 그린다. key는 릴을
-              갈아탈 때 카드 상태를 새로 시작하는 보험이다 */}
-          {reel.debate && <DebateVoteCard key={reel.id} debate={reel.debate} />}
+          {/* 투표 카드 — 태그 행과 댓글 사이 (KAN-418, 시안 V3). 열린 토론은
+              피드 응답에 인라인이라 그대로 그리고, 마감 릴은 위에서 따로 받은
+              결과를 표시 전용으로 그린다. key는 릴을 갈아탈 때 카드 상태를
+              새로 시작하는 보험이다 */}
+          {reel.debate ? (
+            <DebateVoteCard key={reel.id} debate={reel.debate} />
+          ) : (
+            closedDebate && <VoteCard debate={closedDebate} closed />
+          )}
 
           <CommentsHeader
             count={reel.commentCount + addedComments}
