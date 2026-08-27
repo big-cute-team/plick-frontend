@@ -60,10 +60,17 @@ export const metadata: Metadata = {
 /**
  * 모바일 웹뷰 대응 뷰포트 — 노치/펀치홀까지 그려지도록 `viewport-fit=cover`,
  * 다양한 기기에서 확대 오작동을 줄이기 위해 initialScale 고정.
+ *
+ * maximumScale 1은 iOS가 16px 미만 input(text-body 13.5px)에 포커스할 때 걸어 주는
+ * 자동 확대를 막고, userScalable false는 WKWebView의 핀치 줌을 막는다.
+ * 일반 Safari는 iOS 10부터 user-scalable=no를 무시하므로 브라우저 사용자의
+ * 핀치 줌(접근성)은 그대로 살아 있고, 앱 웹뷰에서만 네이티브처럼 잠긴다.
  */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#0b0d12",
 };
