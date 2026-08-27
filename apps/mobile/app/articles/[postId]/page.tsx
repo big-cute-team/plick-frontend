@@ -3,9 +3,14 @@ import { notFound } from "next/navigation";
 import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
+import { getArticleDebate } from "@plick/core/debates";
 import { truncateText } from "@plick/domain/format";
 import { newsArticleJsonLd } from "@plick/domain/jsonld";
-import type { ArticleCard, InitialCommentPage } from "@plick/domain/types";
+import type {
+  ArticleCard,
+  Debate,
+  InitialCommentPage,
+} from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
@@ -92,13 +97,16 @@ export default async function ArticleDetailPage({
 }) {
   const { postId } = await params;
 
-  // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다
-  // (기사 KAN-308, 댓글 KAN-309)
+  // 토큰을 실어야 응답의 `likedByMe`·`myVote`가 이 유저 기준으로 온다
+  // (기사 KAN-308, 댓글 KAN-309, 투표 KAN-418)
   const accessToken = await getAccessToken();
-  const [articleResult, commentsResult] = await Promise.allSettled([
-    getArticle(postId, accessToken),
-    getComments(postId, { accessToken }),
-  ]);
+  const [articleResult, commentsResult, debateResult] =
+    await Promise.allSettled([
+      getArticle(postId, accessToken),
+      getComments(postId, { accessToken }),
+      // 투표형 게시물인지는 이 호출이 판별한다 — 토론 없는 기사는 null이 온다
+      getArticleDebate(postId, accessToken ? { accessToken } : undefined),
+    ]);
 
   if (articleResult.status === "rejected") {
     const e = articleResult.reason;
@@ -117,6 +125,14 @@ export default async function ArticleDetailPage({
     commentsResult.status === "fulfilled"
       ? { page: commentsResult.value, fetchedAt: Date.now() }
       : undefined;
+
+  // 토론 조회만 실패하면 페이지를 죽이지 않고 투표 카드 없이 내려보낸다 —
+  // 댓글 씨앗과 같은 판단이다
+  const debate: Debate | null =
+    debateResult.status === "fulfilled" ? debateResult.value : null;
+  if (debateResult.status === "rejected") {
+    console.error("[article] 토론 로드 실패:", debateResult.reason);
+  }
 
   // 함께 보면 좋은 기사 — 팀태그가 필요해 상세를 받은 뒤 이어 받는다
   let suggested: ArticleCard[] = [];
@@ -150,6 +166,7 @@ export default async function ArticleDetailPage({
           article={articleResult.value}
           suggested={suggested}
           initialComments={initialComments}
+          debate={debate}
         />
       </ScrollArea>
       <TabBar />

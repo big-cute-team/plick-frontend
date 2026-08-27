@@ -9,9 +9,11 @@ import { formatCount } from "@plick/domain/format";
 import type {
   ArticleCard,
   ArticleDetail,
+  Debate,
   InitialCommentPage,
 } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
+import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
@@ -39,15 +41,18 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *   관련 기사를 받는다(KAN-338). 비어 있으면 카드 대신 빈 문구가 나온다.
  * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지(KAN-303).
  *   실패했으면 undefined — 목록이 클라에서 직접 받는다.
+ * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드가 빠진다.
  */
 export function ArticleBody({
   article,
   suggested = [],
   initialComments,
+  debate = null,
 }: {
   article: ArticleDetail;
   suggested?: ArticleCard[];
   initialComments?: InitialCommentPage;
+  debate?: Debate | null;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
@@ -120,6 +125,16 @@ export function ArticleBody({
         <div className="flex flex-wrap items-center gap-1.5">
           <TagChips tags={article.hashtags} />
         </div>
+      )}
+
+      {/* 투표 카드 — 태그 행과 액션 행 사이 (KAN-418, 시안 V3·W14).
+          인터랙션이 있어 댓글처럼 클라 경계로 내려간다. 마감 판정은 기사
+          contentType이 실기준이다(FINISH = 마감) */}
+      {debate && (
+        <DebateVoteCard
+          debate={debate}
+          closed={article.contentType === "FINISH"}
+        />
       )}
 
       {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (KAN-301) */}

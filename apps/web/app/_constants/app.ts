@@ -36,5 +36,6 @@ export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/", label: "홈" },
   { href: "/reels", label: "릴스" },
   { href: "/articles", label: "기사" },
+  { href: "/debates", label: "토론" },
   { href: "/me", label: "MY" },
 ];

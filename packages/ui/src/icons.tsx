@@ -64,6 +64,19 @@ export const BellIcon = (p: IconProps) => (
   </svg>
 );
 
+/**
+ * 토론 탭 — 말풍선 (KAN-418). 피그마 T1 탭바의 토론 아이콘이 스크립트로 그린
+ * 말풍선이라(ADR 0108) 특정 노드 벡터가 아니고, 하단 탭 세트의 기하(24 그리드·
+ * 1.8 스트로크)에 맞춰 직접 그렸다 — NewsIcon과 같은 경위다.
+ */
+export const DebateIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M21 11.5a8.5 8 0 0 1-8.5 8 8.9 8.9 0 0 1-3.2-.6L4 20.5l1.1-4A7.7 7.7 0 0 1 4 11.5a8.5 8 0 0 1 17 0Z" />
+    <path d="M8.5 10.5h7" />
+    <path d="M8.5 13.5h4.5" />
+  </svg>
+);
+
 export const UserIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="12" cy="8" r="4" />

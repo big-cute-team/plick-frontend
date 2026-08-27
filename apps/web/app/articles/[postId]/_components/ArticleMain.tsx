@@ -9,9 +9,11 @@ import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type {
   ArticleCard,
   ArticleDetail,
+  Debate,
   InitialCommentPage,
 } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
+import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { SuggestedArticles } from "./SuggestedArticles";
@@ -44,15 +46,18 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *   기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
  * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지. 댓글 fetch가
  *   실패했으면 없이 들어오고, 그때는 목록이 클라에서 직접 받는다.
+ * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드가 빠진다.
  */
 export function ArticleMain({
   article,
   suggested = [],
   initialComments,
+  debate = null,
 }: {
   article: ArticleDetail;
   suggested?: ArticleCard[];
   initialComments?: InitialCommentPage;
+  debate?: Debate | null;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
@@ -122,6 +127,17 @@ export function ArticleMain({
       {article.hashtags.length > 0 && (
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <TagChips tags={article.hashtags} />
+        </div>
+      )}
+
+      {/* 투표 카드 — 태그 행과 액션 행 사이 (KAN-418, 시안 W14·W15).
+          인터랙션이 있어 댓글처럼 클라 경계로 내려간다 */}
+      {debate && (
+        <div className="mt-5">
+          <DebateVoteCard
+            debate={debate}
+            closed={article.contentType === "FINISH"}
+          />
         </div>
       )}
 

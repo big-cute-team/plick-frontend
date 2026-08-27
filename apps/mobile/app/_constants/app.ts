@@ -1,7 +1,13 @@
 /**
  * @file 모바일 앱 전용 상수. 도메인 상수(TEAMS 등)는 `@plick/domain/constants`.
  */
-import { HomeIcon, NewsIcon, ReelsIcon, UserIcon } from "@plick/ui/icons";
+import {
+  DebateIcon,
+  HomeIcon,
+  NewsIcon,
+  ReelsIcon,
+  UserIcon,
+} from "@plick/ui/icons";
 import type { Tab } from "@/_types/app";
 
 /**
@@ -74,6 +80,13 @@ export const TABS: Tab[] = [
     Icon: ReelsIcon,
     match: (p) => p.startsWith("/reels"),
     screen: "reels",
+  },
+  {
+    href: "/debates",
+    label: "토론",
+    Icon: DebateIcon,
+    match: (p) => p.startsWith("/debates"),
+    screen: "debate",
   },
   {
     href: "/me",

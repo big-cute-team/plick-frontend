@@ -19,6 +19,7 @@
 import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@plick/domain/constants";
 import type { ReelCard, ReelFeedPage, TeamCode } from "@plick/domain/types";
 import { apiFetch } from "./client";
+import { toDebate, type DebateResponse } from "./debates";
 
 /** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
 interface ReelsCardResponse {
@@ -43,6 +44,8 @@ interface ReelsCardResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /** 이 릴에 붙은 토론 (KAN-418). 토론 없는 게시물은 null이다. */
+  debate: DebateResponse | null;
 }
 
 interface ReelsFeedResponse {
@@ -88,6 +91,7 @@ function toReelCard(r: ReelsCardResponse): ReelCard {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    debate: r.debate ? toDebate(r.debate) : null,
   };
 }
 
