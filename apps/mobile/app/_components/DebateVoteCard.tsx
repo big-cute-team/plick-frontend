@@ -17,8 +17,8 @@ import { useDebateVote } from "@/_hooks/useDebateVote";
  * 이 카드가 떠 있는 동안의 표시용 사본으로 같은 값을 유지한다.
  *
  * @param debate 서버(또는 피드 캐시)가 내려준 최초 토론 상태
- * @param closed 마감된 토론인가(기사 `contentType === "FINISH"`). 릴 세부는
- *   BE가 열린 토론만 인라인으로 줘서 넘길 일이 없다.
+ * @param closed 마감된 토론인가(`contentType === "FINISH"`). 기사·릴 세부
+ *   모두 같은 기준으로 넘긴다 — 마감이면 결과 읽기 전용이다.
  * @param size `VoteCard` 크기 — 기사·릴 세부는 md(기본)
  */
 export function DebateVoteCard({

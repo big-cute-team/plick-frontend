@@ -181,9 +181,13 @@ export function ReelItem({
             stage={reel.stage}
             crestSize={34}
             stageTextClass="text-label"
-            /* 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 시안 T2).
-               마감(FINISH) 릴은 BE가 debate를 null로 내려 자연히 빠진다 */
-            extra={reel.debate ? <DebateLiveChip /> : null}
+            /* 열린 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 시안 T2).
+               마감(FINISH) 릴도 debate가 인라인으로 오므로(KAN-420) contentType으로 거른다 */
+            extra={
+              reel.debate && reel.contentType !== "FINISH" ? (
+                <DebateLiveChip />
+              ) : null
+            }
           />
           <button
             ref={titleTextRef}
