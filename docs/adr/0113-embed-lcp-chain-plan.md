@@ -123,7 +123,10 @@ URL을 서버가 아는 순간 `ReactDOM.preload(url, { as: "image", fetchPriori
 - [x] PR 1: 첫 릴 트윗 서버 렌더 + preload + swr 시딩 + 서버 캐시 → 측정
 - [ ] PR 2: `ReelDetailSheet`·`ShareDialog`·`LoginPromptDialog`·`TweetEmbed` 등 dynamic 전환 → 측정
 - [ ] PR 3: 화면 밖 릴 트윗 fetch 게이팅 → 측정
-- [ ] 피그마 새 페이지에 챕터 장표 작성
+- [x] 피그마 새 페이지(`PLick 성능 2 — 임베드 LCP`)에 장표 시작 — 진행형으로 쓴다.
+      6쪽 문제 정의(체인 다이어그램·lcp-discovery 진단·접근·측정 원칙), 7쪽 1단계 실행기
+      (구현·head 산출물·preload 증발 트러블슈팅·결과 표·533→19ms 스탯·다음 병목).
+      PR 2·3이 끝나면 8·9쪽을 같은 서사로 이어 붙인다
 - [ ] DOM 윈도우잉 + #16은 다음 챕터로 (감사 서사 3번)
 - [ ] web(데스크톱) 릴스에 같은 서버 렌더 이식 — 모바일 검증 후 별도 티켓
 
