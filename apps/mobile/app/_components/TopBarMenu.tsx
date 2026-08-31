@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MenuIcon } from "@plick/ui/icons";
-import { TABS } from "@/_constants/app";
+import { TABS } from "@/_constants/tabs";
 
 /**
  * 상단바 우측 햄버거 메뉴 — 하단 탭과 같은 목적지(홈·릴스·MY)를 위에서도 연다.

@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { TEAMS } from "@plick/domain/constants";
-import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
-import { ShareDialog } from "@/_components/ShareDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { SHEET_TRANSITION } from "@/_constants/reels";
@@ -19,6 +18,21 @@ import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { ReelActionRail } from "./ReelActionRail";
+
+/**
+ * 탭해야 뜨는 다이얼로그는 초기 번들에서 뺀다 (KAN-428). 조건부 마운트라 서버
+ * HTML에 없고, 첫 탭 때 청크를 받아 뜬다. TweetEmbed는 dynamic 금지 — 첫 릴이
+ * 서버 렌더(KAN-422)라 ssr을 끄면 초기 HTML의 임베드가 사라진다.
+ */
+const LoginPromptDialog = dynamic(
+  () =>
+    import("@/_components/LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
+const ShareDialog = dynamic(
+  () => import("@/_components/ShareDialog").then((m) => m.ShareDialog),
+  { ssr: false },
+);
 
 /**
  * 릴 한 장 — 통일된 배경(bg-reel-bg) 위에 사진 또는 원문 트윗 임베드 +

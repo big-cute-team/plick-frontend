@@ -1,14 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { syncLikeIntoFeeds } from "@plick/core/like-sync";
 import { formatCount } from "@plick/domain/format";
 import type { LikeState } from "@plick/domain/types";
 import { HeartMiniIcon } from "@plick/ui/icons";
-import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useArticleLike } from "@/_hooks/useArticleLike";
+
+/**
+ * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const LoginPromptDialog = dynamic(
+  () =>
+    import("@/_components/LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
 
 /**
  * 기사 세부 좋아요 버튼 (KAN-308) — 본문 밑 액션 줄의 알약 버튼.

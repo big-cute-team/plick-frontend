@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { articlesTeamPath, teamHubPath } from "@plick/domain/format";
-import { TABS } from "@/_constants/app";
+import { TABS } from "@/_constants/tabs";
 import { useArticlesRefresh } from "@/_hooks/useArticlesRefresh";
 import { useDebatesRefresh } from "@/_hooks/useDebatesRefresh";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";

@@ -1,14 +1,7 @@
 /**
- * @file 모바일 앱 전용 상수. 도메인 상수(TEAMS 등)는 `@plick/domain/constants`.
+ * @file 모바일 앱 전용 상수. 도메인 상수(TEAMS 등)는 `@plick/domain/constants`,
+ * 하단 탭 구성(TABS)은 `@/_constants/tabs`(아이콘을 끌고 와 분리, KAN-428).
  */
-import {
-  DebateIcon,
-  HomeIcon,
-  NewsIcon,
-  ReelsIcon,
-  UserIcon,
-} from "@plick/ui/icons";
-import type { Tab } from "@/_types/app";
 
 /**
  * 태그된 팀이 없는 게시물의 미디어 색 CSS 변수 (KAN-271, KAN-276).
@@ -53,45 +46,3 @@ export const TWEET_FLOW_MAX_HEIGHT_RATIO = 0.6;
  * `app/onboarding`으로 되돌리고 로그인(`_services/auth.ts`)의 분기를 복원한다.
  */
 export const ONBOARDING_ENTRY = "/onboarding/nickname";
-
-/** 하단 탭 구성 — TabBar가 그린다. 검색·알림 탭은 기능이 없어 뺐다 (KAN-297). */
-export const TABS: Tab[] = [
-  {
-    href: "/",
-    label: "홈",
-    Icon: HomeIcon,
-    // 팀 허브(/teams/[slug])는 홈 화면을 팀 필터만 바꿔 그린 것이라 홈 탭이다 (KAN-350)
-    match: (p) => p === "/" || p.startsWith("/teams"),
-    screen: "home",
-  },
-  {
-    href: "/articles",
-    label: "기사",
-    Icon: NewsIcon,
-    // 기사 세부(/articles/123)도 기사 탭으로 빛낸다 — 웹 GNB와 같은 판정.
-    // 다만 세부에서 탭을 누르는 건 재탭이 아니라 목록 복귀라 surface를 좁힌다
-    match: (p) => p.startsWith("/articles"),
-    surface: (p) => p === "/articles" || p.startsWith("/articles/teams"),
-    screen: "articles",
-  },
-  {
-    href: "/reels",
-    label: "릴스",
-    Icon: ReelsIcon,
-    match: (p) => p.startsWith("/reels"),
-    screen: "reels",
-  },
-  {
-    href: "/debates",
-    label: "토론",
-    Icon: DebateIcon,
-    match: (p) => p.startsWith("/debates"),
-    screen: "debate",
-  },
-  {
-    href: "/me",
-    label: "MY",
-    Icon: UserIcon,
-    match: (p) => p.startsWith("/me"),
-  },
-];
