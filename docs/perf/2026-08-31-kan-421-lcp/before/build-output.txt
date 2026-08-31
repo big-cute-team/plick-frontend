@@ -1,0 +1,62 @@
+  Finished TypeScript in 1913ms ...
+  Collecting page data using 14 workers ...
+  Generating static pages using 14 workers (0/22) ...
+[debates] 토론 리스트 초기 로드 실패: Error: Dynamic server usage: Route /debates couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at y (.next/server/chunks/ssr/0r1e_next_dist_0x2.byg._.js:1:12428)
+    at n (.next/server/chunks/ssr/_06uouzh._.js:1:9270)
+    at e (.next/server/chunks/ssr/_12uw38v._.js:1:3182)
+    at l (.next/server/chunks/ssr/[root-of-the-server]__05zodre._.js:1:6323) {
+  description: "Route /debates couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+  Generating static pages using 14 workers (5/22) 
+  Generating static pages using 14 workers (10/22) 
+  Generating static pages using 14 workers (16/22) 
+[reels] 릴스 피드 초기 로드 실패: Error: Dynamic server usage: Route /reels couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at y (.next/server/chunks/ssr/0r1e_next_dist_0x2.byg._.js:1:12428)
+    at n (.next/server/chunks/ssr/_06uouzh._.js:1:9270)
+    at e (.next/server/chunks/ssr/_12uw38v._.js:1:3182)
+    at k (.next/server/chunks/ssr/[root-of-the-server]__018k6gy._.js:1:5070)
+    at stringify (<anonymous>) {
+  description: "Route /reels couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+✓ Generating static pages using 14 workers (22/22) in 462ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/health
+├ ƒ /api/tweet/[id]
+├ ○ /apple-icon.png
+├ ƒ /articles
+├ ƒ /articles/[postId]
+├ ƒ /articles/teams/[slug]
+├ ƒ /debates
+├ ƒ /faq
+├ ○ /icon.png
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /me
+├ ƒ /me/blocked
+├ ƒ /me/edit
+├ ƒ /oauth/callback
+├ ○ /opengraph-image.png
+├ ƒ /privacy
+├ ƒ /reels
+├ ƒ /reels/[postId]
+├ ○ /robots.txt
+├ ƒ /signup
+├ ƒ /sitemap.xml
+├ ƒ /teams/[slug]
+└ ƒ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[exited with code 0]
