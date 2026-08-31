@@ -9,6 +9,7 @@ import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { SHEET_TRANSITION } from "@/_constants/reels";
 import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelLike } from "@/_hooks/useReelLike";
+import type { Tweet } from "react-tweet/api";
 import type { ReelCard } from "@plick/domain/types";
 import type { TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
@@ -55,17 +56,21 @@ import { ReelActionRail } from "./ReelActionRail";
  * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
  *   인자는 칩·제목이 도킹 지점까지 이동할 거리(px, 음수) — 탭 시점에 측정한다.
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
+ * @param seedTweet - 서버가 미리 받아 둔 이 릴의 트윗 데이터 (KAN-422, 첫 릴만).
+ *   임베드가 SSR로 그려져 클라 fetch를 건너뛴다.
  */
 export function ReelItem({
   reel,
   active,
   onOpenDetail,
   titleMotion,
+  seedTweet,
 }: {
   reel: ReelCard;
   active: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
+  seedTweet?: Tweet;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -142,7 +147,11 @@ export function ReelItem({
             className="reel-embed absolute inset-x-0 flex flex-col [justify-content:safe_center]"
             style={{ top: "var(--safe-top)", bottom: regionBottom }}
           >
-            <TweetEmbed url={reel.sourceUrl} layout="reel" />
+            <TweetEmbed
+              url={reel.sourceUrl}
+              layout="reel"
+              seedTweet={seedTweet}
+            />
           </div>
         )
       )}

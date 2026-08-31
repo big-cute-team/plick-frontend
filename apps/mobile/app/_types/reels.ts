@@ -11,6 +11,20 @@ import type {
   PointerEvent as ReactPointerEvent,
   TransitionEvent as ReactTransitionEvent,
 } from "react";
+import type { Tweet } from "react-tweet/api";
+
+/**
+ * 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-422).
+ *
+ * 임베드를 초기 HTML에 그려 LCP 이미지가 문서에서 바로 발견되게 하는 씨앗이다.
+ * 피드가 refetch로 갈리면 첫 릴이 바뀔 수 있어, 어느 릴의 것인지 id로 못박아
+ * 그 릴에만 붙인다.
+ */
+export interface ReelSeedTweet {
+  /** 이 트윗이 속한 릴 id — 피드의 릴과 대조해 일치할 때만 쓴다 */
+  reelId: string;
+  tweet: Tweet;
+}
 
 /** 릴 세부 시트의 개폐·드래그 상태 (useReelDetailMotion이 만들고 시트·피드가 공유) */
 export interface ReelDetailMotion {

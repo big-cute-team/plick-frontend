@@ -51,26 +51,35 @@ function withoutMedia(tweet: Tweet): Tweet {
  * 뒤로 겹친다). 릴은 원문을 사진째 보여주는 게 목적이라 전문을 다 담으려 사진을
  * 빼던 flow/fill과 정반대다.
  *
+ * `seedTweet`이 오면 클라 fetch를 아예 하지 않는다 (KAN-422) — 서버가 미리 받아
+ * 둔 데이터로 SSR 시점에 임베드가 그려져, LCP인 미디어 이미지가 초기 HTML에서
+ * 바로 발견된다. useTweet은 id와 apiUrl이 둘 다 없으면 swr 키가 null이라 요청
+ * 자체가 나가지 않는다.
+ *
  * @param url 원문 트윗 링크 (`sourceUrl`). 트윗 링크가 아니면 아무것도 그리지 않는다.
  * @param layout `fill`(기본): 부모 박스를 absolute로 채움 · `flow`: 문서 흐름 ·
  *   `reel`: 미디어를 살린 전폭 자연 높이
+ * @param seedTweet 서버가 미리 받아 둔 트윗 데이터. 있으면 클라 fetch 생략.
  */
 export function TweetEmbed({
   url,
   layout = "fill",
+  seedTweet,
 }: {
   url: string;
   layout?: "fill" | "flow" | "reel";
+  seedTweet?: Tweet;
 }) {
   const id = tweetIdFromUrl(url);
   const { outerRef, innerRef, scale, hideMedia } = useTweetFit<
     HTMLDivElement,
     HTMLDivElement
   >();
-  const { data, error } = useTweet(
-    id ?? undefined,
-    id ? `/api/tweet/${id}` : undefined,
+  const { data: fetched, error } = useTweet(
+    seedTweet || !id ? undefined : id,
+    seedTweet || !id ? undefined : `/api/tweet/${id}`,
   );
+  const data = seedTweet ?? fetched;
 
   const flowRef = useRef<HTMLDivElement>(null);
   const [flowHideMedia, setFlowHideMedia] = useState(false);

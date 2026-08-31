@@ -9,6 +9,9 @@ import { ReelsFeed } from "@/reels/_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
+import { getReelSeedTweet } from "@/_services/tweet";
+import { tweetImageUrl } from "@/_utils/tweet";
+import type { ReelSeedTweet } from "@/_types/reels";
 
 /**
  * 릴별 고유 메타데이터 (KAN-349) — 공유 미리보기가 그 릴의 제목·요약으로 나와야
@@ -65,6 +68,9 @@ export async function generateMetadata({
  * 없는·미발행 릴(404)과 정수가 아닌 id(400)는 삭제된 공유 링크나 손으로 친 주소의
  * 정상 경로다 — 에러 화면이 아니라 not-found로 보낸다. 그 외 실패(네트워크 순단
  * 등)는 씨앗 없이 내려보내 클라가 다시 받게 한다.
+ *
+ * 진입 릴(`items[0]`)이 임베드 릴이면 트윗 데이터도 미리 받아 preload까지 건다
+ * (KAN-422) — 탭 피드와 같은 LCP 체인 단축이다.
  */
 export default async function ReelDeepLinkPage({
   params,
@@ -74,12 +80,14 @@ export default async function ReelDeepLinkPage({
   const { postId } = await params;
 
   let initial: InitialReelFeed | undefined;
+  let seedTweet: ReelSeedTweet | undefined;
   try {
     // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다 (KAN-308)
     const page = await getReelsFrom(postId, {
       accessToken: await getAccessToken(),
     });
     initial = { page, fetchedAt: Date.now() };
+    seedTweet = await getReelSeedTweet(page.items[0]);
   } catch (e) {
     if (
       e instanceof ApiError &&
@@ -90,9 +98,20 @@ export default async function ReelDeepLinkPage({
     console.error("[reels] 릴스 딥링크 초기 로드 실패:", e);
   }
 
+  /* 탭 피드와 같은 이유로 preload()가 아니라 <link> 렌더 (reels/page.tsx 주석) */
+  const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
+
   return (
     <AppShell>
-      <ReelsFeed initial={initial} anchorId={postId} />
+      {seedImageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={seedImageUrl}
+          fetchPriority="high"
+        />
+      )}
+      <ReelsFeed initial={initial} anchorId={postId} seedTweet={seedTweet} />
       <TabBar variant="overlay" />
     </AppShell>
   );
