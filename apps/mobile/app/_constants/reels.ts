@@ -63,6 +63,17 @@ export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
 export const REELS_PREFETCH_AHEAD = 3;
 
 /**
+ * 트윗 임베드 fetch를 허용하는 보고 있는 릴과의 거리 (KAN-429).
+ *
+ * 사진 없는 릴은 임베드가 미디어라 마운트 즉시 `/api/tweet`을 부르는데, 첫
+ * 페이지 10장이 동시에 부르면 화면 밖 릴의 트윗 이미지가 LCP인 첫 릴 이미지와
+ * pbs.twimg.com 대역폭을 나눠 쓴다. 이 거리 밖 릴은 fetch를 미루고, 안으로
+ * 들어오면 시작한다(한 번 시작한 릴은 계속 그린다 — {@link ReelItem}). 2면
+ * 넘기는 도중 화면에 걸리는 이웃(±1)에 여유 한 장을 더한 값이다.
+ */
+export const REELS_EMBED_FETCH_AHEAD = 2;
+
+/**
  * 재측정(reInit) 때 "스냅이 아직 달리는 중"으로 보는 남은 거리(px) (KAN-276).
  *
  * 이보다 많이 남았으면 reInit 후 운동 상태를 복원해 애니메이션을 이어 붙이고,
