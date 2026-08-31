@@ -109,8 +109,12 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                    카드(트랙의 86%)가 과하게 커지는 것도 함께 막는다 */
                   <div className="lg:mx-auto lg:max-w-5xl">
                     <HotCarousel cardClassName="aspect-[181/131] lg:aspect-video">
-                      {hot.map((article) => (
-                        <HotCard key={article.id} article={article} />
+                      {hot.map((article, i) => (
+                        <HotCard
+                          key={article.id}
+                          article={article}
+                          fetchPriority={i === 0 ? "high" : "low"}
+                        />
                       ))}
                     </HotCarousel>
                   </div>

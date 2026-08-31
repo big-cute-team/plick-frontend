@@ -46,13 +46,16 @@ import { ReelActionRail } from "./ReelActionRail";
  *
  * @param reel - 표시할 릴
  * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
+ * @param eager - 첫 릴(LCP 후보)이면 사진을 lazy 큐잉 없이 최우선으로 받는다 (KAN-421)
  */
 export function ReelItem({
   reel,
   onOpenDetail,
+  eager = false,
 }: {
   reel: ReelCard;
   onOpenDetail: () => void;
+  eager?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLButtonElement>(null);
@@ -92,7 +95,8 @@ export function ReelItem({
           <img
             src={reel.imageUrl}
             alt=""
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
             className="absolute inset-0 size-full object-cover"
           />
         ) : (
