@@ -95,8 +95,12 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             </p>
           ) : (
             <HotCarousel>
-              {hot.map((article) => (
-                <HotHeroCard key={article.id} article={article} />
+              {hot.map((article, i) => (
+                <HotHeroCard
+                  key={article.id}
+                  article={article}
+                  fetchPriority={i === 0 ? "high" : "low"}
+                />
               ))}
             </HotCarousel>
           )}

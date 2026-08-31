@@ -40,7 +40,7 @@ export function ReelViewer({
           data-reel-index={i}
           className="lg:px-gutter flex h-full snap-start items-center justify-center px-4 py-8 lg:py-10"
         >
-          <ReelItem reel={reel} onOpenDetail={onOpenDetail} />
+          <ReelItem reel={reel} onOpenDetail={onOpenDetail} eager={i === 0} />
         </section>
       ))}
 

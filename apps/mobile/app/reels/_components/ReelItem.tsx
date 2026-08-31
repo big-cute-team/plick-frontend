@@ -130,7 +130,10 @@ export function ReelItem({
         <img
           src={reel.imageUrl}
           alt=""
-          loading="lazy"
+          /* 보고 있는 릴(첫 진입 시 index 0)은 LCP 후보라 lazy 큐잉 대신 최우선으로
+             내려받는다 (KAN-421) */
+          loading={active ? "eager" : "lazy"}
+          fetchPriority={active ? "high" : "auto"}
           className="absolute inset-0 size-full object-cover"
         />
       ) : (

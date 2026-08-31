@@ -42,7 +42,14 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  *
  * @param article - 표시할 핫이슈 기사
  */
-export function HotCard({ article }: { article: HotArticle }) {
+export function HotCard({
+  article,
+  fetchPriority = "auto",
+}: {
+  article: HotArticle;
+  /** 첫 카드(첫 화면에 실제로 보이는 1장)만 high, 나머지는 low로 대역폭 경합을 줄인다 (KAN-421) */
+  fetchPriority?: "high" | "low" | "auto";
+}) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   const stage = article.stage ? STAGE_META[article.stage] : null;
 
@@ -57,6 +64,7 @@ export function HotCard({ article }: { article: HotArticle }) {
              화면에 들어오는 순간에야 받기 시작해 빈 카드가 잠깐 스친다.
              홈 최상단이라 어차피 첫 화면 이미지다 (KAN-382) */
           loading="eager"
+          fetchPriority={fetchPriority}
           className="absolute inset-0 size-full object-cover"
         />
       ) : (
