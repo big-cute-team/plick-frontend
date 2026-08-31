@@ -12,6 +12,7 @@ import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
+import type { ReelSeedTweet } from "@/_types/reels";
 import { clampTitleOffset } from "@/_utils/reels";
 import { ReelDetailSheet } from "./ReelDetailSheet";
 import { ReelItem } from "./ReelItem";
@@ -43,13 +44,17 @@ import { ReelStatus } from "./ReelStatus";
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  * @param anchorId 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 그 릴에서
  *   시작하는 별도 캐시의 피드가 되고, 탭 피드의 보던-릴 복원은 하지 않는다.
+ * @param seedTweet 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-422). 피드가
+ *   refetch로 갈렸을 수 있어 릴 id가 일치하는 릴에만 붙인다.
  */
 export function ReelsFeed({
   initial,
   anchorId,
+  seedTweet,
 }: {
   initial?: InitialReelFeed;
   anchorId?: string;
+  seedTweet?: ReelSeedTweet;
 }) {
   const motion = useReelDetailMotion();
   /* 안드로이드 뒤로가기가 릴스를 나가는 대신 세부 시트를 닫는다 (유튜브 쇼츠 방식) */
@@ -165,6 +170,9 @@ export function ReelsFeed({
               key={reel.id}
               reel={reel}
               active={i === activeIndex}
+              seedTweet={
+                seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
+              }
               onOpenDetail={(lift) => {
                 setDetail({ reel, lift });
                 motion.open();
