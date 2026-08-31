@@ -77,8 +77,12 @@ const ShareDialog = dynamic(
  * @param seedTweet - 서버가 미리 받아 둔 이 릴의 트윗 데이터 (KAN-422, 첫 릴만).
  *   임베드가 SSR로 그려져 클라 fetch를 건너뛴다.
  * @param nearActive - 보고 있는 릴에서 {@link REELS_EMBED_FETCH_AHEAD} 안인가.
- *   밖이면 트윗 임베드 fetch를 미룬다 (KAN-429). 한 번 안으로 들어온 릴은 밖으로
- *   나가도 계속 그린다 — 받은 임베드를 비웠다 다시 그리면 뒤로 넘길 때 깜빡인다.
+ *   밖이면 트윗 임베드 fetch를 미룬다 (KAN-429). 한 번 안으로 들어온 릴은 창 안에
+ *   있는 한 계속 그린다 — 받은 임베드를 비웠다 다시 그리면 뒤로 넘길 때 깜빡인다.
+ * @param inWindow - 보고 있는 릴에서 DOM 유지 창({@link REELS_DOM_WINDOW}) 안인가
+ *   (KAN-431). 밖이면 내용 없이 빈 섹션 골격만 그린다 — Embla가 슬라이드 수와
+ *   높이를 재는 구조라 섹션 자체는 남긴다. 컴포넌트는 마운트를 유지하므로 fetch
+ *   래치 같은 상태는 보존되고, 창에 다시 들어오면 swr 캐시로 즉시 되그린다.
  */
 export const ReelItem = memo(function ReelItem({
   reel,
@@ -87,6 +91,7 @@ export const ReelItem = memo(function ReelItem({
   titleMotion,
   seedTweet,
   nearActive = true,
+  inWindow = true,
 }: {
   reel: ReelCard;
   active: boolean;
@@ -94,6 +99,7 @@ export const ReelItem = memo(function ReelItem({
   titleMotion: TitleMotion | null;
   seedTweet?: Tweet;
   nearActive?: boolean;
+  inWindow?: boolean;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -119,7 +125,8 @@ export const ReelItem = memo(function ReelItem({
      translateY로 올라가 있는 동안은 재지 않는다(임베드는 고정 뒤 레이어라 영향
      안 받아야 함). getBoundingClientRect는 transform이 잡히므로 쉬는 상태에서만 잰다. */
   useEffect(() => {
-    if (titleMotion) return;
+    /* 창 밖에선 제목 자체가 없어 잴 수 없다 — 창에 들어올 때 다시 돈다 (KAN-431) */
+    if (titleMotion || !inWindow) return;
     const section = sectionRef.current;
     const titleText = titleTextRef.current;
     if (!section || !titleText) return;
@@ -133,7 +140,7 @@ export const ReelItem = memo(function ReelItem({
     observer.observe(section);
     observer.observe(titleText);
     return () => observer.disconnect();
-  }, [titleMotion]);
+  }, [titleMotion, inWindow]);
 
   const handleOpen = () => {
     const section = sectionRef.current;
@@ -157,6 +164,18 @@ export const ReelItem = memo(function ReelItem({
   const titleTransform = titleMotion?.shown
     ? `translateY(min(0px, calc(${titleMotion.lift}px + var(${SHEET_DRAG_Y_VAR}, 0px))))`
     : "translateY(0px)";
+
+  /* DOM 유지 창 밖 — 빈 골격만. 훅은 위에서 전부 돌았으므로 조건부 훅 규칙 위반이
+     아니고, 상태(fetch 래치·좋아요 팝업 등)도 마운트와 함께 살아 있다 (KAN-431) */
+  if (!inWindow) {
+    return (
+      <section
+        ref={sectionRef}
+        inert
+        className="bg-reel-bg relative h-full w-full shrink-0 basis-full overflow-hidden"
+      />
+    );
+  }
 
   return (
     <section
