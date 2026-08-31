@@ -27,8 +27,8 @@ const SIDE_STYLE: Record<VoteOption, { fill: string; tint: string }> = {
  * 내 투표(myVote) 또는 마감이 게이트고, 마감이면 투표 없이도 결과를 보여준다.
  *
  * 마감 여부도 스스로 판정하지 않는다 — 실기준이 `closesAt` 시각이 아니라 기사
- * `contentType`(FINISH)이라 기사 상세만 알 수 있다. 리스트·릴스에는 BE가 열린
- * 토론만 내려주므로 호출부가 `closed`를 안 넘기면 진행 중으로 그린다.
+ * `contentType`(FINISH)이라 기사 상세·릴 세부가 각자 판정해 `closed`로 넘긴다.
+ * 토론 리스트에는 BE가 열린 토론만 내려주므로 안 넘기면 진행 중으로 그린다.
  *
  * @param debate - 토론 데이터. 집계 갱신은 호출부가 이 객체를 갈아 끼운다.
  * @param closed - 마감된 토론인가(기사 `contentType === "FINISH"`).

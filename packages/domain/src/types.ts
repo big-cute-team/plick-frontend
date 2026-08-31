@@ -260,15 +260,15 @@ export interface ReelCard {
   /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
   hashtags: string[];
   /**
-   * 게시물 표시 형태 (KAN-418). FINISH면 마감된 토론이 붙은 릴이다 — 그때
-   * `debate`가 null로 오므로(아래 참고) 마감 결과를 보여주려면 이 값을 보고
-   * 기사 토론을 따로 불러야 한다.
+   * 게시물 표시 형태 (KAN-418). 릴에 토론이 붙어 있으면 이 값이 투표 가능
+   * 여부의 실기준이다 — DEBATE는 투표 UI, FINISH는 결과 읽기 전용.
    */
   contentType: ArticleContentType;
   /**
    * 이 릴에 붙은 토론 (KAN-418). 릴스는 목록 응답에 토론이 통째로 인라인돼
    * 별도 조회가 없다 — 기사 상세가 `GET /articles/{id}/debate`를 따로 부르는
-   * 것과 다르다. 토론 없는 게시물과 마감(FINISH) 게시물은 null이다.
+   * 것과 다르다. 마감(FINISH) 릴도 인라인으로 오고(KAN-420) 토론 없는
+   * 게시물(GENERAL)만 null이다.
    */
   debate: Debate | null;
 }
@@ -278,7 +278,8 @@ export interface ReelCard {
  *
  * DEBATE가 열린 토론, FINISH가 마감된 토론이다 — 토론의 열림/마감 판정 실기준은
  * `closesAt` 시각이 아니라 이 값이다(BE `DebateService` 확인). 마감(FINISH)
- * 기사는 토론 리스트에서 빠지고 릴스 카드의 `debate`도 null로 온다.
+ * 기사는 토론 리스트(`GET /debates`)에서만 빠지고, 릴스 카드에는 `debate`가
+ * 인라인으로 온다(KAN-420).
  */
 export type ArticleContentType = "GENERAL" | "DEBATE" | "FINISH";
 
@@ -294,8 +295,8 @@ export type VoteOption = "OPTION_A" | "OPTION_B";
  *
  * 기사 하나에 토론이 최대 하나 붙는 구조다. 마감 여부는 이 응답에 없다 —
  * 실기준이 기사의 {@link ArticleContentType}(FINISH = 마감)이기 때문으로,
- * 기사 상세가 자기 `contentType`으로 판정해 화면에 넘긴다. 리스트·릴스에는
- * 열린 토론만 오므로 판정할 일 자체가 없다.
+ * 기사 상세와 릴 세부가 각자 `contentType`으로 판정해 화면에 넘긴다.
+ * 토론 리스트(`GET /debates`)에는 열린 토론만 오므로 판정할 일이 없다.
  */
 export interface Debate {
   /** BE `debateId`. 투표 엔드포인트의 path 파라미터라 문자열로 담는다. */

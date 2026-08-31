@@ -46,7 +46,8 @@ interface ReelsCardResponse {
   hashtags: string[];
   /** 게시물 표시 형태 (KAN-418) — "GENERAL" | "DEBATE" | "FINISH". */
   contentType: string | null;
-  /** 이 릴에 붙은 토론 (KAN-418). 토론 없는 게시물과 마감(FINISH)은 null이다. */
+  /** 이 릴에 붙은 토론 (KAN-418). DEBATE·FINISH 모두 인라인으로 오고(KAN-420)
+      토론 없는 게시물(GENERAL)만 null이다. */
   debate: DebateResponse | null;
 }
 
