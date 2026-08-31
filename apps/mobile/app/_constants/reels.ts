@@ -99,3 +99,12 @@ export const SHEET_TITLE_GAP = 18;
 /** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
 export const SHEET_TRANSITION =
   "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+
+/**
+ * 시트 드래그 오프셋을 담는 CSS 변수 이름 (KAN-430).
+ *
+ * pointermove마다 React state 대신 이 변수를 문서 루트에 직접 써서
+ * (useReelDetailMotion), 시트·제목·스크림 transform이 리렌더 없이 손가락을
+ * 따라간다. 값은 px 단위 길이고, 참조하는 쪽은 `var(..., 0px)` 폴백을 쓴다.
+ */
+export const SHEET_DRAG_Y_VAR = "--reel-sheet-drag-y";

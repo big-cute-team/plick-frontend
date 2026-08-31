@@ -10,7 +10,11 @@ import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
-import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
+import {
+  SHEET_DRAG_Y_VAR,
+  SHEET_HEIGHT_RATIO,
+  SHEET_TRANSITION,
+} from "@/_constants/reels";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 import type { ReelCard } from "@plick/domain/types";
 import type { ReelDetailMotion } from "@/_types/reels";
@@ -59,13 +63,20 @@ export function ReelDetailSheet({
         role="dialog"
         aria-modal="true"
         aria-label="기사 세부"
+        /* 드래그 변수 수신자 등록 — 변수는 상속이 꺼져 있어 이 요소에 직접 쓰인다 (KAN-430) */
+        ref={motion.dragTargetRef}
         className="bg-bg rounded-t-sheet absolute inset-x-0 bottom-0 flex flex-col overflow-hidden"
         style={{
           height: `${SHEET_HEIGHT_RATIO * 100}%`,
+          /* 드래그 오프셋은 CSS 변수로 흐른다 (KAN-430) — 손가락을 따라가는
+             동안 리렌더 없이 transform만 갱신된다 */
           transform: motion.shown
-            ? `translateY(${motion.dragY}px)`
+            ? `translateY(var(${SHEET_DRAG_Y_VAR}, 0px))`
             : "translateY(100%)",
           transition: motion.dragging ? "none" : SHEET_TRANSITION,
+          /* 드래그 동안만 컴포지터 승격 — 상시 부착은 금지다. 조상 transform이
+             sticky를 깨는 실측(ScrollArea)이 있어 제스처 생명주기에만 묶는다 */
+          willChange: motion.dragging ? "transform" : undefined,
         }}
         onTransitionEnd={motion.onTransitionEnd}
       >

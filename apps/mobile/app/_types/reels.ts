@@ -26,14 +26,17 @@ export interface ReelSeedTweet {
   tweet: Tweet;
 }
 
-/** 릴 세부 시트의 개폐·드래그 상태 (useReelDetailMotion이 만들고 시트·피드가 공유) */
+/**
+ * 릴 세부 시트의 개폐·드래그 상태 (useReelDetailMotion이 만들고 시트·피드가 공유).
+ *
+ * 드래그 오프셋(px)은 여기 없다 — React state가 아니라 CSS 변수
+ * (`SHEET_DRAG_Y_VAR`)로 흐른다 (KAN-430). transform에서 `var(..., 0px)`로 읽는다.
+ */
 export interface ReelDetailMotion {
   /** 시트가 DOM에 있어야 하는가 (닫힘 애니메이션이 끝나면 false) */
   mounted: boolean;
   /** 올라온 상태인가 — false→true 전환이 슬라이드 업, 반대가 다운 */
   shown: boolean;
-  /** 드래그 중 시트를 따라 내리는 오프셋(px) */
-  dragY: number;
   dragging: boolean;
   open: () => void;
   requestClose: () => void;
@@ -46,13 +49,29 @@ export interface ReelDetailMotion {
   };
   /** 본문 스크롤 영역에 다는 ref — 최상단에서 아래로 끄는 터치를 시트 드래그로 넘겨받는다 */
   scrollGrabRef: (node: HTMLDivElement | null) => void;
+  /**
+   * 드래그 변수(`SHEET_DRAG_Y_VAR`)를 받아 갈 요소가 다는 ref — 시트 본체와
+   * 세부 릴의 제목·스크림. 변수는 상속이 꺼져 있어(@property inherits: false)
+   * 소비하는 요소에 직접 써야 하고, 그 등록을 이 ref가 맡는다. 정리 함수를
+   * 반환하는 React 19 콜백 ref다.
+   */
+  dragTargetRef: (node: HTMLElement | null) => (() => void) | undefined;
   onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
 }
 
-/** 세부 시트가 떠 있는 동안 릴의 칩·제목 요소에 적용할 이동 상태 */
+/**
+ * 세부 시트가 떠 있는 동안 릴의 칩·제목 요소에 적용할 이동 상태.
+ *
+ * 프레임마다 변하는 값이 없다 (KAN-430) — 드래그 오프셋은 CSS 변수로 흐르고,
+ * 여기엔 제스처당 한 번 바뀌는 것들만 남아 시트가 떠 있는 동안 렌더가 없다.
+ */
 export interface TitleMotion {
-  /** 현재 translateY 오프셋(px) — 도킹 지점까지의 거리 + 드래그 오프셋 */
-  offset: number;
+  /** 도킹 지점까지 올라갈 거리(px, 음수) — 시트를 연 순간 잰 값으로 고정 */
+  lift: number;
+  /** 시트가 올라온 상태인가 — false면 원래 자리(0)로 내려간다 */
+  shown: boolean;
   /** 드래그 중이면 transition 없이 손가락을 따라간다 */
   dragging: boolean;
+  /** 제목·스크림을 드래그 변수 수신자로 등록하는 ref ({@link ReelDetailMotion.dragTargetRef}) */
+  dragTargetRef: ReelDetailMotion["dragTargetRef"];
 }

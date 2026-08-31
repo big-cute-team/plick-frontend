@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { TEAMS } from "@plick/domain/constants";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
-import { SHEET_TRANSITION } from "@/_constants/reels";
+import { SHEET_DRAG_Y_VAR, SHEET_TRANSITION } from "@/_constants/reels";
 import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelLike } from "@/_hooks/useReelLike";
 import type { Tweet } from "react-tweet/api";
@@ -65,10 +65,14 @@ const ShareDialog = dynamic(
  *
  * 활성 슬라이드가 되면 조회로 기록한다 (KAN-310, {@link useArticleView}).
  *
+ * memo로 감싼다 (KAN-430) — 피드가 렌더될 때(개폐·activeIndex 변화) props가 그대로인
+ * 릴은 건너뛴다. 시트가 붙은 릴만 titleMotion 객체가 갈리고 나머지는 null로 안정된다.
+ *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
- * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출.
- *   인자는 칩·제목이 도킹 지점까지 이동할 거리(px, 음수) — 탭 시점에 측정한다.
+ * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출. 어느 릴인지와
+ *   칩·제목이 도킹 지점까지 이동할 거리(px, 음수)를 넘긴다 — 거리는 탭 시점에 측정한다.
+ *   (릴을 인자로 받는 공유 콜백이라 정체성이 고정돼 memo가 산다)
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
  * @param seedTweet - 서버가 미리 받아 둔 이 릴의 트윗 데이터 (KAN-422, 첫 릴만).
  *   임베드가 SSR로 그려져 클라 fetch를 건너뛴다.
@@ -76,7 +80,7 @@ const ShareDialog = dynamic(
  *   밖이면 트윗 임베드 fetch를 미룬다 (KAN-429). 한 번 안으로 들어온 릴은 밖으로
  *   나가도 계속 그린다 — 받은 임베드를 비웠다 다시 그리면 뒤로 넘길 때 깜빡인다.
  */
-export function ReelItem({
+export const ReelItem = memo(function ReelItem({
   reel,
   active,
   onOpenDetail,
@@ -86,7 +90,7 @@ export function ReelItem({
 }: {
   reel: ReelCard;
   active: boolean;
-  onOpenDetail: (lift: number) => void;
+  onOpenDetail: (reel: ReelCard, lift: number) => void;
   titleMotion: TitleMotion | null;
   seedTweet?: Tweet;
   nearActive?: boolean;
@@ -136,12 +140,23 @@ export function ReelItem({
     const title = titleRef.current;
     if (!section || !title) return;
     onOpenDetail(
+      reel,
       titleLiftDistance(
         section.getBoundingClientRect(),
         title.getBoundingClientRect(),
       ),
     );
   };
+
+  /**
+   * 칩·제목(과 스크림)의 transform. 드래그 오프셋은 {@link SHEET_DRAG_Y_VAR}
+   * CSS 변수로 흐르므로(KAN-430) 손가락을 따라가는 동안 이 컴포넌트는 렌더되지
+   * 않는다. 클램프(도킹 지점 위~원래 자리 0 사이)도 CSS `min()`이 대신한다 —
+   * 시트를 원래 자리 밑까지 내려도 제목은 제 위치 아래로 내려가지 않는다.
+   */
+  const titleTransform = titleMotion?.shown
+    ? `translateY(min(0px, calc(${titleMotion.lift}px + var(${SHEET_DRAG_Y_VAR}, 0px))))`
+    : "translateY(0px)";
 
   return (
     <section
@@ -187,12 +202,17 @@ export function ReelItem({
           올라가 도킹된 제목 뒤를 그대로 받쳐 준다 (같은 offset·타이밍 공유) */}
       <div
         aria-hidden
+        /* 시트가 떠 있을 때만 드래그 변수 수신자로 등록 — 나머지 릴은 등록 밖 (KAN-430) */
+        ref={titleMotion?.dragTargetRef}
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
         style={{
           backgroundImage:
             "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 98%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 88%, transparent) 55%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 80%, transparent 100%)",
-          transform: `translateY(${titleMotion?.offset ?? 0}px)`,
+          transform: titleTransform,
           transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
+          /* 큰 그라데이션 레이어라 드래그 중 프레임마다 다시 칠하지 않게
+             제스처 동안만 컴포지터 승격 (KAN-430, 상시 부착 금지) */
+          willChange: titleMotion?.dragging ? "transform" : undefined,
         }}
       />
 
@@ -203,11 +223,16 @@ export function ReelItem({
         {/* 배지+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
             z-30: 시트 오버레이(z-20)보다 위에 그려져 스크림을 덮는다 */}
         <div
-          ref={titleRef}
+          /* 측정용 titleRef에 더해, 시트가 떠 있으면 드래그 변수 수신자로도 등록 (KAN-430) */
+          ref={(node) => {
+            titleRef.current = node;
+            return titleMotion?.dragTargetRef(node);
+          }}
           className="relative z-30 flex flex-col gap-2.75"
           style={{
-            transform: `translateY(${titleMotion?.offset ?? 0}px)`,
+            transform: titleTransform,
             transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
+            willChange: titleMotion?.dragging ? "transform" : undefined,
           }}
         >
           <PostBadges
@@ -285,4 +310,4 @@ export function ReelItem({
       )}
     </section>
   );
-}
+});
