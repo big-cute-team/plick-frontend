@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { ApiError } from "@plick/core/client";
 import { avatarInitials, formatCount } from "@plick/domain/format";
@@ -14,9 +15,23 @@ import { formatRelativeTime } from "@plick/domain/format";
 import { useAuth } from "./AuthProvider";
 import { CommentComposer } from "./CommentComposer";
 import { CommentEditForm } from "./CommentEditForm";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { LoginPromptDialog } from "./LoginPromptDialog";
-import { ReportCommentDialog } from "./ReportCommentDialog";
+
+/**
+ * 삭제 확인·신고·로그인 유도 다이얼로그는 더보기 메뉴를 탭해야 뜨는 UI라
+ * 초기 번들에서 뺀다 (KAN-428). 조건부 마운트라 서버 HTML에 없다.
+ */
+const ConfirmDialog = dynamic(
+  () => import("./ConfirmDialog").then((m) => m.ConfirmDialog),
+  { ssr: false },
+);
+const LoginPromptDialog = dynamic(
+  () => import("./LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
+const ReportCommentDialog = dynamic(
+  () => import("./ReportCommentDialog").then((m) => m.ReportCommentDialog),
+  { ssr: false },
+);
 
 /**
  * 댓글 한 스레드 — 원 댓글 + (있으면) 접힌 답글들. 기사 세부·릴 세부 시트 공용.

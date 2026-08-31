@@ -1,11 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { Debate, DebateVoteState } from "@plick/domain/types";
 import { VoteCard } from "@plick/ui/VoteCard";
-import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { VOTE_LOGIN_PROMPT } from "@/_constants/debates";
 import { useDebateVote } from "@/_hooks/useDebateVote";
+
+/**
+ * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const LoginPromptDialog = dynamic(
+  () =>
+    import("@/_components/LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
 
 /**
  * 투표 가능한 투표 카드 (KAN-418) — 표시 전용 `VoteCard`에 뮤테이션·로그인

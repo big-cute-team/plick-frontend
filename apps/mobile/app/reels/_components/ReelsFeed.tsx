@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
@@ -14,11 +15,21 @@ import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
 import type { ReelSeedTweet } from "@/_types/reels";
 import { clampTitleOffset } from "@/_utils/reels";
-import { ReelDetailSheet } from "./ReelDetailSheet";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";
 import { ReelSkeleton } from "./ReelSkeleton";
 import { ReelStatus } from "./ReelStatus";
+
+/**
+ * 릴 세부 시트는 첫 탭 전엔 안 뜨는 UI라 초기 번들에서 뺀다 (KAN-428). 시트가
+ * 끌고 오는 댓글 스레드·투표 카드·뮤테이션 훅이 통째로 별도 청크가 된다.
+ * 첫 개폐 애니메이션이 청크 다운로드에 밀리지 않게 아래 이펙트에서 idle 때
+ * 미리 받아 둔다.
+ */
+const ReelDetailSheet = dynamic(
+  () => import("./ReelDetailSheet").then((m) => m.ReelDetailSheet),
+  { ssr: false },
+);
 
 /**
  * 릴스 세로 피드 (KAN-277, KAN-276).
@@ -59,6 +70,23 @@ export function ReelsFeed({
   const motion = useReelDetailMotion();
   /* 안드로이드 뒤로가기가 릴스를 나가는 대신 세부 시트를 닫는다 (유튜브 쇼츠 방식) */
   useBackToClose(motion.mounted, motion.requestClose);
+
+  /**
+   * 세부 시트 청크 프리페치 (KAN-428) — dynamic으로 초기 번들에서 뺀 시트를
+   * 브라우저가 한가할 때 미리 받아 둔다. 초기 로드(LCP 창)와 경합하지 않으면서
+   * 첫 탭의 개폐 애니메이션이 다운로드에 밀리지 않는다. 사파리엔
+   * requestIdleCallback이 없어 타이머로 대신한다.
+   */
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(
+        () => void import("./ReelDetailSheet"),
+      );
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => void import("./ReelDetailSheet"), 1500);
+    return () => window.clearTimeout(id);
+  }, []);
   const queryClient = useQueryClient();
   /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{

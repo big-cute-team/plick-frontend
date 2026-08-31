@@ -1,12 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { SendMiniIcon } from "@plick/ui/icons";
 import { ApiError } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import { useCreateComment } from "@/_hooks/useCreateComment";
 import { useAuth } from "./AuthProvider";
-import { LoginPromptDialog } from "./LoginPromptDialog";
+
+/**
+ * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const LoginPromptDialog = dynamic(
+  () => import("./LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
 
 /**
  * 댓글 입력바 — pill 인풋 + accent 원형 전송 버튼. 기사 세부·릴 세부 시트 공용.
