@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import {
+  REELS_DOM_WINDOW,
   REELS_EMBED_FETCH_AHEAD,
   REELS_PREFETCH_AHEAD,
 } from "@/_constants/reels";
@@ -212,6 +213,12 @@ export function ReelsFeed({
               reel={reel}
               active={i === activeIndex}
               nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
+              /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —
+                 시트는 활성 릴에서만 열리지만 목록이 갈려 인덱스가 밀려도 안전하게 */
+              inWindow={
+                Math.abs(i - activeIndex) <= REELS_DOM_WINDOW ||
+                (motion.mounted && detail?.reel.id === reel.id)
+              }
               seedTweet={
                 seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
               }
