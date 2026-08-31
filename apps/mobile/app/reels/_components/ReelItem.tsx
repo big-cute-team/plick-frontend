@@ -202,12 +202,17 @@ export const ReelItem = memo(function ReelItem({
           올라가 도킹된 제목 뒤를 그대로 받쳐 준다 (같은 offset·타이밍 공유) */}
       <div
         aria-hidden
+        /* 시트가 떠 있을 때만 드래그 변수 수신자로 등록 — 나머지 릴은 등록 밖 (KAN-430) */
+        ref={titleMotion?.dragTargetRef}
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
         style={{
           backgroundImage:
             "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 98%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 88%, transparent) 55%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 80%, transparent 100%)",
           transform: titleTransform,
           transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
+          /* 큰 그라데이션 레이어라 드래그 중 프레임마다 다시 칠하지 않게
+             제스처 동안만 컴포지터 승격 (KAN-430, 상시 부착 금지) */
+          willChange: titleMotion?.dragging ? "transform" : undefined,
         }}
       />
 
@@ -218,11 +223,16 @@ export const ReelItem = memo(function ReelItem({
         {/* 배지+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
             z-30: 시트 오버레이(z-20)보다 위에 그려져 스크림을 덮는다 */}
         <div
-          ref={titleRef}
+          /* 측정용 titleRef에 더해, 시트가 떠 있으면 드래그 변수 수신자로도 등록 (KAN-430) */
+          ref={(node) => {
+            titleRef.current = node;
+            return titleMotion?.dragTargetRef(node);
+          }}
           className="relative z-30 flex flex-col gap-2.75"
           style={{
             transform: titleTransform,
             transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
+            willChange: titleMotion?.dragging ? "transform" : undefined,
           }}
         >
           <PostBadges

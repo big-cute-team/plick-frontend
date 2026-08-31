@@ -129,3 +129,14 @@ body {
   width: 34px;
   height: 34px;
 }
+
+/* 릴 시트 드래그 오프셋 변수 등록 (KAN-430) — inherits: false가 핵심이다.
+ * 미등록 커스텀 프로퍼티는 상속되므로 값을 바꾸면 그 서브트리 전체가 스타일
+ * recalc 대상이 된다(문서 루트에 쓰던 첫 구현은 드래그 프레임마다 문서 전체가
+ * 재계산돼 CPU 4x에서 recalc가 초당 524ms였다). 상속을 끊고 소비하는 요소
+ * (시트·제목·스크림)에 직접 쓰면 recalc가 그 요소로 국한된다. */
+@property --reel-sheet-drag-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}

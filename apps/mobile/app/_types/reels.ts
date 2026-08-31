@@ -49,6 +49,13 @@ export interface ReelDetailMotion {
   };
   /** 본문 스크롤 영역에 다는 ref — 최상단에서 아래로 끄는 터치를 시트 드래그로 넘겨받는다 */
   scrollGrabRef: (node: HTMLDivElement | null) => void;
+  /**
+   * 드래그 변수(`SHEET_DRAG_Y_VAR`)를 받아 갈 요소가 다는 ref — 시트 본체와
+   * 세부 릴의 제목·스크림. 변수는 상속이 꺼져 있어(@property inherits: false)
+   * 소비하는 요소에 직접 써야 하고, 그 등록을 이 ref가 맡는다. 정리 함수를
+   * 반환하는 React 19 콜백 ref다.
+   */
+  dragTargetRef: (node: HTMLElement | null) => (() => void) | undefined;
   onTransitionEnd: (e: ReactTransitionEvent<HTMLDivElement>) => void;
 }
 
@@ -65,4 +72,6 @@ export interface TitleMotion {
   shown: boolean;
   /** 드래그 중이면 transition 없이 손가락을 따라간다 */
   dragging: boolean;
+  /** 제목·스크림을 드래그 변수 수신자로 등록하는 ref ({@link ReelDetailMotion.dragTargetRef}) */
+  dragTargetRef: ReelDetailMotion["dragTargetRef"];
 }

@@ -222,6 +222,7 @@ export function ReelsFeed({
                       lift: detail.lift,
                       shown: motion.shown,
                       dragging: motion.dragging,
+                      dragTargetRef: motion.dragTargetRef,
                     }
                   : null
               }
