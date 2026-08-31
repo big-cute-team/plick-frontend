@@ -72,6 +72,9 @@ const ShareDialog = dynamic(
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
  * @param seedTweet - 서버가 미리 받아 둔 이 릴의 트윗 데이터 (KAN-422, 첫 릴만).
  *   임베드가 SSR로 그려져 클라 fetch를 건너뛴다.
+ * @param nearActive - 보고 있는 릴에서 {@link REELS_EMBED_FETCH_AHEAD} 안인가.
+ *   밖이면 트윗 임베드 fetch를 미룬다 (KAN-429). 한 번 안으로 들어온 릴은 밖으로
+ *   나가도 계속 그린다 — 받은 임베드를 비웠다 다시 그리면 뒤로 넘길 때 깜빡인다.
  */
 export function ReelItem({
   reel,
@@ -79,12 +82,14 @@ export function ReelItem({
   onOpenDetail,
   titleMotion,
   seedTweet,
+  nearActive = true,
 }: {
   reel: ReelCard;
   active: boolean;
   onOpenDetail: (lift: number) => void;
   titleMotion: TitleMotion | null;
   seedTweet?: Tweet;
+  nearActive?: boolean;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -92,6 +97,11 @@ export function ReelItem({
   const team = reel.teams[0] ? TEAMS[reel.teams[0]] : null;
   const like = useReelLike(reel);
   const [shareOpen, setShareOpen] = useState(false);
+
+  /* fetch 게이트는 한 방향으로만 잠긴다 (KAN-429) — 근처였던 적이 있으면 계속
+     fetch 허용. 렌더 중 setState는 React가 지원하는 상태 보정 패턴이다 */
+  const [embedFetchStarted, setEmbedFetchStarted] = useState(nearActive);
+  if (nearActive && !embedFetchStarted) setEmbedFetchStarted(true);
 
   /* 활성 슬라이드가 되는 즉시 조회로 기록한다 (KAN-310). 릴스 전용 엔드포인트가
      없어 기사와 같은 걸 쓴다 — 릴과 기사가 같은 articleSummaryId 체계다 */
@@ -165,6 +175,7 @@ export function ReelItem({
               url={reel.sourceUrl}
               layout="reel"
               seedTweet={seedTweet}
+              defer={!embedFetchStarted}
             />
           </div>
         )

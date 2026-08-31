@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
-import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
+import {
+  REELS_EMBED_FETCH_AHEAD,
+  REELS_PREFETCH_AHEAD,
+} from "@/_constants/reels";
 import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
@@ -198,6 +201,7 @@ export function ReelsFeed({
               key={reel.id}
               reel={reel}
               active={i === activeIndex}
+              nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
               seedTweet={
                 seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
               }
