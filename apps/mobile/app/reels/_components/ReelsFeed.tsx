@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
@@ -17,7 +17,6 @@ import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
 import type { ReelSeedTweet } from "@/_types/reels";
-import { clampTitleOffset } from "@/_utils/reels";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";
 import { ReelSkeleton } from "./ReelSkeleton";
@@ -96,6 +95,17 @@ export function ReelsFeed({
     reel: ReelCard;
     lift: number;
   } | null>(null);
+
+  /* 정체성을 고정해 memo(ReelItem)가 깨지지 않게 한다 (KAN-430) — 인라인
+     화살표면 피드가 렌더될 때마다 릴 전량의 props가 갈려 memo가 무력화된다 */
+  const { open: openSheet } = motion;
+  const openDetail = useCallback(
+    (reel: ReelCard, lift: number) => {
+      setDetail({ reel, lift });
+      openSheet();
+    },
+    [openSheet],
+  );
 
   const {
     data,
@@ -205,16 +215,12 @@ export function ReelsFeed({
               seedTweet={
                 seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
               }
-              onOpenDetail={(lift) => {
-                setDetail({ reel, lift });
-                motion.open();
-              }}
+              onOpenDetail={openDetail}
               titleMotion={
                 motion.mounted && detail?.reel.id === reel.id
                   ? {
-                      offset: motion.shown
-                        ? clampTitleOffset(detail.lift, motion.dragY)
-                        : 0,
+                      lift: detail.lift,
+                      shown: motion.shown,
                       dragging: motion.dragging,
                     }
                   : null

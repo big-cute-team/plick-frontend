@@ -1,7 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { DRAG_CLOSE_THRESHOLD } from "@/_constants/reels";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { DRAG_CLOSE_THRESHOLD, SHEET_DRAG_Y_VAR } from "@/_constants/reels";
 import type { ReelDetailMotion } from "@/_types/reels";
 
 /**
@@ -10,6 +16,14 @@ import type { ReelDetailMotion } from "@/_types/reels";
  * 시트(ReelDetailSheet)와 릴의 칩·제목(ReelItem)이 같은 상태로 transform을
  * 계산해야 한 몸으로 움직이므로, 상태를 부모(ReelsFeed)로 끌어올려 공유한다.
  *
+ * 드래그 오프셋은 React state가 아니다 (KAN-430). state로 두면 pointermove마다
+ * ReelsFeed 전체가 리렌더된다 — 실측으로 드래그 3초에 커밋 77회, 매 커밋 파이버
+ * 1,042개 전량 렌더였다. 대신 {@link SHEET_DRAG_Y_VAR} CSS 변수를 문서 루트에
+ * 직접 쓰고, 시트·제목·스크림이 각자 transform에서 그 변수를 읽는다
+ * (useTeamSwipePager가 트랙 transform을 ref로 직접 미는 것과 같은 원리인데,
+ * 따라 움직일 요소가 세 컴포넌트에 흩어져 있어 ref 대신 변수로 퍼뜨린다).
+ * React 렌더는 제스처 시작·끝(dragging)과 개폐(shown)에만 일어난다.
+ *
  * 끌어내리는 입구는 둘이다. 그랩 존(기자 줄)은 포인터 이벤트로 언제나 받고
  * (`grabProps`), 본문 스크롤 영역은 최상단에서 아래로 끄는 제스처만 시트
  * 드래그로 넘겨받는다(`scrollGrabRef`, KAN-358).
@@ -17,12 +31,15 @@ import type { ReelDetailMotion } from "@/_types/reels";
 export function useReelDetailMotion(): ReelDetailMotion {
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
-  const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startYRef = useRef(0);
   /* 이벤트 핸들러는 리렌더 전 stale state를 볼 수 있어 판정은 ref로 한다 */
   const draggingRef = useRef(false);
   const dragYRef = useRef(0);
+
+  const writeDragY = useCallback((px: number) => {
+    document.documentElement.style.setProperty(SHEET_DRAG_Y_VAR, `${px}px`);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -33,13 +50,28 @@ export function useReelDetailMotion(): ReelDetailMotion {
     return () => cancelAnimationFrame(id);
   }, [mounted]);
 
+  /**
+   * 드래그가 끝난 뒤의 변수 리셋. endDrag에서 바로 0으로 쓰면 transition이 아직
+   * `none`인 채라(리렌더 전) 시트가 제자리로 뚝 떨어진다. dragging=false 커밋과
+   * 같은 스타일 recalc에 묶여야 전환이 재생되므로, 커밋 직후 페인트 전
+   * (useLayoutEffect)에 리셋한다. 언마운트 시에도 남은 값을 걷는다.
+   */
+  useLayoutEffect(() => {
+    if (!dragging) writeDragY(0);
+  }, [dragging, writeDragY]);
+  useEffect(
+    () => () => {
+      document.documentElement.style.removeProperty(SHEET_DRAG_Y_VAR);
+    },
+    [],
+  );
+
   const endDrag = useCallback(() => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setDragging(false);
     if (dragYRef.current > DRAG_CLOSE_THRESHOLD) setShown(false);
     dragYRef.current = 0;
-    setDragY(0);
   }, []);
 
   const grabProps: ReelDetailMotion["grabProps"] = {
@@ -54,7 +86,7 @@ export function useReelDetailMotion(): ReelDetailMotion {
       if (!draggingRef.current) return;
       const dy = Math.max(0, e.clientY - startYRef.current);
       dragYRef.current = dy;
-      setDragY(dy);
+      writeDragY(dy);
     },
     onPointerUp: endDrag,
     onPointerCancel: endDrag,
@@ -116,7 +148,7 @@ export function useReelDetailMotion(): ReelDetailMotion {
         e.preventDefault();
         const dy = Math.max(0, y - startY);
         dragYRef.current = dy;
-        setDragY(dy);
+        writeDragY(dy);
       };
       const onTouchEnd = () => {
         if (mode === "sheet") endDrag();
@@ -134,16 +166,20 @@ export function useReelDetailMotion(): ReelDetailMotion {
         node.removeEventListener("touchcancel", onTouchEnd);
       };
     },
-    [endDrag],
+    [endDrag, writeDragY],
   );
+
+  /* 개폐 콜백은 정체성을 고정한다 — ReelsFeed가 openDetail을 useCallback으로
+     감싸 memo(ReelItem)에 안정된 props를 주는 데 딸려 들어간다 (KAN-430) */
+  const open = useCallback(() => setMounted(true), []);
+  const requestClose = useCallback(() => setShown(false), []);
 
   return {
     mounted,
     shown,
-    dragY,
     dragging,
-    open: () => setMounted(true),
-    requestClose: () => setShown(false),
+    open,
+    requestClose,
     grabProps,
     scrollGrabRef,
     onTransitionEnd: (e) => {

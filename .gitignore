@@ -39,3 +39,6 @@ yarn-error.log*
 
 # Claude — 개인 설정만 제외(팀 공유 settings.json·skills·commands·hooks는 커밋)
 .claude/settings.local.json
+
+# 로컬 작업 산출물 (측정 원본 등)
+_workspace/

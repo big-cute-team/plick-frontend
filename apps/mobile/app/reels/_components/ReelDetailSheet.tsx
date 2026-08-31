@@ -10,7 +10,11 @@ import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
-import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
+import {
+  SHEET_DRAG_Y_VAR,
+  SHEET_HEIGHT_RATIO,
+  SHEET_TRANSITION,
+} from "@/_constants/reels";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 import type { ReelCard } from "@plick/domain/types";
 import type { ReelDetailMotion } from "@/_types/reels";
@@ -62,8 +66,10 @@ export function ReelDetailSheet({
         className="bg-bg rounded-t-sheet absolute inset-x-0 bottom-0 flex flex-col overflow-hidden"
         style={{
           height: `${SHEET_HEIGHT_RATIO * 100}%`,
+          /* 드래그 오프셋은 CSS 변수로 흐른다 (KAN-430) — 손가락을 따라가는
+             동안 리렌더 없이 transform만 갱신된다 */
           transform: motion.shown
-            ? `translateY(${motion.dragY}px)`
+            ? `translateY(var(${SHEET_DRAG_Y_VAR}, 0px))`
             : "translateY(100%)",
           transition: motion.dragging ? "none" : SHEET_TRANSITION,
         }}
