@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
+import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
@@ -45,13 +46,16 @@ import { ReelActionRail } from "./ReelActionRail";
  *
  * @param reel - 표시할 릴
  * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
+ * @param eager - 첫 릴(LCP 후보)이면 사진을 lazy 큐잉 없이 최우선으로 받는다 (KAN-421)
  */
 export function ReelItem({
   reel,
   onOpenDetail,
+  eager = false,
 }: {
   reel: ReelCard;
   onOpenDetail: () => void;
+  eager?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLButtonElement>(null);
@@ -91,7 +95,8 @@ export function ReelItem({
           <img
             src={reel.imageUrl}
             alt=""
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
             className="absolute inset-0 size-full object-cover"
           />
         ) : (
@@ -124,7 +129,17 @@ export function ReelItem({
               "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 92%, transparent) 100%)",
           }}
         >
-          <PostBadges team={team} stage={reel.stage} />
+          <PostBadges
+            team={team}
+            stage={reel.stage}
+            /* 열린 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 모바일 T2와 동일).
+               마감(FINISH) 릴도 debate가 인라인으로 오므로(KAN-420) contentType으로 거른다 */
+            extra={
+              reel.debate && reel.contentType !== "FINISH" ? (
+                <DebateLiveChip />
+              ) : null
+            }
+          />
           <button
             ref={titleRef}
             type="button"

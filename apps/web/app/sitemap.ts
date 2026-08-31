@@ -56,6 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/articles`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
+    // 토론 리스트 (KAN-418) — 릴스처럼 탐색 진입점으로만 싣는다
+    { url: `${SITE_URL}/debates`, changeFrequency: "daily", priority: 0.6 },
     // 팀 허브 (KAN-350) — 팀 검색어의 랜딩이라 기사 개별 페이지보다 우선순위를 높인다
     ...TEAM_ORDER.map((code) => ({
       url: `${SITE_URL}/teams/${TEAMS[code].slug}`,

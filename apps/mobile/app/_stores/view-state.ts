@@ -88,7 +88,7 @@ export const useViewState = create<ViewState>((set) => ({
   reelsIndex: 0,
   setReelsIndex: (reelsIndex) => set({ reelsIndex }),
 
-  topTicks: { home: 0, reels: 0, articles: 0 },
+  topTicks: { home: 0, reels: 0, articles: 0, debate: 0 },
   requestTop: (key) =>
     set((state) => ({
       topTicks: { ...state.topTicks, [key]: state.topTicks[key] + 1 },

@@ -28,4 +28,4 @@ export type Tab = {
  * 뷰 상태 스토어의 키이자 {@link Tab}의 재탭 대상이다. 기사 세부처럼 매번
  * 새로 여는 화면은 되돌릴 자리가 없어 여기 없다.
  */
-export type ScreenKey = "home" | "reels" | "articles";
+export type ScreenKey = "home" | "reels" | "articles" | "debate";

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import {
   BRAND_DESCRIPTION,
@@ -18,6 +19,19 @@ import {
 import { getMyProfile } from "@/_services/profile";
 import { isLoggedIn } from "@/_services/session";
 import "./globals.css";
+
+/**
+ * Pretendard 셀프호스팅 (KAN-421). jsdelivr 동기 CSS(렌더 블로킹 + 한글 전 글리프
+ * variable woff2 2.0MB)를 `next/font/local`로 교체한다. 모바일 layout과 같은 구성 —
+ * Std 서브셋(2,780자, 285KB), 패밀리는 `--font-pretendard` 변수로 노출하고
+ * `@plick/tokens`의 `--font-sans`가 읽는다.
+ */
+const pretendard = localFont({
+  src: "./fonts/PretendardStdVariable.woff2",
+  display: "swap",
+  weight: "45 920",
+  variable: "--font-pretendard",
+});
 
 /**
  * 전 라우트 공통 메타데이터 (KAN-346). 하위 페이지는 title 문자열만 export하면
@@ -83,12 +97,11 @@ export default async function RootLayout({
   const profile = loggedIn ? await getMyProfile().catch(() => null) : null;
 
   return (
-    <html lang="ko" data-theme="dark">
+    <html lang="ko" data-theme="dark" className={pretendard.variable}>
       <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css"
-        />
+        {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
+            미리 열어 둔다 (KAN-421) */}
+        <link rel="preconnect" href="https://pbs.twimg.com" />
       </head>
       <body className="bg-bg text-text">
         <QueryProvider>

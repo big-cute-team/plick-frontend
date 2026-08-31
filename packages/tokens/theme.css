@@ -125,7 +125,9 @@
 }
 
 @theme inline {
-  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  /* 앱이 next/font/local로 정의한 --font-pretendard를 읽는다 (KAN-421).
+   * 변수가 없으면(스토리북 등) 시스템 폰트로 폴백 */
+  --font-sans: var(--font-pretendard, system-ui), system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 
   /* 색 → Tailwind 유틸 매핑.
@@ -275,7 +277,7 @@ body {
 body {
   background: var(--plk-bg);
   color: var(--plk-text);
-  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  font-family: var(--font-pretendard, system-ui), system-ui, sans-serif;
 }
 ::-webkit-scrollbar {
   display: none;

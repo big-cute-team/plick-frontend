@@ -9,6 +9,7 @@ import { formatCount } from "@plick/domain/format";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
+import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { SHEET_HEIGHT_RATIO, SHEET_TRANSITION } from "@/_constants/reels";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 import type { ReelCard } from "@plick/domain/types";
@@ -117,6 +118,19 @@ export function ReelDetailSheet({
               className="ml-auto"
             />
           </div>
+
+          {/* 투표 카드 — 태그 행과 댓글 사이 (KAN-418, 시안 V3). 마감(FINISH)
+              릴도 피드 응답에 debate가 인라인이라(KAN-420) 별도 조회 없이
+              기사 세부와 같이 contentType으로 마감을 판정한다. 마감이면 투표한
+              적 없어도 결과가 바로 보이고 상호작용은 없다. key는 릴을 갈아탈 때
+              카드 상태를 새로 시작하는 보험이다 */}
+          {reel.debate && (
+            <DebateVoteCard
+              key={reel.id}
+              debate={reel.debate}
+              closed={reel.contentType === "FINISH"}
+            />
+          )}
 
           <CommentsHeader
             count={reel.commentCount + addedComments}

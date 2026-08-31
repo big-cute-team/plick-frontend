@@ -10,6 +10,7 @@ import { TagChips } from "@plick/ui/TagChips";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
+import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useArticleReporters } from "@/_hooks/useArticleReporters";
 
 /**
@@ -141,6 +142,19 @@ export function ReelDetailPanel({
                   className="ml-auto"
                 />
               </div>
+
+              {/* 투표 카드 — 태그 행과 댓글 사이 (KAN-418, 모바일 시트와 같은
+                  자리). 마감(FINISH) 릴도 피드 응답에 debate가 인라인이라
+                  (KAN-420) 별도 조회 없이 contentType으로 마감을 판정한다.
+                  패널은 릴을 갈아타도 마운트가 유지되므로 key로 릴마다 카드
+                  상태를 새로 시작한다 */}
+              {rendered.debate && (
+                <DebateVoteCard
+                  key={rendered.id}
+                  debate={rendered.debate}
+                  closed={rendered.contentType === "FINISH"}
+                />
+              )}
 
               <CommentsHeader
                 count={rendered.commentCount + addedComments}

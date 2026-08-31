@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { STAGE_LABEL, type PostStage } from "./PostChips";
 import { TeamCrest } from "./TeamCrest";
 
@@ -22,19 +23,23 @@ const STAGE_TEXT: Record<PostStage, string> = {
  * @param stage - 루머 단계. 없으면 글자를 생략한다.
  * @param crestSize - 로고 크기(px). 표면마다 스케일이 달라 앱이 정한다.
  * @param stageTextClass - 단계 글자 크기 유틸. 로고와 같은 이유로 앱이 정한다.
+ * @param extra - 단계 글자 뒤에 붙는 추가 배지 슬롯 (KAN-418). 릴스가 "토론 중"
+ *   칩을 꽂는 자리다 — 안 넘기면 기존 표시 그대로다.
  */
 export function PostBadges({
   team,
   stage,
   crestSize = 30,
   stageTextClass = "text-caption",
+  extra,
 }: {
   team: { code: string; name: string } | null;
   stage?: PostStage | null;
   crestSize?: number;
   stageTextClass?: string;
+  extra?: ReactNode;
 }) {
-  if (!team && !stage) return null;
+  if (!team && !stage && !extra) return null;
   return (
     <div className="flex items-center gap-2">
       {team && <TeamCrest team={team} size={crestSize} />}
@@ -45,6 +50,7 @@ export function PostBadges({
           {STAGE_LABEL[stage]}
         </span>
       )}
+      {extra}
     </div>
   );
 }

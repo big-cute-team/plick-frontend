@@ -14,6 +14,7 @@ import type { TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { reelSharePath } from "@/_utils/share";
 import { formatRelativeTime } from "@plick/domain/format";
+import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
 import { ReelActionRail } from "./ReelActionRail";
@@ -129,7 +130,10 @@ export function ReelItem({
         <img
           src={reel.imageUrl}
           alt=""
-          loading="lazy"
+          /* 보고 있는 릴(첫 진입 시 index 0)은 LCP 후보라 lazy 큐잉 대신 최우선으로
+             내려받는다 (KAN-421) */
+          loading={active ? "eager" : "lazy"}
+          fetchPriority={active ? "high" : "auto"}
           className="absolute inset-0 size-full object-cover"
         />
       ) : (
@@ -177,6 +181,13 @@ export function ReelItem({
             stage={reel.stage}
             crestSize={34}
             stageTextClass="text-label"
+            /* 열린 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 시안 T2).
+               마감(FINISH) 릴도 debate가 인라인으로 오므로(KAN-420) contentType으로 거른다 */
+            extra={
+              reel.debate && reel.contentType !== "FINISH" ? (
+                <DebateLiveChip />
+              ) : null
+            }
           />
           <button
             ref={titleTextRef}
