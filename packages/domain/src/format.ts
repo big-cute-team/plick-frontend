@@ -220,6 +220,27 @@ export function formatDebateTimeLeft(
 }
 
 /**
+ * 토론이 closesAt 기준으로 마감됐는가 (KAN-436).
+ *
+ * 마감의 실기준은 기사 contentType(FINISH)이지만, BE에 closesAt 도달 시
+ * FINISH로 전환하는 장치가 없어 시각이 지나도 DEBATE로 남는 토론이 실존한다
+ * (BE 검증, 투표 API 차단은 KAN-437). 화면은 이 판정을 contentType 마감과
+ * OR로 겹쳐 시각이 지난 토론도 마감으로 그린다.
+ *
+ * @param closesAt 마감 시각 ISO (KST 오프셋). null이면 상시 진행으로 본다
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ */
+export function isDebateClosed(
+  closesAt: string | null,
+  now: Date = new Date(),
+): boolean {
+  if (!closesAt) return false;
+  const at = new Date(closesAt);
+  if (Number.isNaN(at.getTime())) return false;
+  return at.getTime() <= now.getTime();
+}
+
+/**
  * 토론 마감 시각 표기 (KAN-418) — 투표 후 메타 라인의 "오늘 23:59 마감"에서
  * 시각 부분. KST 기준 같은 날이면 "오늘 23:59", 다른 날이면 "8월 30일 23:59"다.
  * 기기 시간대와 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.

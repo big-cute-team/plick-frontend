@@ -39,6 +39,7 @@ export function useDebateVote({
   const queryClient = useQueryClient();
   const { isLoggedIn } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [closedByServer, setClosedByServer] = useState(false);
 
   function apply(next: DebateVoteState) {
     onChange?.(next);
@@ -75,6 +76,12 @@ export function useDebateVote({
         setNeedsLogin(true);
         return;
       }
+      /* 열린 채 띄워 둔 카드가 그 사이 마감된 경합 (KAN-436) — 롤백한 뒤
+         카드를 마감 상태로 전환해 결과 읽기 전용으로 잠근다 */
+      if (e instanceof ApiError && e.code === "DEBATE_CLOSED") {
+        setClosedByServer(true);
+        return;
+      }
       console.error("[debates] 투표 반영 실패:", e);
     },
   });
@@ -93,5 +100,7 @@ export function useDebateVote({
     /** 로그인 유도 팝업을 띄워야 하는가 (비로그인 탭 또는 401) */
     needsLogin,
     dismissLogin: () => setNeedsLogin(false),
+    /** 투표 시도에 BE가 409 DEBATE_CLOSED로 답했는가 — 카드를 마감으로 잠근다 */
+    closedByServer,
   };
 }
