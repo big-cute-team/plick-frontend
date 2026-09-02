@@ -36,10 +36,10 @@ export async function DebatesScreen() {
       <DebatesScrollArea>
         <header className="px-edge pt-3 pb-2">
           <h1 className="text-section tracking-heading text-text font-extrabold">
-            토론
+            VS
           </h1>
           <p className="text-caption text-text-4 mt-1 font-semibold">
-            투표로 팬들의 여론을 확인해보세요
+            VS에 참여하고 팬들의 여론을 확인해보세요
           </p>
         </header>
         <DebatesFeed initial={initial} />

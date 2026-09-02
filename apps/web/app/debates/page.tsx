@@ -8,7 +8,7 @@ import { DebatesScreen } from "./_components/DebatesScreen";
  * 기사 목록(KAN-346·KAN-386)과 같은 상호 참조 규약이다.
  */
 export const metadata: Metadata = {
-  title: "토론",
+  title: "VS",
   description: PAGE_DESCRIPTIONS.debates,
   alternates: {
     canonical: "/debates",

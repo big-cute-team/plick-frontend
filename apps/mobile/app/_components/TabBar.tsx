@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { articlesTeamPath, teamHubPath } from "@plick/domain/format";
+import { teamHubPath } from "@plick/domain/format";
 import { TABS } from "@/_constants/tabs";
-import { useArticlesRefresh } from "@/_hooks/useArticlesRefresh";
 import { useDebatesRefresh } from "@/_hooks/useDebatesRefresh";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
 import { useReelsRefresh } from "@/_hooks/useReelsRefresh";
@@ -42,13 +41,8 @@ export function TabBar({
    * 항상 두고 온 그 화면(같은 URL)으로 되돌린다 — KAN-314의 복원 감각 유지.
    */
   const homeHref = teamHubPath(useViewState((state) => state.homeFilter));
-  /* 기사 탭도 같은 이유(KAN-386)로 마지막으로 보던 팀의 URL을 목적지로 쓴다 */
-  const articlesHref = articlesTeamPath(
-    useViewState((state) => state.articlesFilter),
-  );
   const refreshHome = useHomeRefresh();
   const refreshReels = useReelsRefresh();
-  const refreshArticles = useArticlesRefresh();
   const refreshDebates = useDebatesRefresh();
   const overlay = variant === "overlay";
 
@@ -62,17 +56,14 @@ export function TabBar({
     requestTop(screen);
     void (screen === "home"
       ? refreshHome()
-      : screen === "articles"
-        ? refreshArticles()
-        : screen === "debate"
-          ? refreshDebates()
-          : refreshReels());
+      : screen === "debate"
+        ? refreshDebates()
+        : refreshReels());
   }
 
-  /** 탭의 목적지 — 피드 탭은 마지막으로 보던 팀 URL, 나머지는 고정 경로 */
+  /** 탭의 목적지 — 홈 탭은 마지막으로 보던 팀 URL, 나머지는 고정 경로 */
   function hrefFor(screen: ScreenKey | undefined, href: string) {
     if (screen === "home") return homeHref;
-    if (screen === "articles") return articlesHref;
     return href;
   }
 
@@ -93,7 +84,7 @@ export function TabBar({
       }}
     >
       <ul className="flex h-14 items-stretch">
-        {TABS.map(({ href, label, Icon, match, screen, surface }) => {
+        {TABS.map(({ href, label, Icon, match, screen }) => {
           const active = match(pathname);
           return (
             <li key={href} className="flex-1">
@@ -101,9 +92,6 @@ export function TabBar({
                 href={hrefFor(screen, href)}
                 onClick={(e) => {
                   if (!active) return;
-                  /* 활성이어도 surface 밖(기사 세부)이면 재탭이 아니라
-                     목록으로 돌아가는 평범한 이동이다 */
-                  if (surface && !surface(pathname)) return;
                   e.preventDefault();
                   retap(screen);
                 }}

@@ -60,7 +60,7 @@ export function VoteCard({
 
   return (
     <section
-      aria-label="투표"
+      aria-label="VS"
       className={`bg-elevate rounded-card flex flex-col ${size === "md" ? "gap-3 p-4" : "gap-2.5 p-3.5"}`}
     >
       <header className="flex items-center justify-between">
@@ -110,14 +110,14 @@ export function VoteCard({
       {/* 마감 시각 표기("오늘 …")도 렌더 시각 파생이라 위와 같은 이유 */}
       <p suppressHydrationWarning className="text-caption text-text-4">
         {closed
-          ? `마감 · ${total.toLocaleString()}명 투표`
+          ? `마감 · ${total.toLocaleString()}명 참여`
           : showResults
             ? `${total.toLocaleString()}명 참여 · ${
                 debate.closesAt
                   ? `${formatDebateCloseAt(debate.closesAt)} 마감`
-                  : "내 투표 반영됨"
+                  : "내 선택 반영됨"
               }`
-            : `${total.toLocaleString()}명 참여 · 투표하면 결과가 열려요`}
+            : `${total.toLocaleString()}명 참여 · 참여하면 결과가 열려요`}
       </p>
     </section>
   );

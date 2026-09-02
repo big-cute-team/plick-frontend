@@ -9,10 +9,9 @@ import type { ComponentType } from "react";
  * `screen`은 이 탭이 여는 화면의 이름이다. 지금 있는 탭을 한 번 더 눌렀을 때
  * 어느 화면을 맨 위로 올릴지 찾는 데 쓴다 (KAN-314). 되돌릴 자리가 없는 탭은 비운다.
  *
- * `surface`는 재탭 판정이 활성 판정보다 좁아야 할 때 준다 (KAN-386). 기사 탭은
- * 기사 세부(`/articles/123`)에서도 활성으로 빛나지만, 거기서 탭을 누르는 건
- * 재탭(맨 위 + 새로고침)이 아니라 목록으로 돌아가는 평범한 이동이어야 한다
- * (웹 GNB NavItem과 같은 판단). 없으면 활성 = 재탭이다.
+ * 재탭 판정을 활성 판정보다 좁히는 `surface`는 기사 탭(KAN-386)만 쓰다가 기사
+ * 탭이 LIVE로 대체되며(KAN-435) 같이 뺐다 — 세부 라우트에서도 활성으로 빛나는
+ * 탭이 다시 생기면 그 커밋을 되살린다.
  */
 export type Tab = {
   href: string;
@@ -20,7 +19,6 @@ export type Tab = {
   Icon: ComponentType<{ size?: number }>;
   match: (p: string) => boolean;
   screen?: ScreenKey;
-  surface?: (p: string) => boolean;
 };
 
 /**

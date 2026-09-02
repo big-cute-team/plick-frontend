@@ -1,5 +1,6 @@
 /**
- * 릴 배지 행의 "토론 중" 칩 (KAN-418, 시안 T2). 모바일·웹 릴이 같이 쓴다.
+ * 릴 배지 행의 "VS 진행 중" 칩 (KAN-418, 시안 T2 — 워딩은 KAN-435에서 VS로).
+ * 모바일·웹 릴이 같이 쓴다.
  *
  * 릴에서 이 게시물이 투표형이라는 유일한 신호라 틴트 배지들 사이에서 혼자
  * 튀도록 솔리드 그린 + 다크 글자로 뒤집었다(ADR 0108). 칩 전체가 accent
@@ -13,7 +14,7 @@ export function DebateLiveChip() {
       <span aria-hidden className="animate-pulse leading-none">
         ●
       </span>
-      토론 중
+      VS 진행 중
     </span>
   );
 }
