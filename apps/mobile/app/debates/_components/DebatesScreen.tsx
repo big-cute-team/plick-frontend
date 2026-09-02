@@ -39,7 +39,7 @@ export async function DebatesScreen() {
             VS
           </h1>
           <p className="text-caption text-text-4 mt-1 font-semibold">
-            VS에 참여하고 팬들의 여론을 확인해보세요
+            투표에 참여하고 팬들의 여론을 확인해보세요
           </p>
         </header>
         <DebatesFeed initial={initial} />
