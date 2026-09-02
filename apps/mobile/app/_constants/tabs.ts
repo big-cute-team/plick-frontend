@@ -5,15 +5,19 @@
  * 쓰는 건 TabBar·TopBarMenu뿐이라 탭 구성만 이 파일로 옮긴다.
  */
 import {
-  DebateIcon,
   HomeIcon,
-  NewsIcon,
+  LiveIcon,
   ReelsIcon,
   UserIcon,
+  VsIcon,
 } from "@plick/ui/icons";
 import type { Tab } from "@/_types/app";
 
-/** 하단 탭 구성 — TabBar가 그린다. 검색·알림 탭은 기능이 없어 뺐다 (KAN-297). */
+/**
+ * 하단 탭 구성 — TabBar가 그린다. 검색·알림 탭은 기능이 없어 뺐다 (KAN-297).
+ * 기사 탭은 LIVE(라이브 스코어, 준비 중)로 대체했다 (KAN-435) — 기사 라우트
+ * 자체는 남아 있고 탭 진입점만 빠졌다.
+ */
 export const TABS: Tab[] = [
   {
     href: "/",
@@ -24,14 +28,10 @@ export const TABS: Tab[] = [
     screen: "home",
   },
   {
-    href: "/articles",
-    label: "기사",
-    Icon: NewsIcon,
-    // 기사 세부(/articles/123)도 기사 탭으로 빛낸다 — 웹 GNB와 같은 판정.
-    // 다만 세부에서 탭을 누르는 건 재탭이 아니라 목록 복귀라 surface를 좁힌다
-    match: (p) => p.startsWith("/articles"),
-    surface: (p) => p === "/articles" || p.startsWith("/articles/teams"),
-    screen: "articles",
+    href: "/live",
+    label: "LIVE",
+    Icon: LiveIcon,
+    match: (p) => p.startsWith("/live"),
   },
   {
     href: "/reels",
@@ -42,8 +42,8 @@ export const TABS: Tab[] = [
   },
   {
     href: "/debates",
-    label: "토론",
-    Icon: DebateIcon,
+    label: "VS",
+    Icon: VsIcon,
     match: (p) => p.startsWith("/debates"),
     screen: "debate",
   },
