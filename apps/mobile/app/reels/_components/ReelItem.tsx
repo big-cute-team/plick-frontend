@@ -13,7 +13,7 @@ import type { ReelCard } from "@plick/domain/types";
 import type { TitleMotion } from "@/_types/reels";
 import { titleLiftDistance } from "@/_utils/reels";
 import { reelSharePath } from "@/_utils/share";
-import { formatRelativeTime } from "@plick/domain/format";
+import { formatRelativeTime, isDebateClosed } from "@plick/domain/format";
 import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterTierBadge } from "@plick/ui/ReporterTierBadge";
@@ -259,10 +259,13 @@ export const ReelItem = memo(function ReelItem({
             stage={reel.stage}
             crestSize={34}
             stageTextClass="text-label"
-            /* 열린 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418, 시안 T2).
-               마감(FINISH) 릴도 debate가 인라인으로 오므로(KAN-420) contentType으로 거른다 */
+            /* 열린 토론이 붙은 릴만 "토론 중" 칩을 단다 (KAN-418).
+               마감(FINISH) 릴도 debate가 인라인으로 오므로(KAN-420) contentType으로
+               거르고, closesAt이 지난 토론도 마감이라 함께 거른다(KAN-436) */
             extra={
-              reel.debate && reel.contentType !== "FINISH" ? (
+              reel.debate &&
+              reel.contentType !== "FINISH" &&
+              !isDebateClosed(reel.debate.closesAt) ? (
                 <DebateLiveChip />
               ) : null
             }

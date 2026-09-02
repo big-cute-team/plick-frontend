@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   formatDebateCloseAt,
   formatDebateTimeLeft,
+  isDebateClosed,
 } from "@plick/domain/format";
 import type { Debate, VoteOption } from "@plick/domain/types";
 
@@ -26,19 +28,21 @@ const SIDE_STYLE: Record<VoteOption, { fill: string; tint: string }> = {
  * 상태·뮤테이션은 소유하지 않는다(PostBadges처럼 표시 전용). 결과 공개는
  * 내 투표(myVote) 또는 마감이 게이트고, 마감이면 투표 없이도 결과를 보여준다.
  *
- * 마감 여부도 스스로 판정하지 않는다 — 실기준이 `closesAt` 시각이 아니라 기사
- * `contentType`(FINISH)이라 기사 상세·릴 세부가 각자 판정해 `closed`로 넘긴다.
- * 토론 리스트에는 BE가 열린 토론만 내려주므로 안 넘기면 진행 중으로 그린다.
+ * 마감 판정은 두 겹이다 (KAN-436). 기사 `contentType`(FINISH) 마감은 호출부가
+ * `closed`로 넘기고, `closesAt` 경과는 카드가 스스로 판정해 OR로 겹친다 —
+ * BE가 closesAt 도달로 FINISH 전환을 하지 않아 시각만 지난 토론이 실존하고
+ * (KAN-437), 토론 리스트 응답에는 contentType이 아예 없어 카드가 직접 봐야 한다.
  *
  * @param debate - 토론 데이터. 집계 갱신은 호출부가 이 객체를 갈아 끼운다.
  * @param closed - 마감된 토론인가(기사 `contentType === "FINISH"`).
+ *   closesAt 경과 마감은 카드가 스스로 겹치므로 contentType 몫만 넘긴다.
  * @param onVote - 트랙 탭 시 호출. 없으면 표시 전용(리스트 카드)으로 그린다.
  * @param isPending - 투표 요청 진행 중 — 트랙 탭을 막는다.
  * @param size - 기사·릴 세부는 md, 토론 리스트 카드는 sm.
  */
 export function VoteCard({
   debate,
-  closed = false,
+  closed: contentClosed = false,
   onVote,
   isPending = false,
   size = "md",
@@ -49,6 +53,22 @@ export function VoteCard({
   isPending?: boolean;
   size?: "md" | "sm";
 }) {
+  /* closesAt 경과 마감. 마감은 시간상 단조라(서버 렌더가 마감이면 더 늦은
+     하이드레이션도 마감) 초기값을 렌더 시점 판정으로 둬도 하이드레이션이
+     안전하고, 열린 채 떠 있는 카드는 타이머가 마감 시각에 그 자리에서 잠근다 */
+  const [pastClose, setPastClose] = useState(() =>
+    isDebateClosed(debate.closesAt),
+  );
+  useEffect(() => {
+    if (pastClose || !debate.closesAt) return;
+    const left = new Date(debate.closesAt).getTime() - Date.now();
+    // setTimeout 지연은 32비트 한계가 있다 — 그보다 먼 마감(24일+)은 이 세션에서 닿지 않는다
+    if (left > 0x7fffffff) return;
+    const timer = setTimeout(() => setPastClose(true), Math.max(left, 0));
+    return () => clearTimeout(timer);
+  }, [debate.closesAt, pastClose]);
+
+  const closed = contentClosed || pastClose;
   const showResults = closed || debate.myVote !== null;
   const total = debate.voteCountA + debate.voteCountB;
   const pctA = total === 0 ? 0 : Math.round((debate.voteCountA / total) * 100);
