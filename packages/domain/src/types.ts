@@ -79,6 +79,13 @@ export interface ArticleSourceReporter extends ArticleReporter {
 export interface ArticleCard {
   /** BE `articleSummaryId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */
   id: string;
+  /**
+   * 게시물 표시 형태 (KAN-438). BE 목록 응답에는 토론 기능(KAN-418)부터 실려
+   * 있었지만 목록 계약이 KAN-271 시점 shape라 버려지고 있었다. DEBATE면
+   * 리스트가 투표 진행 중 표시(글로우·칩)를 단다 — 목록 응답에 `closesAt`이
+   * 없어 시간 경과 판정은 하지 않고, BE 열림/마감 실기준인 이 값만 본다.
+   */
+  contentType: ArticleContentType;
   title: string;
   /** BE가 긴 요약(`summary_detail`)을 내려준다. 카드에서는 줄수로 자른다. */
   summary: string;
