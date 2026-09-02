@@ -4,7 +4,7 @@ import { TEAMS } from "@plick/domain/constants";
 import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { HeartMiniIcon } from "@plick/ui/icons";
+import { HeartMiniIcon, VsIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { ArticleCard, Filter } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
@@ -26,7 +26,8 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 기존대로 기사의 첫 팀이다.
  *
  * 토론이 진행 중인 기사(contentType=DEBATE)는 날짜 옆에 번쩍이는
- * "투표 진행 중" 칩을 단다(KAN-438) — 리스트를 내리다 눈에 걸려 들어가 보게
+ * VS 칩(하단 탭과 같은 VsIcon + "VS")을 단다(KAN-438, 워딩은 "투표 진행 중"
+ * 에서 교체) — 리스트를 내리다 눈에 걸려 들어가 보게
  * 하는 신호다. 행 자체는 손대지 않는다: 테두리 카드로 감싸면 좌우 얼라인이
  * 이웃 행들과 어긋난다. 마감 판정은 하지 않는다 — 목록 응답에 closesAt이
  * 없고, BE 열림/마감 실기준도 이 값이다.
@@ -66,7 +67,13 @@ export function NewsItem({
           <span className="text-body text-text-4" suppressHydrationWarning>
             {formatRelativeTime(article.publishedAt)}
           </span>
-          {debateLive && <DebateLiveChip label="투표 진행 중" />}
+          {debateLive && (
+            <DebateLiveChip
+              variant="outline"
+              icon={<VsIcon size={13} />}
+              label="VS"
+            />
+          )}
         </div>
         {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
             보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
