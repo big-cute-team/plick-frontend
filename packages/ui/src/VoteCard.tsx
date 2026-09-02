@@ -29,9 +29,9 @@ const SIDE_STYLE: Record<VoteOption, { fill: string; tint: string }> = {
  * 내 투표(myVote) 또는 마감이 게이트고, 마감이면 투표 없이도 결과를 보여준다.
  *
  * 마감 판정은 두 겹이다 (KAN-436). 기사 `contentType`(FINISH) 마감은 호출부가
- * `closed`로 넘기고, `closesAt` 경과는 카드가 스스로 판정해 OR로 겹친다 —
- * BE가 closesAt 도달로 FINISH 전환을 하지 않아 시각만 지난 토론이 실존하고
- * (KAN-437), 토론 리스트 응답에는 contentType이 아예 없어 카드가 직접 봐야 한다.
+ * `closed`로 넘기고(토론 리스트도 응답에 contentType이 생겨 같은 규약), `closesAt`
+ * 경과는 카드가 스스로 판정해 OR로 겹친다 — BE가 closesAt 도달로 FINISH 전환을
+ * 하지 않아 시각만 지난 토론이 실존하기 때문이다(KAN-437).
  *
  * @param debate - 토론 데이터. 집계 갱신은 호출부가 이 객체를 갈아 끼운다.
  * @param closed - 마감된 토론인가(기사 `contentType === "FINISH"`).
