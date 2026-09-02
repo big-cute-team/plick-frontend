@@ -38,6 +38,8 @@ interface FeedCardResponse {
   title: string;
   summary: string;
   rumorStage: string | null;
+  /** 게시물 표시 형태 (KAN-438) — "GENERAL" | "DEBATE" | "FINISH". */
+  contentType: string | null;
   publishedAt: string;
   mainImageUrl: string | null;
   detailImageUrl: string | null;
@@ -76,6 +78,11 @@ function toArticleCard(r: FeedCardResponse): ArticleCard {
 
   return {
     id: String(r.articleSummaryId),
+    // 모르는 값이 와도 화면이 투표 표시로 튀지 않게 GENERAL로 떨어뜨린다
+    contentType:
+      r.contentType === "DEBATE" || r.contentType === "FINISH"
+        ? r.contentType
+        : "GENERAL",
     title: r.title,
     summary: r.summary,
     stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,

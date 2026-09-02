@@ -22,7 +22,7 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   return (
     <section>
       <h2 className="text-body-lg text-text pb-3.5 font-extrabold">
-        🔥 지금 뜨거운 투표
+        🔥 지금 뜨거운 VS
       </h2>
 
       {isPending ? (
@@ -33,7 +33,7 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
         </div>
       ) : isError ? (
         <div className="py-16 text-center">
-          <p className="text-body text-text-4">토론을 불러오지 못했어요.</p>
+          <p className="text-body text-text-4">VS를 불러오지 못했어요.</p>
           <button
             type="button"
             onClick={() => refetch()}
@@ -58,7 +58,7 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
         </ul>
       ) : (
         <p className="text-body text-text-4 py-16 text-center">
-          아직 열린 토론이 없어요.
+          아직 열린 VS가 없어요.
         </p>
       )}
     </section>

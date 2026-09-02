@@ -36,16 +36,17 @@ export function DebateVoteCard({
     myVote: initial.myVote,
   });
   const debate: Debate = { ...initial, ...voteState };
-  const { vote, isPending, needsLogin, dismissLogin } = useDebateVote({
-    debate,
-    onChange: setVoteState,
-  });
+  const { vote, isPending, needsLogin, dismissLogin, closedByServer } =
+    useDebateVote({
+      debate,
+      onChange: setVoteState,
+    });
 
   return (
     <>
       <VoteCard
         debate={debate}
-        closed={closed}
+        closed={closed || closedByServer}
         onVote={vote}
         isPending={isPending}
         size={size}

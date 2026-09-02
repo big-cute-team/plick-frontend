@@ -63,6 +63,31 @@ export const REELS_CAROUSEL_OPTIONS: EmblaOptionsType = {
 export const REELS_PREFETCH_AHEAD = 3;
 
 /**
+ * 트윗 임베드 fetch를 허용하는 보고 있는 릴과의 거리 (KAN-429).
+ *
+ * 사진 없는 릴은 임베드가 미디어라 마운트 즉시 `/api/tweet`을 부르는데, 첫
+ * 페이지 10장이 동시에 부르면 화면 밖 릴의 트윗 이미지가 LCP인 첫 릴 이미지와
+ * pbs.twimg.com 대역폭을 나눠 쓴다. 이 거리 밖 릴은 fetch를 미루고, 안으로
+ * 들어오면 시작한다(한 번 시작한 릴은 계속 그린다 — {@link ReelItem}). 2면
+ * 넘기는 도중 화면에 걸리는 이웃(±1)에 여유 한 장을 더한 값이다.
+ */
+export const REELS_EMBED_FETCH_AHEAD = 2;
+
+/**
+ * 릴 내용을 DOM에 유지하는 보고 있는 릴과의 거리 (KAN-431).
+ *
+ * 무한스크롤로 페이지가 쌓이면 지나온 릴의 DOM이 전부 남는다 — 실측으로 릴
+ * 50장에 4,291노드(릴당 92개, 선형·상한 없음), 화면 밖 트윗 임베드 43개가
+ * 마운트 상태였다. 이 거리 밖 릴은 내용을 비우고 빈 섹션 골격만 남긴다.
+ * Embla가 슬라이드 수·높이를 재는 구조라 섹션 자체는 개수·크기를 보존한다.
+ *
+ * {@link REELS_EMBED_FETCH_AHEAD}(2)보다 한 장 큰 3이다 — 창에 다시 들어온
+ * 릴의 임베드 재마운트(swr 캐시 히트)가 화면에 걸리는 ±1에 닿기 전, 화면 밖
+ * 두 장 거리에서 끝나 있게 하는 여유다.
+ */
+export const REELS_DOM_WINDOW = 3;
+
+/**
  * 재측정(reInit) 때 "스냅이 아직 달리는 중"으로 보는 남은 거리(px) (KAN-276).
  *
  * 이보다 많이 남았으면 reInit 후 운동 상태를 복원해 애니메이션을 이어 붙이고,
@@ -88,3 +113,12 @@ export const SHEET_TITLE_GAP = 18;
 /** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
 export const SHEET_TRANSITION =
   "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+
+/**
+ * 시트 드래그 오프셋을 담는 CSS 변수 이름 (KAN-430).
+ *
+ * pointermove마다 React state 대신 이 변수를 문서 루트에 직접 써서
+ * (useReelDetailMotion), 시트·제목·스크림 transform이 리렌더 없이 손가락을
+ * 따라간다. 값은 px 단위 길이고, 참조하는 쪽은 `var(..., 0px)` 폴백을 쓴다.
+ */
+export const SHEET_DRAG_Y_VAR = "--reel-sheet-drag-y";

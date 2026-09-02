@@ -1,6 +1,6 @@
 /**
  * @file 데이터 레이어 상수. `"use server"` 파일(auth.ts)은 함수만 export할 수 있어
- * 상수는 여기로 분리한다. 앱 상수(TABS 등)는 `@/_constants/app`.
+ * 상수는 여기로 분리한다. 앱 상수는 `@/_constants/app`, 탭 구성은 `@/_constants/tabs`.
  */
 
 import type { SocialProvider } from "@/_types/api";

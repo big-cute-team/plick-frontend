@@ -1,9 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { SendIcon } from "@plick/ui/icons";
-import { ShareDialog } from "@/_components/ShareDialog";
 import { articleSharePath } from "@/_utils/share";
+
+/**
+ * ShareDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const ShareDialog = dynamic(
+  () => import("@/_components/ShareDialog").then((m) => m.ShareDialog),
+  { ssr: false },
+);
 
 /**
  * 기사 세부 공유 버튼 (KAN-312) — 본문 밑 액션 줄에서 좋아요 알약 옆에 선다.

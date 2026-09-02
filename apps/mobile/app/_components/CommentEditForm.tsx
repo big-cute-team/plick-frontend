@@ -1,11 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import type { ArticleComment } from "@plick/domain/types";
 import { useUpdateComment } from "@/_hooks/useUpdateComment";
-import { LoginPromptDialog } from "./LoginPromptDialog";
+
+/**
+ * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const LoginPromptDialog = dynamic(
+  () => import("./LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
 
 /**
  * 댓글 인라인 수정 폼 (KAN-333) — 내 댓글의 "수정"을 누르면 본문 자리에 나타난다.

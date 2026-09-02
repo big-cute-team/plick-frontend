@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
-import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
+import {
+  REELS_DOM_WINDOW,
+  REELS_EMBED_FETCH_AHEAD,
+  REELS_PREFETCH_AHEAD,
+} from "@/_constants/reels";
 import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
@@ -12,12 +17,22 @@ import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
-import { clampTitleOffset } from "@/_utils/reels";
-import { ReelDetailSheet } from "./ReelDetailSheet";
+import type { ReelSeedTweet } from "@/_types/reels";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";
 import { ReelSkeleton } from "./ReelSkeleton";
 import { ReelStatus } from "./ReelStatus";
+
+/**
+ * 릴 세부 시트는 첫 탭 전엔 안 뜨는 UI라 초기 번들에서 뺀다 (KAN-428). 시트가
+ * 끌고 오는 댓글 스레드·투표 카드·뮤테이션 훅이 통째로 별도 청크가 된다.
+ * 첫 개폐 애니메이션이 청크 다운로드에 밀리지 않게 아래 이펙트에서 idle 때
+ * 미리 받아 둔다.
+ */
+const ReelDetailSheet = dynamic(
+  () => import("./ReelDetailSheet").then((m) => m.ReelDetailSheet),
+  { ssr: false },
+);
 
 /**
  * 릴스 세로 피드 (KAN-277, KAN-276).
@@ -43,23 +58,55 @@ import { ReelStatus } from "./ReelStatus";
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  * @param anchorId 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 그 릴에서
  *   시작하는 별도 캐시의 피드가 되고, 탭 피드의 보던-릴 복원은 하지 않는다.
+ * @param seedTweet 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-422). 피드가
+ *   refetch로 갈렸을 수 있어 릴 id가 일치하는 릴에만 붙인다.
  */
 export function ReelsFeed({
   initial,
   anchorId,
+  seedTweet,
 }: {
   initial?: InitialReelFeed;
   anchorId?: string;
+  seedTweet?: ReelSeedTweet;
 }) {
   const motion = useReelDetailMotion();
   /* 안드로이드 뒤로가기가 릴스를 나가는 대신 세부 시트를 닫는다 (유튜브 쇼츠 방식) */
   useBackToClose(motion.mounted, motion.requestClose);
+
+  /**
+   * 세부 시트 청크 프리페치 (KAN-428) — dynamic으로 초기 번들에서 뺀 시트를
+   * 브라우저가 한가할 때 미리 받아 둔다. 초기 로드(LCP 창)와 경합하지 않으면서
+   * 첫 탭의 개폐 애니메이션이 다운로드에 밀리지 않는다. 사파리엔
+   * requestIdleCallback이 없어 타이머로 대신한다.
+   */
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(
+        () => void import("./ReelDetailSheet"),
+      );
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => void import("./ReelDetailSheet"), 1500);
+    return () => window.clearTimeout(id);
+  }, []);
   const queryClient = useQueryClient();
   /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{
     reel: ReelCard;
     lift: number;
   } | null>(null);
+
+  /* 정체성을 고정해 memo(ReelItem)가 깨지지 않게 한다 (KAN-430) — 인라인
+     화살표면 피드가 렌더될 때마다 릴 전량의 props가 갈려 memo가 무력화된다 */
+  const { open: openSheet } = motion;
+  const openDetail = useCallback(
+    (reel: ReelCard, lift: number) => {
+      setDetail({ reel, lift });
+      openSheet();
+    },
+    [openSheet],
+  );
 
   const {
     data,
@@ -165,17 +212,24 @@ export function ReelsFeed({
               key={reel.id}
               reel={reel}
               active={i === activeIndex}
-              onOpenDetail={(lift) => {
-                setDetail({ reel, lift });
-                motion.open();
-              }}
+              nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
+              /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —
+                 시트는 활성 릴에서만 열리지만 목록이 갈려 인덱스가 밀려도 안전하게 */
+              inWindow={
+                Math.abs(i - activeIndex) <= REELS_DOM_WINDOW ||
+                (motion.mounted && detail?.reel.id === reel.id)
+              }
+              seedTweet={
+                seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
+              }
+              onOpenDetail={openDetail}
               titleMotion={
                 motion.mounted && detail?.reel.id === reel.id
                   ? {
-                      offset: motion.shown
-                        ? clampTitleOffset(detail.lift, motion.dragY)
-                        : 0,
+                      lift: detail.lift,
+                      shown: motion.shown,
                       dragging: motion.dragging,
+                      dragTargetRef: motion.dragTargetRef,
                     }
                   : null
               }

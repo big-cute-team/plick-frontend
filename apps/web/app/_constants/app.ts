@@ -31,11 +31,15 @@ export const FEED_SURFACE_BY_PATH: Record<string, PostListVariant> = {
   "/articles": "article",
 };
 
-/** GNB 링크 — 피그마 W1 홈(node 203-2) 상단 내비게이션 순서 그대로 */
+/**
+ * GNB 링크 — 피그마 W1 홈(node 203-2) 상단 내비게이션 순서에 LIVE(KAN-435)를
+ * 기사 뒤에 끼웠다. 모바일과 달리 기사 링크는 남긴다 — 티켓 규약이다.
+ */
 export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/", label: "홈" },
   { href: "/reels", label: "릴스" },
   { href: "/articles", label: "기사" },
-  { href: "/debates", label: "토론" },
+  { href: "/live", label: "LIVE" },
+  { href: "/debates", label: "VS" },
   { href: "/me", label: "MY" },
 ];

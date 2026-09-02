@@ -1,11 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ApiError } from "@plick/core/client";
 import { avatarInitials, formatDateKo } from "@plick/domain/format";
 import type { BlockedUser } from "@plick/domain/types";
-import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { useUnblockUser } from "@/_hooks/useUnblockUser";
+
+/**
+ * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
+ */
+const LoginPromptDialog = dynamic(
+  () =>
+    import("@/_components/LoginPromptDialog").then((m) => m.LoginPromptDialog),
+  { ssr: false },
+);
 
 /**
  * 차단 목록 카드 (KAN-411) — 서버가 준 목록을 초깃값으로 들고, 해제하면 그 줄을

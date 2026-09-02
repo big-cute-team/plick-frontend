@@ -34,10 +34,10 @@ export async function DebatesScreen() {
         <div className="max-w-read px-gutter mx-auto w-full pb-22">
           <header className="pt-7 pb-4.5">
             <h1 className="text-hero text-text tracking-heading font-extrabold">
-              토론
+              VS
             </h1>
             <p className="text-body text-text-3 mt-1.5 font-semibold">
-              투표로 팬들의 여론을 확인해보세요
+              투표에 참여하고 팬들의 여론을 확인해보세요
             </p>
           </header>
           <DebatesFeed initial={initial} />
