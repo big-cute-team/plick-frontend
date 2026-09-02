@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@plick/domain": "workspace:*",
-    "@tanstack/react-query": "^5.101.4"
+    "@tanstack/react-query": "^5.102.8"
   },
   "devDependencies": {
     "@plick/eslint-config": "workspace:*",
