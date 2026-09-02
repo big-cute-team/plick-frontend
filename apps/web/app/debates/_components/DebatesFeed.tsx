@@ -13,6 +13,9 @@ const SKELETON_COUNT = 3;
  * 모바일 `DebatesFeed`의 웹 이식이다 — 카드는 표시 전용이고 누르면 소속 기사
  * 상세로 간다.
  *
+ * 마감 토론도 리스트에 함께 온다. contentType(FINISH) 마감은 기사 상세와 같은
+ * 규약으로 `closed`로 넘기고, closesAt 경과 마감은 카드가 스스로 겹친다(KAN-436).
+ *
  * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다.
  */
 export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
@@ -51,14 +54,17 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
                 href={`/articles/${debate.articleId}`}
                 className="focus-visible:outline-accent block transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                <VoteCard debate={debate} />
+                <VoteCard
+                  debate={debate}
+                  closed={debate.contentType === "FINISH"}
+                />
               </Link>
             </li>
           ))}
         </ul>
       ) : (
         <p className="text-body text-text-4 py-16 text-center">
-          아직 열린 VS가 없어요.
+          아직 VS가 없어요.
         </p>
       )}
     </section>
