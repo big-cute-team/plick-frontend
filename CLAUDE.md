@@ -176,6 +176,10 @@ PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
 - 정적 자산 CDN 분리(CloudFront + S3): [docs/deploy-v3-cdn.md](docs/deploy-v3-cdn.md),
   판단 근거는 [ADR 0081](docs/adr/0081-cdn-static-split-plan.md). 적용돼 있고 버킷은
   환경별 `plick-static-dev`·`plick-static-prod`다
+- 모니터링(프로메테우스 + 그라파나, prod): [docs/monitoring.md](docs/monitoring.md). 앱은
+  `instrumentation.ts`가 별도 포트(mobile 9464, web 9465)에 `/metrics`를 열고, 모니터링 EC2는
+  `infra/monitoring/`을 user data로 실어 올린다. 판단 근거는
+  [ADR 0130](docs/adr/0130-prometheus-grafana-monitoring.md)
 - 레이어 폴더 구조의 배경과 판단: [ADR 0029](docs/adr/0029-layered-architecture-restructure.md)
 - 모바일 화면과 컴포넌트 구현: `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
 - 데스크톱 웹(apps/web) 화면과 컴포넌트 구현: `web-publishing` 스킬(`@plick/ui` 승격 절차 포함)
