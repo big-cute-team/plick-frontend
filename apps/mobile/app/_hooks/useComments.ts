@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { commentKeys } from "@plick/core/commentKeys";
 import { getComments } from "@plick/core/comments";
@@ -9,6 +9,10 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
  * 댓글 목록 (KAN-303). 기사 세부·릴 세부 시트 공용.
+ *
+ * suspense 훅이다 (KAN-447) — 씨앗이 있으면 그대로 그리고, 없으면(릴 시트)
+ * 받는 동안 suspend돼 감싼 QueryBoundary의 fallback이 보인다. 실패는 throw로
+ * 같은 경계에 잡힌다. 호출부는 로딩·에러 분기 없이 데이터만 그린다.
  *
  * 피드(`useReelsFeed`)와 같은 커서 규약이다 — `nextCursor`가 null인지로만 끝을
  * 판단하고, `getNextPageParam`이 undefined를 돌려줘야 RQ가 마지막 페이지로
@@ -21,7 +25,7 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
  *   릴 시트는 클라에서 열리므로 씨앗 없이 들어와 마운트 때 받는다.
  */
 export function useComments(articleId: string, initial?: InitialCommentPage) {
-  return useInfiniteQuery({
+  return useSuspenseInfiniteQuery({
     queryKey: commentKeys.list(articleId),
     queryFn: ({ pageParam }) => getComments(articleId, { cursor: pageParam }),
     initialPageParam: null as string | null,

@@ -28,6 +28,11 @@ export function useArticleReporters(
     queryFn: () => getArticle(articleId as string),
     enabled: Boolean(articleId),
     staleTime: FEED_FRESH_MS,
+    /**
+     * 전역 기본(데이터 없으면 경계로 throw, KAN-447)을 끈다 — 실패하면 피드가
+     * 준 대표 기자 이름으로만 서는 게 이 훅의 설계라 경계로 올릴 일이 없다.
+     */
+    throwOnError: false,
     gcTime: FEED_FRESH_MS,
     retry: (failureCount, error) => {
       if (
