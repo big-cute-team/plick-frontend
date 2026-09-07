@@ -151,11 +151,14 @@ COPYFILE_DISABLE=1 tar -C infra/monitoring -cf - . | gzip -9 | base64 | pbcopy
 ```bash
 # 모니터링 EC2(SSM 세션): 붙여 넣어 풀고 재기동
 cd /srv/monitoring && echo '<붙여넣기>' | base64 -d | sudo tar -xzf - -C /srv/monitoring
-sudo docker compose up -d                       # compose·그라파나 변경 반영
-curl -X POST localhost:9090/-/reload            # 프로메테우스 설정만 바꿨을 때
+sudo docker compose up -d --force-recreate prometheus   # 프로메테우스 설정 반영
+sudo docker compose up -d                                # compose·그라파나 변경 반영
 ```
 
-대시보드 JSON은 프로비저닝 폴더라 30초 안에 자동 반영된다. 그라파나 UI에서 고친 대시보드는
+`curl -X POST localhost:9090/-/reload`로는 안 된다. `prometheus.yml`이 파일 단위 bind
+mount라 tar 풀기나 `sed -i`처럼 파일을 새로 쓰는 편집은 inode가 바뀌어 컨테이너가 옛 파일을
+계속 본다. 컨테이너를 다시 만들어야 새 파일을 문다(지표는 named volume이라 남는다).
+대시보드 JSON은 프로비저닝 폴더째 마운트라 30초 안에 자동 반영된다. 그라파나 UI에서 고친 대시보드는
 JSON을 내보내 리포 파일에 되돌려 놓아야 인스턴스 재생성에서 살아남는다.
 
 ## 7. 함정

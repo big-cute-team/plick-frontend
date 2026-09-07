@@ -188,9 +188,15 @@ Launch Template이 내려 주는 `Name` 태그였다. 사용자도 태그 탭에
 둘 다 키를 확인하지 않고 값만 본 것이다.
 
 필터를 `tag:Name`으로 바꿨다. Name 태그는 Launch Template의 태그 사양에서 오므로 어느 복제본이
-떠도 같다. 인스턴스에서는 `/srv/monitoring/prometheus/prometheus.yml`을 sed로 고치고
-`POST /-/reload`로 재시작 없이 반영했다. 컨테이너에 `--web.enable-lifecycle`을 켜 둔 게
-여기서 쓸모가 있었다.
+떠도 같다. 인스턴스에서는 `/srv/monitoring/prometheus/prometheus.yml`을 `sed -i`로 고치고
+`POST /-/reload`로 반영하려 했는데, 그래도 타깃이 안 나왔다. 컨테이너 안에서 메타데이터
+서비스에 닿는지(401이 바로 오면 닿는 것), 로그에 refresh 에러가 있는지까지 다 확인하고 나서야
+원인이 보였다. `sed -i`는 파일을 제자리에서 고치는 게 아니라 임시 파일을 쓰고 이름을 바꿔치기해서
+inode가 바뀐다. compose가 `prometheus.yml`을 파일 단위로 bind mount해 뒀으니 컨테이너는 옛
+inode를 계속 물고 있었고, reload는 옛 설정을 충실히 다시 읽었다. `docker compose up -d
+--force-recreate prometheus`로 컨테이너를 다시 만들어 새 파일을 물게 했다. 문서의 설정 갱신
+절도 reload가 아니라 재생성으로 고쳤다. `--web.enable-lifecycle`은 제자리 편집(`tee`처럼
+truncate해서 쓰는 방식)일 때만 쓸모가 있다.
 
 덤으로 안 것 하나. 콘솔의 Ubuntu 타일 기본값이 24.04가 아니라 26.04(resolute)였다. Docker
 공식 저장소에 26.04 채널이 이미 있어서 그대로 깔렸다. 문서엔 24.04로 적어 뒀는데 실제 인스턴스는
