@@ -7,7 +7,7 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
 ## 1. 구성
 
 ```
-프론트 EC2 (ASG, front-sg-prod)             모니터링 EC2 (monitoring-sg-prod)
+프론트 EC2 (ASG, front-sg-prod)             모니터링 EC2 (front-monitoring-sg-prod)
   pm2 plick-mobile :3001 ─┐                   docker compose
      └─ /metrics :9464 ◄──┼── scrape ◄──── prometheus :9090 (127.0.0.1)
   pm2 plick-web    :3000 ─┤                     └─ ec2_sd (태그로 인스턴스 자동 발견)
@@ -66,9 +66,9 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
 
 ### 3.2 보안그룹
 
-- `monitoring-sg-prod` 생성 (VPC plick-vpc-prod): 인바운드 없음, 아웃바운드 전체.
+- `front-monitoring-sg-prod` 생성 (VPC plick-vpc-prod): 인바운드 없음, 아웃바운드 전체.
   그라파나·프로메테우스는 127.0.0.1에만 바인딩돼 있고 SSM 포트 포워딩으로만 본다
-- `front-sg-prod` 인바운드 규칙 추가: TCP 9464-9465, 소스 `monitoring-sg-prod`,
+- `front-sg-prod` 인바운드 규칙 추가: TCP 9464-9465, 소스 `front-monitoring-sg-prod`,
   설명 `prometheus scrape`. 이 한 줄이 프라이빗 서브넷 문제의 전부다
 
 ### 3.3 user data 만들기
@@ -86,7 +86,7 @@ tar+gzip+base64로 들어 있다.
 - 유형: t3.small (프로메테우스+그라파나에 2GB면 충분하다)
 - 키 페어: 없음 (SSM만 쓴다)
 - 네트워크: VPC plick-vpc-prod, 서브넷 pri-svc-a-prod, 퍼블릭 IP 자동 할당 비활성화,
-  보안그룹 monitoring-sg-prod
+  보안그룹 front-monitoring-sg-prod
 - 스토리지: 30GB gp3 (보존 30일 기준 넉넉하다)
 - 고급 세부 정보: IAM 인스턴스 프로파일 plick-front-monitoring-role-prod, 사용자 데이터에
   3.3 출력 붙여 넣기

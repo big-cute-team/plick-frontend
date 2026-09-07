@@ -7,7 +7,7 @@
 # ec2:DescribeAvailabilityZones 필요).
 #
 # 포트: 앱이 instrumentation.ts에서 여는 메트릭 포트(mobile 9464, web 9465). Next 포트
-# (3000·3001)가 아니다. front-sg-prod에 이 두 포트를 monitoring-sg-prod 소스로 열어 둬야 한다.
+# (3000·3001)가 아니다. front-sg-prod에 이 두 포트를 front-monitoring-sg-prod 소스로 열어 둬야 한다.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
