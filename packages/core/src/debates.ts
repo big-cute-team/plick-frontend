@@ -11,7 +11,11 @@
  * 채워진다 — 릴스 피드의 `likedByMe`와 같은 규약(KAN-308)이다.
  */
 
-import type { Debate, DebateListItem } from "@plick/domain/types";
+import type {
+  ArticleContentType,
+  Debate,
+  DebateListItem,
+} from "@plick/domain/types";
 import { ApiError, apiFetch } from "./client";
 
 /**
@@ -32,6 +36,7 @@ export interface DebateResponse {
 
 interface DebateListItemResponse extends DebateResponse {
   articleId: number;
+  contentType: ArticleContentType;
 }
 
 /**
@@ -52,8 +57,9 @@ export function toDebate(d: DebateResponse): Debate {
 }
 
 /**
- * 열려 있는 토론 리스트를 가져온다 (`GET /api/v1/debates`, 최신순).
+ * 토론 리스트를 가져온다 (`GET /api/v1/debates`, 최신순).
  *
+ * 마감(FINISH) 토론도 함께 온다 — 아이템의 `contentType`이 마감 판정 기준이다.
  * 페이지네이션·필터 파라미터가 없는 순수 배열 응답이다. 빈 상태는 `[]`.
  *
  * @param accessToken 서버에서 부를 때만 — `myVote`가 그 유저 기준으로 온다.
@@ -69,7 +75,11 @@ export async function getDebates({
       : undefined,
   );
 
-  return items.map((d) => ({ ...toDebate(d), articleId: String(d.articleId) }));
+  return items.map((d) => ({
+    ...toDebate(d),
+    articleId: String(d.articleId),
+    contentType: d.contentType,
+  }));
 }
 
 /**

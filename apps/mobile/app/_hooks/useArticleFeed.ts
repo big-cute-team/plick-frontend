@@ -60,6 +60,12 @@ export function useArticleFeed(
      */
     refetchOnWindowFocus: false,
     /**
+     * 전역 기본(데이터 없으면 경계로 throw, KAN-447)을 끈다 — 홈·기사 목록은
+     * 팀 스와이프 페이저 안에서 상태 분기로 에러를 그리고, 미리보기 페인
+     * (TeamFeedPreview)은 에러를 아예 안 그리는 게 의도라 경계로 던질 수 없다.
+     */
+    throwOnError: false,
+    /**
      * 4xx는 다시 보내도 같은 답이 온다. 잘못된 파라미터나 커서가 그렇고,
      * 특히 커서가 상하면 재시도 세 번이 전부 400으로 낭비된다.
      * 서버 오류나 네트워크 순단만 다시 시도한다.

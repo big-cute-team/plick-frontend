@@ -303,7 +303,8 @@ export type VoteOption = "OPTION_A" | "OPTION_B";
  * 기사 하나에 토론이 최대 하나 붙는 구조다. 마감 여부는 이 응답에 없다 —
  * 실기준이 기사의 {@link ArticleContentType}(FINISH = 마감)이기 때문으로,
  * 기사 상세와 릴 세부가 각자 `contentType`으로 판정해 화면에 넘긴다.
- * 토론 리스트(`GET /debates`)에는 열린 토론만 오므로 판정할 일이 없다.
+ * 토론 리스트(`GET /debates`)는 마감 토론도 함께 오면서 아이템에 `contentType`이
+ * 붙는다({@link DebateListItem}) — 리스트 카드도 같은 기준으로 판정한다.
  */
 export interface Debate {
   /** BE `debateId`. 투표 엔드포인트의 path 파라미터라 문자열로 담는다. */
@@ -314,8 +315,8 @@ export interface Debate {
   optionB: string;
   /**
    * 마감 시각 ISO-8601 (KST 오프셋). null이면 남은 시간 표기를 생략한다.
-   * 표시용 힌트일 뿐 마감 판정 기준이 아니다 — BE는 목록 필터도 투표 차단도
-   * 기사 `contentType`으로만 본다.
+   * 표시용 힌트일 뿐 마감 판정 기준이 아니다 — BE는 투표 차단을 기사
+   * `contentType`으로만 본다.
    */
   closesAt: string | null;
   voteCountA: number;
@@ -327,13 +328,15 @@ export interface Debate {
 /**
  * 토론 리스트 한 건 (KAN-418, `GET /api/v1/debates`).
  *
- * 리스트 전용으로 소속 기사 id가 붙는다 — 카드 클릭 시 기사 상세로 보내는 데
- * 쓴다. 팀·기사 제목 같은 부가 정보는 응답에 없다(리스트 카드가 질문만 보여주는
- * 이유). 페이지네이션 없는 순수 배열로 온다.
+ * 리스트 전용으로 소속 기사 id와 `contentType`이 붙는다 — 기사 상세로 보내는
+ * 링크와 마감 판정에 쓴다. 팀·기사 제목 같은 부가 정보는 응답에 없다(리스트
+ * 카드가 질문만 보여주는 이유). 페이지네이션 없는 순수 배열로 온다.
  */
 export interface DebateListItem extends Debate {
   /** 소속 기사 id — 릴스·기사의 `articleSummaryId`와 같은 체계를 문자열로. */
   articleId: string;
+  /** 소속 기사의 상태 — FINISH면 마감 토론이다. 마감 판정의 실기준. */
+  contentType: ArticleContentType;
 }
 
 /**

@@ -1,0 +1,54 @@
+# 프론트 EC2(ASG)를 EC2 서비스 디스커버리로 찾아 긁는다 (KAN-455).
+#
+# 왜 static_configs가 아닌가: ASG가 배포마다 인스턴스를 통째로 바꾼다(Blue/Green). IP를
+# 적어 두면 첫 배포에 죽은 주소가 된다. ec2_sd_configs는 리전의 인스턴스 목록을 주기적으로
+# DescribeInstances로 받아 와 태그로 거르고, 프라이빗 IP를 타깃으로 만든다.
+# 자격 증명은 모니터링 EC2의 인스턴스 롤에서 자동으로 얻는다(ec2:DescribeInstances·
+# ec2:DescribeAvailabilityZones 필요).
+#
+# 필터는 aws:autoscaling:groupName이 아니라 Name 태그다. CodeDeploy Blue/Green이 배포마다
+# ASG를 복제하면서 CodeDeploy_plick-frontend-dg-prod_d-<배포ID>로 이름을 새로 짓기 때문에
+# groupName 값은 배포할 때마다 바뀐다. Name 태그는 Launch Template에서 내려와 고정이다.
+#
+# 포트: 앱이 instrumentation.ts에서 여는 메트릭 포트(mobile 9464, web 9465). Next 포트
+# (3000·3001)가 아니다. front-sg-prod에 이 두 포트를 front-monitoring-sg-prod 소스로 열어 둬야 한다.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: plick-front-mobile
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9464
+        refresh_interval: 60s
+        filters:
+          - name: tag:Name
+            values: [plick-frontend-asg-prod]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az
+
+  - job_name: plick-front-web
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9465
+        refresh_interval: 60s
+        filters:
+          - name: tag:Name
+            values: [plick-frontend-asg-prod]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az

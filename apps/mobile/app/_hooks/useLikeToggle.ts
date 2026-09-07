@@ -31,9 +31,10 @@ import { useAuth } from "@/_components/AuthProvider";
  * 쿠키는 있는데 토큰이 만료된 경우는 401 `AUTH_REQUIRED`로 드러나므로 같은 팝업으로
  * 받는다(댓글 입력바와 같은 방식).
  *
- * 그 밖의 실패(없는 대상, 네트워크 순단)는 문구를 띄우지 않고 되돌리기만 한다.
- * 채워졌던 하트가 도로 비는 게 이미 실패 신호이고, 좋아요 한 번에 모달이나 경고
- * 줄을 세우는 건 과하다. 원인은 콘솔에 남긴다.
+ * 그 밖의 실패(없는 대상, 네트워크 순단)는 되돌린 뒤 전역 안전망(KAN-447,
+ * QueryProvider의 MutationCache onError)이 토스트로 알린다. 예전엔 콘솔에만
+ * 남겨 화면이 무반응이었다 — 모달은 좋아요 한 번에 과하다는 판단은 유지하되,
+ * 지나가는 한 줄로는 실패를 알린다.
  *
  * @param toggle 누른 뒤 부를 서버 액션. 켤 때 true, 끌 때 false로 호출된다
  * @param state 지금 보고 있는 좋아요 상태(원본에서 읽은 값)
@@ -72,11 +73,10 @@ export function useLikeToggle({
     onSuccess: (likeCount, liked) => onChange({ liked, likeCount }),
     onError: (e, _liked, previous) => {
       if (previous) onChange(previous);
+      /* 그 밖의 실패 안내는 전역 안전망(토스트)이 맡는다 (KAN-447) */
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {
         setNeedsLogin(true);
-        return;
       }
-      console.error("[likes] 좋아요 반영 실패:", e);
     },
   });
 

@@ -55,6 +55,12 @@ export function useReelsFeed(initial?: InitialReelFeed, anchorId?: string) {
      */
     refetchOnWindowFocus: false,
     /**
+     * 전역 기본(데이터 없으면 경계로 throw, KAN-447)을 끈다 — 릴스는 빈 화면
+     * 에러, 커서 400 첫 페이지 복구, 재시도 슬라이드까지 화면이 에러를 직접
+     * 소유하는 흐름이라 경계로 던지면 그 복구 UI가 전부 죽는다.
+     */
+    throwOnError: false,
+    /**
      * 4xx는 다시 보내도 같은 답이 온다. 잘못된 파라미터나 커서가 그렇고,
      * 특히 커서가 상하면 재시도가 전부 400으로 낭비된다.
      * 서버 오류나 네트워크 순단만 다시 시도한다.

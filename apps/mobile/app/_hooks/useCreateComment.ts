@@ -29,6 +29,8 @@ export function useCreateComment(articleId: string, onPosted?: () => void) {
   const qc = useQueryClient();
 
   return useMutation({
+    /* 콜사이트가 에러 UI를 완결 처리한다 — 전역 안전망 토스트 제외 (KAN-447) */
+    meta: { errorHandled: true },
     mutationFn: async (input: {
       content: string;
       parentCommentId?: number;

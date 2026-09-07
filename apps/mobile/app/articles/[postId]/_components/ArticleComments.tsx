@@ -3,8 +3,9 @@
 import { useState } from "react";
 import type { InitialCommentPage } from "@plick/domain/types";
 import { CommentComposer } from "@/_components/CommentComposer";
-import { CommentList } from "@/_components/CommentList";
+import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
+import { QueryBoundary } from "@/_components/QueryBoundary";
 
 /**
  * 기사 세부의 댓글 섹션 (KAN-303) — 헤더 카운트·입력바·목록을 묶는 클라 경계.
@@ -37,12 +38,18 @@ export function ArticleComments({
     <>
       <CommentsHeader count={initialCount + added} />
       <CommentComposer articleId={articleId} onPosted={bump} />
-      <CommentList
-        articleId={articleId}
-        initial={initialComments}
-        onPosted={bump}
-        onDeleted={drop}
-      />
+      {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
+      <QueryBoundary
+        fallback={<CommentListSkeleton />}
+        errorMessage="댓글을 불러오지 못했어요."
+      >
+        <CommentList
+          articleId={articleId}
+          initial={initialComments}
+          onPosted={bump}
+          onDeleted={drop}
+        />
+      </QueryBoundary>
     </>
   );
 }
