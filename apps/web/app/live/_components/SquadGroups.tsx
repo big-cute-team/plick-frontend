@@ -4,9 +4,11 @@ import { useState } from "react";
 import {
   POSITION_LABEL,
   POSITION_ORDER,
+  type SquadPlayer,
   type TeamSquad,
 } from "@plick/domain/live";
 import { ChevronMiniIcon } from "@plick/ui/icons";
+import { PlayerPhoto } from "./PlayerPhoto";
 import { SeasonStatsModal } from "./SeasonStatsModal";
 
 /**
@@ -14,7 +16,7 @@ import { SeasonStatsModal } from "./SeasonStatsModal";
  * 1열 스택. 선수 행을 누르면 시즌 스탯 모달(LW7)이 열린다.
  */
 export function SquadGroups({ squad }: { squad: TeamSquad }) {
-  const [playerId, setPlayerId] = useState<number | null>(null);
+  const [player, setPlayer] = useState<SquadPlayer | null>(null);
 
   return (
     <>
@@ -34,12 +36,16 @@ export function SquadGroups({ squad }: { squad: TeamSquad }) {
                   <button
                     key={player.id}
                     type="button"
-                    onClick={() => setPlayerId(player.id)}
+                    onClick={() => setPlayer(player)}
                     className={`group flex items-center gap-3 py-3 text-left ${
                       i > 0 ? "border-border border-t" : ""
                     }`}
                   >
-                    <span className="bg-avatar size-9 shrink-0 rounded-full" />
+                    <PlayerPhoto
+                      src={player.photo}
+                      name={player.name}
+                      size={36}
+                    />
                     <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
                       {player.name}
                     </span>
@@ -61,7 +67,11 @@ export function SquadGroups({ squad }: { squad: TeamSquad }) {
       <p className="text-caption text-text-4 pt-6 text-center">
         선수를 누르면 시즌 스탯을 볼 수 있어요
       </p>
-      <SeasonStatsModal playerId={playerId} onClose={() => setPlayerId(null)} />
+      <SeasonStatsModal
+        player={player}
+        team={squad.team}
+        onClose={() => setPlayer(null)}
+      />
     </>
   );
 }

@@ -3,11 +3,13 @@
 import { useRouter } from "next/navigation";
 
 /**
- * 경기 정보를 불러오지 못했을 때의 에러 상태(피그마 L4, 502
- * MATCH_UPSTREAM_ERROR 대응 지면). 껍데기 단계라 다시 시도는
- * `router.refresh()`만 한다 — 실배선 때 쿼리 refetch로 바꾼다.
+ * 경기 정보를 불러오지 못했을 때의 에러 상태(피그마 L4) — BE 502
+ * `MATCH_UPSTREAM_ERROR`와 순단이 여기로 온다.
+ *
+ * @param onRetry - 다시 시도 콜백. 쿼리 지면은 QueryBoundary의 retry를 넘기고,
+ *   서버 컴포넌트 fetch 지면(순위표·스쿼드)은 생략해 세그먼트 새로고침으로 간다
  */
-export function LiveLoadError() {
+export function LiveLoadError({ onRetry }: { onRetry?: () => void }) {
   const router = useRouter();
 
   return (
@@ -23,7 +25,7 @@ export function LiveLoadError() {
       </p>
       <button
         type="button"
-        onClick={() => router.refresh()}
+        onClick={onRetry ?? (() => router.refresh())}
         className="bg-elevate text-text-2 border-border rounded-control text-body mt-2 border px-6 py-2.5 font-bold active:opacity-70"
       >
         다시 시도

@@ -1,14 +1,14 @@
 /**
- * @file 라이브 스코어 도메인 타입·헬퍼 (KAN-446).
+ * @file 라이브 스코어 도메인 타입·헬퍼 (KAN-446 껍데기 → KAN-452 배선).
  *
- * BE 라이브 스코어 API 6종([API 명세] 라이브 스코어, ADR 0126)의 응답을 FE가
- * 소비하는 목표 형태다. 껍데기 단계에서 web·mobile이 동시에 소비하므로 앱
- * 레이어가 아니라 여기 둔다(ADR 0011 게이트 — 사용처 2곳). 실제 배선 세션에서
- * BE 응답과 대조해 조정한다.
+ * BE 라이브 스코어 API 6종(`match` 태그, BE `MatchController`)의 응답을 FE가
+ * 소비하는 형태다. BE DTO와 필드가 다른 곳은 `@plick/core/live`의 경계 변환이
+ * 흡수하고, 화면은 이 타입만 본다. web·mobile이 함께 쓰므로 앱 레이어가 아니라
+ * 여기 둔다(ADR 0011 게이트 C).
  */
 import type { TeamCode } from "./types";
 
-/** 경기 진행 상태. POSTPONED·CANCELLED는 목록 카드에서 연기·취소 칩으로 그린다. */
+/** 경기 진행 상태 — BE `MatchStatus` 5값 그대로. */
 export type MatchStatus =
   | "SCHEDULED"
   | "LIVE"
@@ -19,17 +19,19 @@ export type MatchStatus =
 /**
  * 라이브 화면에 등장하는 팀 참조. `id`·`code`가 null이면 빅6 밖 팀이다 —
  * 마이팀 강조·스쿼드 진입(`/live/teams/[teamId]`)이 불가능하고 크레스트는
- * `shortName` 이니셜 제네릭으로 그린다.
+ * CDN `logo`, 그것도 실패하면 `shortName` 이니셜 제네릭으로 그린다.
  */
 export interface LiveTeam {
   /** BE teams.team_id — 빅6 밖이면 null */
   id: number | null;
   /** 빅6 로컬 크레스트 코드(`TEAMS` 레지스트리 키) — 빅6 밖이면 null */
   code: TeamCode | null;
-  /** 영문 팀명 그대로 — 한글 번역은 대회명에만 있다(명세 규약) */
+  /** 영문 팀명 그대로 — 한글 번역은 대회명에만 있다(BE 규약) */
   name: string;
-  /** 제네릭 크레스트에 넣는 축약 코드 (예: COV, BHA) */
+  /** 제네릭 크레스트·타임라인에 넣는 축약 코드 (예: COV, BHA) */
   shortName: string;
+  /** API-Football CDN 로고 URL — 빅6는 로컬 에셋을 써서 무시한다 */
+  logo: string | null;
 }
 
 /** 스코어. 킥오프 전에는 둘 다 null이고 화면은 "-"로 그린다. */
@@ -41,14 +43,14 @@ export interface MatchScore {
 /** 경기 목록 카드 한 장(GET /matches)이자 상세 헤더(GET /matches/{id}) 공용 형태. */
 export interface MatchSummary {
   id: number;
-  /** 대회명 — 명세상 유일한 한글 필드 */
+  /** API-Football league id — 목록의 대회 그룹핑 키 */
+  competitionId: number;
+  /** 대회명 — BE가 한글 사전으로 치환한다(미등재는 영문 폴백) */
   competition: string;
-  /** 라운드 표기 (예: "4R") */
-  round: string;
   status: MatchStatus;
-  /** HT(하프타임)·PEN 같은 세부 상태 — 없으면 null */
+  /** API-Football 세부 상태 코드(1H·HT·2H·FT·PEN·TBD 등) — 없으면 null */
   statusDetail: string | null;
-  /** 킥오프 시각 ISO 문자열(KST 기준 표기용) */
+  /** 킥오프 시각 ISO 문자열(BE가 KST 오프셋으로 준다) */
   kickoffAt: string;
   /** 라이브 경과 분 — 라이브가 아니면 null */
   elapsed: number | null;
@@ -57,7 +59,7 @@ export interface MatchSummary {
   score: MatchScore;
 }
 
-/** 순위표 한 행(GET /standings). */
+/** 순위표 한 행(GET /standings). `zone`은 FE가 순위로 판정한다. */
 export interface StandingRow {
   rank: number;
   team: LiveTeam;
@@ -71,33 +73,50 @@ export interface StandingRow {
   zone: "UCL" | null;
 }
 
-/** 타임라인 이벤트. `playerName`은 null일 수 있어 이름 없는 행도 깨지지 않게 그린다. */
-export interface MatchEvent {
-  /** "45+2'" 같은 표기 문자열 그대로 */
+/** 득점 요약 한 줄(GET /matches/{id}의 goals) — 시간순. */
+export interface MatchGoal {
+  /** "45+2'" 표기 문자열 */
   minute: string;
-  type: "GOAL" | "SUB" | "CARD" | "VAR";
-  playerName: string | null;
-  /** 도움·사유·판정 내용 등 부가 설명 — 없으면 null */
+  playerName: string;
+  /** 자책골·페널티 같은 부가 표기 — 일반 골이면 null */
   detail: string | null;
   side: "HOME" | "AWAY";
 }
 
+/**
+ * 타임라인 이벤트 — 최신이 앞이다. `playerName`은 null일 수 있어(취소된 골
+ * 흔적 등) 이름 없는 행도 깨지지 않게 그린다.
+ */
+export interface MatchEvent {
+  /** "45+2'" 같은 표기 문자열 */
+  minute: string;
+  type: "GOAL" | "SUB" | "CARD" | "RED_CARD" | "VAR";
+  playerName: string | null;
+  /** 도움·교체 아웃·판정 내용 등 부가 설명 — 없으면 null */
+  detail: string | null;
+  side: "HOME" | "AWAY";
+}
+
+/** 라인업 포지션 그룹 — BE 라인업(G/D/M/F)과 스쿼드(Goalkeeper 등) 표기를 여기로 접는다. */
+export type Position = "GK" | "DF" | "MF" | "FW";
+
 /** 선발 선수 한 명. `grid`는 "줄:칸"(GK가 1줄)이고 null이면 벤치다. */
 export interface LineupPlayer {
   id: number;
-  number: number;
+  number: number | null;
   name: string;
   grid: string | null;
   /** 무출전이면 null */
   rating: number | null;
+  captain: boolean;
 }
 
 /** 벤치 선수 한 명 — 피치 좌표 없이 포지션 라벨로 그린다. */
 export interface BenchPlayer {
   id: number;
-  number: number;
+  number: number | null;
   name: string;
-  position: string;
+  position: Position;
   rating: number | null;
 }
 
@@ -105,6 +124,7 @@ export interface BenchPlayer {
 export interface TeamLineup {
   team: LiveTeam;
   formation: string;
+  coach: string | null;
   players: LineupPlayer[];
   bench: BenchPlayer[];
 }
@@ -120,13 +140,16 @@ export interface MatchStat {
 export interface Absentee {
   team: LiveTeam;
   playerName: string;
+  photo: string | null;
   reason: string;
   kind: "INJURY" | "SUSPENSION";
 }
 
 /** 프리뷰 상대전적 한 경기 — result는 이 경기 홈 팀 기준 승·무·패다. */
 export interface HeadToHeadGame {
+  /** "25.03.10" 표기 */
   date: string;
+  /** "LIV 2 - 1 MCI" 표기 */
   line: string;
   result: "W" | "D" | "L";
 }
@@ -161,11 +184,14 @@ export interface MatchPreview {
 
 /**
  * 경기 상세(GET /matches/{id}). 서버가 조각 실패 시 그 블록만 null로 내리는
- * 구조(Redis 캐시 설계)라 블록별 조건부 렌더가 기본이다. 스코어 정본은
- * `header.score`다 — 이벤트 요약과 어긋나면 header를 믿는다.
+ * 구조(BE 블록 단위 폴백)라 블록별 조건부 렌더가 기본이다. 라인업·스탯이
+ * 아직 공개 전이면(빈 배열) 경계 변환이 null로 접는다. 스코어 정본은
+ * `header.score`다 — 득점 요약과 어긋나면 header를 믿는다.
  */
 export interface MatchDetail {
   header: MatchSummary;
+  /** 득점 요약(시간순) — BE가 취소 골(선수 null)을 뺀 것 */
+  goals: MatchGoal[];
   preview: MatchPreview | null;
   events: MatchEvent[] | null;
   lineups: { home: TeamLineup; away: TeamLineup } | null;
@@ -177,7 +203,8 @@ export interface SquadPlayer {
   id: number;
   name: string;
   number: number | null;
-  position: "GK" | "DF" | "MF" | "FW";
+  position: Position;
+  photo: string | null;
 }
 
 /** 팀 스쿼드. 이적 반영이 며칠 늦을 수 있다는 안내를 화면에 함께 그린다. */
@@ -193,42 +220,64 @@ export interface PlayerStatEntry {
   value: string;
 }
 
-/** 선수 경기 스탯(라인업에서 선수를 눌렀을 때 시트로 연다). */
+/**
+ * 선수 경기 스탯(라인업에서 선수를 눌렀을 때 시트로 연다). 팀명은 응답에 없어
+ * 호출부가 라인업 컨텍스트에서 넘긴다.
+ */
 export interface PlayerMatchStats {
   playerId: number;
   name: string;
-  teamName: string;
-  position: string;
-  number: number;
-  minutes: number;
+  photo: string | null;
+  position: Position;
+  number: number | null;
+  /** 무출전이면 null */
+  minutes: number | null;
   rating: number | null;
+  captain: boolean;
+  substitute: boolean;
   stats: PlayerStatEntry[];
 }
 
-/** 시즌 스탯의 대회별 한 행. */
+/** 시즌 스탯의 대회별 한 행 — 무출전 대회는 값이 null일 수 있다. */
 export interface SeasonCompetitionStats {
   name: string;
-  appearances: number;
-  goals: number;
-  assists: number;
-  rating: number;
+  appearances: number | null;
+  goals: number | null;
+  assists: number | null;
+  rating: number | null;
 }
 
 /**
  * 선수 시즌 스탯(GET /players/{id}/season-stats). 무출전은 404가 아니라
- * `competitions: []`로 온다 — 빈 상태 지면을 따로 그린다.
+ * `competitions: []`로 온다 — 빈 상태 지면을 따로 그린다. 이름·포지션은
+ * 응답에 없어 시트가 스쿼드 행에서 받는다.
  */
 export interface PlayerSeasonStats {
   playerId: number;
-  name: string;
-  teamName: string;
-  position: string;
-  season: string;
   competitions: SeasonCompetitionStats[];
 }
 
-/** 포지션 그룹 라벨 — 스쿼드·벤치 화면이 같은 표기를 쓴다. */
-export const POSITION_LABEL: Record<SquadPlayer["position"], string> = {
+/** 서버 컴포넌트가 받아 둔 경기 목록 씨앗 — 시각을 묶는 이유는 기사 피드와 같다. */
+export interface InitialMatchList {
+  items: MatchSummary[];
+  /** 서버가 응답을 받은 시각(epoch ms). 캐시 신선도의 기준점 */
+  fetchedAt: number;
+}
+
+/** 서버 컴포넌트가 받아 둔 경기 상세 씨앗. */
+export interface InitialMatchDetail {
+  detail: MatchDetail;
+  fetchedAt: number;
+}
+
+/** 이번 시즌 표기 — BE `football.season`(2026)의 화면 라벨. 시즌이 바뀌면 같이 올린다. */
+export const LIVE_SEASON_LABEL = "2026-27";
+
+/** 챔피언스리그 진출권으로 강조하는 순위 상한(1~4위). */
+export const UCL_ZONE_MAX_RANK = 4;
+
+/** 포지션 그룹 라벨 — 스쿼드·벤치·시트가 같은 표기를 쓴다. */
+export const POSITION_LABEL: Record<Position, string> = {
   GK: "골키퍼",
   DF: "수비수",
   MF: "미드필더",
@@ -236,12 +285,43 @@ export const POSITION_LABEL: Record<SquadPlayer["position"], string> = {
 };
 
 /** 스쿼드 화면의 포지션 그룹 나열 순서. */
-export const POSITION_ORDER: SquadPlayer["position"][] = [
-  "GK",
-  "DF",
-  "MF",
-  "FW",
-];
+export const POSITION_ORDER: Position[] = ["GK", "DF", "MF", "FW"];
+
+/**
+ * 빅6 밖 EPL 팀의 축약 코드. API-Football 팀명 기준이고 없으면
+ * {@link teamShortName}이 이름에서 만든다.
+ */
+const TEAM_SHORT_NAMES: Record<string, string> = {
+  "Aston Villa": "AVL",
+  Newcastle: "NEW",
+  Brighton: "BHA",
+  "Nottingham Forest": "NFO",
+  "West Ham": "WHU",
+  "Crystal Palace": "CRY",
+  Bournemouth: "BOU",
+  Fulham: "FUL",
+  Brentford: "BRE",
+  Everton: "EVE",
+  Wolves: "WOL",
+  Leeds: "LEE",
+  Burnley: "BUR",
+  Sunderland: "SUN",
+};
+
+/**
+ * 팀명 → 축약 코드. 알려진 EPL 팀은 표에서, 그 밖(컵 상대·친선 상대)은 첫
+ * 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
+ *
+ * @example
+ * teamShortName("Coventry"); // "COV"
+ * teamShortName("Aston Villa"); // "AVL"
+ */
+export function teamShortName(name: string): string {
+  const known = TEAM_SHORT_NAMES[name];
+  if (known) return known;
+  const word = name.split(/\s+/).find((w) => w.length >= 3) ?? name;
+  return word.slice(0, 3).toUpperCase();
+}
 
 /**
  * 평점 강조 톤 (디자인 기준 7.5 이상 accent, 미만 warn, null은 무출전 "-").
@@ -276,9 +356,23 @@ export function statHomeRatio(stat: MatchStat): number | null {
 /** 경기 카드 상태 표기 톤 — 앱이 토큰 색으로 매핑한다(live=danger, postponed=warn). */
 export type MatchStatusTone = "live" | "scheduled" | "finished" | "postponed";
 
+/** 라이브 세부 코드(API-Football status.short) → 두 번째 줄 표기. */
+const LIVE_PHASE_LABEL: Record<string, string> = {
+  "1H": "전반",
+  HT: "하프타임",
+  "2H": "후반",
+  ET: "연장",
+  BT: "휴식",
+  P: "승부차기",
+  SUSP: "중단",
+  INT: "중단",
+  LIVE: "진행 중",
+};
+
 /**
  * 경기 카드 상태 컬럼의 두 줄 표기. web·mobile 카드가 같은 문구를 쓰므로
- * 여기서 한 번만 정한다. HT·PEN 같은 `statusDetail`이 있으면 그걸 우선한다.
+ * 여기서 한 번만 정한다. `statusDetail`은 BE가 API-Football 세부 코드를
+ * 그대로 주므로(1H·HT·FT·PEN·TBD 등) 코드별로 접는다.
  *
  * @example
  * matchStatusLabel(live); // { primary: "67'", secondary: "후반", tone: "live" }
@@ -288,25 +382,27 @@ export function matchStatusLabel(match: MatchSummary): {
   secondary: string;
   tone: MatchStatusTone;
 } {
+  const code = match.statusDetail;
   switch (match.status) {
     case "LIVE":
       return {
-        primary: match.statusDetail ?? `${match.elapsed ?? 0}'`,
-        secondary: (match.elapsed ?? 0) > 45 ? "후반" : "전반",
+        primary:
+          code === "HT" || code === "BT"
+            ? code
+            : code === "P"
+              ? "PEN"
+              : `${match.elapsed ?? 0}'`,
+        secondary: (code && LIVE_PHASE_LABEL[code]) ?? "진행 중",
         tone: "live",
       };
     case "SCHEDULED":
       return {
-        primary: kickoffTimeLabel(match.kickoffAt),
+        primary: code === "TBD" ? "미정" : kickoffTimeLabel(match.kickoffAt),
         secondary: "예정",
         tone: "scheduled",
       };
     case "FINISHED":
-      return {
-        primary: match.statusDetail ?? "FT",
-        secondary: "종료",
-        tone: "finished",
-      };
+      return { primary: code ?? "FT", secondary: "종료", tone: "finished" };
     case "POSTPONED":
       return { primary: "연기", secondary: "추후 공지", tone: "postponed" };
     case "CANCELLED":
@@ -314,16 +410,31 @@ export function matchStatusLabel(match: MatchSummary): {
   }
 }
 
+/** "YYYY-MM-DD" 형식이면서 실제로 있는 날짜인지 — `?date=` 쿼리 검증. */
+export function isDateKey(value: string | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = parseDateKey(value);
+  return (
+    date.getFullYear() === Number(value.slice(0, 4)) &&
+    date.getMonth() + 1 === Number(value.slice(5, 7)) &&
+    date.getDate() === Number(value.slice(8, 10))
+  );
+}
+
 /**
- * "YYYY-MM-DD" 날짜 키에 일수를 더한다. 날짜 스트립이 기준일 좌우 7칸을
- * 만들 때 쓴다. 문자열을 로컬 자정으로 파싱해 타임존 밀림이 없다.
+ * KST 기준 오늘의 날짜 키. 기기·서버 타임존에 기대지 않고 Intl로 고정한다
+ * (BE도 `date`를 KST로 해석한다).
+ *
+ * @example
+ * todayDateKeyKst(); // "2026-09-07"
  */
-export function addDaysToDateKey(dateKey: string, days: number): string {
-  const date = parseDateKey(dateKey);
-  date.setDate(date.getDate() + days);
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${mm}-${dd}`;
+export function todayDateKeyKst(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
 
 /**
@@ -383,10 +494,53 @@ function parseDateKey(dateKey: string): Date {
 }
 
 /**
- * 킥오프 ISO 문자열 → "23:00" 시각 표기. 껍데기 단계는 목데이터의 KST
- * 오프셋(+09:00)이 박힌 ISO를 그대로 쓰므로 단순 추출이다 — 실배선 때
- * Intl 기반 KST 유틸로 교체한다(클라 타임존에 기대지 않기, ADR 0126).
+ * 킥오프 ISO 문자열 → "23:00" 시각 표기. 기기 타임존과 무관하게 KST로 고정한다.
+ *
+ * @example
+ * kickoffTimeLabel("2026-09-05T23:00:00+09:00"); // "23:00"
  */
 export function kickoffTimeLabel(kickoffAt: string): string {
-  return kickoffAt.match(/T(\d{2}:\d{2})/)?.[1] ?? kickoffAt;
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(kickoffAt));
+}
+
+/**
+ * 킥오프 ISO 문자열 → "9월 5일 (금)" 표기(KST). 상세 헤더의 예정 경기 날짜다.
+ *
+ * @example
+ * kickoffDateLabel("2026-09-05T23:00:00+09:00"); // "9월 5일 (금)"
+ */
+export function kickoffDateLabel(kickoffAt: string): string {
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+  }).formatToParts(new Date(kickoffAt));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("month")}월 ${get("day")}일 (${get("weekday")})`;
+}
+
+/**
+ * 이벤트 분 표기 — 추가시간은 "90+6'"처럼 붙인다. 분이 없으면 빈 문자열.
+ *
+ * @example
+ * eventMinuteLabel(45, 2); // "45+2'"
+ */
+export function eventMinuteLabel(
+  minute: number | null,
+  extraMinute: number | null,
+): string {
+  if (minute === null) return "";
+  return `${minute}${extraMinute ? `+${extraMinute}` : ""}'`;
+}
+
+/** 목록에 라이브 경기가 하나라도 있는지 — 조건부 폴링의 판정. */
+export function hasLiveMatch(matches: MatchSummary[] | undefined): boolean {
+  return matches?.some((match) => match.status === "LIVE") ?? false;
 }

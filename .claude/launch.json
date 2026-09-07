@@ -28,6 +28,40 @@
       "runtimeArgs": ["--filter", "web", "exec", "next", "start"],
       "port": 3100,
       "autoPort": true
+    },
+    {
+      "name": "mobile-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3011"
+      ],
+      "port": 3011,
+      "autoPort": true
+    },
+    {
+      "name": "web-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3010"
+      ],
+      "port": 3010,
+      "autoPort": true
     }
   ]
 }
