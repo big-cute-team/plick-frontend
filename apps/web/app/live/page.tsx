@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
-import { LiveIcon } from "@plick/ui/icons";
+import {
+  MOCK_MATCH_DAYS,
+  MOCK_STANDINGS,
+  MOCK_TODAY,
+} from "@plick/domain/live-mock";
+import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { DateStrip } from "./_components/DateStrip";
+import { LiveEmptyDay } from "./_components/LiveEmptyDay";
+import { LiveLoadError } from "./_components/LiveLoadError";
+import { MatchDayList } from "./_components/MatchDayList";
+import { StandingsRail } from "./_components/StandingsRail";
 
 /**
- * 준비 중 페이지라 색인 신호를 보내지 않는다 — 콘텐츠가 생기면
- * 기사·토론 리스트처럼 description·canonical·모바일 alternate를 붙인다.
+ * 아직 목데이터 지면이라 색인 신호를 보내지 않는다 — API가 붙으면
+ * 기사·토론 리스트처럼 description과 canonical(+ 모바일 alternate)을 붙인다.
  */
 export const metadata: Metadata = {
   title: "LIVE",
@@ -12,32 +22,47 @@ export const metadata: Metadata = {
 };
 
 /**
- * 데스크톱 LIVE 페이지 (KAN-435) — 라이브 스코어가 들어올 예정이고 지금은
- * 준비 중 안내만 그린다. 뼈대는 토론 리스트와 같은 GNB + 중앙 단일 컬럼이다.
+ * LIVE 대시보드(피그마 LW1~LW3, KAN-446). 데스크톱은 모바일과 달리 순위를
+ * 별도 라우트로 빼지 않고 2컬럼(경기 목록 + 순위표 레일)으로 항상 함께
+ * 보여준다. lg 아래에선 1열로 스택된다(레일을 숨기지 않는다). 날짜는
+ * `/live?date=` 쿼리, `?demo=error`는 에러 지면 확인용 임시 훅(배선 때 삭제).
  */
-export default function LivePage() {
+export default async function LivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string; demo?: string }>;
+}) {
+  const { date, demo } = await searchParams;
+  const selected = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : MOCK_TODAY;
+  const matches = MOCK_MATCH_DAYS[selected] ?? [];
+
   return (
     <>
       <SiteHeader />
       <main>
-        <div className="max-w-read px-gutter mx-auto w-full pb-22">
+        <PageContainer className="pb-22">
           <header className="pt-7 pb-4.5">
             <h1 className="text-hero text-text tracking-heading font-extrabold">
               LIVE
             </h1>
             <p className="text-body text-text-3 mt-1.5 font-semibold">
-              프리미어리그 경기 스코어를 실시간으로 보여드릴 거예요
+              프리미어리그 경기와 순위를 한눈에 볼 수 있어요
             </p>
           </header>
-          <div className="flex flex-col items-center gap-3 py-24 text-center">
-            <span className="bg-elevate text-text-3 grid size-14 place-items-center rounded-full">
-              <LiveIcon size={26} />
-            </span>
-            <p className="text-body text-text-4">
-              라이브 스코어를 준비하고 있어요. 조금만 기다려 주세요.
-            </p>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="flex flex-col gap-1">
+              <DateStrip selected={selected} />
+              {demo === "error" ? (
+                <LiveLoadError />
+              ) : matches.length > 0 ? (
+                <MatchDayList matches={matches} />
+              ) : (
+                <LiveEmptyDay />
+              )}
+            </div>
+            <StandingsRail rows={MOCK_STANDINGS} />
           </div>
-        </div>
+        </PageContainer>
       </main>
     </>
   );
