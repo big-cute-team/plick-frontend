@@ -342,6 +342,38 @@ export function dateKeyParts(dateKey: string): {
   return { weekday, day: date.getDate() };
 }
 
+/** 날짜 키의 연·월 조각. 날짜 스트립의 월 단위 렌더 기준이다. */
+export function dateKeyYearMonth(dateKey: string): {
+  year: number;
+  month: number;
+} {
+  return {
+    year: Number(dateKey.slice(0, 4)),
+    month: Number(dateKey.slice(5, 7)),
+  };
+}
+
+/**
+ * 해당 연·월의 날짜 키 전부(1일~말일). 날짜 스트립이 월 전체를 슬라이드로
+ * 담을 때 쓴다.
+ *
+ * @example
+ * monthDateKeys(2026, 9); // ["2026-09-01", …, "2026-09-30"]
+ */
+export function monthDateKeys(year: number, month: number): string[] {
+  const last = new Date(year, month, 0).getDate();
+  const mm = String(month).padStart(2, "0");
+  return Array.from(
+    { length: last },
+    (_, i) => `${year}-${mm}-${String(i + 1).padStart(2, "0")}`,
+  );
+}
+
+/** 연·월 표기 (예: "2026년 9월") — 날짜 스트립 위 셀렉터 버튼 라벨. */
+export function monthLabel(year: number, month: number): string {
+  return `${year}년 ${month}월`;
+}
+
 /** "YYYY-MM-DD"를 로컬 자정 Date로 파싱한다(타임존 밀림 방지). */
 function parseDateKey(dateKey: string): Date {
   const y = Number(dateKey.slice(0, 4));
