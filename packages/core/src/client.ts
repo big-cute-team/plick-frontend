@@ -42,6 +42,69 @@ export class ApiError extends Error {
 }
 
 /**
+ * `apiFetch` 한 번의 결과 요약. 메트릭 관측자가 받는다 (KAN-455).
+ *
+ * `path`는 호출부가 넘긴 원문 그대로다. ID를 접어 라벨 카디널리티를 낮추는 일은
+ * 관측자 쪽(`metrics.ts`)에서 한다.
+ */
+export interface ApiFetchOutcome {
+  method: string;
+  path: string;
+  /** HTTP status. 네트워크 단계에서 실패해 응답이 없으면 0. */
+  status: number;
+  durationMs: number;
+}
+
+/**
+ * `apiFetch` 결과를 받아 볼 관측자. 서버 프로세스가 `setApiFetchObserver`로 꽂는다.
+ *
+ * 이 파일은 브라우저 번들에도 들어가므로 prom-client 같은 Node 전용 의존을
+ * 여기서 import하지 않는다. 관측자를 함수 한 개짜리 빈 슬롯으로 두고, 서버가
+ * 뜰 때(`instrumentation.ts`)만 채운다. 브라우저에선 영원히 null이라 비용이 없다.
+ */
+type ApiFetchObserver = (outcome: ApiFetchOutcome) => void;
+
+/**
+ * 관측자를 모듈 변수가 아니라 `globalThis`에 둔다.
+ *
+ * Next는 `instrumentation.ts`와 각 페이지·라우트를 서로 다른 번들로 묶고, 번들마다
+ * 이 파일의 복사본이 따로 들어간다. 모듈 변수로 두면 instrumentation 번들의 슬롯에만
+ * 관측자가 꽂히고 페이지 번들의 `apiFetch`는 빈 슬롯을 본다(첫 검증에서 실제로
+ * 카운터가 0으로 남았다). 프로세스 전체가 공유하는 자리는 `globalThis`뿐이라
+ * `Symbol.for`로 키를 만들어 거기 둔다.
+ */
+const OBSERVER_KEY = Symbol.for("plick.apiFetchObserver");
+
+function getObserver(): ApiFetchObserver | null {
+  return (
+    (globalThis as Record<symbol, ApiFetchObserver | null | undefined>)[
+      OBSERVER_KEY
+    ] ?? null
+  );
+}
+
+/**
+ * BE 호출 관측자를 등록한다. 마지막에 등록한 하나만 유지한다.
+ *
+ * @param observer 호출마다 받을 콜백. null이면 해제.
+ */
+export function setApiFetchObserver(observer: ApiFetchObserver | null): void {
+  (globalThis as Record<symbol, ApiFetchObserver | null>)[OBSERVER_KEY] =
+    observer;
+}
+
+/** 관측자가 던져도 호출부 흐름을 깨지 않게 감싼다. 메트릭은 부수 효과일 뿐이다. */
+function observe(outcome: ApiFetchOutcome): void {
+  const observer = getObserver();
+  if (!observer) return;
+  try {
+    observer(outcome);
+  } catch {
+    /* 메트릭 실패는 무시 */
+  }
+}
+
+/**
  * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
  *
  * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
@@ -104,11 +167,25 @@ export async function apiFetch<T>(
   const cacheConfigured = init?.cache !== undefined || init?.next !== undefined;
   const cacheable = !authorized && isGet && !cacheConfigured;
 
-  const res = await fetch(`${baseUrl()}${path}`, {
-    ...init,
-    headers,
-    ...(authorized ? { cache: "no-store" as const } : {}),
-    ...(cacheable ? { next: { revalidate: ANONYMOUS_GET_REVALIDATE } } : {}),
+  const method = (init?.method ?? "GET").toUpperCase();
+  const startedAt = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl()}${path}`, {
+      ...init,
+      headers,
+      ...(authorized ? { cache: "no-store" as const } : {}),
+      ...(cacheable ? { next: { revalidate: ANONYMOUS_GET_REVALIDATE } } : {}),
+    });
+  } catch (error) {
+    observe({ method, path, status: 0, durationMs: Date.now() - startedAt });
+    throw error;
+  }
+  observe({
+    method,
+    path,
+    status: res.status,
+    durationMs: Date.now() - startedAt,
   });
 
   if (!res.ok) {
