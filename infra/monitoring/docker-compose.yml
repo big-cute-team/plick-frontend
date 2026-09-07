@@ -1,0 +1,42 @@
+# 모니터링 EC2(prod VPC 프라이빗 서브넷) 한 대에서 도는 프로메테우스 + 그라파나 (KAN-455).
+# 두 포트 모두 127.0.0.1에만 바인딩한다. 접근은 SSM 포트 포워딩으로만 하고, 보안그룹에도
+# 인바운드가 없다. 인스턴스 안에서 localhost로 닿는 게 곧 포워딩 대상이다.
+# 볼륨은 named volume이라 docker compose down 정도로는 지표가 안 지워진다.
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      # 첫 로그인은 admin/admin, 로그인 직후 비밀번호 변경을 강제한다.
+      # 바깥에서 닿을 수 없는 포트라 초기값을 user data에 박아 두지 않는다.
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus-data:
+  grafana-data:

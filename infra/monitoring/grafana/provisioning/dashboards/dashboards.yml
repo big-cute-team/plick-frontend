@@ -1,0 +1,12 @@
+# /var/lib/grafana/dashboards 아래 JSON을 대시보드로 자동 등록한다.
+apiVersion: 1
+providers:
+  - name: plick
+    folder: PLick
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
