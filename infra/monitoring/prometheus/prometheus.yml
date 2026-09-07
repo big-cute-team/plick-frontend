@@ -6,6 +6,10 @@
 # 자격 증명은 모니터링 EC2의 인스턴스 롤에서 자동으로 얻는다(ec2:DescribeInstances·
 # ec2:DescribeAvailabilityZones 필요).
 #
+# 필터는 aws:autoscaling:groupName이 아니라 Name 태그다. CodeDeploy Blue/Green이 배포마다
+# ASG를 복제하면서 CodeDeploy_plick-frontend-dg-prod_d-<배포ID>로 이름을 새로 짓기 때문에
+# groupName 값은 배포할 때마다 바뀐다. Name 태그는 Launch Template에서 내려와 고정이다.
+#
 # 포트: 앱이 instrumentation.ts에서 여는 메트릭 포트(mobile 9464, web 9465). Next 포트
 # (3000·3001)가 아니다. front-sg-prod에 이 두 포트를 front-monitoring-sg-prod 소스로 열어 둬야 한다.
 global:
@@ -23,7 +27,7 @@ scrape_configs:
         port: 9464
         refresh_interval: 60s
         filters:
-          - name: tag:aws:autoscaling:groupName
+          - name: tag:Name
             values: [plick-frontend-asg-prod]
           - name: instance-state-name
             values: [running]
@@ -39,7 +43,7 @@ scrape_configs:
         port: 9465
         refresh_interval: 60s
         filters:
-          - name: tag:aws:autoscaling:groupName
+          - name: tag:Name
             values: [plick-frontend-asg-prod]
           - name: instance-state-name
             values: [running]

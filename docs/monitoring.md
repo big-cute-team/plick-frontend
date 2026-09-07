@@ -25,8 +25,9 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
   `plick_request_error_total`(Next `onRequestError`)
 - 모니터링 EC2: [infra/monitoring/](../infra/monitoring/)의 compose와 설정을 user data로
   실어 첫 부팅에 `docker compose up -d`한다. 프로메테우스는 `ec2_sd_configs`로
-  `aws:autoscaling:groupName=plick-frontend-asg-prod` 태그의 인스턴스를 60초마다 다시
-  찾는다. Blue/Green으로 인스턴스가 통째로 바뀌어도 설정을 안 건드린다
+  `Name=plick-frontend-asg-prod` 태그의 인스턴스를 60초마다 다시 찾는다.
+  `aws:autoscaling:groupName`은 CodeDeploy Blue/Green이 배포마다 ASG를 복제하며
+  `CodeDeploy_…_d-<배포ID>`로 바꿔 달아서 필터로 못 쓴다. Blue/Green으로 인스턴스가 통째로 바뀌어도 설정을 안 건드린다
 - 그라파나: 데이터 소스와 `PLick Frontend (prod)` 대시보드가 프로비저닝으로 자동 등록된다
 
 ## 2. 리포 파일
@@ -111,8 +112,8 @@ sudo docker ps                                        # prometheus·grafana 두 
 curl -s localhost:9090/api/v1/targets | python3 -m json.tool | grep -E '"job"|"health"'
 ```
 
-두 잡 모두 `health: up`이면 끝이다. `activeTargets`가 비어 있으면 3.1 권한이나 ASG 태그
-값을 의심한다(`sudo docker logs prometheus`에 UnauthorizedOperation이 찍힌다). 타깃은 있는데
+두 잡 모두 `health: up`이면 끝이다. `activeTargets`에 프론트 잡이 없으면 3.1 권한이나
+Name 태그 값을 의심한다(`sudo docker logs prometheus`에 UnauthorizedOperation이 찍힌다). 타깃은 있는데
 down이면 3.2 보안그룹 규칙이거나 아직 앱 배포가 안 나간 것이다. 프론트 인스턴스의
 프라이빗 IP로 직접 확인할 수 있다:
 

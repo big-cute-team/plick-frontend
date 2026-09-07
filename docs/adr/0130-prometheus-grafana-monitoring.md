@@ -163,3 +163,35 @@ path별 p95, 이벤트루프 지연이 그려졌다. 스크린샷을 찍으려�
   경로가 필요하다. 이것도 후속이다.
 - 알림(에러율 임계치 → 슬랙)은 그라파나 알림 규칙으로 걸 수 있는데 인스턴스가 서고 나서
   실제 값 분포를 보고 정한다.
+
+## 후속: 콘솔 작업 중 ASG 태그 필터가 빗나갔다
+
+사용자가 콘솔에서 IAM 롤(plick-front-monitoring-role-prod), 보안그룹(front-monitoring-sg-prod),
+모니터링 EC2(front-monitoring-prod)를 만들었다. user data는 문제없이 돌아 컨테이너 둘이
+떴는데, 프로메테우스 타깃에 `prometheus` 잡만 있고 프론트 잡 둘이 없었다.
+
+로그에 에러가 한 줄도 없어서 자격 증명 실패는 아니었다. 실패였다면 refresh 단계에서
+ERROR가 찍힌다. 설정에 ec2_sd가 실린 것도 API로 확인했고, droppedTargets도 0이었다.
+발견은 성공했는데 결과가 0개라는 뜻이라, 모니터링 EC2에 aws CLI를 깔아 같은 롤로 같은
+조회를 손으로 돌려 봤다. 필터를 건 조회는 비었고, 필터를 뺀 조회에서 답이 나왔다.
+
+```
+i-0a998b838b1a5cb22  192.168.2.149  plick-frontend-asg-prod  CodeDeploy_plick-frontend-dg-prod_d-86V40O0LK
+i-09796df509c9f84c8  192.168.4.151  plick-frontend-asg-prod  CodeDeploy_plick-frontend-dg-prod_d-86V40O0LK
+```
+
+`aws:autoscaling:groupName` 값이 `plick-frontend-asg-prod`가 아니었다. CodeDeploy Blue/Green은
+배포마다 원본 ASG를 복제해 Green을 만들고, 그 복제본 이름을 `CodeDeploy_<배포그룹>_d-<배포ID>`로
+짓는다. 트래픽이 넘어가면 Blue를 지우고 복제본이 현역이 된다. 그래서 인스턴스에 붙는 groupName
+태그는 배포할 때마다 바뀌고, 내가 콘솔에서 봤던 `plick-frontend-asg-prod`는 ASG 자체가 아니라
+Launch Template이 내려 주는 `Name` 태그였다. 사용자도 태그 탭에서 그 값을 보고 "맞다"고 했는데
+둘 다 키를 확인하지 않고 값만 본 것이다.
+
+필터를 `tag:Name`으로 바꿨다. Name 태그는 Launch Template의 태그 사양에서 오므로 어느 복제본이
+떠도 같다. 인스턴스에서는 `/srv/monitoring/prometheus/prometheus.yml`을 sed로 고치고
+`POST /-/reload`로 재시작 없이 반영했다. 컨테이너에 `--web.enable-lifecycle`을 켜 둔 게
+여기서 쓸모가 있었다.
+
+덤으로 안 것 하나. 콘솔의 Ubuntu 타일 기본값이 24.04가 아니라 26.04(resolute)였다. Docker
+공식 저장소에 26.04 채널이 이미 있어서 그대로 깔렸다. 문서엔 24.04로 적어 뒀는데 실제 인스턴스는
+26.04다.
