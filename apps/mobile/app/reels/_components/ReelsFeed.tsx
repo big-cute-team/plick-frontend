@@ -9,6 +9,7 @@ import {
   REELS_EMBED_FETCH_AHEAD,
   REELS_PREFETCH_AHEAD,
 } from "@/_constants/reels";
+import { useAsyncError } from "@/_hooks/useAsyncError";
 import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
 import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
@@ -91,6 +92,7 @@ export function ReelsFeed({
     return () => window.clearTimeout(id);
   }, []);
   const queryClient = useQueryClient();
+  const throwAsync = useAsyncError();
   /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{
     reel: ReelCard;
@@ -158,13 +160,17 @@ export function ReelsFeed({
    *
    * 캐시를 비우지 않고 첫 페이지만 남겨 다시 받는다 (KAN-379) — 비우면 서버가
    * 내려준 `initial` 씨앗이 다시 심겨 옛 릴이 한 번 스쳤다 간다.
+   *
+   * 복구 절차 자체가 실패하면 useAsyncError로 경계에 던진다 (KAN-447) — 예전엔
+   * void로 삼켜 재시도 버튼이 조용히 죽은 척했다. RQ 밖 프로미스라 throwOnError가
+   * 못 받아 주는 자리고, 복구의 실패는 더 물러설 데가 없어 경계가 맞다.
    */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      void restartFeedQuery(
+      restartFeedQuery(
         queryClient,
         anchorId ? reelKeys.anchor(anchorId) : reelKeys.feed(),
-      );
+      ).catch(throwAsync);
       return;
     }
     fetchNextPage();

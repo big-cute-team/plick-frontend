@@ -80,7 +80,7 @@ export function useDebateVote({
         setClosedByServer(true);
         return;
       }
-      console.error("[debates] 투표 반영 실패:", e);
+      /* 그 밖의 실패 안내는 전역 안전망(토스트)이 맡는다 (KAN-447) */
     },
   });
 

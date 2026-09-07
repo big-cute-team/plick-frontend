@@ -7,7 +7,8 @@ import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
 import { formatCount } from "@plick/domain/format";
 import { CommentComposer } from "@/_components/CommentComposer";
-import { CommentList } from "@/_components/CommentList";
+import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
+import { QueryBoundary } from "@/_components/QueryBoundary";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import {
@@ -153,11 +154,17 @@ export function ReelDetailSheet({
             onPosted={() => setAddedComments((n) => n + 1)}
           />
 
-          <CommentList
-            articleId={reel.id}
-            onPosted={() => setAddedComments((n) => n + 1)}
-            onDeleted={() => setAddedComments((n) => n - 1)}
-          />
+          {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
+          <QueryBoundary
+            fallback={<CommentListSkeleton />}
+            errorMessage="댓글을 불러오지 못했어요."
+          >
+            <CommentList
+              articleId={reel.id}
+              onPosted={() => setAddedComments((n) => n + 1)}
+              onDeleted={() => setAddedComments((n) => n - 1)}
+            />
+          </QueryBoundary>
         </div>
       </div>
     </div>

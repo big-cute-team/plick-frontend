@@ -8,6 +8,7 @@ import {
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
 import { AuthProvider } from "@/_components/AuthProvider";
+import { ErrorToast } from "@/_components/ErrorToast";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { QueryProvider } from "@/_queries/QueryProvider";
 import {
@@ -141,6 +142,9 @@ export default async function RootLayout({
             {children}
           </AuthProvider>
         </QueryProvider>
+        {/* 뮤테이션 전역 안전망이 잡은 실패를 띄우는 토스트 (KAN-447) — fixed라
+            트리 어디든 되지만, 화면 트리 밖에 두어 라우트 교체와 무관하게 산다 */}
+        <ErrorToast />
         {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 이 컴포넌트가
             스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
             LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}
