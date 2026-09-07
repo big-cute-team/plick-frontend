@@ -5,23 +5,35 @@ import { TEAMS } from "@plick/domain/constants";
 import {
   ratingTone,
   type LineupPlayer,
+  type LiveTeam,
   type TeamLineup,
 } from "@plick/domain/live";
 import { PlayerMatchStatsModal } from "./PlayerMatchStatsModal";
 
 /**
- * 상세 좌측의 라인업 카드(피그마 LW4) — 피치 렌더 + 홈 벤치. `grid`는
+ * 상세 좌측의 라인업 카드(피그마 LW4) — 피치 렌더 + 양 팀 벤치. `grid`는
  * "줄:칸" 좌표(GK가 1줄), 어웨이 위·홈 아래 반전(명세 규약). 선수를 누르면
- * 경기 스탯 모달이 열린다 — 그 상태 때문에 클라 컴포넌트다.
+ * 경기 스탯 모달이 열린다 — 그 상태 때문에 클라 컴포넌트다. 스탯 응답엔
+ * 팀명이 없어 눌린 자리의 팀을 같이 들고 간다.
+ *
+ * @param matchId - 경기 id (선수 스탯 조회용)
+ * @param live - 라이브 중이면 모달을 열 때마다 스탯을 다시 받는다
  */
 export function LineupCard({
+  matchId,
+  live,
   home,
   away,
 }: {
+  matchId: number;
+  live: boolean;
   home: TeamLineup;
   away: TeamLineup;
 }) {
-  const [playerId, setPlayerId] = useState<number | null>(null);
+  const [player, setPlayer] = useState<{ id: number; team: LiveTeam } | null>(
+    null,
+  );
+  const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
 
   return (
     <section className="bg-elevate rounded-card flex flex-col gap-3 p-5">
@@ -38,7 +50,7 @@ export function LineupCard({
             key={`away-${i}`}
             lineup={away}
             players={line}
-            onPlayerTap={setPlayerId}
+            onPlayerTap={onPlayerTap}
           />
         ))}
         <span
@@ -52,15 +64,18 @@ export function LineupCard({
               key={`home-${i}`}
               lineup={home}
               players={line}
-              onPlayerTap={setPlayerId}
+              onPlayerTap={onPlayerTap}
             />
           ))}
         <FormationTag lineup={home} />
       </div>
-      <Bench lineup={home} onPlayerTap={setPlayerId} />
+      <Bench lineup={home} onPlayerTap={onPlayerTap} />
+      <Bench lineup={away} onPlayerTap={onPlayerTap} />
       <PlayerMatchStatsModal
-        playerId={playerId}
-        onClose={() => setPlayerId(null)}
+        matchId={matchId}
+        live={live}
+        player={player}
+        onClose={() => setPlayer(null)}
       />
     </section>
   );
@@ -92,7 +107,7 @@ function PitchLine({
 }: {
   lineup: TeamLineup;
   players: LineupPlayer[];
-  onPlayerTap: (playerId: number) => void;
+  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   const colorVar = lineup.team.code
     ? TEAMS[lineup.team.code].colorVar
@@ -105,7 +120,7 @@ function PitchLine({
           <button
             key={player.id}
             type="button"
-            onClick={() => onPlayerTap(player.id)}
+            onClick={() => onPlayerTap(player.id, lineup.team)}
             className="group flex w-20 flex-col items-center gap-1"
           >
             <span className="relative">
@@ -142,7 +157,7 @@ function Bench({
   onPlayerTap,
 }: {
   lineup: TeamLineup;
-  onPlayerTap: (playerId: number) => void;
+  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   if (lineup.bench.length === 0) return null;
   return (
@@ -156,7 +171,7 @@ function Bench({
           <button
             key={player.id}
             type="button"
-            onClick={() => onPlayerTap(player.id)}
+            onClick={() => onPlayerTap(player.id, lineup.team)}
             className={`hover:bg-elevate-2 rounded-tile flex items-center gap-3 px-1.5 py-2.5 text-left transition-colors ${
               i > 0 ? "border-border border-t" : ""
             }`}

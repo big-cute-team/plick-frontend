@@ -1,4 +1,5 @@
 import {
+  kickoffDateLabel,
   kickoffTimeLabel,
   matchStatusLabel,
   type MatchSummary,
@@ -6,8 +7,8 @@ import {
 import { LiveCrest } from "./LiveCrest";
 
 /**
- * 경기 상세 헤더 카드(피그마 LW4·LW5) — 양 팀을 좌우 끝에, 가운데에 대회
- * 라운드·스코어(또는 킥오프 시각)·상태 칩을 세로로 쌓는다. 스코어 정본은
+ * 경기 상세 헤더 카드(피그마 LW4·LW5) — 양 팀을 좌우 끝에, 가운데에 대회명·
+ * 스코어(또는 킥오프 시각)·상태 칩을 세로로 쌓는다(라운드는 BE 미제공). 스코어 정본은
  * `header.score`다(명세 규약).
  */
 export function MatchHeaderCard({ header }: { header: MatchSummary }) {
@@ -16,7 +17,7 @@ export function MatchHeaderCard({ header }: { header: MatchSummary }) {
       <TeamSide team={header.home} align="start" />
       <div className="flex flex-1 flex-col items-center gap-1.5">
         <span className="text-caption text-text-4 font-medium">
-          {header.competition} · {header.round}
+          {header.competition}
         </span>
         {header.status === "SCHEDULED" || header.status === "POSTPONED" ? (
           <>
@@ -85,14 +86,4 @@ function StatusChip({ header }: { header: MatchSummary }) {
       {label}
     </span>
   );
-}
-
-/** 킥오프 ISO → "9월 5일 (금)" 표기(목데이터의 KST 오프셋 ISO 기준). */
-function kickoffDateLabel(kickoffAt: string): string {
-  const match = kickoffAt.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return "";
-  const [, y, m, d] = match;
-  const date = new Date(Number(y), Number(m) - 1, Number(d));
-  const weekday = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
-  return `${Number(m)}월 ${Number(d)}일 (${weekday})`;
 }

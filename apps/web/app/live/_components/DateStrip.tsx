@@ -9,7 +9,6 @@ import {
   monthDateKeys,
   monthLabel,
 } from "@plick/domain/live";
-import { MOCK_TODAY } from "@plick/domain/live-mock";
 import { ChevronMiniIcon } from "@plick/ui/icons";
 
 /**
@@ -17,10 +16,18 @@ import { ChevronMiniIcon } from "@plick/ui/icons";
  * 1일~말일 전체 슬라이드 스트립 + 좌우 화살표. 선택한 날(기본 오늘)이
  * 가운데로 스크롤되고, 화살표는 스트립을 한 화면 폭만큼 밀어 준다.
  * 모바일 `live/_components/DateStrip`과 같은 URL 규약(`/live?date=`)이다.
+ * 오늘은 페이지가 KST로 계산해 넘긴다(하이드레이션 어긋남 방지).
  *
  * @param selected - 현재 보고 있는 날짜 키. 이 값이 스트립의 달을 정한다
+ * @param today - KST 오늘 날짜 키. 쿼리 없는 `/live`가 가리키는 날이다
  */
-export function DateStrip({ selected }: { selected: string }) {
+export function DateStrip({
+  selected,
+  today,
+}: {
+  selected: string;
+  today: string;
+}) {
   const router = useRouter();
   const { year, month } = dateKeyYearMonth(selected);
   const days = monthDateKeys(year, month);
@@ -57,15 +64,15 @@ export function DateStrip({ selected }: { selected: string }) {
   }, [open, year]);
 
   const hrefFor = (dateKey: string) =>
-    dateKey === MOCK_TODAY ? "/live" : `/live?date=${dateKey}`;
+    dateKey === today ? "/live" : `/live?date=${dateKey}`;
 
   /* 오늘이 속한 달을 고르면 오늘로, 다른 달은 1일로 이동한다 */
   const goMonth = (nextYear: number, nextMonth: number) => {
     setOpen(false);
-    const today = dateKeyYearMonth(MOCK_TODAY);
+    const todayYm = dateKeyYearMonth(today);
     const target =
-      today.year === nextYear && today.month === nextMonth
-        ? MOCK_TODAY
+      todayYm.year === nextYear && todayYm.month === nextMonth
+        ? today
         : `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
     router.push(hrefFor(target));
   };

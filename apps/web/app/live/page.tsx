@@ -1,40 +1,62 @@
 import type { Metadata } from "next";
-import {
-  MOCK_MATCH_DAYS,
-  MOCK_STANDINGS,
-  MOCK_TODAY,
-} from "@plick/domain/live-mock";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
+import { getMatches, getStandings } from "@plick/core/live";
+import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
+import type { InitialMatchList, StandingRow } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { DateStrip } from "./_components/DateStrip";
-import { LiveEmptyDay } from "./_components/LiveEmptyDay";
 import { LiveLoadError } from "./_components/LiveLoadError";
-import { MatchDayList } from "./_components/MatchDayList";
+import { LiveMatchesFeed } from "./_components/LiveMatchesFeed";
 import { StandingsRail } from "./_components/StandingsRail";
 
 /**
- * 아직 목데이터 지면이라 색인 신호를 보내지 않는다 — API가 붙으면
- * 기사·토론 리스트처럼 description과 canonical(+ 모바일 alternate)을 붙인다.
+ * 이 URL이 canonical이고 대응 모바일 LIVE 탭을 alternate로 선언한다 — 토론
+ * 리스트와 같은 상호 참조 규약. 날짜 쿼리 URL도 canonical은 `/live`다.
  */
 export const metadata: Metadata = {
   title: "LIVE",
-  robots: { index: false },
+  description: PAGE_DESCRIPTIONS.live,
+  alternates: {
+    canonical: "/live",
+    media: { [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/live` },
+  },
 };
 
 /**
- * LIVE 대시보드(피그마 LW1~LW3, KAN-446). 데스크톱은 모바일과 달리 순위를
- * 별도 라우트로 빼지 않고 2컬럼(경기 목록 + 순위표 레일)으로 항상 함께
- * 보여준다. lg 아래에선 1열로 스택된다(레일을 숨기지 않는다). 날짜는
- * `/live?date=` 쿼리, `?demo=error`는 에러 지면 확인용 임시 훅(배선 때 삭제).
+ * LIVE 대시보드(피그마 LW1~LW3, KAN-452). 데스크톱은 순위를 별도 라우트로
+ * 빼지 않고 2컬럼(경기 목록 + 순위표 레일)으로 항상 함께 보여준다. 목록은
+ * 서버 씨앗 + 클라 폴링, 순위표는 서버 컴포넌트 fetch(단발 읽기)다. 둘은
+ * 독립이라 한쪽이 실패해도 다른 쪽은 그대로 뜬다.
  */
 export default async function LivePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; demo?: string }>;
+  searchParams: Promise<{ date?: string }>;
 }) {
-  const { date, demo } = await searchParams;
-  const selected = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : MOCK_TODAY;
-  const matches = MOCK_MATCH_DAYS[selected] ?? [];
+  const { date } = await searchParams;
+  const today = todayDateKeyKst();
+  const selected = isDateKey(date) ? date : today;
+
+  const [matches, standings] = await Promise.allSettled([
+    getMatches(selected),
+    getStandings(),
+  ]);
+
+  let initial: InitialMatchList | undefined;
+  if (matches.status === "fulfilled") {
+    initial = { items: matches.value, fetchedAt: Date.now() };
+  } else {
+    console.error("[live] 경기 목록 초기 로드 실패:", matches.reason);
+  }
+
+  let rows: StandingRow[] | undefined;
+  if (standings.status === "fulfilled") {
+    rows = standings.value;
+  } else {
+    console.error("[live] 순위표 로드 실패:", standings.reason);
+  }
 
   return (
     <>
@@ -51,16 +73,19 @@ export default async function LivePage({
           </header>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="flex flex-col gap-1">
-              <DateStrip selected={selected} />
-              {demo === "error" ? (
-                <LiveLoadError />
-              ) : matches.length > 0 ? (
-                <MatchDayList matches={matches} />
-              ) : (
-                <LiveEmptyDay />
-              )}
+              <DateStrip selected={selected} today={today} />
+              <LiveMatchesFeed date={selected} initial={initial} />
             </div>
-            <StandingsRail rows={MOCK_STANDINGS} />
+            {rows ? (
+              <StandingsRail rows={rows} />
+            ) : (
+              <section className="bg-elevate rounded-card h-fit px-3.5 py-4">
+                <h2 className="text-body-lg text-text px-1 pb-2 font-bold">
+                  순위표
+                </h2>
+                <LiveLoadError compact />
+              </section>
+            )}
           </div>
         </PageContainer>
       </main>

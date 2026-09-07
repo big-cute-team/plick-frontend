@@ -2,6 +2,7 @@ import { TEAMS } from "@plick/domain/constants";
 import {
   ratingTone,
   type LineupPlayer,
+  type LiveTeam,
   type TeamLineup,
 } from "@plick/domain/live";
 
@@ -10,7 +11,7 @@ import {
  * 어웨이는 위쪽·홈은 아래쪽으로 반전해 서로 마주 보게 그린다(명세 규약).
  * 선수 도트를 누르면 경기 스탯 시트가 열린다.
  *
- * @param onPlayerTap - 선수 도트 탭 콜백(선수 id) — 클라 탭 컨테이너가 넘긴다
+ * @param onPlayerTap - 선수 도트 탭 콜백(선수 id, 소속 팀) — 클라 탭 컨테이너가 넘긴다
  */
 export function LineupPitch({
   home,
@@ -19,7 +20,7 @@ export function LineupPitch({
 }: {
   home: TeamLineup;
   away: TeamLineup;
-  onPlayerTap: (playerId: number) => void;
+  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   return (
     <section className="border-accent-border/50 bg-accent/5 rounded-card relative flex flex-col gap-4 border px-2 py-3">
@@ -77,7 +78,7 @@ function PitchLine({
 }: {
   lineup: TeamLineup;
   players: LineupPlayer[];
-  onPlayerTap: (playerId: number) => void;
+  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   const colorVar = lineup.team.code
     ? TEAMS[lineup.team.code].colorVar
@@ -90,7 +91,7 @@ function PitchLine({
           <button
             key={player.id}
             type="button"
-            onClick={() => onPlayerTap(player.id)}
+            onClick={() => onPlayerTap(player.id, lineup.team)}
             className="flex w-16 flex-col items-center gap-1 active:opacity-70"
           >
             <span className="relative">

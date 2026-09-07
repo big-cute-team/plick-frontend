@@ -9,7 +9,6 @@ import {
   monthDateKeys,
   monthLabel,
 } from "@plick/domain/live";
-import { MOCK_TODAY } from "@plick/domain/live-mock";
 import { ChevronMiniIcon } from "@plick/ui/icons";
 
 /**
@@ -18,12 +17,20 @@ import { ChevronMiniIcon } from "@plick/ui/icons";
  * 가운데로 스크롤된다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리
  * 없는 `/live`다.
  *
- * 스크롤 센터링·드롭다운 상태 때문에 클라 컴포넌트다. 껍데기 단계의 오늘은
- * `MOCK_TODAY` — 실배선 때 KST 오늘로 바꾼다.
+ * 스크롤 센터링·드롭다운 상태 때문에 클라 컴포넌트다. 오늘은 페이지가 KST로
+ * 계산해 넘긴다 — 여기서 다시 계산하면 서버·기기 시각이 자정을 사이에 두고
+ * 갈릴 때 하이드레이션이 어긋난다.
  *
  * @param selected - 현재 보고 있는 날짜 키(YYYY-MM-DD). 이 값이 스트립의 달을 정한다
+ * @param today - KST 오늘 날짜 키. 쿼리 없는 `/live`가 가리키는 날이다
  */
-export function DateStrip({ selected }: { selected: string }) {
+export function DateStrip({
+  selected,
+  today,
+}: {
+  selected: string;
+  today: string;
+}) {
   const router = useRouter();
   const { year, month } = dateKeyYearMonth(selected);
   const days = monthDateKeys(year, month);
@@ -60,15 +67,15 @@ export function DateStrip({ selected }: { selected: string }) {
   }, [open, year]);
 
   const hrefFor = (dateKey: string) =>
-    dateKey === MOCK_TODAY ? "/live" : `/live?date=${dateKey}`;
+    dateKey === today ? "/live" : `/live?date=${dateKey}`;
 
   /* 오늘이 속한 달을 고르면 오늘로, 다른 달은 1일로 이동한다 */
   const goMonth = (nextYear: number, nextMonth: number) => {
     setOpen(false);
-    const today = dateKeyYearMonth(MOCK_TODAY);
+    const todayYm = dateKeyYearMonth(today);
     const target =
-      today.year === nextYear && today.month === nextMonth
-        ? MOCK_TODAY
+      todayYm.year === nextYear && todayYm.month === nextMonth
+        ? today
         : `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
     router.push(hrefFor(target));
   };

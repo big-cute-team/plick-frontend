@@ -1,5 +1,6 @@
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "./LiveCrest";
+import { PlayerPhoto } from "./PlayerPhoto";
 
 /**
  * 킥오프 전 프리뷰 지면(피그마 L5) — 결장자·상대전적·리그 순위·직전 경기
@@ -29,7 +30,11 @@ function Absentees({ preview }: { preview: MatchPreview }) {
           className="flex items-center gap-2.5"
         >
           <LiveCrest team={absentee.team} size={18} />
-          <span className="bg-avatar size-7 shrink-0 rounded-full" />
+          <PlayerPhoto
+            src={absentee.photo}
+            name={absentee.playerName}
+            size={28}
+          />
           <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
             {absentee.playerName}
           </span>
@@ -55,7 +60,10 @@ function HeadToHead({ preview }: { preview: MatchPreview }) {
         상대 전적 · 최근 5경기
       </h2>
       {preview.headToHead.map((game) => (
-        <div key={game.date} className="flex items-center gap-2">
+        <div
+          key={`${game.date}-${game.line}`}
+          className="flex items-center gap-2"
+        >
           <span className="text-caption text-text-4 w-14 shrink-0">
             {game.date}
           </span>

@@ -1,4 +1,5 @@
 import {
+  kickoffDateLabel,
   kickoffTimeLabel,
   matchStatusLabel,
   type MatchSummary,
@@ -73,14 +74,4 @@ function StatusChip({ header }: { header: MatchSummary }) {
       {label}
     </span>
   );
-}
-
-/** 킥오프 ISO → "9월 5일 (금)" 표기. 목데이터의 KST 오프셋 ISO 기준이다. */
-function kickoffDateLabel(kickoffAt: string): string {
-  const match = kickoffAt.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return "";
-  const [, y, m, d] = match;
-  const date = new Date(Number(y), Number(m) - 1, Number(d));
-  const weekday = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
-  return `${Number(m)}월 ${Number(d)}일 (${weekday})`;
 }

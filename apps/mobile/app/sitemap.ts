@@ -56,6 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // (/articles/teams/[slug])은 canonical이 팀 허브라 싣지 않는다
     { url: `${SITE_URL}/articles`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
+    // 라이브 스코어 (KAN-452) — 경기 상세는 시즌 단위로 바뀌는 임시 URL이라 목록만 싣는다
+    { url: `${SITE_URL}/live`, changeFrequency: "hourly", priority: 0.7 },
     // 팀 허브 (KAN-350) — 팀 검색어의 랜딩이라 기사 개별 페이지보다 우선순위를 높인다
     ...TEAM_ORDER.map((code) => ({
       url: `${SITE_URL}/teams/${TEAMS[code].slug}`,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { StandingRow } from "@plick/domain/live";
+import { LIVE_SEASON_LABEL, type StandingRow } from "@plick/domain/live";
 import { LiveCrest } from "./LiveCrest";
 
 /**
@@ -13,7 +13,9 @@ export function StandingsRail({ rows }: { rows: StandingRow[] }) {
     <section className="bg-elevate rounded-card h-fit px-3.5 py-4">
       <div className="flex items-baseline justify-between px-1 pb-2">
         <h2 className="text-body-lg text-text font-bold">순위표</h2>
-        <span className="text-caption text-text-4">25-26 시즌</span>
+        <span className="text-caption text-text-4">
+          {LIVE_SEASON_LABEL} 시즌
+        </span>
       </div>
       {rows.map((row) => (
         <StandingLine key={row.rank} row={row} />

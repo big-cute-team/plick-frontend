@@ -1,4 +1,4 @@
-import { ratingTone, type TeamLineup } from "@plick/domain/live";
+import { ratingTone, type LiveTeam, type TeamLineup } from "@plick/domain/live";
 
 /**
  * 라인업 탭의 벤치 카드(피그마 L7 하단). `rating` null은 무출전 "-" 표기다.
@@ -9,7 +9,7 @@ export function BenchList({
   onPlayerTap,
 }: {
   lineup: TeamLineup;
-  onPlayerTap: (playerId: number) => void;
+  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   if (lineup.bench.length === 0) return null;
 
@@ -29,7 +29,7 @@ export function BenchList({
           <button
             key={player.id}
             type="button"
-            onClick={() => onPlayerTap(player.id)}
+            onClick={() => onPlayerTap(player.id, lineup.team)}
             className={`flex items-center gap-3 py-2.5 text-left active:opacity-70 ${
               i > 0 ? "border-border border-t" : ""
             }`}
