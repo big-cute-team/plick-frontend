@@ -80,7 +80,7 @@ scripts/monitoring/build-user-data.sh > /tmp/monitoring-user-data.sh
 출력 파일(약 6KB, 제한 16KB)을 그대로 붙여 넣는다. 안에 infra/monitoring/ 전체가
 tar+gzip+base64로 들어 있다.
 
-### 3.4 EC2 생성 `plick-monitoring-prod`
+### 3.4 EC2 생성 `front-monitoring-prod`
 
 - AMI: Ubuntu Server 24.04 LTS (x86_64)
 - 유형: t3.small (프로메테우스+그라파나에 2GB면 충분하다)
@@ -90,7 +90,7 @@ tar+gzip+base64로 들어 있다.
 - 스토리지: 30GB gp3 (보존 30일 기준 넉넉하다)
 - 고급 세부 정보: IAM 인스턴스 프로파일 plick-front-monitoring-role-prod, 사용자 데이터에
   3.3 출력 붙여 넣기
-- 태그: Name=plick-monitoring-prod
+- 태그: Name=front-monitoring-prod
 
 user data는 첫 부팅에만 돈다. Docker apt 저장소와 이미지 pull이 인터넷을 타므로 NAT가
 살아 있어야 한다(prod는 plick-nat-prod). 부팅 후 3~5분 기다린다.
