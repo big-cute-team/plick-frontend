@@ -62,6 +62,42 @@
       ],
       "port": 3010,
       "autoPort": true
+    },
+    {
+      "name": "mobile-chat",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "CHAT_WS_URL=ws://localhost:8090/ws/chat",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3021"
+      ],
+      "port": 3021,
+      "autoPort": true
+    },
+    {
+      "name": "web-chat",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "CHAT_WS_URL=ws://localhost:8090/ws/chat",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3020"
+      ],
+      "port": 3020,
+      "autoPort": true
     }
   ]
 }
