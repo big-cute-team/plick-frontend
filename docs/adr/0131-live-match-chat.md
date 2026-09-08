@@ -213,10 +213,19 @@ fetch 캐시였다. `getMatchDetail`이 `revalidate: 20`이라 Next가 응답을
 
 ## 막힌 것과 남은 것
 
-- dev 공개 경로. 코드는 다 됐지만 브라우저가 dev BE 채팅에 닿을 길이 없다. 공개 ALB에 API 호스트
-  규칙을 열고(예: `dev-api.plick.co.kr` → tg-main), FE SSM `.env`에 `CHAT_WS_URL=wss://dev-api.plick.co.kr/ws/chat`을
-  넣고, BE dev env의 `CORS_ALLOWED_ORIGINS`에 `https://dev-m.plick.co.kr,https://dev.plick.co.kr`이
-  있어야 한다. 셋 다 인프라 작업이라 이 PR에 없다.
+- dev 공개 경로. 처음엔 인프라 작업이 셋 남았다고 적었는데, PR을 올린 뒤 aws CLI로 dev 리소스를
+  읽어 보니 대부분 이미 돼 있었다. 공개 ALB(`plick-alb-pub`) 443 리스너에 우선순위 30으로
+  `dev-api.plick.co.kr` → `tg-main-pub`(백엔드 EC2 두 대, healthy) 규칙이 있고, Route 53에 A 레코드도
+  있고, BE dev env(`/plick/main/dev/env`)의 `CORS_ALLOWED_ORIGINS`에 `dev.plick.co.kr`과 `dev-m.plick.co.kr`이
+  들어 있고 `CHAT_OPEN_BEFORE=720h`까지 잡혀 있었다. Confluence 문서가 "남은 결정"이라 적은 뒤 BE 쪽이
+  처리한 모양이다. 남은 건 FE SSM env(`/plick/frontend/{mobile,web}/dev/env`)에
+  `CHAT_WS_URL=wss://dev-api.plick.co.kr/ws/chat` 한 줄뿐이다. 배포 스크립트가 설치 단계에서 SSM을
+  읽어 `.env`를 만드니 머지 전에 넣어 둬야 첫 배포부터 값이 실린다.
+- 대신 다른 게 걸린다. 공개 ALB 보안 그룹이 443을 CloudFront origin-facing 프리픽스 리스트와 고정 IP
+  두 개에만 열어 뒀다. `dev-api`는 CloudFront를 안 거치고 ALB로 바로 가는 호스트라 그 IP 둘에서만
+  닿는다. 이 세션을 돌린 맥의 공인 IP는 목록에 없어서 `curl https://dev-api.plick.co.kr/health`가
+  타임아웃이었다. dev에서 채팅을 확인하려면 확인하는 자리의 IP를 보안 그룹에 넣거나 목록에 있는
+  망에서 봐야 한다. 이건 dev를 닫아 둔 정책이라 열 일이 아니다.
 - 채팅 서버 자체가 BE develop에 아직 없다. `feat/KAN-448-live-chat` 브랜치가 dev에 배포돼 있다는
   게 티켓의 말이지만 develop 머지 여부는 BE 쪽 일이다.
 - 로컬 BE에 `FOOTBALL_API_KEY`가 없어 실제 BE로는 붙어 보지 못했다. 목 서버는 계약 문서대로
