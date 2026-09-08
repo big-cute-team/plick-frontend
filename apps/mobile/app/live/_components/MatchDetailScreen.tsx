@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import type { InitialMatchDetail } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
+import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
+import { MatchChatPanel } from "./MatchChatPanel";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderBlock } from "./MatchHeaderBlock";
+import { MatchTabBar } from "./MatchTabBar";
 import { MatchTopBar } from "./MatchTopBar";
 import { PreviewBlocks } from "./PreviewBlocks";
 
@@ -49,9 +54,17 @@ export function MatchDetailScreen({
 }
 
 /**
- * 상태로 지면이 갈린다 — SCHEDULED는 프리뷰 블록, LIVE·FINISHED는
- * 요약·라인업·스탯 탭, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
- * CANCELLED는 헤더와 안내만.
+ * 상태로 지면이 갈린다 — SCHEDULED는 프리뷰·채팅 탭, LIVE·FINISHED는
+ * 요약·라인업·스탯·채팅 탭, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
+ * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`).
+ *
+ * 채팅 탭만 스크롤 영역 밖에 선다 (KAN-458). 입력바가 화면 하단에 붙어 있어야
+ * 하는데 `AppShell`이 높이를 못박고 스크롤은 `ScrollArea`가 맡는 구조라, 스크롤
+ * 안에 두면 입력바가 목록과 함께 흘러가 버린다. 그래서 채팅일 때는 헤더·탭 줄을
+ * 고정하고 남는 높이를 채팅 패널이 다 가져간다(목록만 안에서 스크롤).
+ *
+ * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이 사라지면
+ * 첫 탭으로 돌아간다.
  */
 function MatchDetailBody({
   matchId,
@@ -62,28 +75,44 @@ function MatchDetailBody({
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
   const { header } = detail;
-  const notPlayed =
-    header.status === "SCHEDULED" || header.status === "POSTPONED";
+  const tabs = MATCH_TABS_BY_STATUS[header.status];
+  const [selected, setSelected] = useState<MatchTabKey | null>(null);
+  const active =
+    selected !== null && tabs.includes(selected) ? selected : tabs[0];
+
+  if (active === "chat") {
+    return (
+      <>
+        <MatchTopBar title={header.competition} />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <MatchHeaderBlock header={header} />
+          <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+          <MatchChatPanel header={header} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <MatchTopBar title={header.competition} />
       <ScrollArea>
         <MatchHeaderBlock header={header} />
-        {notPlayed && detail.preview ? (
-          <PreviewBlocks preview={detail.preview} />
-        ) : header.status === "POSTPONED" || header.status === "CANCELLED" ? (
-          <p className="text-body text-text-4 px-edge py-16 text-center">
-            {header.status === "POSTPONED"
-              ? "경기가 연기됐어요. 새 일정은 추후 공지돼요."
-              : "취소된 경기예요."}
-          </p>
-        ) : header.status === "SCHEDULED" ? (
-          <p className="text-body text-text-4 px-edge py-16 text-center">
-            프리뷰 정보가 아직 없어요
-          </p>
+        {active === undefined ? (
+          header.status === "POSTPONED" && detail.preview ? (
+            <PreviewBlocks preview={detail.preview} />
+          ) : (
+            <p className="text-body text-text-4 px-edge py-16 text-center">
+              {header.status === "POSTPONED"
+                ? "경기가 연기됐어요. 새 일정은 추후 공지돼요."
+                : "취소된 경기예요."}
+            </p>
+          )
         ) : (
-          <MatchDetailTabs detail={detail} />
+          <>
+            <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+            <MatchDetailTabs detail={detail} tab={active} />
+          </>
         )}
       </ScrollArea>
     </>

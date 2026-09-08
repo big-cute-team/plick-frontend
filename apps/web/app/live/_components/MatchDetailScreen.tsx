@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import type { InitialMatchDetail } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { MATCH_VIEWS_BY_STATUS } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
+import type { MatchView } from "@/_types/live";
 import { GoalsCard } from "./GoalsCard";
 import { LineupCard } from "./LineupCard";
 import { LiveLoadError } from "./LiveLoadError";
+import { MatchChatPanel } from "./MatchChatPanel";
 import { MatchHeaderCard } from "./MatchHeaderCard";
+import { MatchViewTabs } from "./MatchViewTabs";
 import { PreviewGrid } from "./PreviewGrid";
 import { StatsRail } from "./StatsRail";
 import { TimelineCard } from "./TimelineCard";
@@ -18,6 +23,9 @@ import { TimelineCard } from "./TimelineCard";
  * 프리뷰 2컬럼, POSTPONED는 프리뷰가 있으면 프리뷰, CANCELLED는 헤더와
  * 안내만. 블록별 null 조건부 렌더가 기본이다(서버가 조각 실패 시 그 조각만
  * 빼고 내리는 구조). GNB는 쿼리 상태와 무관하게 항상 그린다.
+ *
+ * 채팅(KAN-458)은 헤더 카드 아래 "경기 / 채팅" 탭으로 갈린다. 연기·취소는
+ * 방이 열리지 않아 탭 없이 안내만 그린다(`MATCH_VIEWS_BY_STATUS`).
  *
  * @param matchId API-Football fixture id
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
@@ -60,13 +68,21 @@ function MatchDetailBody({
   detail: NonNullable<ReturnType<typeof useMatchDetail>["data"]>;
 }) {
   const { header } = detail;
-  const notPlayed =
-    header.status === "SCHEDULED" || header.status === "POSTPONED";
+  const views = MATCH_VIEWS_BY_STATUS[header.status];
+  const [selected, setSelected] = useState<MatchView | null>(null);
+  const active =
+    selected !== null && views.includes(selected) ? selected : views[0];
 
   return (
     <>
       <MatchHeaderCard header={header} />
-      {notPlayed && detail.preview ? (
+      {active !== undefined && (
+        <MatchViewTabs views={views} active={active} onSelect={setSelected} />
+      )}
+      {active === "chat" ? (
+        <MatchChatPanel header={header} />
+      ) : (header.status === "SCHEDULED" || header.status === "POSTPONED") &&
+        detail.preview ? (
         <PreviewGrid preview={detail.preview} />
       ) : header.status === "POSTPONED" || header.status === "CANCELLED" ? (
         <p className="text-body text-text-4 py-20 text-center">
