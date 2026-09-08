@@ -13,9 +13,10 @@ import { ChevronMiniIcon } from "@plick/ui/icons";
 
 /**
  * 경기 목록의 날짜 내비게이션 — 위에 연·월 셀렉터(드롭다운), 아래에 그 달
- * 1일~말일 전체를 담은 가로 슬라이드 스트립. 선택한 날(기본은 오늘)이
- * 가운데로 스크롤된다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리
- * 없는 `/live`다.
+ * 1일~말일 전체를 담은 가로 슬라이드 스트립. 처음 들어올 때와 달을 바꿀 때만
+ * 선택한 날(기본은 오늘)을 가운데로 스크롤하고, 같은 달 안에서 날짜를 고를
+ * 때는 스트립을 그 자리에 둔다(KAN-459). 오늘 칸은 요일 대신 "오늘" 태그를
+ * 단다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는 `/live`다.
  *
  * 스크롤 센터링·드롭다운 상태 때문에 클라 컴포넌트다. 오늘은 페이지가 KST로
  * 계산해 넘긴다 — 여기서 다시 계산하면 서버·기기 시각이 자정을 사이에 두고
@@ -60,7 +61,9 @@ export function DateStrip({
     };
     raf = requestAnimationFrame(center);
     return () => cancelAnimationFrame(raf);
-  }, [selected]);
+    // 처음 들어올 때와 달이 바뀔 때만 센터링한다. 같은 달 안의 날짜 선택은
+    // 스트립을 그 자리에 둔다 (KAN-459) — selected를 의존성에 넣지 않는 이유
+  }, [year, month]);
 
   useEffect(() => {
     if (open) setPickerYear(year);
@@ -172,11 +175,23 @@ export function DateStrip({
                 on ? "bg-accent-tint" : ""
               }`}
             >
-              <span
-                className={`text-micro font-semibold ${on ? "text-accent" : "text-text-4"}`}
-              >
-                {weekday}
-              </span>
+              {dateKey === today ? (
+                <span
+                  className={`rounded-badge text-micro px-1.5 font-bold ${
+                    on
+                      ? "bg-accent text-on-accent"
+                      : "bg-accent-tint text-accent"
+                  }`}
+                >
+                  오늘
+                </span>
+              ) : (
+                <span
+                  className={`text-micro font-semibold ${on ? "text-accent" : "text-text-4"}`}
+                >
+                  {weekday}
+                </span>
+              )}
               <span
                 className={`text-body-lg font-bold ${on ? "text-accent" : "text-text-2"}`}
               >

@@ -1,3 +1,4 @@
+import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "./LiveCrest";
 import { PlayerPhoto } from "./PlayerPhoto";
@@ -24,33 +25,46 @@ export function PreviewGrid({ preview }: { preview: MatchPreview }) {
   );
 }
 
+/** 결장자는 팀별로 묶어 홈 그룹부터 보여준다 (KAN-459). 팀 줄 아래에 선수 줄이 들여쓰기로 붙는다. */
 function Absentees({ preview }: { preview: MatchPreview }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-2.5 p-5">
+    <section className="bg-elevate rounded-card flex flex-col gap-3 p-5">
       <h2 className="text-body text-text-2 font-bold">결장자</h2>
-      {preview.absentees.map((absentee) => (
-        <div
-          key={`${absentee.team.shortName}-${absentee.playerName}`}
-          className="flex items-center gap-2.5"
-        >
-          <LiveCrest team={absentee.team} size={18} />
-          <PlayerPhoto
-            src={absentee.photo}
-            name={absentee.playerName}
-            size={28}
-          />
-          <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
-            {absentee.playerName}
-          </span>
-          <span
-            className={`rounded-badge text-micro px-2 py-1 font-bold ${
-              absentee.kind === "SUSPENSION"
-                ? "bg-danger/15 text-danger"
-                : "bg-warn-tint text-warn"
-            }`}
-          >
-            {absentee.reason}
-          </span>
+      {groupAbsenteesByTeam(preview.absentees).map((group) => (
+        <div key={group.team.shortName} className="flex flex-col gap-2">
+          <p className="flex items-center gap-2">
+            <LiveCrest team={group.team} size={16} />
+            <span className="text-label text-text font-bold">
+              {group.team.name}
+            </span>
+            <span className="text-caption text-text-4">
+              {group.players.length}명
+            </span>
+          </p>
+          {group.players.map((absentee) => (
+            <div
+              key={absentee.playerName}
+              className="flex items-center gap-2.5 pl-1"
+            >
+              <PlayerPhoto
+                src={absentee.photo}
+                name={absentee.playerName}
+                size={28}
+              />
+              <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
+                {absentee.playerName}
+              </span>
+              <span
+                className={`rounded-badge text-micro px-2 py-1 font-bold ${
+                  absentee.kind === "SUSPENSION"
+                    ? "bg-danger/15 text-danger"
+                    : "bg-warn-tint text-warn"
+                }`}
+              >
+                {absentee.reason}
+              </span>
+            </div>
+          ))}
         </div>
       ))}
     </section>

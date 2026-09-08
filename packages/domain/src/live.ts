@@ -145,6 +145,12 @@ export interface Absentee {
   kind: "INJURY" | "SUSPENSION";
 }
 
+/** 프리뷰 결장자를 팀별로 묶은 한 그룹 — {@link groupAbsenteesByTeam}의 결과. */
+export interface AbsenteeGroup {
+  team: LiveTeam;
+  players: Absentee[];
+}
+
 /** 프리뷰 상대전적 한 경기 — result는 이 경기 홈 팀 기준 승·무·패다. */
 export interface HeadToHeadGame {
   /** "25.03.10" 표기 */
@@ -272,6 +278,14 @@ export interface InitialMatchDetail {
 
 /** 이번 시즌 표기 — BE `football.season`(2026)의 화면 라벨. 시즌이 바뀌면 같이 올린다. */
 export const LIVE_SEASON_LABEL = "2026-27";
+
+/**
+ * 시즌 스탯에서 숨기는 대회명 패턴 (KAN-459). BE는 사전에 없는 대회를 API-Football
+ * 영문명 그대로 내려주는데(예: "World Cup", "Friendlies", "World Cup - Qualification
+ * Europe"), 앱은 클럽 관점이라 국가대표 대회 두 갈래를 뺀다. 사전에 실린
+ * "클럽 친선경기"(667)는 한글이라 걸리지 않고 그대로 남는다.
+ */
+export const HIDDEN_SEASON_COMPETITION = /world cup|friendlies/i;
 
 /** 챔피언스리그 진출권으로 강조하는 순위 상한(1~4위). */
 export const UCL_ZONE_MAX_RANK = 4;
@@ -543,4 +557,26 @@ export function eventMinuteLabel(
 /** 목록에 라이브 경기가 하나라도 있는지 — 조건부 폴링의 판정. */
 export function hasLiveMatch(matches: MatchSummary[] | undefined): boolean {
   return matches?.some((match) => match.status === "LIVE") ?? false;
+}
+
+/**
+ * 결장자를 팀별로 묶는다 (KAN-459). 그룹 순서는 배열에 처음 등장한 팀 순이라
+ * 경계 변환이 홈·원정 순으로 정렬해 주면 그대로 홈 그룹이 먼저다. 빅6 밖 팀은
+ * `id`가 null이라 팀 식별은 `shortName`으로 한다.
+ *
+ * @param absentees - 프리뷰 결장자 목록(팀 섞임)
+ * @example
+ * groupAbsenteesByTeam([{ team: liv, … }, { team: mci, … }, { team: liv, … }])
+ * // → [{ team: liv, players: [2명] }, { team: mci, players: [1명] }]
+ */
+export function groupAbsenteesByTeam(absentees: Absentee[]): AbsenteeGroup[] {
+  const groups: AbsenteeGroup[] = [];
+  for (const absentee of absentees) {
+    const group = groups.find(
+      (g) => g.team.shortName === absentee.team.shortName,
+    );
+    if (group) group.players.push(absentee);
+    else groups.push({ team: absentee.team, players: [absentee] });
+  }
+  return groups;
 }
