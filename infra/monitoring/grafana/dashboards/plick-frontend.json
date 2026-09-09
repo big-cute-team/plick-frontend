@@ -51,10 +51,237 @@
       }
     },
     {
+      "id": 11,
+      "type": "timeseries",
+      "title": "ALB 요청 수 (건/분, 대상 그룹별)",
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "RequestCount",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-mobile-prod/c5e2967e51228232"
+          },
+          "label": "mobile"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "RequestCount",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-web-prod/f95c07968606ab06"
+          },
+          "label": "web"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "ALB 5xx (건/분, 대상·ELB)",
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
+      "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "HTTPCode_Target_5XX_Count",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-mobile-prod/c5e2967e51228232"
+          },
+          "label": "mobile target"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "HTTPCode_Target_5XX_Count",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-web-prod/f95c07968606ab06"
+          },
+          "label": "web target"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "HTTPCode_ELB_5XX_Count",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-mobile-prod/c5e2967e51228232"
+          },
+          "label": "mobile elb"
+        },
+        {
+          "refId": "D",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "HTTPCode_ELB_5XX_Count",
+          "statistic": "Sum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-web-prod/f95c07968606ab06"
+          },
+          "label": "web elb"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "ALB 응답 지연 p95 (초)",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
+      "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "TargetResponseTime",
+          "statistic": "p95",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-mobile-prod/c5e2967e51228232"
+          },
+          "label": "mobile"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "TargetResponseTime",
+          "statistic": "p95",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-web-prod/f95c07968606ab06"
+          },
+          "label": "web"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "ALB 비정상 호스트 수",
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 8 },
+      "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "UnHealthyHostCount",
+          "statistic": "Maximum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-mobile-prod/c5e2967e51228232"
+          },
+          "label": "mobile"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "cloudwatch" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "region": "default",
+          "namespace": "AWS/ApplicationELB",
+          "metricName": "UnHealthyHostCount",
+          "statistic": "Maximum",
+          "period": "60",
+          "matchExact": true,
+          "dimensions": {
+            "LoadBalancer": "app/plick-alb-pub-prod/62683bd055563be3",
+            "TargetGroup": "targetgroup/tg-front-web-prod/f95c07968606ab06"
+          },
+          "label": "web"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0 },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
       "id": 2,
       "type": "timeseries",
       "title": "BE 호출 속도 (req/s, status별)",
-      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -74,7 +301,7 @@
       "id": 3,
       "type": "timeseries",
       "title": "BE 호출 에러율 (status 5xx·0)",
-      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -84,7 +311,10 @@
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
       "options": {
         "legend": { "displayMode": "list", "placement": "bottom" },
         "tooltip": { "mode": "multi" }
@@ -94,7 +324,7 @@
       "id": 4,
       "type": "timeseries",
       "title": "BE 왕복 p95 (초, path별)",
-      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -114,7 +344,7 @@
       "id": 5,
       "type": "timeseries",
       "title": "Next 요청 처리 에러 (건/분, kind별)",
-      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -134,7 +364,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "이벤트루프 지연 p99 (초)",
-      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 37, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -154,7 +384,7 @@
       "id": 7,
       "type": "timeseries",
       "title": "힙 사용량 (bytes)",
-      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 37, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -174,7 +404,7 @@
       "id": 8,
       "type": "timeseries",
       "title": "프로세스 CPU (코어 비율)",
-      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 45, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -194,7 +424,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "RSS 메모리 (bytes)",
-      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 45, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -205,6 +435,26 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "클라 경계 에러 (건/5분, boundary·error별)",
+      "gridPos": { "x": 0, "y": 53, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (app, boundary, error) (increase(plick_client_error_total[5m]))",
+          "legendFormat": "{{app}} {{boundary}} {{error}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
       "options": {
         "legend": { "displayMode": "list", "placement": "bottom" },
         "tooltip": { "mode": "multi" }

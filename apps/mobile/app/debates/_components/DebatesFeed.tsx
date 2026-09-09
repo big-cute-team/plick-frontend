@@ -27,6 +27,7 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
       </h2>
 
       <QueryBoundary
+        name="DebatesFeed"
         fallback={
           <div className="flex flex-col gap-3">
             {Array.from({ length: SKELETON_COUNT }, (_, i) => (

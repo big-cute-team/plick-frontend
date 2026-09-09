@@ -30,6 +30,10 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
+      # 슬랙 웹훅 (KAN-457). 같은 폴더 .env에서 온다. user data가 SSM에서 읽어 쓴다.
+      # 없으면 자리표시자로 두어 프로비저닝은 통과시키고 전송만 실패하게 한다 — 시크릿 하나
+      # 때문에 그라파나 자체가 못 뜨면 안 된다.
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/PLACEHOLDER}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
