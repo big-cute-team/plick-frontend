@@ -87,7 +87,9 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
 }
 ```
 
-`grafana-cloudwatch-read` (그라파나 문서의 CloudWatch 데이터 소스 최소 권한에서 로그 부분을 뺀 것):
+`grafana-cloudwatch-read` (그라파나 문서의 CloudWatch 데이터 소스 최소 권한에서 로그 부분을 뺀 것.
+`logs:DescribeLogGroups` 하나만 남긴 이유는 데이터 소스 "Save & test"가 로그 그룹 나열까지 해 보기
+때문이다. 없어도 지표는 되지만 테스트가 빨갛게 떠서 헷갈린다):
 
 ```json
 {
@@ -105,6 +107,7 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
         "ec2:DescribeTags",
         "ec2:DescribeInstances",
         "ec2:DescribeRegions",
+        "logs:DescribeLogGroups",
         "tag:GetResources"
       ],
       "Resource": "*"
