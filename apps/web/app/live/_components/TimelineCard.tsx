@@ -13,7 +13,7 @@ const KIND_CHIP: Record<
 };
 
 /**
- * 상세 좌측의 타임라인 카드(피그마 LW4) — 최신 이벤트가 위(경계 변환이
+ * 요약 탭의 타임라인 카드(피그마 LW4 → KAN-462 확대) — 최신 이벤트가 위(경계 변환이
  * 뒤집어 준다). `playerName` null 행은 부가 설명을 본문 자리로 올려 깨지지
  * 않게 그린다(명세 함정). 이벤트가 아직 없으면 안내 한 줄만 둔다.
  */
@@ -25,10 +25,10 @@ export function TimelineCard({
   events: MatchEvent[];
 }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col p-5 pb-2.5">
-      <h2 className="text-body text-text-2 pb-1.5 font-bold">타임라인</h2>
+    <section className="bg-elevate rounded-card flex flex-col p-6 pb-3">
+      <h2 className="text-title text-text pb-2 font-bold">타임라인</h2>
       {events.length === 0 && (
-        <p className="text-body text-text-4 py-6 text-center">
+        <p className="text-body-lg text-text-4 py-8 text-center">
           아직 기록된 이벤트가 없어요
         </p>
       )}
@@ -39,27 +39,27 @@ export function TimelineCard({
         return (
           <div
             key={`${event.minute}-${i}`}
-            className={`flex items-center gap-3 py-2.5 ${
+            className={`flex items-center gap-4 py-3 ${
               i > 0 ? "border-border border-t" : ""
             }`}
           >
-            <span className="text-label text-text-3 w-10 shrink-0 font-bold">
+            <span className="text-body text-text-3 w-12 shrink-0 font-bold">
               {event.minute}
             </span>
             <span
-              className={`rounded-badge text-micro shrink-0 px-1.5 py-0.5 font-bold ${chip.className}`}
+              className={`rounded-badge text-label shrink-0 px-2 py-1 font-bold ${chip.className}`}
             >
               {chip.label}
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-body text-text truncate font-semibold">
+              <span className="text-body-lg text-text truncate font-semibold">
                 {title}
               </span>
               {sub && (
-                <span className="text-caption text-text-4 truncate">{sub}</span>
+                <span className="text-body text-text-4 truncate">{sub}</span>
               )}
             </span>
-            <span className="text-caption text-text-4 shrink-0 font-semibold">
+            <span className="text-body text-text-4 shrink-0 font-semibold">
               {event.side === "HOME"
                 ? header.home.shortName
                 : header.away.shortName}

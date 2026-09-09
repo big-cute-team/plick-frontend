@@ -5,11 +5,13 @@ import type { InitialMatchDetail } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { SwipePager } from "@/_components/SwipePager";
 import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
 import { MatchChatPanel } from "./MatchChatPanel";
+import { MatchChatPreview } from "./MatchChatPreview";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderBlock } from "./MatchHeaderBlock";
 import { MatchTabBar } from "./MatchTabBar";
@@ -66,6 +68,13 @@ export function MatchDetailScreen({
  *
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이 사라지면
  * 첫 탭으로 돌아간다.
+ *
+ * 본문을 좌우로 끌면 이웃 탭으로 넘어간다 (KAN-462, `SwipePager`). 커밋은 탭을
+ * 누른 것과 같은 `setSelected`다. 페이저는 두 레이아웃(채팅 고정 / 스크롤)에
+ * 각각 하나씩이라 채팅 경계를 넘는 커밋에서는 옛 페이저가 내려가고 새 페이저가
+ * 제자리(transform 없음)로 올라온다 — 스냅이 끝난 자리에 미리보기가 있었으므로
+ * 그대로 진짜 페인으로 갈아 끼워지는 셈이다. 채팅 이웃의 미리보기는 소켓을
+ * 열지 않는 자리 표시(`MatchChatPreview`)다.
  */
 function MatchDetailBody({
   matchId,
@@ -81,6 +90,15 @@ function MatchDetailBody({
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
 
+  const neighborTab = (tab: MatchTabKey, dir: 1 | -1) =>
+    tabs[tabs.indexOf(tab) + dir] ?? null;
+  const renderPreview = (tab: MatchTabKey) =>
+    tab === "chat" ? (
+      <MatchChatPreview />
+    ) : (
+      <MatchDetailTabs detail={detail} tab={tab} />
+    );
+
   if (active === "chat") {
     return (
       <>
@@ -88,7 +106,16 @@ function MatchDetailBody({
         <div className="flex min-h-0 flex-1 flex-col">
           <MatchHeaderBlock header={header} />
           <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-          <MatchChatPanel header={header} />
+          <SwipePager
+            value={active}
+            neighborOf={neighborTab}
+            onCommit={setSelected}
+            renderPreview={renderPreview}
+            className="flex min-h-0 flex-1 flex-col"
+            trackClassName="flex min-h-0 flex-1 flex-col"
+          >
+            <MatchChatPanel header={header} />
+          </SwipePager>
         </div>
       </>
     );
@@ -112,7 +139,14 @@ function MatchDetailBody({
         ) : (
           <>
             <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-            <MatchDetailTabs detail={detail} tab={active} />
+            <SwipePager
+              value={active}
+              neighborOf={neighborTab}
+              onCommit={setSelected}
+              renderPreview={renderPreview}
+            >
+              <MatchDetailTabs detail={detail} tab={active} />
+            </SwipePager>
           </>
         )}
       </ScrollArea>

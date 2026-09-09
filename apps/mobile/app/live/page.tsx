@@ -4,12 +4,13 @@ import { getMatches } from "@plick/core/live";
 import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
 import type { InitialMatchList } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
-import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { DateStrip } from "./_components/DateStrip";
+import { LiveDatePager } from "./_components/LiveDatePager";
 import { LiveMatchesFeed } from "./_components/LiveMatchesFeed";
+import { LiveScrollArea } from "./_components/LiveScrollArea";
 import { LiveSubTabs } from "./_components/LiveSubTabs";
 
 /**
@@ -29,6 +30,9 @@ export const metadata: Metadata = {
  * 첫 목록은 서버에서 받아 씨앗으로 내려주고(토론 리스트와 같은 패턴), 이후
  * 폴링·재시도는 클라 훅이 맡는다. 서버 fetch가 실패하면(502 등) 씨앗 없이
  * 내려보내 클라가 다시 받고, 그것도 실패하면 목록 자리에만 에러 지면이 선다.
+ *
+ * 목록을 좌우로 끌면 전날·다음날로 넘어가고(`LiveDatePager`), 맨 위에서 당기면
+ * 그 날짜 목록을 다시 받는다(`LiveScrollArea`, KAN-462).
  */
 export default async function LivePage({
   searchParams,
@@ -49,11 +53,13 @@ export default async function LivePage({
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea>
+      <LiveScrollArea date={selected}>
         <LiveSubTabs active="matches" />
         <DateStrip selected={selected} today={today} />
-        <LiveMatchesFeed date={selected} initial={initial} />
-      </ScrollArea>
+        <LiveDatePager date={selected} today={today}>
+          <LiveMatchesFeed date={selected} initial={initial} />
+        </LiveDatePager>
+      </LiveScrollArea>
       <TabBar />
     </AppShell>
   );

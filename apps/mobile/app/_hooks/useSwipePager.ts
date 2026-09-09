@@ -7,8 +7,6 @@ import {
   useState,
   type RefObject,
 } from "react";
-import type { Filter } from "@plick/domain/types";
-import { FILTER_ORDER } from "@/_constants/team-filter";
 import {
   SWIPE_COMMIT_RATIO,
   SWIPE_DIRECTION_SLOP,
@@ -19,24 +17,26 @@ import {
   SWIPE_SETTLE_TIMEOUT_MS,
   SWIPE_SETTLE_TRANSITION,
   SWIPE_VELOCITY_WINDOW_MS,
-} from "@/_constants/team-swipe";
+} from "@/_constants/swipe-pager";
 import { damp } from "@/_utils/damp";
 
 /**
- * 드래그 중 트랙 옆에 그릴 이웃 팀 미리보기.
+ * 드래그 중 트랙 옆에 그릴 이웃 페인 미리보기.
  *
- * `side`는 미리보기 페인이 트랙의 어느 쪽에 붙는지다 — 다음 팀(왼쪽으로 끌기)은
- * 오른쪽(`next`), 이전 팀은 왼쪽(`prev`)이다. `top`은 페인의 세로 보정(px)이다.
- * 팀별 스크롤이 있는 화면(기사)에서만 쓴다: 지금 리스트를 내려 본 만큼
+ * `side`는 미리보기 페인이 트랙의 어느 쪽에 붙는지다 — 다음 값(왼쪽으로 끌기)은
+ * 오른쪽(`next`), 이전 값은 왼쪽(`prev`)이다. `top`은 페인의 세로 보정(px)이다.
+ * 값별 스크롤이 있는 화면(기사)에서만 쓴다: 지금 리스트를 내려 본 만큼
  * 미리보기를 내려 붙여 이웃 리스트 맨 위가 뷰포트 상단(sticky 아래)에 오게
- * 하되, 이웃 팀에 저장된 스크롤이 있으면 그만큼 도로 올려 커밋 후 복원될
- * 자리와 픽셀이 이어진다. 팀별 스크롤이 없는 화면(홈)은 항상 0이다 — 스크롤
- * 그대로 페인만 옆으로 민다.
+ * 하되, 이웃에 저장된 스크롤이 있으면 그만큼 도로 올려 커밋 후 복원될
+ * 자리와 픽셀이 이어진다. 값별 스크롤이 없는 화면(홈·라이브)은 항상 0이다 —
+ * 스크롤 그대로 페인만 옆으로 민다.
  */
-export type SwipePreview = { team: Filter; side: "next" | "prev"; top: number };
+export type SwipePreview<T> = { value: T; side: "next" | "prev"; top: number };
 
 /**
- * 리스트를 좌우로 끌어 이웃 팀 탭으로 넘어가는 페이저 제스처 (KAN-388).
+ * 콘텐츠를 좌우로 끌어 이웃 값(팀 탭·날짜·상세 탭)으로 넘어가는 페이저 제스처
+ * (KAN-388 팀 스와이프를 KAN-462에서 값 타입과 이웃 판정을 주입받는 형태로
+ * 일반화).
  *
  * 손가락이 닿으면 첫 {@link SWIPE_DIRECTION_SLOP}px 동안 축을 재고, 가로 성분이
  * 클 때만 제스처를 가져온다(세로가 크면 평범한 스크롤·당겨서 새로고침에 양보).
@@ -45,14 +45,14 @@ export type SwipePreview = { team: Filter; side: "next" | "prev"; top: number };
  * 대입하고, React 상태는 이웃 페인의 마운트가 바뀔 때만 쓴다.
  *
  * 손을 떼면 폭 대비 {@link SWIPE_COMMIT_RATIO} 이상 끌렸거나 플릭 속도를 넘겼을
- * 때 이웃 팀으로 확정한다. 확정 스냅이 끝나면 `onCommit`을 부르는데, 이때 트랙
- * transform을 바로 걷지 않는다 — `onCommit`은 URL만 바꾸고(`replaceState`) 새
- * 팀의 리스트는 React가 다음 렌더에서 갈아 끼우므로, 그 전에 걷으면 옛 팀
- * 리스트가 한 프레임 비친다. `filter` prop이 확정한 팀으로 바뀐 뒤
- * `useLayoutEffect`(페인트 전)에서 transform을 걷고 스크롤을 맞춰, 미리보기
- * 페인과 진짜 페인이 같은 픽셀로 이어지게 한다.
+ * 때 이웃으로 확정한다. 확정 스냅이 끝나면 `onCommit`을 부르는데, 이때 트랙
+ * transform을 바로 걷지 않는다 — `onCommit`은 URL이나 상태만 바꾸고 새 값의
+ * 콘텐츠는 React가 다음 렌더에서 갈아 끼우므로, 그 전에 걷으면 옛 콘텐츠가
+ * 한 프레임 비친다. `value` prop이 확정한 값으로 바뀐 뒤 `useLayoutEffect`
+ * (페인트 전)에서 transform을 걷고 스크롤을 맞춰, 미리보기 페인과 진짜 페인이
+ * 같은 픽셀로 이어지게 한다.
  *
- * 끝 탭에서 더 끌면 이웃이 없다는 뜻으로 {@link damp} 저항만 준다. 화면 좌우
+ * 끝에서 더 끌면 이웃이 없다는 뜻으로 {@link damp} 저항만 준다. 화면 좌우
  * 가장자리 {@link SWIPE_EDGE_GUARD}px에서 시작한 터치는 iOS 뒤로가기 제스처
  * 몫으로 무시한다. `prefers-reduced-motion`이면 스냅 애니메이션 없이 즉시
  * 확정한다.
@@ -60,57 +60,63 @@ export type SwipePreview = { team: Filter; side: "next" | "prev"; top: number };
  * @param containerRef 제스처를 받을 컨테이너. 스크롤러(`main`)를 `closest`로 찾는
  *   기준이기도 하다.
  * @param trackRef `translateX`를 먹일 트랙 엘리먼트
- * @param filter 지금 보고 있는 팀. 커밋 후 이 prop이 확정 팀으로 바뀌는 순간을
+ * @param value 지금 보고 있는 값. 커밋 후 이 prop이 확정 값으로 바뀌는 순간을
  *   기다려 transform을 걷는다.
- * @param onCommit 스와이프가 이웃 팀으로 확정됐을 때. 탭 클릭 핸들러를 그대로
+ * @param neighborOf 지금 값의 이웃. `dir`이 1이면 다음(왼쪽으로 끌 때 오른쪽에서
+ *   들어오는 것), -1이면 이전. 없으면 null — 그쪽은 끝이라 저항만 준다.
+ * @param onCommit 스와이프가 이웃으로 확정됐을 때. 탭 클릭 핸들러를 그대로
  *   넘기면 URL·스크롤 장부 처리가 탭과 같은 경로를 탄다.
- * @param targetScrollTop 이웃 팀으로 넘어가면 복원될 scrollTop을 알려주는 함수.
+ * @param targetScrollTop 이웃으로 넘어가면 복원될 scrollTop을 알려주는 함수.
  *   기사 페이지가 팀별 저장 위치를 넘기면, 미리보기를 그 자리에 맞춰 붙이고
- *   커밋 때 스크롤을 보정한다. 팀별 스크롤 개념이 없는 화면(홈)은 넘기지
+ *   커밋 때 스크롤을 보정한다. 값별 스크롤 개념이 없는 화면은 넘기지
  *   않는다 — 그러면 스크롤은 손대지 않고 페인만 옆으로 밀어, 탭 클릭과 같은
  *   "보던 자리 그대로" 감각이 된다.
  * @returns `preview` — 드래그·스냅 중 렌더할 이웃 페인. 없으면 null.
  */
-export function useTeamSwipePager({
+export function useSwipePager<T extends string>({
   containerRef,
   trackRef,
-  filter,
+  value,
+  neighborOf,
   onCommit,
   targetScrollTop,
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
   trackRef: RefObject<HTMLDivElement | null>;
-  filter: Filter;
-  onCommit: (next: Filter) => void;
-  targetScrollTop?: (next: Filter) => number | undefined;
-}): { preview: SwipePreview | null } {
-  const [preview, setPreview] = useState<SwipePreview | null>(null);
+  value: T;
+  neighborOf: (value: T, dir: 1 | -1) => T | null;
+  onCommit: (next: T) => void;
+  targetScrollTop?: (next: T) => number | undefined;
+}): { preview: SwipePreview<T> | null } {
+  const [preview, setPreview] = useState<SwipePreview<T> | null>(null);
 
   /** 리스너는 등록 시점에 굳으므로 최신 값은 ref로 건넨다 */
-  const filterRef = useRef(filter);
-  filterRef.current = filter;
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const neighborRef = useRef(neighborOf);
+  neighborRef.current = neighborOf;
   const onCommitRef = useRef(onCommit);
   onCommitRef.current = onCommit;
   const targetRef = useRef(targetScrollTop);
   targetRef.current = targetScrollTop;
 
-  /** 커밋 후 `filter` prop이 이 팀으로 바뀌기를 기다린다 */
-  const pendingRef = useRef<Filter | null>(null);
+  /** 커밋 후 `value` prop이 이 값으로 바뀌기를 기다린다 */
+  const pendingRef = useRef<T | null>(null);
   /**
    * 커밋이 완료되는 순간 스크롤러에 적용할 scrollTop. null이면 건드리지
-   * 않는다 — 팀별 스크롤 개념이 없는 화면(홈)은 클릭과 똑같이 보던 자리에
+   * 않는다 — 값별 스크롤 개념이 없는 화면(홈)은 클릭과 똑같이 보던 자리에
    * 그대로 있어야 한다 (KAN-388 후속 피드백).
    */
   const commitScrollRef = useRef<number | null>(null);
 
   /**
-   * 커밋의 마무리 — 새 팀 리스트가 DOM에 들어온 커밋 직후, 페인트 전에
+   * 커밋의 마무리 — 새 콘텐츠가 DOM에 들어온 커밋 직후, 페인트 전에
    * transform을 걷고 스크롤을 미리보기와 같은 자리로 맞춘다. 미리보기와 새
-   * 리스트가 같은 캐시를 그리므로 이 교체는 픽셀이 이어진다. transition을
+   * 콘텐츠가 같은 캐시를 그리므로 이 교체는 픽셀이 이어진다. transition을
    * 먼저 비워야 transform 복귀가 애니메이션으로 새지 않는다.
    */
   useLayoutEffect(() => {
-    if (pendingRef.current === null || pendingRef.current !== filter) return;
+    if (pendingRef.current === null || pendingRef.current !== value) return;
     pendingRef.current = null;
     const track = trackRef.current;
     if (track) {
@@ -122,7 +128,7 @@ export function useTeamSwipePager({
       scroller.scrollTop = commitScrollRef.current;
     }
     setPreview(null);
-  }, [filter, containerRef, trackRef]);
+  }, [value, containerRef, trackRef]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -142,7 +148,7 @@ export function useTeamSwipePager({
     let scrollTopAtLock = 0;
     let innerOffsetCur = 0;
     let listTopScroll = 0;
-    let candidate: Filter | null = null;
+    let candidate: T | null = null;
     let candidateTop = 0;
     let offset = 0;
     /**
@@ -153,8 +159,8 @@ export function useTeamSwipePager({
     let samples: { x: number; t: number }[] = [];
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const neighborOf = (dir: 1 | -1): Filter | null =>
-      FILTER_ORDER[FILTER_ORDER.indexOf(filterRef.current) + dir] ?? null;
+    const neighbor = (dir: 1 | -1): T | null =>
+      neighborRef.current(valueRef.current, dir);
 
     /**
      * 축이 확정되는 순간 한 번 잰다.
@@ -162,9 +168,9 @@ export function useTeamSwipePager({
      * `innerOffsetCur`는 지금 리스트가 sticky 아래로 파고든 깊이(px)다 —
      * 미리보기 페인을 이만큼 내려 붙여야 이웃 리스트 맨 위가 뷰포트 상단에
      * 온다. `listTopScroll`은 "리스트 맨 위가 sticky 바로 아래 오는 scrollTop"
-     * 으로, 이웃 팀의 저장 스크롤을 리스트 내부 깊이로 환산할 때 쓴다. sticky
-     * 블록은 Tailwind `sticky` 클래스로 찾는다 — 두 화면 모두 팀 탭(과 기사
-     * 헤더)이 이 클래스로 상단에 붙어 있다.
+     * 으로, 이웃의 저장 스크롤을 리스트 내부 깊이로 환산할 때 쓴다. sticky
+     * 블록은 Tailwind `sticky` 클래스로 찾는다 — 팀 탭(과 기사 헤더)이 이
+     * 클래스로 상단에 붙어 있다.
      */
     function measure() {
       const rect = el!.getBoundingClientRect();
@@ -261,14 +267,14 @@ export function useTeamSwipePager({
       }
 
       const raw = touch.clientX - startX;
-      // 왼쪽으로 끌면(raw<0) 순서상 다음 팀이 오른쪽에서 들어온다
-      const next = raw === 0 ? null : neighborOf(raw < 0 ? 1 : -1);
+      // 왼쪽으로 끌면(raw<0) 순서상 다음 값이 오른쪽에서 들어온다
+      const next = raw === 0 ? null : neighbor(raw < 0 ? 1 : -1);
       if (next !== candidate) {
         candidate = next;
         if (next) {
-          /* 팀별 스크롤이 있는 화면(기사)만 세로를 보정한다. 없는 화면(홈)은
+          /* 값별 스크롤이 있는 화면(기사)만 세로를 보정한다. 없는 화면(홈)은
              클릭과 같은 감각으로 스크롤 그대로 페인만 옆으로 민다 — 이웃
-             리스트도 지금 보던 깊이의 내용이 끌려 들어온다 */
+             콘텐츠도 지금 보던 깊이의 내용이 끌려 들어온다 */
           if (targetRef.current) {
             const saved = targetRef.current(next);
             const innerTarget =
@@ -278,7 +284,7 @@ export function useTeamSwipePager({
             candidateTop = 0;
           }
           setPreview({
-            team: next,
+            value: next,
             side: raw < 0 ? "next" : "prev",
             top: candidateTop,
           });
@@ -295,7 +301,7 @@ export function useTeamSwipePager({
     /**
      * 손을 뗀 뒤 스냅. 커밋이면 화면 폭 끝까지, 아니면 제자리로 CSS 전환을
      * 걸고, `transitionend`(안 오면 안전 타이머)에서 마무리한다. 커밋의 실제
-     * 상태 전환(`onCommit` → filter 변화 → layout effect)은 finish에서 시작된다.
+     * 상태 전환(`onCommit` → value 변화 → layout effect)은 finish에서 시작된다.
      */
     const end = (cancelled: boolean) => {
       if (!swiping) {
