@@ -1,0 +1,19 @@
+# ALB CloudWatch 지표를 그라파나에서 보기 위한 데이터 소스 (KAN-457).
+#
+# 왜 필요한가: 프로메테우스 카운터는 서버 프로세스가 부른 BE 호출만 잡는다. 브라우저의
+# /be 프록시 fetch는 Next 리라이트라 apiFetch를 안 지나고, 페이지 요청 수·5xx·응답 지연
+# 같은 HTTP 레벨 값은 애초에 앱 안에 없다. ALB가 이미 CloudWatch에 다 쌓고 있으니 그걸 읽는다.
+#
+# 자격 증명: authType default는 SDK 기본 체인이다. 모니터링 EC2에서는 인스턴스 롤
+# (plick-front-monitoring-role-prod)의 grafana-cloudwatch-read 인라인 정책으로 읽는다.
+# 로컬 검증에서는 ~/.aws를 컨테이너에 읽기 전용으로 마운트해 같은 체인을 태운다.
+apiVersion: 1
+datasources:
+  - name: CloudWatch
+    uid: cloudwatch
+    type: cloudwatch
+    access: proxy
+    editable: false
+    jsonData:
+      authType: default
+      defaultRegion: ap-northeast-2

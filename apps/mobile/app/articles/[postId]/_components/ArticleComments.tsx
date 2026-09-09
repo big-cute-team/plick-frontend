@@ -40,6 +40,7 @@ export function ArticleComments({
       <CommentComposer articleId={articleId} onPosted={bump} />
       {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
       <QueryBoundary
+        name="ArticleComments"
         fallback={<CommentListSkeleton />}
         errorMessage="댓글을 불러오지 못했어요."
       >

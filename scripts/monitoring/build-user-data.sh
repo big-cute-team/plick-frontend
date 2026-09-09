@@ -39,6 +39,16 @@ mkdir -p /srv/monitoring
 echo '$payload' | base64 -d | tar -xzf - -C /srv/monitoring
 chown -R ubuntu:ubuntu /srv/monitoring
 
+# 슬랙 웹훅 (KAN-457). 시크릿은 user data에 박지 않고 SSM Parameter Store에서 읽는다.
+# 인스턴스 롤에 ssm:GetParameter가 있어야 한다. 파라미터가 없으면 비워 두고 compose의
+# 자리표시자로 뜬다 — 알림 전송만 실패하고 그라파나는 정상이다.
+apt-get install -y awscli
+webhook="\$(aws ssm get-parameter --region ap-northeast-2 \
+  --name /plick/frontend/monitoring/prod/slack-webhook --with-decryption \
+  --query Parameter.Value --output text 2>/dev/null || true)"
+printf 'SLACK_WEBHOOK_URL=%s\n' "\$webhook" > /srv/monitoring/.env
+chmod 600 /srv/monitoring/.env
+
 # 그라파나 컨테이너는 uid 472로 돈다. 프로비저닝 폴더는 읽기 전용 마운트라 상관없지만
 # named volume 초기화가 실패하지 않게 미리 만들어 둔다
 cd /srv/monitoring

@@ -31,6 +31,7 @@ export function PlayerMatchStatsSheet({
     <LiveSheet open={player !== null} onClose={onClose} label="선수 경기 스탯">
       {player && (
         <QueryBoundary
+          name="PlayerMatchStats"
           fallback={<SheetSkeleton />}
           errorMessage="선수 스탯을 불러오지 못했어요."
         >

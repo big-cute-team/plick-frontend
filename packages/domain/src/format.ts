@@ -304,3 +304,18 @@ export function formatRelativeTime(
 
   return `${at.getMonth() + 1}월 ${at.getDate()}일`;
 }
+
+/**
+ * 채팅 메시지 시각 — 같은 경기 안의 대화라 날짜 없이 `14:35` 한 가지면 된다 (KAN-458).
+ * 서버가 준 KST ISO를 그대로 KST로 그린다.
+ *
+ * @param iso ISO-8601 문자열 (예: "2026-09-08T14:35:10.512+09:00")
+ */
+export function formatChatTime(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
+}

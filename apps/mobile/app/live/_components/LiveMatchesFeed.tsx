@@ -28,6 +28,7 @@ export function LiveMatchesFeed({
 }) {
   return (
     <QueryBoundary
+      name="LiveMatches"
       fallback={
         <div className="px-edge flex flex-col gap-2 pt-2">
           {Array.from({ length: SKELETON_COUNT }, (_, i) => (

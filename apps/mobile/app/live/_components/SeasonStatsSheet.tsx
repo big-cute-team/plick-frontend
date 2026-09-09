@@ -46,6 +46,7 @@ export function SeasonStatsSheet({
             </span>
           </div>
           <QueryBoundary
+            name="SeasonStats"
             fallback={<TableSkeleton />}
             errorMessage="시즌 스탯을 불러오지 못했어요."
           >

@@ -1,12 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
+import { reportClientError } from "@plick/core/client-error";
+
 /**
  * 라우트 공통 에러 경계 (KAN-319) — 서버 fetch 실패(BE 다운 등)와 예상 못 한 렌더
  * 에러의 마지막 그물. Next가 실패한 세그먼트를 이 화면으로 대체한다.
  * `reset()`은 세그먼트 재렌더(=재시도). 모바일 `app/error.tsx`와 같은 구성이고
  * 데스크톱이라 hover·focus만 얹는다.
+ *
+ * 잡은 에러는 `route` 경계 이름으로 서버에 보고한다(KAN-457). web에는 컴포넌트
+ * 경계가 없어 클라 에러는 전부 여기로 모인다.
  */
-export default function AppError({ reset }: { reset: () => void }) {
+export default function AppError({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  useEffect(() => {
+    reportClientError("route", error);
+  }, [error]);
+
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-7 px-6">
       <div className="flex flex-col items-center gap-2.5">

@@ -2,64 +2,51 @@
 
 import { useState } from "react";
 import type { LiveTeam, MatchDetail } from "@plick/domain/live";
+import type { MatchTabKey } from "@/_types/live";
 import { BenchList } from "./BenchList";
 import { GoalsBlock } from "./GoalsBlock";
 import { LineupPitch } from "./LineupPitch";
 import { PlayerMatchStatsSheet } from "./PlayerMatchStatsSheet";
+import { PreviewBlocks } from "./PreviewBlocks";
 import { StatsCompare } from "./StatsCompare";
 import { TimelineBlock } from "./TimelineBlock";
 
-type TabKey = "summary" | "lineups" | "stats";
-
-const TAB_LABEL: Record<TabKey, string> = {
-  summary: "요약",
-  lineups: "라인업",
-  stats: "스탯",
-};
-
 /**
- * 경기 상세(라이브·종료)의 내부 탭(피그마 L6~L9). 목록 서브탭과 달리 URL로
- * 승격하지 않고 컴포넌트 상태로 둔다(ADR 0126 스토리 2 — 한 경기 안의 보기
- * 전환일 뿐이라 주소가 갈릴 이유가 없다). 각 블록은 서버가 조각 실패 시
- * null로 내릴 수 있어 블록별 빈 안내가 기본이다.
+ * 경기 상세 탭의 본문(피그마 L5~L9). 프리뷰·요약·라인업·스탯을 그린다. 채팅 탭은
+ * 스크롤 영역 밖에 따로 서야 해서(`MatchChatPanel`) 여기 없다. 탭 선택은
+ * `MatchDetailScreen`이 갖고 여기는 받은 탭만 그린다(KAN-458에서 제어형으로).
+ * 각 블록은 서버가 조각 실패 시 null로 내릴 수 있어 블록별 빈 안내가 기본이다.
  *
  * 선수를 누르면 경기 스탯 시트가 열린다. 스탯 응답엔 팀명이 없어 눌린 자리의
  * 팀을 같이 들고 간다.
+ *
+ * @param detail 경기 상세
+ * @param tab 지금 탭. `chat`은 오지 않는다
  */
-export function MatchDetailTabs({ detail }: { detail: MatchDetail }) {
-  const [tab, setTab] = useState<TabKey>("summary");
+export function MatchDetailTabs({
+  detail,
+  tab,
+}: {
+  detail: MatchDetail;
+  tab: Exclude<MatchTabKey, "chat">;
+}) {
   const [player, setPlayer] = useState<{ id: number; team: LiveTeam } | null>(
     null,
   );
   const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
 
+  if (tab === "preview") {
+    return detail.preview ? (
+      <div className="pt-4">
+        <PreviewBlocks preview={detail.preview} />
+      </div>
+    ) : (
+      <EmptyBlock label="프리뷰 정보가 아직 없어요" />
+    );
+  }
+
   return (
     <>
-      <div
-        role="tablist"
-        aria-label="경기 상세 보기"
-        className="border-border flex border-b"
-      >
-        {(Object.keys(TAB_LABEL) as TabKey[]).map((key) => {
-          const on = key === tab;
-          return (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              onClick={() => setTab(key)}
-              className={`text-body flex-1 border-b-2 pt-2 pb-2.5 font-bold ${
-                on
-                  ? "border-accent text-accent"
-                  : "text-text-4 border-transparent"
-              }`}
-            >
-              {TAB_LABEL[key]}
-            </button>
-          );
-        })}
-      </div>
       <div className="px-edge flex flex-col gap-3 pt-4 pb-6">
         {tab === "summary" &&
           (detail.events ? (

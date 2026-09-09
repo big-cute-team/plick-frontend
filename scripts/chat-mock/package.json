@@ -1,0 +1,12 @@
+{
+  "name": "plick-chat-mock",
+  "private": true,
+  "type": "module",
+  "description": "라이브 경기 채팅 웹소켓 목 서버 (KAN-458). 계약: Confluence [API 명세] 라이브 경기 채팅(59146245)",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

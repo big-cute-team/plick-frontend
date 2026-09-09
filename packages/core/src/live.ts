@@ -14,6 +14,7 @@
 import { TEAM_CODES } from "@plick/domain/constants";
 import {
   eventMinuteLabel,
+  HIDDEN_SEASON_COMPETITION,
   teamShortName,
   UCL_ZONE_MAX_RANK,
   type Absentee,
@@ -46,6 +47,9 @@ import { apiFetch } from "./client";
 const LIVE_REVALIDATE_SECONDS = 20;
 
 type Side = "HOME" | "AWAY";
+
+/** 홈·원정 정렬 키 — 홈이 먼저. */
+const sideOrder = (side: Side) => (side === "HOME" ? 0 : 1);
 
 interface SideResponse {
   teamId: number | null;
@@ -308,13 +312,16 @@ export async function getPlayerSeasonStats(
   );
   return {
     playerId: stats.playerId,
-    competitions: stats.competitions.map((c) => ({
-      name: c.leagueName,
-      appearances: c.appearances,
-      goals: c.goals,
-      assists: c.assists,
-      rating: parseRating(c.rating),
-    })),
+    competitions: stats.competitions
+      // 국가대표 대회(월드컵·A매치 친선)는 클럽 앱 관점에서 뺀다 (KAN-459)
+      .filter((c) => !HIDDEN_SEASON_COMPETITION.test(c.leagueName))
+      .map((c) => ({
+        name: c.leagueName,
+        appearances: c.appearances,
+        goals: c.goals,
+        assists: c.assists,
+        rating: parseRating(c.rating),
+      })),
   };
 }
 
@@ -367,17 +374,20 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
       })),
     preview: detail.preview
       ? {
-          absentees: detail.preview.absences.map(
-            (absence): Absentee => ({
-              team: teamOf(absence.side),
-              playerName: absence.playerName,
-              photo: absence.photo,
-              reason: absence.reason ?? absence.type ?? "결장",
-              kind: /suspen/i.test(absence.reason ?? "")
-                ? "SUSPENSION"
-                : "INJURY",
-            }),
-          ),
+          // 홈 먼저, 원정 다음 — 화면이 팀별로 묶을 때 홈 그룹이 앞에 온다 (KAN-459)
+          absentees: [...detail.preview.absences]
+            .sort((a, b) => sideOrder(a.side) - sideOrder(b.side))
+            .map(
+              (absence): Absentee => ({
+                team: teamOf(absence.side),
+                playerName: absence.playerName,
+                photo: absence.photo,
+                reason: absence.reason ?? absence.type ?? "결장",
+                kind: /suspen/i.test(absence.reason ?? "")
+                  ? "SUSPENSION"
+                  : "INJURY",
+              }),
+            ),
           headToHead: detail.preview.headToHead.flatMap(
             (game): HeadToHeadGame[] => {
               if (game.homeGoals === null || game.awayGoals === null) {
