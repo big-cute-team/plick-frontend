@@ -34,6 +34,7 @@ export function MatchDetailScreen({
   return (
     <AppShell>
       <QueryBoundary
+        name="MatchDetail"
         fallback={
           <>
             <MatchTopBar title="경기" />

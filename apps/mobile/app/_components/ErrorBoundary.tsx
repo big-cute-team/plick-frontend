@@ -2,8 +2,14 @@
 
 import { Component } from "react";
 import type { ReactNode } from "react";
+import { reportClientError } from "@plick/core/client-error";
 
 interface ErrorBoundaryProps {
+  /**
+   * 메트릭 라벨로 나갈 경계 이름 (KAN-457). 어느 화면의 경계가 터졌는지 대시보드에서
+   * 구분하는 용도라 화면마다 다르게 준다. 안 주면 `ErrorBoundary`로 뭉친다
+   */
+  name?: string;
   /** 에러가 잡혔을 때 대신 그릴 UI. reset을 부르면 children을 다시 그린다(재시도) */
   fallback: (error: unknown, reset: () => void) => ReactNode;
   /** reset 직전에 호출 — QueryErrorResetBoundary의 reset을 물려 실패한 쿼리를 되살린다 */
@@ -23,6 +29,9 @@ interface ErrorBoundaryState {
  *
  * 클래스인 이유: getDerivedStateFromError는 훅 대응물이 없다. React가 렌더
  * 에러를 잡는 유일한 통로가 클래스 생명주기라 이 파일만 클래스로 남긴다.
+ *
+ * 잡은 에러는 componentDidCatch에서 서버에 보고한다(KAN-457). 브라우저 안에서만
+ * 끝나던 에러를 프로메테우스 카운터로 셀 수 있게 하는 유일한 통로다.
  */
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
@@ -32,6 +41,10 @@ export class ErrorBoundary extends Component<
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: unknown): void {
+    reportClientError(this.props.name ?? "ErrorBoundary", error);
   }
 
   reset = (): void => {

@@ -156,6 +156,7 @@ export function ReelDetailSheet({
 
           {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
           <QueryBoundary
+            name="ReelComments"
             fallback={<CommentListSkeleton />}
             errorMessage="댓글을 불러오지 못했어요."
           >
