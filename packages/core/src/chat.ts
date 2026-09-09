@@ -18,6 +18,19 @@ import type {
 /** 메시지 한 건의 최대 길이(글자). BE `chat.max-message-length`와 같은 값이다. */
 export const CHAT_MAX_MESSAGE_LENGTH = 200;
 
+/**
+ * 전송 한도의 흐르는 창(ms). BE `chat.rate-limit-window`와 같은 값이다(KAN-464).
+ * 한 접속이 이 창 안에 `chat.rate-limit-messages`(5건)까지 보낼 수 있다.
+ */
+export const CHAT_RATE_LIMIT_WINDOW_MS = 5_000;
+
+/**
+ * 거절 안내가 떠 있는 시간(ms). FE 정책이다(KAN-465). 창 길이와 같게 둔 이유는
+ * `RATE_LIMITED` 통보가 한 번만 오기 때문이다 — 안내가 창보다 먼저 사라지면 그
+ * 뒤에 보낸 메시지가 통보 없이 버려지는 구간이 생긴다.
+ */
+export const CHAT_REJECT_NOTICE_MS = CHAT_RATE_LIMIT_WINDOW_MS;
+
 /** 방이 열리는 시각 — 킥오프 30분 전. BE `chat.open-before` 기본값이다. */
 export const CHAT_OPEN_BEFORE_MS = 30 * 60_000;
 

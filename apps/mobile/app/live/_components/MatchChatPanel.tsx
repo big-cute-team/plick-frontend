@@ -75,8 +75,10 @@ function ChatRoom({
   kickoffAt: string;
 }) {
   const { userId } = useAuth();
-  const { messages, status, failure, rejected, send, retry, clearRejected } =
-    useMatchChat(matchId, true);
+  const { messages, status, failure, rejected, send, retry } = useMatchChat(
+    matchId,
+    true,
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const nearBottom = useRef(true);
   const [unread, setUnread] = useState(0);
@@ -157,7 +159,6 @@ function ChatRoom({
         disabled={status !== "open"}
         rejected={rejected}
         onSend={send}
-        onChange={clearRejected}
       />
     </div>
   );
@@ -193,7 +194,9 @@ function MessageRow({
  * 입력바. 댓글 입력바(`CommentComposer`)와 같은 pill 인풋 + accent 원형 전송 버튼이다.
  * 글자수는 서버 검증(1~200자)을 미리 건다 — `maxLength`로 초과 입력을 막고 공백만
  * 입력은 보내지 않는다. 그래도 서버가 거절하면(`ERROR` 프레임) 입력바 밑에 사유를
- * 보여주고 입력값은 남긴다.
+ * 보여준다. 사유별 문구는 `CHAT_REJECT_MESSAGE`에 있고, 안내는
+ * 훅이 정한 시간 뒤에 스스로 사라진다(KAN-465). 전송 한도(`RATE_LIMITED`)도 같은
+ * 자리에 뜨며 입력창은 잠그지 않는다 — 접속이 살아 있어 잠시 뒤 다시 보낼 수 있다.
  *
  * 하단 여백은 홈 인디케이터를 피해 `--safe-bottom`을 더한다.
  */
@@ -201,12 +204,10 @@ function Composer({
   disabled,
   rejected,
   onSend,
-  onChange,
 }: {
   disabled: boolean;
   rejected: string | null;
   onSend: (content: string) => boolean;
-  onChange: () => void;
 }) {
   const [value, setValue] = useState("");
   const [dropped, setDropped] = useState(false);
@@ -241,7 +242,6 @@ function Composer({
           onChange={(e) => {
             setValue(e.target.value);
             setDropped(false);
-            onChange();
           }}
           placeholder={disabled ? "연결 중…" : "메시지 보내기"}
           aria-label="채팅 메시지"
