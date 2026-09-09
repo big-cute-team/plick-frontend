@@ -6,8 +6,16 @@
  * 웹소켓이라 `{ code, message, data }` 래퍼를 타지 않고 프레임이 곧 배열이다.
  */
 
-/** 서버가 보낸 사람에게만 돌려주는 거절 사유. */
-export type ChatRejectReason = "EMPTY_MESSAGE" | "MESSAGE_TOO_LONG";
+/**
+ * 서버가 보낸 사람에게만 돌려주는 거절 사유. `RATE_LIMITED`(KAN-464)는 한 접속이
+ * 창 안의 건수를 넘긴 것으로, 넘은 메시지는 방에 나가지 않고 접속도 끊기지 않는다.
+ * 계속 던지는 동안 이 통보는 한 번만 온다 — 다음 메시지가 통과할 때까지 다시 오지
+ * 않으므로, 화면이 이 안내를 서둘러 지우면 그 사이 버려진 메시지를 알 길이 없다.
+ */
+export type ChatRejectReason =
+  | "EMPTY_MESSAGE"
+  | "MESSAGE_TOO_LONG"
+  | "RATE_LIMITED";
 
 /** 방에 오간 메시지 한 건. 입장 지급분(최근 20개)과 실시간 메시지가 같은 모양이다. */
 export interface ChatMessage {
