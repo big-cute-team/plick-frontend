@@ -1,11 +1,11 @@
 /**
  * @file 라이브 스코어 클라 쿼리 정책 상수 (KAN-452). 모바일 `_constants/live.ts`와
  * 같은 값의 수동 동기화 복제다 — 캐시·폴링 정책은 앱 정책이라 승격하지 않는다.
- * 경기 상세 보기 구성(KAN-458)도 화면 정책이라 여기 둔다.
+ * 경기 상세 탭 구성(KAN-458 → KAN-462)도 화면 정책이라 여기 둔다.
  */
 
 import type { MatchStatus } from "@plick/domain/live";
-import type { MatchView } from "@/_types/live";
+import type { MatchTabKey } from "@/_types/live";
 
 /**
  * 라이브 경기가 있을 때의 폴링 간격(ms). BE 라이브 오버레이·상세 캐시 TTL이
@@ -21,22 +21,25 @@ export const LIVE_POLL_MS = 20_000;
 export const LIVE_MAX_RETRIES = 1;
 
 /**
- * 경기 상태별 보기 구성 (KAN-458). 데스크톱은 요약·라인업·스탯을 한 지면에 다
- * 펼치므로 "경기"와 "채팅" 둘만 있다. 연기·취소는 방이 열리지 않아 탭 없이
- * 안내만 그린다.
+ * 경기 상태별 상세 탭 구성 (KAN-462). 예전엔 요약·라인업·스탯을 한 지면에 다
+ * 펼쳤는데 세로로 너무 길어져 모바일처럼 탭으로 나눴다. 예정 경기는 프리뷰
+ * 하나라 탭 줄 없이 본문만 그리고, 연기·취소는 탭 없이 안내만 그린다. 채팅은
+ * 탭이 아니라 우측 패널이다.
  */
-export const MATCH_VIEWS_BY_STATUS: Record<MatchStatus, MatchView[]> = {
-  SCHEDULED: ["match", "chat"],
-  LIVE: ["match", "chat"],
-  FINISHED: ["match", "chat"],
+export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
+  SCHEDULED: ["preview"],
+  LIVE: ["summary", "lineups", "stats"],
+  FINISHED: ["summary", "lineups", "stats"],
   POSTPONED: [],
   CANCELLED: [],
 };
 
-/** 보기 라벨. */
-export const MATCH_VIEW_LABEL: Record<MatchView, string> = {
-  match: "경기",
-  chat: "채팅",
+/** 탭 라벨. */
+export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
+  preview: "프리뷰",
+  summary: "요약",
+  lineups: "라인업",
+  stats: "스탯",
 };
 
 /** 서버 거절 사유 → 입력바 밑 안내 문구. 목록에 없는 사유는 일반 실패 문구로 떨어진다. */

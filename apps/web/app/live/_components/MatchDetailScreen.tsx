@@ -4,28 +4,23 @@ import { useState } from "react";
 import type { InitialMatchDetail } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { MATCH_VIEWS_BY_STATUS } from "@/_constants/live";
+import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
-import type { MatchView } from "@/_types/live";
-import { GoalsCard } from "./GoalsCard";
-import { LineupCard } from "./LineupCard";
+import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
 import { MatchChatPanel } from "./MatchChatPanel";
+import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderCard } from "./MatchHeaderCard";
-import { MatchViewTabs } from "./MatchViewTabs";
+import { MatchTabBar } from "./MatchTabBar";
 import { PreviewGrid } from "./PreviewGrid";
-import { StatsRail } from "./StatsRail";
-import { TimelineCard } from "./TimelineCard";
+import { SameDayMatchesStrip } from "./SameDayMatchesStrip";
 
 /**
- * 경기 상세 화면 본체 (KAN-452) — 데스크톱은 모바일의 내부 탭 대신 지면을
- * 넓게 써서 요약·라인업(좌)과 스탯(우 레일)을 한 번에 노출한다. SCHEDULED는
- * 프리뷰 2컬럼, POSTPONED는 프리뷰가 있으면 프리뷰, CANCELLED는 헤더와
- * 안내만. 블록별 null 조건부 렌더가 기본이다(서버가 조각 실패 시 그 조각만
- * 빼고 내리는 구조). GNB는 쿼리 상태와 무관하게 항상 그린다.
- *
- * 채팅(KAN-458)은 헤더 카드 아래 "경기 / 채팅" 탭으로 갈린다. 연기·취소는
- * 방이 열리지 않아 탭 없이 안내만 그린다(`MATCH_VIEWS_BY_STATUS`).
+ * 경기 상세 화면 본체 (KAN-452 → KAN-462 네이버 스포츠식 재배치). 좌측 넓은
+ * 컬럼에 헤더 카드·같은 날 경기 스트립·탭 줄·탭 본문을 세로로 두고, 우측
+ * 컬럼에 채팅 패널을 늘 띄운다. 예전엔 요약·라인업·스탯을 한 지면에 다 펼쳐
+ * 세로가 너무 길었고 채팅은 "경기/채팅" 탭 뒤에 숨어 있었다. GNB는 쿼리 상태와
+ * 무관하게 항상 그린다. lg 아래에서는 우측 컬럼이 본문 아래로 내려간다.
  *
  * @param matchId API-Football fixture id
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
@@ -62,92 +57,70 @@ export function MatchDetailScreen({
   );
 }
 
+/**
+ * 상태로 좌측 본문이 갈린다 — SCHEDULED는 프리뷰(탭 하나라 탭 줄 없이 본문만),
+ * LIVE·FINISHED는 요약·라인업·스탯 탭, POSTPONED는 프리뷰가 있으면 프리뷰,
+ * 없으면 안내만, CANCELLED는 안내만(`MATCH_TABS_BY_STATUS`). 우측 채팅 패널은
+ * 상태와 무관하게 늘 같은 자리에 있어 탭을 바꿔도 리마운트되지 않는다.
+ *
+ * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이
+ * 사라지면 첫 탭으로 돌아간다.
+ */
 function MatchDetailBody({
   detail,
 }: {
   detail: NonNullable<ReturnType<typeof useMatchDetail>["data"]>;
 }) {
   const { header } = detail;
-  const views = MATCH_VIEWS_BY_STATUS[header.status];
-  const [selected, setSelected] = useState<MatchView | null>(null);
+  const tabs = MATCH_TABS_BY_STATUS[header.status];
+  const [selected, setSelected] = useState<MatchTabKey | null>(null);
   const active =
-    selected !== null && views.includes(selected) ? selected : views[0];
+    selected !== null && tabs.includes(selected) ? selected : tabs[0];
 
   return (
-    <>
-      <MatchHeaderCard header={header} />
-      {active !== undefined && (
-        <MatchViewTabs views={views} active={active} onSelect={setSelected} />
-      )}
-      {active === "chat" ? (
-        <MatchChatPanel header={header} />
-      ) : (header.status === "SCHEDULED" || header.status === "POSTPONED") &&
-        detail.preview ? (
-        <PreviewGrid preview={detail.preview} />
-      ) : header.status === "POSTPONED" || header.status === "CANCELLED" ? (
-        <p className="text-body text-text-4 py-20 text-center">
-          {header.status === "POSTPONED"
-            ? "경기가 연기됐어요. 새 일정은 추후 공지돼요."
-            : "취소된 경기예요."}
-        </p>
-      ) : header.status === "SCHEDULED" ? (
-        <p className="text-body text-text-4 py-20 text-center">
-          프리뷰 정보가 아직 없어요
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="flex flex-col gap-3">
-            {detail.events ? (
-              <>
-                <GoalsCard goals={detail.goals} />
-                <TimelineCard header={header} events={detail.events} />
-              </>
-            ) : (
-              <p className="text-body text-text-4 py-10 text-center">
-                요약 정보가 아직 없어요
-              </p>
-            )}
-            {detail.lineups ? (
-              <LineupCard
-                matchId={header.id}
-                live={header.status === "LIVE"}
-                home={detail.lineups.home}
-                away={detail.lineups.away}
-              />
-            ) : (
-              <p className="text-body text-text-4 py-6 text-center">
-                라인업은 킥오프 20~40분 전에 공개돼요
-              </p>
-            )}
-          </div>
-          {detail.stats ? (
-            <StatsRail stats={detail.stats} status={header.status} />
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="flex min-w-0 flex-col gap-4">
+        <MatchHeaderCard header={header} />
+        <SameDayMatchesStrip header={header} />
+        {active === undefined ? (
+          header.status === "POSTPONED" && detail.preview ? (
+            <PreviewGrid preview={detail.preview} />
           ) : (
-            <p className="text-body text-text-4 py-10 text-center">
-              스탯 정보가 아직 없어요
+            <p className="bg-elevate rounded-card text-body-lg text-text-4 py-20 text-center">
+              {header.status === "POSTPONED"
+                ? "경기가 연기됐어요. 새 일정은 추후 공지돼요."
+                : "취소된 경기예요."}
             </p>
-          )}
-        </div>
-      )}
-    </>
+          )
+        ) : (
+          <>
+            {tabs.length > 1 && (
+              <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+            )}
+            <MatchDetailTabs detail={detail} tab={active} />
+          </>
+        )}
+      </div>
+      <MatchChatPanel header={header} />
+    </div>
   );
 }
 
 /** 헤더 카드 자리 스켈레톤 — 양 팀과 가운데 스코어의 실루엣. */
 function HeaderSkeleton() {
   return (
-    <section className="bg-elevate rounded-card flex animate-pulse items-center gap-4 px-6 py-5 lg:px-8">
-      <div className="flex w-32 items-center gap-3 lg:w-44">
-        <div className="bg-elevate-2 size-9 rounded-full" />
-        <div className="bg-elevate-2 rounded-control h-4 w-20" />
+    <section className="bg-elevate rounded-card flex animate-pulse items-center gap-6 px-8 py-8">
+      <div className="flex w-40 flex-col items-center gap-3 lg:w-52">
+        <div className="bg-elevate-2 size-16 rounded-full" />
+        <div className="bg-elevate-2 rounded-control h-5 w-24" />
       </div>
-      <div className="flex flex-1 flex-col items-center gap-2">
-        <div className="bg-elevate-2 rounded-control h-3.5 w-24" />
-        <div className="bg-elevate-2 rounded-control h-9 w-20" />
+      <div className="flex flex-1 flex-col items-center gap-3">
+        <div className="bg-elevate-2 rounded-control h-4 w-28" />
+        <div className="bg-elevate-2 rounded-control h-12 w-28" />
       </div>
-      <div className="flex w-32 flex-row-reverse items-center gap-3 lg:w-44">
-        <div className="bg-elevate-2 size-9 rounded-full" />
-        <div className="bg-elevate-2 rounded-control h-4 w-20" />
+      <div className="flex w-40 flex-col items-center gap-3 lg:w-52">
+        <div className="bg-elevate-2 size-16 rounded-full" />
+        <div className="bg-elevate-2 rounded-control h-5 w-24" />
       </div>
     </section>
   );

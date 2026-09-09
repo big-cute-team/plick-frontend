@@ -40,12 +40,12 @@ export function SeasonStatsModal({
     <LiveModal open={player !== null} onClose={onClose} label="선수 시즌 스탯">
       {player && (
         <div className="flex items-center gap-3 pb-4">
-          <PlayerPhoto src={player.photo} name={player.name} size={48} />
+          <PlayerPhoto src={player.photo} name={player.name} size={64} />
           <span className="flex min-w-0 flex-col">
-            <span className="text-title text-text font-extrabold">
+            <span className="text-headline text-text font-extrabold">
               {player.name}
             </span>
-            <span className="text-caption text-text-3">
+            <span className="text-body text-text-3">
               {team.name} · {POSITION_LABEL[player.position]} ·{" "}
               {LIVE_SEASON_LABEL}
             </span>
@@ -65,7 +65,7 @@ export function SeasonStatsModal({
         />
       ) : stats.competitions.length > 0 ? (
         <>
-          <div className="text-caption text-text-4 flex items-center gap-2 pb-2 font-medium">
+          <div className="text-body text-text-4 flex items-center gap-2 pb-2 font-medium">
             <span className="min-w-0 flex-1">대회</span>
             <span className="w-8 text-right">출전</span>
             <span className="w-6 text-right">골</span>
@@ -79,20 +79,20 @@ export function SeasonStatsModal({
                 i > 0 ? "border-border border-t" : ""
               }`}
             >
-              <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
+              <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
                 {competition.name}
               </span>
-              <span className="text-label text-text-2 w-8 text-right">
+              <span className="text-body text-text-2 w-8 text-right">
                 {competition.appearances ?? "-"}
               </span>
-              <span className="text-label text-text-2 w-6 text-right">
+              <span className="text-body text-text-2 w-6 text-right">
                 {competition.goals ?? "-"}
               </span>
-              <span className="text-label text-text-2 w-8 text-right">
+              <span className="text-body text-text-2 w-8 text-right">
                 {competition.assists ?? "-"}
               </span>
               <span
-                className={`text-label w-10 text-right font-bold ${
+                className={`text-body w-10 text-right font-bold ${
                   ratingTone(competition.rating) === "accent"
                     ? "text-accent"
                     : "text-text"

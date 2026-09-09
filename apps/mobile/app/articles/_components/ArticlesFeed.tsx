@@ -18,7 +18,8 @@ import { NewsItem } from "@/_components/NewsItem";
 import { NewsItemSkeleton } from "@/_components/NewsItemSkeleton";
 import { TeamFeedPreview } from "@/_components/TeamFeedPreview";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
-import { TeamSwipePager } from "@/_components/TeamSwipePager";
+import { SwipePager } from "@/_components/SwipePager";
+import { neighborFilter } from "@/_constants/team-filter";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useArticlesRefresh } from "@/_hooks/useArticlesRefresh";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
@@ -180,8 +181,9 @@ export function ArticlesFeed({
           같은 handleChange라 떠나는 팀의 스크롤 저장과 위 이펙트의 복원·맨 위
           이동이 그대로 돈다. targetScrollTop으로 팀별 저장 위치를 넘겨, 봤던
           팀의 미리보기는 복원될 자리의 내용부터 끌려 들어온다 */}
-      <TeamSwipePager
-        filter={filter}
+      <SwipePager
+        value={filter}
+        neighborOf={neighborFilter}
         onCommit={handleChange}
         targetScrollTop={(team) =>
           useViewState.getState().articlesTabScrollTops[team]
@@ -252,7 +254,7 @@ export function ArticlesFeed({
             </p>
           )}
         </div>
-      </TeamSwipePager>
+      </SwipePager>
     </>
   );
 }

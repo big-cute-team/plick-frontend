@@ -1,5 +1,6 @@
 /**
- * @file 팀 좌우 스와이프 페이저의 기하·타이밍 상수 (KAN-388).
+ * @file 좌우 스와이프 페이저(`useSwipePager`)의 기하·타이밍 상수 (KAN-388,
+ * KAN-462에서 팀 탭 밖으로 일반화).
  */
 
 /**
@@ -54,7 +55,7 @@ export const SWIPE_VELOCITY_WINDOW_MS = 100;
 export const SWIPE_FLICK_MIN_DISTANCE = 10;
 
 /**
- * 끝 탭(전체·마지막 팀)에서 더 끌 때 콘텐츠가 밀리는 최대 거리(px).
+ * 끝(전체·마지막 팀, 첫 상세 탭 등)에서 더 끌 때 콘텐츠가 밀리는 최대 거리(px).
  *
  * 감쇠 곡선(`damp`)의 점근선이다. 당겨서 새로고침(`PULL_MAX_DISTANCE` 120)보다
  * 작게 둔다 — 세로 당김은 스피너가 나올 자리를 만들지만 여기는 "더 없다"는

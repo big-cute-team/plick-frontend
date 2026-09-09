@@ -494,6 +494,32 @@ export function monthDateKeys(year: number, month: number): string[] {
   );
 }
 
+/**
+ * 날짜 키를 `delta`일만큼 옮긴다 — 경기 목록의 좌우 스와이프(전날·다음날)와
+ * 웹 상세의 같은 날 경기 스트립이 쓴다. 월·연 경계는 Date가 넘겨 준다.
+ *
+ * @example
+ * shiftDateKey("2026-09-30", 1); // "2026-10-01"
+ */
+export function shiftDateKey(dateKey: string, delta: number): string {
+  const date = parseDateKey(dateKey);
+  date.setDate(date.getDate() + delta);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
+/**
+ * 킥오프 ISO 문자열 → 그 경기가 속한 날짜 키(KST). 상세에서 같은 날 경기
+ * 목록을 찾을 때 쓴다 — 목록 API의 `date`도 KST 기준이라 짝이 맞는다.
+ *
+ * @example
+ * kickoffDateKey("2026-09-05T23:00:00+09:00"); // "2026-09-05"
+ */
+export function kickoffDateKey(kickoffAt: string): string {
+  return todayDateKeyKst(new Date(kickoffAt));
+}
+
 /** 연·월 표기 (예: "2026년 9월") — 날짜 스트립 위 셀렉터 버튼 라벨. */
 export function monthLabel(year: number, month: number): string {
   return `${year}년 ${month}월`;

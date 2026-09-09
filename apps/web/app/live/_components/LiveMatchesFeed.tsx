@@ -43,13 +43,13 @@ export function LiveMatchesFeed({
 /** 경기 카드 자리 스켈레톤 — 상태 컬럼·팀 두 줄·스코어의 실루엣이다. */
 function MatchCardSkeleton() {
   return (
-    <div className="bg-elevate rounded-card flex animate-pulse items-center gap-4 px-4 py-3.5">
-      <div className="bg-elevate-2 rounded-control h-9 w-13" />
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="bg-elevate-2 rounded-control h-4 w-2/3" />
-        <div className="bg-elevate-2 rounded-control h-4 w-1/2" />
+    <div className="bg-elevate rounded-card flex animate-pulse items-center gap-5 px-5 py-4.5">
+      <div className="bg-elevate-2 rounded-control h-11 w-16" />
+      <div className="flex flex-1 flex-col gap-2.5">
+        <div className="bg-elevate-2 rounded-control h-5 w-2/3" />
+        <div className="bg-elevate-2 rounded-control h-5 w-1/2" />
       </div>
-      <div className="bg-elevate-2 rounded-control h-9 w-5" />
+      <div className="bg-elevate-2 rounded-control h-11 w-6" />
     </div>
   );
 }

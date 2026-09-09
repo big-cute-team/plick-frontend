@@ -13,25 +13,47 @@ import { CHAT_REJECT_MESSAGE } from "@/_constants/live";
 import { useMatchChat } from "@/_hooks/useMatchChat";
 
 /**
- * 경기 채팅 보기 (KAN-458, 모바일 `MatchChatPanel`의 데스크톱 판). 카드 하나가
- * 고정 높이를 갖고 안에서 목록이 스크롤한다. 접속 전에 화면이 먼저 거르는
- * 세 가지 — 비로그인, 닉네임 없음(온보딩 미완료, 서버 403), 방 닫힘(킥오프
- * 3시간 뒤, 서버 404) — 는 안내로 끝내고, 그 밖에는 붙어서 목록과 입력바를 그린다.
+ * 경기 채팅 패널 (KAN-458, 모바일 `MatchChatPanel`의 데스크톱 판 → KAN-462에서
+ * 우측 상시 패널로). 네이버 스포츠의 응원 톡처럼 상세 우측 컬럼에 늘 떠 있고
+ * 뷰포트를 따라 붙는다(`sticky`). 좌측 탭을 바꿔도 이 패널은 같은 자리의 같은
+ * 컴포넌트라 리마운트되지 않는다 — 소켓·메시지 목록·입력 중인 글이 그대로
+ * 남는다. 카드가 고정 높이를 갖고 안에서 목록이 스크롤한다.
+ *
+ * 접속 전에 화면이 먼저 거르는 것 — 연기·취소(방이 열리지 않는다), 비로그인,
+ * 닉네임 없음(온보딩 미완료, 서버 403), 방 닫힘(킥오프 3시간 뒤, 서버 404) —
+ * 는 안내로 끝내고, 그 밖에는 붙어서 목록과 입력바를 그린다.
  *
  * 킥오프 30분 전(`before`)은 거르지 않고 붙어 본다. dev는 방 여는 구간을 넓혀
  * 둘 수 있어서(`CHAT_OPEN_BEFORE=720h`) 화면이 먼저 막으면 확인이 안 된다.
  *
- * @param header 경기 헤더(id·킥오프)
+ * @param header 경기 헤더(id·킥오프·상태)
  */
 export function MatchChatPanel({ header }: { header: MatchSummary }) {
   const { isLoggedIn, nickname } = useAuth();
+  const closed = header.status === "POSTPONED" || header.status === "CANCELLED";
 
   return (
     <section
       aria-label="경기 채팅"
-      className="bg-elevate border-border rounded-card mt-5 flex h-[min(70vh,720px)] min-h-[420px] flex-col overflow-hidden border"
+      className="bg-elevate border-border rounded-card flex h-[min(calc(100dvh-7rem),820px)] min-h-[480px] flex-col overflow-hidden border lg:sticky lg:top-22"
     >
-      {!isLoggedIn ? (
+      <header className="border-border flex shrink-0 items-center gap-2 border-b px-5 py-4">
+        <span
+          aria-hidden
+          className={`size-2 rounded-full ${closed ? "bg-text-4" : "bg-accent"}`}
+        />
+        <h2 className="text-title text-text font-extrabold">경기 채팅</h2>
+        <span className="text-body text-text-4 ml-auto">
+          {closed ? "열리지 않는 방" : "킥오프 30분 전 오픈"}
+        </span>
+      </header>
+      {closed ? (
+        <Notice>
+          {header.status === "POSTPONED"
+            ? "연기된 경기라 채팅방이 열리지 않아요"
+            : "취소된 경기라 채팅방이 열리지 않아요"}
+        </Notice>
+      ) : !isLoggedIn ? (
         <Gate
           title="로그인이 필요해요"
           body="같은 경기를 보는 사람들과 채팅하려면 로그인하세요."
@@ -122,7 +144,7 @@ function ChatRoom({
         {status === "failed" ? (
           <Failed phase={phase} failure={failure} onRetry={retry} />
         ) : messages.length === 0 ? (
-          <p className="text-body text-text-4 my-auto text-center">
+          <p className="text-body-lg text-text-4 my-auto text-center">
             {status === "open"
               ? "아직 메시지가 없어요. 첫 마디를 남겨 보세요"
               : "연결 중…"}
@@ -169,15 +191,15 @@ function MessageRow({
     <div className="flex flex-col gap-0.5">
       <div className="flex items-baseline gap-1.5">
         <span
-          className={`text-label font-bold ${mine ? "text-accent" : "text-text"}`}
+          className={`text-body font-bold ${mine ? "text-accent" : "text-text"}`}
         >
           {message.nickname}
         </span>
-        <span className="text-micro text-text-4" suppressHydrationWarning>
+        <span className="text-caption text-text-4" suppressHydrationWarning>
           {formatChatTime(message.sentAt)}
         </span>
       </div>
-      <p className="text-body text-text-2 leading-body break-words whitespace-pre-wrap">
+      <p className="text-body-lg text-text-2 leading-body break-words whitespace-pre-wrap">
         {message.content}
       </p>
     </div>
@@ -233,15 +255,15 @@ function Composer({
           }}
           placeholder={disabled ? "연결 중…" : "메시지 보내기"}
           aria-label="채팅 메시지"
-          className="bg-elevate-2 border-border text-body text-text placeholder:text-text-4 focus-visible:border-accent rounded-pill h-11 min-w-0 flex-1 border px-4 focus-visible:outline-none disabled:opacity-60"
+          className="bg-elevate-2 border-border text-body-lg text-text placeholder:text-text-4 focus-visible:border-accent rounded-pill h-12 min-w-0 flex-1 border px-4 focus-visible:outline-none disabled:opacity-60"
         />
         <button
           type="submit"
           aria-label="보내기"
           disabled={disabled || value.trim().length === 0}
-          className="bg-accent text-on-accent grid size-11 shrink-0 place-items-center rounded-full hover:opacity-90 disabled:opacity-40"
+          className="bg-accent text-on-accent grid size-12 shrink-0 place-items-center rounded-full hover:opacity-90 disabled:opacity-40"
         >
-          <SendMiniIcon size={17} />
+          <SendMiniIcon size={18} />
         </button>
       </form>
       {error && <p className="text-caption text-danger px-1">{error}</p>}
@@ -270,7 +292,7 @@ function Failed({
         : "채팅에 연결하지 못했어요";
   return (
     <div className="my-auto flex flex-col items-center gap-3">
-      <p className="text-body text-text-4 text-center">{message}</p>
+      <p className="text-body-lg text-text-4 text-center">{message}</p>
       {failure === "auth" ? (
         <Link
           href="/login"
@@ -304,8 +326,8 @@ function Gate({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-12">
-      <p className="text-body-lg text-text font-extrabold">{title}</p>
-      <p className="text-label text-text-3 text-center">{body}</p>
+      <p className="text-title text-text font-extrabold">{title}</p>
+      <p className="text-body text-text-3 text-center">{body}</p>
       <Link
         href={href}
         className="bg-accent text-on-accent rounded-control text-body mt-3 px-5 py-2.5 font-extrabold hover:opacity-90"
@@ -318,7 +340,7 @@ function Gate({
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-body text-text-4 flex flex-1 items-center justify-center px-6 py-12 text-center">
+    <p className="text-body-lg text-text-4 flex flex-1 items-center justify-center px-6 py-12 text-center">
       <span>{children}</span>
     </p>
   );
