@@ -52,3 +52,24 @@ scrape_configs:
         target_label: instance
       - source_labels: [__meta_ec2_availability_zone]
         target_label: az
+
+  # 메인 API 서버(백엔드). 프런트 잡과 같은 EC2 서비스 디스커버리인데 포트와 경로만 다르다.
+  # 백엔드는 스프링 부트라 메트릭이 앱 포트가 아닌 9466의 액추에이터 경로에 있어서
+  # metrics_path를 따로 준다(프런트는 /metrics가 기본값이라 안 적었다).
+  # main-sg-prod에 9466 인바운드를 front-monitoring-sg-prod 소스로 열어 둬야 한다 (KAN-473).
+  - job_name: plick-main
+    metrics_path: /actuator/prometheus
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9466
+        refresh_interval: 60s
+        filters:
+          - name: tag:Name
+            values: [plick-main-prod]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az
