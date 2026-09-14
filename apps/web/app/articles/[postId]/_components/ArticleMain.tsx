@@ -3,7 +3,6 @@ import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
-import { SendIcon } from "@plick/ui/icons";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type {
@@ -16,6 +15,7 @@ import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
+import { ArticleShareButton } from "./ArticleShareButton";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -144,19 +144,14 @@ export function ArticleMain({
       {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (모바일과 같은 자리) */}
       <SuggestedArticles articles={suggested} />
 
-      {/* 액션 — 좋아요만 클라 경계로 떼어 낸다(누른 상태일 때 강조색) */}
+      {/* 액션 — 좋아요·공유 버튼만 클라 경계로 떼어 낸다(좋아요는 누른 상태일 때
+          강조색, 공유는 링크 복사 팝업). 본문은 서버 컴포넌트로 남는다 */}
       <div className="border-border mt-4 flex flex-wrap items-center gap-2.5 border-b pb-4">
         <ArticleLikeButton
           articleId={article.id}
           initial={{ liked: article.liked, likeCount: article.likeCount }}
         />
-        <button
-          type="button"
-          className="bg-elevate-2 border-border text-text-2 text-body rounded-pill hover:border-border-strong hover:text-text focus-visible:outline-accent flex h-9 items-center gap-1.5 border px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          <SendIcon size={15} />
-          공유
-        </button>
+        <ArticleShareButton articleId={article.id} />
       </div>
 
       <ArticleComments
