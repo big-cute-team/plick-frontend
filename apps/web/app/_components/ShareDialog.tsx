@@ -8,11 +8,11 @@ import { useCopyLink } from "@/_hooks/useCopyLink";
 import { shareUrl } from "@/_utils/share";
 
 /**
- * 링크 공유 팝업 (KAN-312, web 이식 KAN-349) — 릴의 공유 버튼이 쓴다.
+ * 링크 공유 팝업 (KAN-312, web 이식 KAN-349) — 릴과 기사 세부(KAN-485)의 공유 버튼이 쓴다.
  *
  * 모바일과 같은 주소 확인 + 복사 버튼 팝업이고, `LoginPromptDialog`와 같은
  * 스크림 + 카드 관용이다. 데스크톱이라 hover·focus-visible을 얹었다.
- * 무엇을 공유할지는 호출부가 경로로 정한다(릴은 `reelSharePath`).
+ * 무엇을 공유할지는 호출부가 경로로 정한다(릴은 `reelSharePath`, 기사는 `articleSharePath`).
  *
  * body로 포털을 뚫는다 — 릴 카드·세부 패널 안은 `transform`이 걸린 조상이 될 수
  * 있고, 그러면 `position: fixed`의 기준 상자가 어긋난다(`LoginPromptDialog`와
