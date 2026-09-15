@@ -16,12 +16,19 @@ import { useArticleReporters } from "@/_hooks/useArticleReporters";
 /**
  * 릴 세부 패널 (KAN-219, 피그마 W2 기사 세부 219-2, API 연결 KAN-323).
  *
- * 릴에서 제목 영역이나 댓글 버튼을 누르면 오른쪽에서 미끄러져 들어온다.
- * 기자 줄·본문·해시태그·댓글·입력바를 담는다 — 모바일 `ReelDetailSheet`의
- * 데스크톱 대응(아래→위 대신 오른쪽→왼쪽).
+ * 데스크톱에선 처음부터 열려 있고(KAN-483), 닫은 뒤 릴에서 제목 영역이나 댓글
+ * 버튼을 누르면 오른쪽에서 다시 미끄러져 들어온다. 기자 줄·본문·해시태그·댓글·
+ * 입력바를 담는다 — 모바일 `ReelDetailSheet`의 데스크톱 대응(아래→위 대신
+ * 오른쪽→왼쪽).
  *
  * 데스크톱(lg↑)은 릴 뷰어 옆 인라인 카드로 서고, 모바일 뷰에선 전체 화면 오버레이로
- * 뜬다(좁은 폭에서 릴과 나란히 둘 수 없어 릴 위를 덮는다).
+ * 뜬다(좁은 폭에서 릴과 나란히 둘 수 없어 릴 위를 덮는다). 그래서 기본 열림은
+ * 데스크톱에만 준다 — 좁은 폭에서 열린 채 시작하면 릴을 가린다.
+ *
+ * `undecided`(사용자가 아직 열고 닫지 않음)일 때는 열림·닫힘 클래스를 하나로 고르지
+ * 않고 `lg:` 분기로 데스크톱 열림·좁은 폭 닫힘을 CSS가 정한다. 서버는 창 폭을 모르니
+ * 어느 폭에서도 맞는 HTML을 내려야 하이드레이션이 어긋나지 않는다. 소유자가 마운트
+ * 뒤 실제 폭으로 확정하면 같은 화면을 그리는 보통 클래스로 넘어간다.
  *
  * 개폐 애니메이션: 패널을 항상 마운트해 두고 `open` 클래스만 토글하므로 열 때·닫을 때
  * 모두 transition이 탄다(마운트 타이밍 레이스가 없다). 데스크톱은 폭(0↔29.5rem)을
@@ -43,13 +50,17 @@ import { useArticleReporters } from "@/_hooks/useArticleReporters";
  * 된다. 받기 전엔 대표 이름만 서고 원문 버튼은 피드의 대표 링크로 직행한다.
  *
  * @param reel - 세부를 보여줄 릴. `null`이면 닫힘(마지막 릴은 닫힘 애니 동안 유지).
+ * @param undecided - 사용자가 아직 열고 닫지 않은 초기 상태. 데스크톱은 열림, 좁은
+ *   폭은 닫힘으로 CSS가 가른다. 소유자가 마운트 뒤 실제 폭으로 확정하면 꺼진다
  * @param onClose - 닫기 요청 콜백(패널 소유자가 `reel`을 `null`로 만든다)
  */
 export function ReelDetailPanel({
   reel,
+  undecided = false,
   onClose,
 }: {
   reel: ReelCard | null;
+  undecided?: boolean;
   onClose: () => void;
 }) {
   const open = reel != null;
@@ -85,9 +96,11 @@ export function ReelDetailPanel({
     <div
       aria-hidden={!open}
       className={`fixed inset-0 z-50 overflow-hidden transition-[width,transform] duration-300 ease-out lg:static lg:z-auto lg:h-full lg:shrink-0 ${
-        open
-          ? "translate-x-0 lg:w-[29.5rem]"
-          : "pointer-events-none translate-x-full lg:w-0 lg:translate-x-0"
+        !open
+          ? "pointer-events-none translate-x-full lg:w-0 lg:translate-x-0"
+          : undecided
+            ? "pointer-events-none translate-x-full lg:pointer-events-auto lg:w-[29.5rem] lg:translate-x-0"
+            : "translate-x-0 lg:w-[29.5rem]"
       }`}
     >
       <div className="lg:pr-gutter h-full w-full lg:w-[29.5rem] lg:py-10">

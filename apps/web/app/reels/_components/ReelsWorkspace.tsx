@@ -6,7 +6,10 @@ import type { InitialReelFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
-import { REELS_PREFETCH_AHEAD } from "@/_constants/reels";
+import {
+  REELS_PANEL_DESKTOP_QUERY,
+  REELS_PREFETCH_AHEAD,
+} from "@/_constants/reels";
 import { useActiveReel } from "@/_hooks/useActiveReel";
 import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
@@ -20,9 +23,16 @@ import { ReelViewer } from "./ReelViewer";
  * 릴스 작업 영역 (KAN-219, API 연결 KAN-323) — 세로 스냅 뷰어 + 오른쪽 세부
  * 패널을 가로로 배치하고, 피드 데이터와 패널 개폐 상태를 소유한다.
  *
- * 릴에서 제목 영역이나 댓글 버튼을 누르면 패널이 열리고, 데스크톱에선 뷰어가 폭을
- * 나눠 주며 패널이 오른쪽에서 미끄러져 들어온다. 모바일 뷰에선 패널이 전체 화면
- * 오버레이로 뜬다(`ReelDetailPanel`).
+ * 데스크톱에선 패널이 처음부터 열려 있다 (KAN-483) — 릴 옆에 댓글이 바로 보인다.
+ * 닫으면 뷰어가 폭을 되찾고, 제목 영역이나 댓글 버튼을 누르면 오른쪽에서 다시
+ * 미끄러져 들어온다. 모바일 뷰에선 패널이 전체 화면 오버레이라 릴을 덮으므로
+ * 닫힌 채로 시작하고 눌러야 뜬다(`ReelDetailPanel`).
+ *
+ * "기본 열림"을 서버가 그릴 수 없어서 개폐 상태는 세 값이다. `null`은 아직 사용자가
+ * 열고 닫지 않은 상태로, 이때는 패널이 CSS(`lg:`)로 데스크톱 열림·좁은 폭 닫힘을
+ * 스스로 가른다 — 서버는 창 폭을 모르니 어느 쪽이든 맞는 HTML을 내려야 하이드레이션이
+ * 어긋나지 않는다. 마운트 뒤 `matchMedia`로 실제 값을 확정해 두면 이후 열고 닫기는
+ * 보통의 boolean이다. 확정 전후 클래스가 같은 화면을 그려 깜빡임이 없다.
  *
  * 패널이 무엇을 그릴지는 열 때 고른 릴이 아니라 지금 보고 있는 릴이 정한다
  * ({@link useActiveReel}). 패널을 열어 둔 채 다음 릴로 넘기면 패널 내용도 따라
@@ -50,7 +60,8 @@ export function ReelsWorkspace({
   initial?: InitialReelFeed;
   anchorId?: string;
 }) {
-  const [detailOpen, setDetailOpen] = useState(false);
+  /** `null`은 미정(데스크톱 열림·좁은 폭 닫힘을 CSS가 정한다), 이후엔 사용자 선택 */
+  const [detailOpen, setDetailOpen] = useState<boolean | null>(null);
   const { activeIndex, registerReel } = useActiveReel();
   const queryClient = useQueryClient();
   const {
@@ -76,6 +87,13 @@ export function ReelsWorkspace({
      들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
      뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
   useArticleView(activeReel?.id ?? "", activeReel !== undefined);
+
+  /* 미정 상태를 실제 창 폭으로 확정한다 — 서버는 창 폭을 모르니 여기서만 알 수 있다 */
+  useEffect(() => {
+    setDetailOpen(
+      (v) => v ?? window.matchMedia(REELS_PANEL_DESKTOP_QUERY).matches,
+    );
+  }, []);
 
   /**
    * `isFetchingNextPage`가 아니라 `isFetching`으로 막는다 — 다음 페이지뿐 아니라
@@ -157,7 +175,8 @@ export function ReelsWorkspace({
         />
       )}
       <ReelDetailPanel
-        reel={detailOpen ? (activeReel ?? null) : null}
+        reel={detailOpen === false ? null : (activeReel ?? null)}
+        undecided={detailOpen === null}
         onClose={() => setDetailOpen(false)}
       />
     </div>
