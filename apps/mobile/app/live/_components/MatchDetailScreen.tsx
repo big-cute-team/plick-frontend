@@ -6,7 +6,7 @@ import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { SwipePager } from "@/_components/SwipePager";
-import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
+import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
@@ -59,7 +59,9 @@ export function MatchDetailScreen({
 /**
  * 상태로 지면이 갈린다 — SCHEDULED는 프리뷰·채팅 탭, LIVE·FINISHED는
  * 요약·라인업·스탯·채팅 탭, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
- * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`).
+ * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`). 채팅이 닫혀 있는 동안은
+ * `matchTabsFor`가 채팅 탭을 빼 주고(KAN-486), 탭이 하나만 남으면(예정 경기의
+ * 프리뷰) 웹처럼 탭 줄 없이 본문만 그린다.
  *
  * 채팅 탭만 스크롤 영역 밖에 선다 (KAN-458). 입력바가 화면 하단에 붙어 있어야
  * 하는데 `AppShell`이 높이를 못박고 스크롤은 `ScrollArea`가 맡는 구조라, 스크롤
@@ -85,7 +87,7 @@ function MatchDetailBody({
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
   const { header } = detail;
-  const tabs = MATCH_TABS_BY_STATUS[header.status];
+  const tabs = matchTabsFor(header.status);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
@@ -138,7 +140,9 @@ function MatchDetailBody({
           )
         ) : (
           <>
-            <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+            {tabs.length > 1 && (
+              <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+            )}
             <SwipePager
               value={active}
               neighborOf={neighborTab}
