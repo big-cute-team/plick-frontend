@@ -3,6 +3,7 @@ import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { getArticles } from "@plick/core/articles";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import { LiveDot } from "@plick/ui/LiveDot";
 import { ArticlesFeed } from "./ArticlesFeed";
 import { ArticlesScrollArea } from "./ArticlesScrollArea";
 
@@ -44,7 +45,9 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
             /* 서버가 prop으로 넘기는 JSX는 직렬화되며 정적 자식 표시를 잃어
                React가 key를 요구한다 — 형제가 생기는 자리라 명시한다 */
             <header key="articles-header" className="px-edge pt-3 pb-2">
-              <h1 className="text-section tracking-heading text-text font-extrabold">
+              {/* 홈 섹션 제목과 같은 라이브 점 (KAN-481) */}
+              <h1 className="text-section tracking-heading text-text flex items-center gap-2 font-extrabold">
+                <LiveDot />
                 지금 올라온 소식
               </h1>
               <p className="text-caption text-text-4 mt-1 font-semibold">
