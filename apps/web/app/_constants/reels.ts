@@ -15,3 +15,10 @@
  * 앞선 릴에 심는다({@link ReelViewer}).
  */
 export const REELS_PREFETCH_AHEAD = 3;
+
+/**
+ * 세부 패널을 기본으로 열어 두는 뷰포트 (KAN-483). Tailwind `lg`(64rem)와 같은
+ * 값이다 — 패널 CSS가 `lg:`로 인라인·오버레이를 가르니 JS 판정도 같은 선이어야 한다.
+ * {@link PULL_VIEWPORT_QUERY}(`max-width: 1023px`)의 반대편이다.
+ */
+export const REELS_PANEL_DESKTOP_QUERY = "(min-width: 1024px)";
