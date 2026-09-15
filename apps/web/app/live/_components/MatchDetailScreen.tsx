@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CHAT_ENABLED } from "@plick/core/chat";
 import type { InitialMatchDetail } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -63,6 +64,9 @@ export function MatchDetailScreen({
  * 없으면 안내만, CANCELLED는 안내만(`MATCH_TABS_BY_STATUS`). 우측 채팅 패널은
  * 상태와 무관하게 늘 같은 자리에 있어 탭을 바꿔도 리마운트되지 않는다.
  *
+ * 채팅이 닫혀 있는 동안(`CHAT_ENABLED`, KAN-486)은 우측 컬럼을 아예 만들지
+ * 않고 본문이 한 컬럼을 다 쓴다. 빈 360px 컬럼이 남지 않게 한다.
+ *
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이
  * 사라지면 첫 탭으로 돌아간다.
  */
@@ -78,7 +82,11 @@ function MatchDetailBody({
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <div
+      className={`grid grid-cols-1 gap-6 ${
+        CHAT_ENABLED ? "lg:grid-cols-[minmax(0,1fr)_360px]" : ""
+      }`}
+    >
       <div className="flex min-w-0 flex-col gap-4">
         <MatchHeaderCard header={header} />
         <SameDayMatchesStrip header={header} />
@@ -101,7 +109,7 @@ function MatchDetailBody({
           </>
         )}
       </div>
-      <MatchChatPanel header={header} />
+      {CHAT_ENABLED && <MatchChatPanel header={header} />}
     </div>
   );
 }

@@ -15,6 +15,14 @@ import type {
   ChatRoomPhase,
 } from "@plick/domain/chat";
 
+/**
+ * 라이브 채팅 노출 스위치 (KAN-486). 채팅 BE가 아직 실서비스에 올라오지 않아
+ * 당분간 닫아 둔다. 모바일은 경기 상세의 채팅 탭을, 웹은 우측 채팅 패널을 이
+ * 값으로 가린다. 훅·소켓·세션 라우트는 그대로 두었으니 BE가 올라오면 true로만
+ * 돌리면 된다. 두 앱이 같은 값을 봐야 해서 앱 상수가 아니라 여기 둔다.
+ */
+export const CHAT_ENABLED: boolean = false;
+
 /** 메시지 한 건의 최대 길이(글자). BE `chat.max-message-length`와 같은 값이다. */
 export const CHAT_MAX_MESSAGE_LENGTH = 200;
 
