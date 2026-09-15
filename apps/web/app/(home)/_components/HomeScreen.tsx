@@ -4,6 +4,7 @@ import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HotCarousel } from "@plick/ui/HotCarousel";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { LiveDot } from "@plick/ui/LiveDot";
 import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
 import { MoreArticlesLink } from "@/_components/MoreArticlesLink";
 import { PageContainer } from "@/_components/PageContainer";
@@ -128,7 +129,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                   우측 끝에 정렬되게 한다. 자식이 하나라 사이드바 열은 비어 있다 */}
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-section text-text tracking-heading font-extrabold">
+                  {/* 빨간 점이 번쩍여 지금 갱신되는 목록임을 알린다 (KAN-481) */}
+                  <h2 className="text-section text-text tracking-heading flex items-center gap-2 font-extrabold">
+                    <LiveDot />
                     지금 올라온 소식
                   </h2>
                   {/* 첫 페이지 밖 기사는 기사 페이지가 맡는다 (KAN-386) */}

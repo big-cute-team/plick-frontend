@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { formatCount } from "@plick/domain/format";
 import { TEAMS } from "@plick/domain/constants";
 import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { MediaThumb } from "@plick/ui/MediaThumb";
@@ -7,7 +6,12 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { HeartMiniIcon, VsIcon } from "@plick/ui/icons";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { ArticleCard, Filter } from "@plick/domain/types";
-import { formatRelativeTime } from "@plick/domain/format";
+import {
+  formatCount,
+  formatRelativeTime,
+  isRecentlyPublished,
+} from "@plick/domain/format";
+import { NewBadge } from "@plick/ui/NewBadge";
 
 /**
  * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.
@@ -32,6 +36,13 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 이웃 행들과 어긋난다. 마감 판정은 하지 않는다 — 목록 응답에 closesAt이
  * 없고, BE 열림/마감 실기준도 이 값이다.
  *
+ * 발행 30분 안의 기사는 시각 옆에 NEW 태그를 단다 (KAN-481). 판정은 렌더 시각
+ * 기준이라 상대 시각 글자와 같은 사정으로 서버 HTML과 클라 첫 렌더가 어긋날 수
+ * 있는데, 글자는 `suppressHydrationWarning`으로 덮이지만 태그는 요소 유무라
+ * 덮이지 않는다. 경계(정확히 30분)를 SSR과 하이드레이션 사이 몇 초에 넘는
+ * 기사가 있어야 생기는 일이라 React가 그 트리를 클라에서 다시 그리는 걸로
+ * 감수한다.
+ *
  * @param article - 표시할 기사 카드
  * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  */
@@ -49,6 +60,7 @@ export function NewsItem({
         ? TEAMS[article.teams[0]]
         : null;
   const debateLive = article.contentType === "DEBATE";
+  const isNew = isRecentlyPublished(article.publishedAt);
 
   return (
     <Link
@@ -67,6 +79,7 @@ export function NewsItem({
           <span className="text-body text-text-4" suppressHydrationWarning>
             {formatRelativeTime(article.publishedAt)}
           </span>
+          {isNew && <NewBadge />}
           {debateLive && (
             <DebateLiveChip
               variant="outline"

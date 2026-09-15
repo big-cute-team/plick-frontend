@@ -3,7 +3,12 @@
  * 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
  */
 import { BRAND_TITLE, BRAND_TITLE_TEMPLATE } from "./brand";
-import { TEAMS, TEAM_BY_SLUG, TEAM_FULL_NAMES } from "./constants";
+import {
+  NEW_ARTICLE_WINDOW_MS,
+  TEAMS,
+  TEAM_BY_SLUG,
+  TEAM_FULL_NAMES,
+} from "./constants";
 import type { Filter } from "./types";
 
 /**
@@ -303,6 +308,27 @@ export function formatRelativeTime(
   if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}일 전`;
 
   return `${at.getMonth() + 1}월 ${at.getDate()}일`;
+}
+
+/**
+ * 발행 후 30분 안의 기사인가 (KAN-481) — 목록의 NEW 태그 판정. 창 길이는
+ * `NEW_ARTICLE_WINDOW_MS`가 정한다.
+ *
+ * 미래 시각(서버·기기 시계 차이)도 방금 올라온 것으로 본다 — 음수 차이를 거르면
+ * 시계가 몇 초 빠른 기기에서 방금 기사가 NEW를 놓친다. 값이 깨졌으면 false다.
+ *
+ * @param iso 발행 시각 (KST 오프셋 ISO)
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ * @example
+ * isRecentlyPublished("2026-09-15T10:00:00+09:00", new Date("2026-09-15T10:20:00+09:00")); // true
+ */
+export function isRecentlyPublished(
+  iso: string,
+  now: Date = new Date(),
+): boolean {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return false;
+  return now.getTime() - at.getTime() < NEW_ARTICLE_WINDOW_MS;
 }
 
 /**
