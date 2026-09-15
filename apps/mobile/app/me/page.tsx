@@ -12,7 +12,10 @@ import {
 } from "@plick/ui/icons";
 import { SettingRow } from "@plick/ui/SettingRow";
 import { TEAMS } from "@plick/domain/constants";
+import { getMyActivityCounts } from "@/_services/activity";
 import { getMyProfile } from "@/_services/profile";
+import { getAccessToken } from "@/_services/session";
+import { ActivityCard } from "./_components/ActivityCard";
 import { DeleteAccountButton } from "./_components/DeleteAccountButton";
 import { FavoriteTeamsCard } from "./_components/FavoriteTeamsCard";
 import { LoginPromptCard } from "./_components/LoginPromptCard";
@@ -32,9 +35,21 @@ export const metadata: Metadata = {
  * FAQ·버전은 공통. 다크 모드 토글 카드는 걷어냈다 — 앱을 다크 고정으로 돌렸다.
  * 프로필은 `GET /users/me`로 읽는다(KAN-267) —
  * null이면 비로그인/토큰 무효로 보고 유도 카드.
+ *
+ * 활동 개수(KAN-495)는 프로필과 나란히 받는다. 실패해도 마이페이지는 떠야
+ * 하므로 삼켜서 null로 두고, 카드는 숫자 없이 진입만 열어 둔다.
  */
 export default async function MyPage() {
-  const profile = await getMyProfile();
+  const accessToken = await getAccessToken();
+  const [profile, counts] = await Promise.all([
+    getMyProfile(),
+    accessToken
+      ? getMyActivityCounts(accessToken).catch((error: unknown) => {
+          console.error("[me] 활동 개수 조회 실패:", error);
+          return null;
+        })
+      : null,
+  ]);
 
   return (
     <AppShell>
@@ -48,6 +63,7 @@ export default async function MyPage() {
               <FavoriteTeamsCard
                 teams={profile.myTeams.map((code) => TEAMS[code])}
               />
+              <ActivityCard counts={counts} />
             </>
           ) : (
             <LoginPromptCard />

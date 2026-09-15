@@ -32,8 +32,13 @@ import type {
 } from "@plick/domain/types";
 import { apiFetch } from "./client";
 
-/** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
-interface FeedCardResponse {
+/**
+ * BE 응답 카드 (be-verify가 실제 응답으로 확인한 그대로). 내가 좋아요한 기사
+ * 목록(KAN-495, `GET /users/me/likes`)이 같은 레코드를 그대로 내려주므로 그쪽
+ * fetcher가 이 타입과 {@link toArticleCard}를 가져다 쓴다 — 댓글의
+ * `CommentResponse`·`toComment`와 같은 관용이다.
+ */
+export interface FeedCardResponse {
   articleSummaryId: number;
   title: string;
   summary: string;
@@ -73,7 +78,7 @@ export const ARTICLES_PAGE_SIZE = 10;
  * BE → 도메인 경계 변환. 필드명·철자·null 차이를 전부 여기서 흡수한다.
  * 화면은 `ArticleCard`만 보고 BE 응답 모양을 모른다.
  */
-function toArticleCard(r: FeedCardResponse): ArticleCard {
+export function toArticleCard(r: FeedCardResponse): ArticleCard {
   const reporterName = r.reporter?.koName ?? r.reporter?.enName ?? null;
 
   return {
