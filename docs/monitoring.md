@@ -1,6 +1,6 @@
 # 모니터링 (프로메테우스 + 그라파나, prod)
 
-prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 그라파나로 본다. ALB HTTP 지표는 CloudWatch 데이터 소스로 같은
+prod 프론트 EC2(ASG)의 Node 서버 지표와 메인 API 서버 지표를 프로메테우스가 긁고 그라파나로 본다. ALB HTTP 지표는 CloudWatch 데이터 소스로 같은
 대시보드에 붙이고, 임계치를 넘으면 슬랙으로 알린다.
 판단 근거와 시행착오는 [ADR 0130](adr/0130-prometheus-grafana-monitoring.md)과
 후속 [ADR 0133](adr/0133-monitoring-followup-cloudwatch-client-errors-alerts.md)에 있다.
@@ -18,6 +18,7 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
                                     노트북 ── SSM 포트 포워딩  └─ CloudWatch(ALB) 읽기
                                                     슬랙 ◄── 알림 규칙 (웹훅은 SSM 파라미터)
   브라우저 에러 경계 ── POST /api/client-error ──► 앱 라우트 핸들러 → 카운터
+  메인 API EC2 (main-sg-prod) /actuator/prometheus :9466 ◄── scrape ◄── prometheus
 ```
 
 - 앱 쪽: 각 앱 `instrumentation.ts`의 `register()`가 Node 런타임에서
@@ -39,6 +40,8 @@ prod 프론트 EC2(ASG)의 Node 서버 지표를 프로메테우스가 긁고 �
 - 모니터링 EC2: [infra/monitoring/](../infra/monitoring/)의 compose와 설정을 user data로
   실어 첫 부팅에 `docker compose up -d`한다. 프로메테우스는 `ec2_sd_configs`로
   `Name=plick-frontend-asg-prod` 태그의 인스턴스를 60초마다 다시 찾는다.
+  메인 API 서버(`Name=plick-main-prod`)도 같은 방식으로 긁는다. 백엔드는 스프링 부트라
+  포트가 9466이고 경로가 `/actuator/prometheus`인 것만 다르다(KAN-473).
   `aws:autoscaling:groupName`은 CodeDeploy Blue/Green이 배포마다 ASG를 복제하며
   `CodeDeploy_…_d-<배포ID>`로 바꿔 달아서 필터로 못 쓴다. Blue/Green으로 인스턴스가 통째로 바뀌어도 설정을 안 건드린다
 - 그라파나: 데이터 소스(Prometheus·CloudWatch), `PLick Frontend (prod)` 대시보드, 알림
@@ -144,6 +147,8 @@ SecureString으로 넣는다(기본 키 aws/ssm이면 kms 권한은 필요 없�
   그라파나·프로메테우스는 127.0.0.1에만 바인딩돼 있고 SSM 포트 포워딩으로만 본다
 - `front-sg-prod` 인바운드 규칙 추가: TCP 9464-9465, 소스 `front-monitoring-sg-prod`,
   설명 `prometheus scrape`. 이 한 줄이 프라이빗 서브넷 문제의 전부다
+- `main-sg-prod` 인바운드 규칙 추가: TCP 9466, 소스 `front-monitoring-sg-prod`.
+  메인 API 서버를 긁으려면 같은 규칙이 백엔드 쪽에도 있어야 한다. 백엔드가 이미 열어 뒀다
 
 ### 3.3 user data 만들기
 
@@ -151,7 +156,7 @@ SecureString으로 넣는다(기본 키 aws/ssm이면 kms 권한은 필요 없�
 scripts/monitoring/build-user-data.sh > /tmp/monitoring-user-data.sh
 ```
 
-출력 파일(약 6KB, 제한 16KB)을 그대로 붙여 넣는다. 안에 infra/monitoring/ 전체가
+출력 파일(약 11KB, 제한 16KB)을 그대로 붙여 넣는다. 안에 infra/monitoring/ 전체가
 tar+gzip+base64로 들어 있다.
 
 ### 3.4 EC2 생성 `front-monitoring-prod`
@@ -186,7 +191,7 @@ sudo docker ps                                        # prometheus·grafana 두 
 curl -s localhost:9090/api/v1/targets | python3 -m json.tool | grep -E '"job"|"health"'
 ```
 
-두 잡 모두 `health: up`이면 끝이다. 그라파나에서 데이터 소스 → CloudWatch → Save & test가
+세 잡(`plick-front-mobile`·`plick-front-web`·`plick-main`) 모두 `health: up`이면 끝이다. 그라파나에서 데이터 소스 → CloudWatch → Save & test가
 통과하면 3.1의 CloudWatch 권한도 맞은 것이다. `activeTargets`에 프론트 잡이 없으면 3.1 권한이나
 Name 태그 값을 의심한다(`sudo docker logs prometheus`에 UnauthorizedOperation이 찍힌다). 타깃은 있는데
 down이면 3.2 보안그룹 규칙이거나 아직 앱 배포가 안 나간 것이다. 프론트 인스턴스의
@@ -274,11 +279,13 @@ JSON을 내보내 리포 파일에 되돌려 놓아야 인스턴스 재생성에
 | 규칙                 | 식                                                | 조건                 | 지속 |
 | -------------------- | ------------------------------------------------- | -------------------- | ---- |
 | BE 호출 에러율       | 30분 창 5xx·0 비율, 같은 창 요청 20건 이상일 때만 | 5% 초과              | 5분  |
-| 스크레이프 타깃 down | `up{job=~"plick-front-.*"} == 0`                  | 시리즈가 있으면 발화 | 3분  |
+| 스크레이프 타깃 down | `up{job=~"plick-.*"} == 0`                        | 시리즈가 있으면 발화 | 3분  |
 
 초기값은 2026-09-09 prod 실측(40시간)에서 잡았다. 그때 트래픽이 mobile 0.03 req/s, web
 0.09 req/s라 5분 창 비율은 요청 한 건 실패에도 튀었고, 30분 창에 요청 20건 조건을 함께 걸었다.
 밤에는 30분에 20건이 안 돼 비율 알림이 꺼진다. 그 시간대 장애는 타깃 down 규칙이 받는다.
+타깃 down 식은 `plick-front-.*`가 아니라 `plick-.*`다. 프런트 두 잡뿐 아니라 메인 API 잡도
+같이 받으려고 넓혔다(KAN-473). 메인 API가 죽어도 이 슬랙 채널로 온다.
 며칠 분포를 더 보고 임계값을 조정한다.
 
 `or … * 0`은 web처럼 5xx 시리즈가 한 번도 안 생긴 앱을 0%로 만들기 위한 것이다. 없으면

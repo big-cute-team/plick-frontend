@@ -55,6 +55,11 @@ description: >-
 - 새 훅을 만들기 전에 `app/_hooks/`를 먼저 훑는다. 비슷한 훅이 이미 있으면 재사용하거나 확장하고, 새로 만들면 JSDoc 첫 줄에 무엇을 하는 훅인지 요약을 단다(자동완성 목록에서 읽히는 줄이다).
 - `Logo` `MediaThumb` `TeamCrest`와 아이콘 레지스트리(`icons.tsx`)는 웹과 공용이라
   **`@plick/ui`로 승격됨**(KAN-200) — `@plick/ui/<파일명>`으로 import. 새 공용 아이콘도 여기에 추가.
+- 콘텐츠를 좌우로 끌어 이웃 값(팀·날짜·탭)으로 넘기는 화면은 `SwipePager`(`_components`)를 쓴다.
+  `value`·`neighborOf`·`onCommit`·`renderPreview`만 넘기면 축 판정·플릭·스냅·미리보기 페인이 붙는다.
+  커밋 핸들러는 탭 클릭 핸들러를 그대로 넘긴다(URL·상태 동기화가 같은 경로를 타게). 소켓처럼
+  마운트 비용이 있는 페인의 미리보기는 자리 표시로 대신한다(`MatchChatPreview`). 당겨서 새로고침은
+  `ScrollArea`의 `onRefresh`인데 서버 컴포넌트는 함수를 못 넘기니 `XxxScrollArea` 클라 껍데기를 둔다.
 - 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder) — `colorVar`에 `TEAMS[code].colorVar`를 넘긴다.
 - 팀 로고 = `TeamCrest`(`team`에 `TEAMS[code]` 객체) — `public/teams/<코드소문자>.webp`의 **실제 구단
   로고**를 그린다(피그마의 구단 로고 자리 전부 이걸로). 새 팀은 같은 규칙으로 webp만 추가(웹·모바일

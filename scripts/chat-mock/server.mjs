@@ -4,6 +4,9 @@
  *    matchId=900001(종료 경기)는 404, 그 밖엔 통과
  *  - 입장 직후 최근 20개 한 프레임, 이후 100ms 창으로 묶어 배열 프레임
  *  - {"content":""} → ERROR EMPTY_MESSAGE, 200자 초과 → ERROR MESSAGE_TOO_LONG
+ *  - 전송 한도(KAN-464): 접속 하나가 5초 흐르는 창에 5건까지. 넘으면 방에 안 뿌리고
+ *    ERROR RATE_LIMITED를 한 번만 돌려준다(다시 통과할 때까지). 무효 메시지도 센다.
+ *    env RATE_LIMIT_MESSAGES / RATE_LIMIT_WINDOW_MS로 바꿀 수 있다
  *  - POST /kick?retry=ms  전원 4000 "retry=<ms>"로 끊기 (배포 시뮬레이션)
  *  - POST /seed?n=25      서버가 스스로 n개 메시지를 방에 뿌림 (입장 지급·자동 스크롤 확인)
  */
@@ -11,6 +14,29 @@ import http from "node:http";
 import { WebSocketServer } from "ws";
 
 const PORT = Number(process.env.PORT ?? 8090);
+const RATE_LIMIT_MESSAGES = Number(process.env.RATE_LIMIT_MESSAGES ?? 5);
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS ?? 5000);
+
+/** BE ChatSendQuota와 같은 흐르는 창. 통과한 전송 시각만 들고 있다가 지난 것부터 버린다. */
+function quota() {
+  const sentAt = [];
+  let notified = false;
+  return {
+    tryAcquire(now) {
+      while (sentAt.length > 0 && now - sentAt[0] >= RATE_LIMIT_WINDOW_MS)
+        sentAt.shift();
+      if (sentAt.length >= RATE_LIMIT_MESSAGES) return false;
+      sentAt.push(now);
+      notified = false;
+      return true;
+    },
+    shouldNotify() {
+      if (notified) return false;
+      notified = true;
+      return true;
+    },
+  };
+}
 const rooms = new Map(); // matchId -> { clients:Set<ws>, recent:[], queue:[] }
 let seq = 0;
 
@@ -97,6 +123,7 @@ server.on("upgrade", (req, socket, head) => {
     ws.matchId = matchId;
     ws.userId = Number(url.searchParams.get("uid") ?? 1);
     ws.nickname = url.searchParams.get("nick") ?? "테스터";
+    ws.quota = quota();
     const r = room(matchId);
     r.clients.add(ws);
     ws.send(JSON.stringify(r.recent));
@@ -120,6 +147,11 @@ server.on("upgrade", (req, socket, head) => {
             },
           ]),
         );
+      if (!ws.quota.tryAcquire(Date.now())) {
+        console.log(`rate-limited match=${matchId} uid=${ws.userId}`);
+        if (ws.quota.shouldNotify()) err("RATE_LIMITED");
+        return;
+      }
       if (content === null || String(content).trim() === "")
         return err("EMPTY_MESSAGE");
       if (String(content).length > 200) return err("MESSAGE_TOO_LONG");

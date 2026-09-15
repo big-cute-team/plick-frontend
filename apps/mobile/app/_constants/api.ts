@@ -14,7 +14,13 @@ import type { SocialProvider } from "@/_types/api";
  *   계정 선택 창을 다시 띄운다(KAN-395) — 로그아웃 뒤 다른 계정으로 재로그인하려는데
  *   같은 세션으로 자동 통과되던 문제 해결.
  * - 카카오: `prompt=login`은 카카오톡·카카오계정 세션이 살아 있어도 로그인 창을 다시
- *   띄운다(KAN-395, 같은 이유).
+ *   띄운다(KAN-395, 같은 이유). `scope`는 동의 화면에 띄울 항목을 고르는 값이다(쉼표 구분,
+ *   KAN-476). 이미 가입한 계정은 콘솔에서 동의 항목을 켜도 그것만으로는 다시 묻지 않아
+ *   연령대·성별이 비는데, scope에 적으면 다음 로그인 때 추가 동의 화면이 뜬다.
+ *   scope를 주면 적은 항목만 묻게 되므로 지금 받고 있는 `account_email`도 같이 적는다 —
+ *   빼면 신규 가입자의 이메일이 안 들어온다. 선택 동의 항목이라 거부해도 로그인은 이어지고,
+ *   값은 BE가 저장한다(KAN-475). 콘솔에서 켜지 않은 항목을 적으면 인가가 오류로 막히니
+ *   동의 항목을 먼저 켜고 배포한다.
  * - 애플(KAN-395): `response_type=code`만으로 GET 콜백으로 돌아오려면 scope를 요구하지
  *   않는다 — scope를 붙이면 `response_mode=form_post`가 강제돼 콜백이 POST로 바뀐다.
  *   유저 식별은 BE가 code 교환으로 받는 id_token의 sub로 해결한다.
@@ -27,7 +33,10 @@ export const OAUTH_AUTHORIZE: Record<
   KAKAO: {
     endpoint: "https://kauth.kakao.com/oauth/authorize",
     clientIdEnv: "KAKAO_CLIENT_ID",
-    extraParams: { prompt: "login" },
+    extraParams: {
+      scope: "account_email,age_range,gender",
+      prompt: "login",
+    },
   },
   GOOGLE: {
     endpoint: "https://accounts.google.com/o/oauth2/v2/auth",

@@ -64,7 +64,7 @@ groups:
               refId: A
               instant: true
               range: false
-              expr: up{job=~"plick-front-.*"} == 0
+              expr: up{job=~"plick-.*"} == 0
           - refId: C
             datasourceUid: __expr__
             model:

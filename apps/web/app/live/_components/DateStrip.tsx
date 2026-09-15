@@ -98,13 +98,13 @@ export function DateStrip({
           aria-haspopup="listbox"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="text-body-lg text-text hover:text-accent focus-visible:outline-accent flex items-center gap-1.5 font-bold transition-colors focus-visible:outline-2"
+          className="text-title text-text hover:text-accent focus-visible:outline-accent flex items-center gap-1.5 font-bold transition-colors focus-visible:outline-2"
         >
           {monthLabel(year, month)}
           <span
             className={`text-text-3 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
           >
-            <ChevronMiniIcon size={13} />
+            <ChevronMiniIcon size={15} />
           </span>
         </button>
       </div>
@@ -171,9 +171,9 @@ export function DateStrip({
           type="button"
           aria-label="이전 날짜 보기"
           onClick={() => slide(-1)}
-          className="text-icon hover:bg-elevate rounded-control grid size-8 shrink-0 rotate-180 place-items-center transition-colors"
+          className="text-icon hover:bg-elevate rounded-control grid size-9 shrink-0 rotate-180 place-items-center transition-colors"
         >
-          <ChevronMiniIcon size={14} />
+          <ChevronMiniIcon size={16} />
         </button>
         <div
           ref={stripRef}
@@ -187,13 +187,13 @@ export function DateStrip({
                 key={dateKey}
                 href={hrefFor(dateKey)}
                 aria-current={on ? "date" : undefined}
-                className={`rounded-control focus-visible:outline-accent flex w-12 shrink-0 flex-col items-center gap-0.5 py-2 transition-colors focus-visible:outline-2 ${
+                className={`rounded-control focus-visible:outline-accent flex w-14 shrink-0 flex-col items-center gap-1 py-2.5 transition-colors focus-visible:outline-2 ${
                   on ? "bg-accent-tint" : "hover:bg-elevate"
                 }`}
               >
                 {dateKey === today ? (
                   <span
-                    className={`rounded-badge text-micro px-1.5 font-bold ${
+                    className={`rounded-badge text-label px-1.5 font-bold ${
                       on
                         ? "bg-accent text-on-accent"
                         : "bg-accent-tint text-accent"
@@ -203,13 +203,13 @@ export function DateStrip({
                   </span>
                 ) : (
                   <span
-                    className={`text-micro font-semibold ${on ? "text-accent" : "text-text-4"}`}
+                    className={`text-label font-semibold ${on ? "text-accent" : "text-text-4"}`}
                   >
                     {weekday}
                   </span>
                 )}
                 <span
-                  className={`text-body-lg font-bold ${on ? "text-accent" : "text-text-2"}`}
+                  className={`text-title font-bold ${on ? "text-accent" : "text-text-2"}`}
                 >
                   {day}
                 </span>
@@ -221,9 +221,9 @@ export function DateStrip({
           type="button"
           aria-label="다음 날짜 보기"
           onClick={() => slide(1)}
-          className="text-icon hover:bg-elevate rounded-control grid size-8 shrink-0 place-items-center transition-colors"
+          className="text-icon hover:bg-elevate rounded-control grid size-9 shrink-0 place-items-center transition-colors"
         >
-          <ChevronMiniIcon size={14} />
+          <ChevronMiniIcon size={16} />
         </button>
       </div>
     </div>

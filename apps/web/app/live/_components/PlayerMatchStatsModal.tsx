@@ -43,9 +43,9 @@ export function PlayerMatchStatsModal({
       ) : (
         <>
           <div className="flex items-center gap-3 pb-5">
-            <PlayerPhoto src={stats.photo} name={stats.name} size={48} />
+            <PlayerPhoto src={stats.photo} name={stats.name} size={64} />
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-title text-text font-extrabold">
+              <span className="text-headline text-text font-extrabold">
                 {stats.name}
                 {stats.captain && (
                   <span className="text-caption text-accent ml-1.5 font-bold">
@@ -53,7 +53,7 @@ export function PlayerMatchStatsModal({
                   </span>
                 )}
               </span>
-              <span className="text-caption text-text-3">
+              <span className="text-body text-text-3">
                 {player?.team.name} · {POSITION_LABEL[stats.position]}
                 {stats.number !== null && ` · No.${stats.number}`}
                 {stats.minutes === null
@@ -63,7 +63,7 @@ export function PlayerMatchStatsModal({
             </span>
             {stats.rating !== null && (
               <span
-                className={`rounded-tile text-body-lg mr-8 px-2.5 py-1 font-extrabold ${
+                className={`rounded-tile text-title mr-8 px-3 py-1.5 font-extrabold ${
                   ratingTone(stats.rating) === "accent"
                     ? "bg-accent-tint text-accent"
                     : "bg-warn-tint text-warn"
@@ -77,10 +77,10 @@ export function PlayerMatchStatsModal({
             {stats.stats.map((entry) => (
               <div
                 key={entry.label}
-                className="bg-elevate rounded-tile flex flex-col gap-1 px-3.5 py-3"
+                className="bg-elevate rounded-tile flex flex-col gap-1 px-4 py-3.5"
               >
-                <span className="text-caption text-text-4">{entry.label}</span>
-                <span className="text-body-lg text-text font-bold">
+                <span className="text-body text-text-4">{entry.label}</span>
+                <span className="text-title text-text font-bold">
                   {entry.value}
                 </span>
               </div>
@@ -97,7 +97,7 @@ function ModalSkeleton() {
   return (
     <div className="animate-pulse">
       <div className="flex items-center gap-3 pb-5">
-        <div className="bg-avatar size-12 rounded-full" />
+        <div className="bg-avatar size-16 rounded-full" />
         <div className="flex flex-1 flex-col gap-2">
           <div className="bg-elevate rounded-control h-5 w-1/2" />
           <div className="bg-elevate rounded-control h-3.5 w-2/3" />

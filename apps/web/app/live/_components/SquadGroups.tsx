@@ -28,34 +28,34 @@ export function SquadGroups({ squad }: { squad: TeamSquad }) {
           if (players.length === 0) return null;
           return (
             <section key={position} className="flex flex-col gap-2">
-              <h2 className="text-label text-text-3 font-bold">
+              <h2 className="text-body-lg text-text-3 font-bold">
                 {POSITION_LABEL[position]}
               </h2>
-              <div className="bg-elevate rounded-card flex flex-col px-4 py-1">
+              <div className="bg-elevate rounded-card flex flex-col px-5 py-1">
                 {players.map((player, i) => (
                   <button
                     key={player.id}
                     type="button"
                     onClick={() => setPlayer(player)}
-                    className={`group flex items-center gap-3 py-3 text-left ${
+                    className={`group flex items-center gap-4 py-3.5 text-left ${
                       i > 0 ? "border-border border-t" : ""
                     }`}
                   >
                     <PlayerPhoto
                       src={player.photo}
                       name={player.name}
-                      size={36}
+                      size={48}
                     />
-                    <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
+                    <span className="text-title text-text min-w-0 flex-1 truncate font-semibold">
                       {player.name}
                     </span>
                     {player.number !== null && (
-                      <span className="text-label text-text-4 font-bold">
+                      <span className="text-body text-text-4 font-bold">
                         No.{player.number}
                       </span>
                     )}
                     <span className="text-text-4 group-hover:text-text-2 transition-colors">
-                      <ChevronMiniIcon size={14} />
+                      <ChevronMiniIcon size={16} />
                     </span>
                   </button>
                 ))}
@@ -64,7 +64,7 @@ export function SquadGroups({ squad }: { squad: TeamSquad }) {
           );
         })}
       </div>
-      <p className="text-caption text-text-4 pt-6 text-center">
+      <p className="text-body text-text-4 pt-6 text-center">
         선수를 누르면 시즌 스탯을 볼 수 있어요
       </p>
       <SeasonStatsModal

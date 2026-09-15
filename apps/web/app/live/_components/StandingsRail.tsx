@@ -10,18 +10,16 @@ import { LiveCrest } from "./LiveCrest";
  */
 export function StandingsRail({ rows }: { rows: StandingRow[] }) {
   return (
-    <section className="bg-elevate rounded-card h-fit px-3.5 py-4">
-      <div className="flex items-baseline justify-between px-1 pb-2">
-        <h2 className="text-body-lg text-text font-bold">순위표</h2>
-        <span className="text-caption text-text-4">
-          {LIVE_SEASON_LABEL} 시즌
-        </span>
+    <section className="bg-elevate rounded-card h-fit px-4 py-5">
+      <div className="flex items-baseline justify-between px-1 pb-3">
+        <h2 className="text-title text-text font-bold">순위표</h2>
+        <span className="text-body text-text-4">{LIVE_SEASON_LABEL} 시즌</span>
       </div>
       {rows.map((row) => (
         <StandingLine key={row.rank} row={row} />
       ))}
-      <p className="text-caption text-text-4 flex items-center gap-1.5 px-1 pt-3">
-        <span aria-hidden className="bg-accent h-2.5 w-0.5 rounded-full" />
+      <p className="text-body text-text-4 flex items-center gap-1.5 px-1 pt-4">
+        <span aria-hidden className="bg-accent h-3 w-0.5 rounded-full" />
         1~4위 챔피언스리그 · 1시간마다 갱신돼요
       </p>
     </section>
@@ -34,29 +32,29 @@ function StandingLine({ row }: { row: StandingRow }) {
   const content = (
     <>
       <span
-        className={`text-caption w-4 shrink-0 text-center font-semibold ${
+        className={`text-body w-5 shrink-0 text-center font-semibold ${
           row.zone === "UCL" ? "text-accent" : "text-text-4"
         }`}
       >
         {row.rank}
       </span>
-      <LiveCrest team={row.team} size={18} />
+      <LiveCrest team={row.team} size={24} />
       <span
-        className={`text-label min-w-0 flex-1 truncate ${
+        className={`text-body-lg min-w-0 flex-1 truncate ${
           row.team.code ? "text-text font-semibold" : "text-text-3"
         }`}
       >
         {row.team.name}
       </span>
       <span
-        className={`text-label shrink-0 font-bold ${myTeam ? "text-accent" : "text-text-2"}`}
+        className={`text-body-lg shrink-0 font-bold ${myTeam ? "text-accent" : "text-text-2"}`}
       >
         {row.points}
       </span>
     </>
   );
 
-  const lineClass = `flex items-center gap-2 rounded-tile px-1.5 py-1.5 ${
+  const lineClass = `flex items-center gap-2.5 rounded-tile px-2 py-2 ${
     myTeam ? "bg-accent-tint" : ""
   }`;
 

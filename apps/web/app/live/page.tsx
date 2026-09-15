@@ -71,7 +71,7 @@ export default async function LivePage({
               프리미어리그 경기와 순위를 한눈에 볼 수 있어요
             </p>
           </header>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="flex flex-col gap-1">
               <DateStrip selected={selected} today={today} />
               <LiveMatchesFeed date={selected} initial={initial} />
@@ -79,8 +79,8 @@ export default async function LivePage({
             {rows ? (
               <StandingsRail rows={rows} />
             ) : (
-              <section className="bg-elevate rounded-card h-fit px-3.5 py-4">
-                <h2 className="text-body-lg text-text px-1 pb-2 font-bold">
+              <section className="bg-elevate rounded-card h-fit px-4 py-5">
+                <h2 className="text-title text-text px-1 pb-3 font-bold">
                   순위표
                 </h2>
                 <LiveLoadError compact />

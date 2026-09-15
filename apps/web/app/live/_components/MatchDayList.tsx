@@ -24,12 +24,12 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-5 pt-2">
       {groups.map((group) => (
-        <section key={group.id} className="flex flex-col gap-2">
-          <h2 className="flex items-center gap-1.5">
-            <span aria-hidden className="bg-accent h-3 w-0.5 rounded-full" />
-            <span className="text-label text-text-3 font-bold">
+        <section key={group.id} className="flex flex-col gap-2.5">
+          <h2 className="flex items-center gap-2">
+            <span aria-hidden className="bg-accent h-3.5 w-0.5 rounded-full" />
+            <span className="text-body text-text-3 font-bold">
               {group.competition}
             </span>
           </h2>
@@ -38,7 +38,7 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
           ))}
         </section>
       ))}
-      <p className="text-caption text-text-4 pt-1 text-center">
+      <p className="text-body text-text-4 pt-1 text-center">
         라이브 경기는 20~30초마다 자동 갱신돼요
       </p>
     </div>

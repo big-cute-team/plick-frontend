@@ -4,6 +4,14 @@
  */
 
 /**
+ * 공유할 기사 세부 페이지 경로 (KAN-485). 절대 주소는 {@link shareUrl}이 만든다.
+ * 모바일 `articleSharePath`와 같다.
+ */
+export function articleSharePath(articleId: string): string {
+  return `/articles/${articleId}`;
+}
+
+/**
  * 공유할 릴 딥링크 경로 (KAN-349). 받은 사람이 같은 릴 화면(`/reels/[postId]`)에서
  * 이어 본다.
  */
@@ -20,7 +28,7 @@ export function reelSharePath(reelId: string): string {
  *
  * ⚠️ `location`을 읽으므로 브라우저에서만 부른다(마운트 뒤 이벤트 핸들러나 effect).
  *
- * @param path 앱 내 경로 (`/reels/1`)
+ * @param path 앱 내 경로 (`/articles/1`, `/reels/1`)
  */
 export function shareUrl(path: string): string {
   return `${window.location.origin}${path}`;

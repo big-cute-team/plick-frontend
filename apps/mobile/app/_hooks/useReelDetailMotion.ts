@@ -20,7 +20,7 @@ import type { ReelDetailMotion } from "@/_types/reels";
  * ReelsFeed 전체가 리렌더된다 — 실측으로 드래그 3초에 커밋 77회, 매 커밋 파이버
  * 1,042개 전량 렌더였다. 대신 {@link SHEET_DRAG_Y_VAR} CSS 변수를 쓰고,
  * 시트·제목·스크림이 각자 transform에서 그 변수를 읽는다
- * (useTeamSwipePager가 트랙 transform을 ref로 직접 미는 것과 같은 원리인데,
+ * (useSwipePager가 트랙 transform을 ref로 직접 미는 것과 같은 원리인데,
  * 따라 움직일 요소가 세 컴포넌트에 흩어져 있어 ref 하나 대신 변수로 퍼뜨린다).
  * React 렌더는 제스처 시작·끝(dragging)과 개폐(shown)에만 일어난다.
  *

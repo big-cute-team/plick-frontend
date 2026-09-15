@@ -15,7 +15,7 @@ const TONE_TEXT: Record<MatchStatusTone, string> = {
 };
 
 /**
- * 경기 목록 카드(피그마 LW1) — 모바일 L1 카드의 데스크톱판. 상태 컬럼·팀
+ * 경기 목록 카드(피그마 LW1 → KAN-462 확대) — 모바일 L1 카드의 데스크톱판. 상태 컬럼·팀
  * 두 줄·스코어 컬럼 구성은 같고 hover·focus 상태만 데스크톱답게 더한다.
  */
 export function MatchCard({ match }: { match: MatchSummary }) {
@@ -24,20 +24,20 @@ export function MatchCard({ match }: { match: MatchSummary }) {
   return (
     <Link
       href={`/live/matches/${match.id}`}
-      className="bg-elevate rounded-card hover:border-border-strong focus-visible:outline-accent flex items-center gap-4 border border-transparent px-4 py-3.5 transition-colors focus-visible:outline-2"
+      className="bg-elevate rounded-card hover:border-border-strong focus-visible:outline-accent flex items-center gap-5 border border-transparent px-5 py-4.5 transition-colors focus-visible:outline-2"
     >
-      <span className="flex w-13 shrink-0 flex-col items-center gap-0.5">
-        <span className={`text-body font-bold ${TONE_TEXT[tone]}`}>
+      <span className="flex w-16 shrink-0 flex-col items-center gap-0.5">
+        <span className={`text-body-lg font-bold ${TONE_TEXT[tone]}`}>
           {primary}
         </span>
-        <span className="text-micro text-text-4 font-medium">{secondary}</span>
+        <span className="text-label text-text-4 font-medium">{secondary}</span>
       </span>
-      <span aria-hidden className="bg-border h-9 w-px shrink-0" />
-      <span className="flex min-w-0 flex-1 flex-col gap-2">
+      <span aria-hidden className="bg-border h-11 w-px shrink-0" />
+      <span className="flex min-w-0 flex-1 flex-col gap-2.5">
         <TeamLine match={match} side="home" />
         <TeamLine match={match} side="away" />
       </span>
-      <span className="flex shrink-0 flex-col items-end gap-1.5">
+      <span className="flex shrink-0 flex-col items-end gap-2">
         <ScoreText match={match} side="home" />
         <ScoreText match={match} side="away" />
       </span>
@@ -54,10 +54,10 @@ function TeamLine({
 }) {
   const team = match[side];
   return (
-    <span className="flex items-center gap-2">
-      <LiveCrest team={team} size={20} />
+    <span className="flex items-center gap-2.5">
+      <LiveCrest team={team} size={28} />
       <span
-        className={`text-body-lg truncate font-semibold ${team.code ? "text-text" : "text-text-3"}`}
+        className={`text-title truncate font-semibold ${team.code ? "text-text" : "text-text-3"}`}
       >
         {team.name}
       </span>
@@ -75,7 +75,7 @@ function ScoreText({
 }) {
   const value = match.score[side];
   if (value === null) {
-    return <span className="text-title text-text-4 font-bold">-</span>;
+    return <span className="text-headline text-text-4 font-bold">-</span>;
   }
   const other = match.score[side === "home" ? "away" : "home"] ?? 0;
   const color =
@@ -84,5 +84,5 @@ function ScoreText({
       : value >= other
         ? "text-text"
         : "text-text-3";
-  return <span className={`text-title font-bold ${color}`}>{value}</span>;
+  return <span className={`text-headline font-bold ${color}`}>{value}</span>;
 }

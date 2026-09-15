@@ -5,11 +5,13 @@ import type { InitialMatchDetail } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
-import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
+import { SwipePager } from "@/_components/SwipePager";
+import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
 import { MatchChatPanel } from "./MatchChatPanel";
+import { MatchChatPreview } from "./MatchChatPreview";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderBlock } from "./MatchHeaderBlock";
 import { MatchTabBar } from "./MatchTabBar";
@@ -57,7 +59,9 @@ export function MatchDetailScreen({
 /**
  * 상태로 지면이 갈린다 — SCHEDULED는 프리뷰·채팅 탭, LIVE·FINISHED는
  * 요약·라인업·스탯·채팅 탭, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
- * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`).
+ * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`). 채팅이 닫혀 있는 동안은
+ * `matchTabsFor`가 채팅 탭을 빼 주고(KAN-486), 탭이 하나만 남으면(예정 경기의
+ * 프리뷰) 웹처럼 탭 줄 없이 본문만 그린다.
  *
  * 채팅 탭만 스크롤 영역 밖에 선다 (KAN-458). 입력바가 화면 하단에 붙어 있어야
  * 하는데 `AppShell`이 높이를 못박고 스크롤은 `ScrollArea`가 맡는 구조라, 스크롤
@@ -66,6 +70,13 @@ export function MatchDetailScreen({
  *
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이 사라지면
  * 첫 탭으로 돌아간다.
+ *
+ * 본문을 좌우로 끌면 이웃 탭으로 넘어간다 (KAN-462, `SwipePager`). 커밋은 탭을
+ * 누른 것과 같은 `setSelected`다. 페이저는 두 레이아웃(채팅 고정 / 스크롤)에
+ * 각각 하나씩이라 채팅 경계를 넘는 커밋에서는 옛 페이저가 내려가고 새 페이저가
+ * 제자리(transform 없음)로 올라온다 — 스냅이 끝난 자리에 미리보기가 있었으므로
+ * 그대로 진짜 페인으로 갈아 끼워지는 셈이다. 채팅 이웃의 미리보기는 소켓을
+ * 열지 않는 자리 표시(`MatchChatPreview`)다.
  */
 function MatchDetailBody({
   matchId,
@@ -76,10 +87,19 @@ function MatchDetailBody({
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
   const { header } = detail;
-  const tabs = MATCH_TABS_BY_STATUS[header.status];
+  const tabs = matchTabsFor(header.status);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
+
+  const neighborTab = (tab: MatchTabKey, dir: 1 | -1) =>
+    tabs[tabs.indexOf(tab) + dir] ?? null;
+  const renderPreview = (tab: MatchTabKey) =>
+    tab === "chat" ? (
+      <MatchChatPreview />
+    ) : (
+      <MatchDetailTabs detail={detail} tab={tab} />
+    );
 
   if (active === "chat") {
     return (
@@ -88,7 +108,16 @@ function MatchDetailBody({
         <div className="flex min-h-0 flex-1 flex-col">
           <MatchHeaderBlock header={header} />
           <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-          <MatchChatPanel header={header} />
+          <SwipePager
+            value={active}
+            neighborOf={neighborTab}
+            onCommit={setSelected}
+            renderPreview={renderPreview}
+            className="flex min-h-0 flex-1 flex-col"
+            trackClassName="flex min-h-0 flex-1 flex-col"
+          >
+            <MatchChatPanel header={header} />
+          </SwipePager>
         </div>
       </>
     );
@@ -111,8 +140,17 @@ function MatchDetailBody({
           )
         ) : (
           <>
-            <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-            <MatchDetailTabs detail={detail} tab={active} />
+            {tabs.length > 1 && (
+              <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+            )}
+            <SwipePager
+              value={active}
+              neighborOf={neighborTab}
+              onCommit={setSelected}
+              renderPreview={renderPreview}
+            >
+              <MatchDetailTabs detail={detail} tab={active} />
+            </SwipePager>
           </>
         )}
       </ScrollArea>
