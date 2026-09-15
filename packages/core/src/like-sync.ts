@@ -13,6 +13,7 @@
 
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { LikeState } from "@plick/domain/types";
+import { activityKeys } from "./activityKeys";
 import { articleKeys } from "./articleKeys";
 import { reelKeys } from "./reelKeys";
 
@@ -27,6 +28,12 @@ interface FeedPageLike {
  * 팀 탭마다 캐시 엔트리가 따로 있어(`articleKeys.feed(team)`) 어느 탭에 들어
  * 있는지 모르므로 도메인 상위 키로 한 번에 훑는다. 아직 안 받은 탭은 캐시가
  * 없어 그냥 지나간다.
+ *
+ * 마이페이지의 "좋아요한 기사" 목록(KAN-495)도 같은 카드 모양이라 함께 고친다.
+ * 그 목록은 `liked`가 false로 바뀐 카드를 그리지 않으므로, 세부에서 하트를
+ * 끄고 돌아오면 목록에서 바로 빠진 것처럼 보이고 다시 켜면 되살아난다. 활동
+ * 개수는 목록에 없는 기사를 눌렀을 수도 있어 캐시로 못 맞추고 stale로만
+ * 표시한다. 활동 화면에 다시 들어올 때 새로 센다.
  *
  * @param queryClient 앱의 QueryClient
  * @param articleId 기사(릴) id — 릴스와 기사가 같은 `articleSummaryId` 체계다
@@ -48,10 +55,11 @@ export function syncLikeIntoFeeds(
       })),
     };
 
-  for (const key of [articleKeys.all, reelKeys.all]) {
+  for (const key of [articleKeys.all, reelKeys.all, activityKeys.likes()]) {
     queryClient.setQueriesData<InfiniteData<FeedPageLike>>(
       { queryKey: key },
       patch,
     );
   }
+  void queryClient.invalidateQueries({ queryKey: activityKeys.counts() });
 }

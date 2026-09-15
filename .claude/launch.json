@@ -98,6 +98,33 @@
       ],
       "port": 3020,
       "autoPort": true
+    },
+    {
+      "name": "backend-8082",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/dowankim/Documents/plick-backend && JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ./gradlew bootRun --args='--spring.profiles.active=local --server.port=8082 --management.server.port=9468'"
+      ],
+      "port": 8082,
+      "autoPort": false
+    },
+    {
+      "name": "mobile-8082",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3012"
+      ],
+      "port": 3012,
+      "autoPort": true
     }
   ]
 }
