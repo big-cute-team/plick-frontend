@@ -122,8 +122,8 @@ permitted`) BE는 백그라운드 셸로 띄웠다.
 validate`에 마이그레이션 도구가 없어 수동 DDL이다. 이건 공유 DB라 혼자 결정하지 않는다. 같은 이유로 IDE
 BE를 지금 코드로 재시작해도 똑같이 죽는다.
 
-그래서 이 세션은 여기까지가 코드고, 런타임 검증은 DDL 적용 뒤로 미뤘다. 적용할 문장은 BE
-`src/test/resources/schema.sql`의 그대로다.
+사용자 승인을 받고 `db.sh`로 아래를 공유 DB에 넣었다. 둘 다 NULL 허용이라 옛 빌드로 떠 있는 8080에는
+영향이 없다. 넣자마자 8082가 9초 만에 올라왔고 스웨거에 세 경로가 보였다.
 
 ```sql
 ALTER TABLE public.users
@@ -132,6 +132,54 @@ ALTER TABLE public.users
   ADD CONSTRAINT chk_user_age_range CHECK (((age_range)::text = ANY ((ARRAY['1~9'::character varying, '10~14'::character varying, '15~19'::character varying, '20~29'::character varying, '30~39'::character varying, '40~49'::character varying, '50~59'::character varying, '60~69'::character varying, '70~79'::character varying, '80~89'::character varying, '90~'::character varying])::text[]))),
   ADD CONSTRAINT chk_user_gender CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])));
 ```
+
+## 계약은 티켓 표 그대로였다
+
+`be-verify`가 8082에 일회용 유저 둘(87 활동 있음, 88 활동 없음)을 만들어 좋아요 3건과 댓글 3건(답글 1
+포함)을 실제 API로 쌓고 세 GET을 대조했다. 필드명·타입은 티켓 표와 전부 일치했다. 좋아요 카드는 홈
+피드 카드와 키 17개가 같아서 `toArticleCard`를 그대로 물렸고, 그래서 이번에 그 함수를 `@plick/core`에서
+export했다.
+
+티켓에 없던 사실 넷. 답글도 내 댓글 목록에 평면 항목으로 오고 부모 표시가 없다. `createdAt`은 `+09:00`
+오프셋 문자열이다. `article.imageUrl`은 null일 수 있다(로컬 시드는 전부 null). 좋아요 커서를 댓글
+엔드포인트에 넣어도 형식이 같아 400이 아니라 빈 200이 온다. 마지막 건은 쿼리키를 `activityKeys.likes()`와
+`activityKeys.comments()`로 갈라 둔 것으로 충분하다. 커서는 그 키의 캐시에만 산다.
+
+에러는 토큰 없음 401 `AUTH_REQUIRED`, size 0·31·문자 400 `COMMON_INVALID_PARAM`, 커서 위조 400
+`COMMON_INVALID_PARAM`이었다. 좋아요 취소와 댓글 삭제 뒤 목록·개수가 같이 줄었고, 빈 유저는 빈
+배열과 0이었다.
+
+## 화면은 prod 빌드로 밟았다
+
+`next dev`는 사용자 터미널의 3001이 `.next/dev`를 잡고 있어서 이 세션 것을 또 띄우지 않았다. 대신
+prod 빌드를 `next start`로 3012에 올렸는데, 첫 빌드에서 다음 페이지 요청이 404였다. `/be` 프록시
+rewrites의 BE 주소가 빌드 시점에 굳는다는 걸(CLAUDE.md에 적혀 있던 것) 잊고 `.env.local`의 8080으로
+빌드한 것이다. 서버 컴포넌트는 런타임 env로 8082를 봐서 첫 페이지는 멀쩡했고 클라 요청만 8080으로
+갔다. `API_BASE_URL=http://localhost:8082 pnpm --filter mobile build`로 다시 빌드하니 풀렸다.
+
+유저 87 토큰을 쿠키로 심고 밟은 것.
+
+- 비로그인 `/me/activity`: 로그인 카드.
+- 활동 없는 유저(84)의 `/me`: 카드에 0·0. `/me/activity`: 탭 옆 0, 빈 상태 문구. 클라 `/be` 요청 없음
+  (씨앗으로 다 채워짐).
+- 유저 87에 좋아요 14건을 API로 더 쌓은 뒤 `/me`: 카드에 14·2. `/me/activity`: 첫 페이지 10건이
+  서버 HTML로 오고, 끝까지 내리면 `?cursor=`를 실은 두 번째 요청이 200으로 4건을 붙이고
+  "좋아요한 기사를 전부 봤어요"가 뜬다.
+- 목록 끝의 기사에 들어가 하트를 끄고 뒤로: 그 줄이 빠져 13건, 탭 옆 숫자도 13. 나간 요청은
+  `/users/me/activity` 하나뿐이고 목록은 refetch되지 않았다. 스크롤 자리(689px)도 그대로였다.
+- 댓글 탭: 원댓글 2건이 본문·기사 조각으로 그려진다. 하나에 들어가 삭제하고 뒤로: 1건, 숫자 1,
+  역시 개수 요청 하나뿐.
+- 그 기사에 댓글을 새로 달고 뒤로: 목록이 첫 페이지 하나만 다시 받아(`/users/me/comments?size=10`
+  한 번) 새 댓글이 맨 위에 오고 숫자 2.
+- 탭 전환: `history.replaceState`로 `?tab=comments`가 되고 리로드 없이 목록이 바뀐다.
+- 콘솔 에러 없음(옛 빌드 때의 404 로그만 남아 있었다).
+
+당겨서 새로고침은 안 밟았다. 브라우저 패널이 hidden이라 제스처가 얼어 있어서(메모리의 애니메이션 검증
+표면 항목) 시뮬레이터 몫으로 남긴다. 동작은 `useArticlesRefresh`의 판박이라 코드로만 확인했다.
+
+끝나고 유저 87·88과 그 좋아요·댓글을 순서대로 지우고 잔여 0을 확인했다.
+
+check-types, lint, format:check, mobile build 통과.
 
 ## 만든 것
 
@@ -149,22 +197,8 @@ ALTER TABLE public.users
 | 마이페이지 활동 카드                                                                            | `apps/mobile/app/me/_components/ActivityCard.tsx` |
 | `ScreenKey`에 `activity`                                                                        | 스크롤 위치 복원과 탭 전환 시 맨 위로             |
 
-## 지금까지 눈으로 본 것
-
-BE 없이 볼 수 있는 상태는 prod 빌드(`next start`, 3101, BE는 옛 8080)로 밟았다.
-
-- 비로그인 `/me/activity`: 로그인 카드가 상단바 아래 카드 섀시로 뜬다.
-- 로그인(민팅 토큰) `/me`: 프로필·응원팀 카드 아래 "내 활동" 카드가 붙고, 개수 조회가 404라 타일에
-  숫자 없이 라벨만 있다. 진입은 된다.
-- 로그인 `/me/activity`: 탭 둘이 sticky로 뜨고, 목록 자리에 "불러오지 못했어요" + 다시 시도.
-  "내가 쓴 댓글"을 누르면 리로드 없이 URL이 `?tab=comments`로 바뀌고 탭과 목록 자리가 따라온다.
-- 콘솔 에러는 옛 BE의 404뿐이다.
-
-check-types, lint, format:check, mobile build 통과.
-
 ## 남은 것
 
-- 공유 DB에 KAN-475 DDL 적용 뒤 8082 BE를 띄워 `be-verify`로 세 계약을 실제 응답으로 대조하고,
-  로그인 상태의 목록·무한 스크롤·빈 상태·좋아요 취소 반영을 브라우저로 밟는다.
+- 당겨서 새로고침(`useActivityRefresh`)은 iOS 시뮬레이터로 한 번 밟는다.
 - 게스트 계정(BE-11)이 생기면 `ActivityLoginPrompt`를 소셜 연동 유도로 바꾼다.
 - web 이식 때 `_types/activity.ts`·`_services/activity.ts`를 `@plick/domain`·`@plick/core`로 올린다.
