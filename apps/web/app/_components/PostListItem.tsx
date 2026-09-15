@@ -2,8 +2,13 @@ import Link from "next/link";
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { HeartMiniIcon } from "@plick/ui/icons";
+import { NewBadge } from "@plick/ui/NewBadge";
 import { TEAMS } from "@plick/domain/constants";
-import { formatCount, formatRelativeTime } from "@plick/domain/format";
+import {
+  formatCount,
+  formatRelativeTime,
+  isRecentlyPublished,
+} from "@plick/domain/format";
 import type { ArticleCard, Filter } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { PostListVariant } from "@/_types/app";
@@ -57,6 +62,9 @@ const VARIANT: Record<
  * (KAN-368, 모바일과 동일) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다.
  * 전체 탭은 기존대로 기사의 첫 팀이다.
  *
+ * 발행 30분 안의 기사는 시각 옆에 NEW 태그를 단다 (KAN-481). 하이드레이션
+ * 경계 사정은 모바일 `NewsItem`과 같다.
+ *
  * @param post - 표시할 기사 카드
  * @param variant - 행 변형(news=홈, article=기사)
  * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
@@ -78,6 +86,7 @@ export function PostListItem({
       : post.teams[0]
         ? TEAMS[post.teams[0]]
         : null;
+  const isNew = isRecentlyPublished(post.publishedAt);
 
   return (
     <Link
@@ -94,6 +103,7 @@ export function PostListItem({
           <span className="text-caption text-text-4" suppressHydrationWarning>
             {formatRelativeTime(post.publishedAt)}
           </span>
+          {isNew && <NewBadge />}
         </div>
         <Title
           className={`text-text text-title mt-1.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}

@@ -6,6 +6,7 @@ import { getArticles, getHotArticles } from "@plick/core/articles";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { LiveDot } from "@plick/ui/LiveDot";
 import { WEB_SITE_URL } from "@/_constants/site";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HomeFooter } from "./HomeFooter";
@@ -108,7 +109,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
 
         <section className="pt-3">
           <div className="px-edge flex items-center justify-between pb-2">
-            <h2 className="text-section tracking-heading text-text font-extrabold">
+            {/* 빨간 점이 번쩍여 지금 갱신되는 목록임을 알린다 (KAN-481) */}
+            <h2 className="text-section tracking-heading text-text flex items-center gap-2 font-extrabold">
+              <LiveDot />
               지금 올라온 소식
             </h2>
             {/* 첫 페이지 밖 기사는 기사 페이지가 맡는다 (KAN-386) */}

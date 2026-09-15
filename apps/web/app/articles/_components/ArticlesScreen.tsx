@@ -1,5 +1,6 @@
 import { getArticles } from "@plick/core/articles";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
+import { LiveDot } from "@plick/ui/LiveDot";
 import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
 import { PostFeed } from "@/_components/PostFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -46,7 +47,9 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
                 /* 서버가 prop으로 넘기는 JSX는 직렬화되며 정적 자식 표시를
                    잃어 React가 key를 요구한다 (모바일과 같은 사정) */
                 <header key="articles-header" className="pt-7 pb-4.5">
-                  <h1 className="text-hero text-text tracking-heading font-extrabold">
+                  {/* 홈 섹션 제목과 같은 라이브 점 — hero 크기라 한 단계 키운다 (KAN-481) */}
+                  <h1 className="text-hero text-text tracking-heading flex items-center gap-2.5 font-extrabold">
+                    <LiveDot size="size-2.5" />
                     지금 올라온 소식
                   </h1>
                   <p className="text-body text-text-3 mt-1.5 font-semibold">

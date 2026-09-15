@@ -186,3 +186,9 @@ export const COMMENT_REPORT_REASONS: {
   { value: "SEXUAL", label: "음란" },
   { value: "ETC", label: "기타" },
 ];
+
+/**
+ * 기사 목록에서 NEW 태그를 다는 발행 후 시간 창 (KAN-481). 30분 안에 올라온
+ * 기사가 대상이다. 판정은 `isRecentlyPublished`(format)가 한다.
+ */
+export const NEW_ARTICLE_WINDOW_MS = 30 * 60_000;
