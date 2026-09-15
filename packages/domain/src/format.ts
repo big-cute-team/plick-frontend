@@ -6,10 +6,11 @@ import { BRAND_TITLE, BRAND_TITLE_TEMPLATE } from "./brand";
 import {
   NEW_ARTICLE_WINDOW_MS,
   TEAMS,
+  TEAM_BY_KO_NAME,
   TEAM_BY_SLUG,
   TEAM_FULL_NAMES,
 } from "./constants";
-import type { Filter } from "./types";
+import type { Filter, TeamCode } from "./types";
 
 /**
  * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
@@ -94,6 +95,39 @@ export function articlesTeamTitle(filter: Filter): string {
   return brandTitle(
     filter === "ALL" ? "기사" : `${TEAM_FULL_NAMES[filter]} 기사`,
   );
+}
+
+/**
+ * 팀 프로필 URL (KAN-500). 팀 허브(`/teams/[slug]`)가 홈 피드를 그리는 자리라
+ * 프로필은 그 아래 `/profile`로 뒀다 — 같은 slug 규약이라 팀 검색어 랜딩과
+ * 프로필이 한 접두 아래 모인다.
+ *
+ * @example
+ * teamProfilePath("TOT"); // "/teams/tottenham/profile"
+ */
+export function teamProfilePath(code: TeamCode): string {
+  return `/teams/${TEAMS[code].slug}/profile`;
+}
+
+/**
+ * 인물 프로필 URL (KAN-500). 관련 기사 목록이 프로필 아래 이어지므로 인물
+ * 칩·선수 카드가 전부 이 하나로 간다.
+ *
+ * @example
+ * figurePath("12"); // "/figures/12"
+ */
+export function figurePath(figureId: string): string {
+  return `/figures/${encodeURIComponent(figureId)}`;
+}
+
+/**
+ * 해시태그 → 팀 프로필 URL (KAN-500). 해시태그는 팀 한글 정식명만 오므로
+ * (`TEAM_BY_KO_NAME` 주석) 매핑되면 그 팀 프로필이고, 안 되면 링크 없는
+ * 글자 칩으로 남긴다.
+ */
+export function hashtagHref(tag: string): string | null {
+  const code = TEAM_BY_KO_NAME[tag];
+  return code ? teamProfilePath(code) : null;
 }
 
 /**

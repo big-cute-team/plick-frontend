@@ -5,7 +5,13 @@
  * 동일 값으로 복제돼 있던 것을 구조 감사(2026-07-16)로 승격했다(ADR 0018).
  * 앱 전용 상수(GNB 링크 등)는 각 앱 `app/_lib/constants.ts`에 남는다.
  */
-import type { CommentReportReason, RumorStage, Team, TeamCode } from "./types";
+import type {
+  CommentReportReason,
+  FigureType,
+  RumorStage,
+  Team,
+  TeamCode,
+} from "./types";
 
 /** 팀 레지스트리 — 코드 → 한글 이름·URL slug·컬러 토큰 매핑 */
 export const TEAMS: Record<TeamCode, Team> = {
@@ -192,3 +198,27 @@ export const COMMENT_REPORT_REASONS: {
  * 기사가 대상이다. 판정은 `isRecentlyPublished`(format)가 한다.
  */
 export const NEW_ARTICLE_WINDOW_MS = 30 * 60_000;
+
+/**
+ * 인물 구분 → 화면 라벨 (KAN-500). 칩과 프로필에서 선수는 라벨을 생략하고
+ * 감독·코치·구단주만 이름 옆에 단다 — 태그의 대부분이 선수라 매번 "선수"를
+ * 붙이면 글자만 는다. 생략 판단은 화면이 하고 여기는 표기만 둔다.
+ */
+export const FIGURE_TYPE_LABEL: Record<FigureType, string> = {
+  PLAYER: "선수",
+  MANAGER: "감독",
+  COACH: "코치",
+  OWNER: "구단주",
+  OTHER: "관계자",
+};
+
+/**
+ * 팀 프로필의 소속 인물 섹션 순서 (KAN-500). 감독·코칭스태프가 먼저, 선수단이
+ * 그 다음, 구단주·관계자가 마지막이다. BE는 구분 없이 한글명순 한 배열로 주므로
+ * 화면이 이 순서로 갈라 그린다.
+ */
+export const FIGURE_SECTIONS: { types: FigureType[]; label: string }[] = [
+  { types: ["MANAGER", "COACH"], label: "감독·코칭스태프" },
+  { types: ["PLAYER"], label: "선수단" },
+  { types: ["OWNER", "OTHER"], label: "구단주·관계자" },
+];

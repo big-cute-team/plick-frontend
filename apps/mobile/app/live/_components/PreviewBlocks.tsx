@@ -1,7 +1,7 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "./LiveCrest";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@/_components/PlayerPhoto";
 
 /**
  * 킥오프 전 프리뷰 지면(피그마 L5) — 결장자·상대전적·리그 순위·직전 경기

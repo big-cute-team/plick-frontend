@@ -1,0 +1,192 @@
+# 0146. 팀과 선수 이름을 눌러 관련 기사 보기, 인물 칩과 팀·인물 프로필 (KAN-500)
+
+2026-09-15. 브랜치 `feature/KAN-500-entity-tags`.
+관련: [ADR 0145](0145-mypage-activity-lists.md) 홈 피드 카드를 다른 목록이 그대로 쓰는 전례,
+[ADR 0048](0048-view-state-restore.md) 피드 캐시 30분과 씨앗, [ADR 0011](0011-shared-code-boundary.md)
+무엇을 core로 올리는가, [ADR 0028](0028-be-verify-subagent.md) 계약 검증 위임.
+
+## 티켓이 요구한 것
+
+회의록 FE-10이다. 어느 화면에서든 팀, 선수, 감독 이름을 누르면 그와 관련된 기사가 전부 나오는 화면으로
+간다. 서버는 상위 Epic KAN-488에서 끝났고 dev에 올라가 있다고 했다.
+
+화면은 넷이었다. 기사 카드와 상세에 응답의 `figures` 배열을 이름 칩으로 그리기, 칩을 누르면 그 대상의
+기사 목록, 팀 이름을 누르면 로고·표기·소속 선수 카드가 있는 팀 프로필, 선수나 감독 이름을 누르면 사진·
+한 줄 소개·소속 팀이 있는 인물 프로필. 완료 조건은 칩에서 관련 기사로 가기, 팀 프로필의 선수 카드에서
+그 선수 기사로 가기, 인물 프로필에서 소속 팀으로 이어 가기, 태그 없는 기사도 레이아웃이 안 깨지기,
+없는 id는 404 화면, 비로그인도 전부 보이기였다. 피그마는 없었다.
+
+쓸 API는 넷이다.
+
+| 경로                                 | 용도           | 비고                                 |
+| ------------------------------------ | -------------- | ------------------------------------ |
+| `GET /api/v1/articles?figureId={id}` | 인물 관련 기사 | 커서 페이지. 응답은 홈 피드와 똑같다 |
+| `GET /api/v1/articles?teamId={id}`   | 팀 관련 기사   | 원래 있던 것                         |
+| `GET /api/v1/teams/{teamId}`         | 팀 프로필      | 신규                                 |
+| `GET /api/v1/figures/{figureId}`     | 인물 프로필    | 신규                                 |
+
+그리고 기사 피드, 릴스 피드, 기사 상세, 마이페이지 좋아요 목록 네 곳에 `figures` 배열이 붙었다.
+`{ figureId, nameKo, type, imageUrl }`이고 `type`은 PLAYER·MANAGER·COACH·OWNER·OTHER다.
+
+## 계약 검증이 절반에서 막혔다
+
+늘 하던 대로 `be-verify` 서브에이전트에 넷을 맡겼다. 로컬 BE 저장소를 `origin/develop` 최신으로
+당겼는데 기동이 안 됐다. 공유 Supabase에 `entity_trend_snapshots`(KAN-497 급상승 랭킹)와
+`figure_tags`(KAN-488) 두 테이블이 없어서 `ddl-auto: validate`가 막는다. BE에 마이그레이션 도구가 없어
+스키마를 바꾸는 PR이 머지되면 누군가 손으로 DDL을 넣어야 하는데(ADR 0145에서도 `users.age_range`로
+한 번 겪었다) 이번엔 아직 아무도 안 넣은 상태였다.
+
+공유 DB에 DDL을 넣는 건 사용자 승인이 필요한 일이라(팀 전체에 즉시 반영된다) 서브에이전트는 넣지 않고
+`src/test/resources/schema.sql`에서 옮긴 DDL 파일만 준비해 뒀다. 대신 `--spring.jpa.hibernate.ddl-auto=none`으로
+validate를 끈 BE를 8082에 띄워 테이블이 있는 두 프로필 엔드포인트는 실측했고, 피드 계열은
+`relation "figure_tags" does not exist`로 500이라 소스와 스웨거 스키마로만 확인했다.
+
+한 가지 더 알게 된 게 있다. 공유 DB의 `article_summaries.figure_id`는 3,998건 전부 NULL이고 인물 태깅
+수집기는 dev RDS에만 돈다. 그래서 DDL을 넣어도 `figure_tags`는 빈 테이블이라 로컬에서는 `figures`가
+전부 `[]`다. 칩이 실제로 그려지는 걸 로컬에서 보려면 검증용 행을 직접 넣어야 한다.
+
+실측으로 굳은 것들이다.
+
+팀 프로필은 `{ teamId, nameKo, nameEn, shortName, logoUrl, figures[] }`이고 `figures`는 `is_deleted=false`만
+한글명 오름차순으로 온다. 팀당 31~40명. `logoUrl`은 6팀 전부 null이다. 없는 id는 404 `TEAM_NOT_FOUND`,
+숫자가 아니면 400 `COMMON_INVALID_PARAM`.
+
+인물 프로필은 `{ figureId, nameKo, nameEn, type, imageUrl, description, team }`이고 `imageUrl`·`description`·
+`team` 셋 다 null일 수 있다. `team`은 객체째 null이고 안에 `nameEn`이 없어 팀 프로필과 모양이 다르다.
+없는 id도, 운영자가 내린 인물(`is_deleted=true`)도 똑같이 404 `FIGURE_NOT_FOUND`라 구분이 안 된다.
+209명 live 인물 전원 `image_url`이 NULL이라 어느 환경에서도 사진은 아직 null만 온다.
+
+id 체계는 하나다. `figures.team_id`, `team_tags.team_id`, `favorite_teams.team_id` 전부 `teams(team_id)`
+FK고, 피드 카드의 `teams: [3]`과 팀 프로필의 `teamId`가 같은 값이다. 그래서 FE의 `TEAM_IDS`·`TEAM_CODES`를
+그대로 쓸 수 있었다.
+
+둘 다 익명 200이고 로그인해도 응답이 byte 단위로 같다. 위조 토큰을 실으면 공개 경로여도 401이라 토큰을
+싣지 않는 게 맞다.
+
+## 관련 기사 목록과 프로필을 한 화면으로 합쳤다
+
+티켓은 "관련 기사 목록"과 "인물 프로필"을 다른 번호로 적었다. 칩을 누르면 기사 목록, 이름을 누르면
+프로필이라는 식이다. 그런데 완료 조건을 다시 읽으면 "카드와 상세에서 인물 칩을 눌러서 관련 기사로
+간다"와 "인물 프로필에서 소속 팀으로 이어 간다"가 같이 있다. 칩 하나에 목적지가 둘일 수는 없다.
+
+그래서 인물 화면 하나(`/figures/[figureId]`)에 프로필을 머리로 두고 그 아래 관련 기사를 무한 목록으로
+이었다. 칩을 눌러 기사 목록만 보면 누구의 기사인지 머리가 없고, 프로필만 보면 사진·한 줄 소개·소속 팀
+세 줄로 화면이 끝나 텅 빈다. 둘을 합치면 둘 다 산다. 인물 칩, 팀 프로필의 선수 행이 전부 이 하나로 간다.
+
+팀은 사정이 달랐다. 팀 관련 기사는 이미 기사 목록의 팀 탭(`/articles/teams/[slug]`)이 원본이고 홈 팀
+허브(`/teams/[slug]`)도 팀으로 거른 피드다. 같은 목록을 세 번째 URL에 또 펼치면 어디가 원본인지
+흐려진다. 그래서 팀 프로필(`/teams/[slug]/profile`)은 로고·표기·소속 인물 목록만 담고 "관련 기사 보기"
+버튼으로 기사 목록의 팀 탭에 보낸다. 경로를 팀 허브 아래 `/profile`로 둔 건 같은 slug 규약 아래 팀
+검색어 랜딩과 프로필이 한 접두에 모이게 하려는 것이다. `app/(home)/teams/[slug]`와 `app/teams/[slug]/profile`이
+폴더는 다르지만 URL이 겹치지 않아 Next가 그대로 받아 준다.
+
+## 카드 한 줄에 링크를 셋 넣는 문제
+
+가장 오래 고민한 자리다. 홈·기사 목록·좋아요 목록의 카드 `NewsItem`은 행 전체가 `<Link>`였다. 여기에
+팀 이름은 팀 프로필로, 인물 칩은 인물 프로필로, 나머지는 기사로 가야 한다. `<a>` 안에 `<a>`는 HTML이
+허용하지 않는다. 브라우저가 파싱하다 바깥 앵커를 강제로 닫아 버려서 마크업이 의도와 다르게 잘린다.
+
+처음엔 팀 이름과 칩 줄을 `<Link>` 밖으로 빼서 위아래로 쌓을까 했다. 그러면 팀 이름이 있는 머리 줄이
+행에서 떨어져 나가 눌러도 기사로 안 가는 구역이 생기고, 행 높이도 바뀐다.
+
+택한 건 stretched link다. 행을 `<article class="relative">`로 두고 제목 `<Link>`에 `after:absolute after:inset-0`을
+줘서 가상 요소가 행 전체를 덮게 한다. 어디를 눌러도 제목 링크가 받는다. 그 위에 팀 이름 링크와 인물 칩
+줄, 오른쪽 팀 로고 링크만 `relative z-10`으로 올리면 그 자리는 자기 목적지를 갖는다. 제목이 `line-clamp-2`라
+overflow가 잘려 있는데, `::after`의 containing block은 positioned 조상인 `<article>`이고 `<h3>`는
+positioned가 아니라 잘리지 않는다. 이걸 확인하려고 h3에 `relative`가 없는지 두 번 봤다.
+
+`active:opacity-70`은 `<article>`에 뒀다. 팀 이름을 눌러도 행 전체가 눌린 것처럼 보이지만, 목적지가 다른
+것만 확실하면 되는 자리라 감수했다.
+
+인물 태그가 없는 기사는 칩 줄 요소 자체를 그리지 않는다. 배포 직후엔 태그 있는 기사가 거의 없다고 했으니
+빈 줄로 행마다 높이가 늘어나면 티가 크게 난다.
+
+## 칩 컴포넌트를 `@plick/ui`에 두지 않았다
+
+해시태그 칩 `TagChips`는 `@plick/ui`에 있고 웹과 모바일이 같이 쓴다. 인물 칩을 거기에 얹으면 자연스러워
+보이는데 두 가지가 걸렸다. 칩이 링크가 되면서 목적지 경로(`/figures/[id]`, `/teams/[slug]/profile`)가 앱
+라우트에 묶이는데 ui 패키지는 앱 라우트를 몰라야 한다(ADR 0011 게이트 A). 그리고 웹에는 아직 이 화면이
+없어 두 번째 사용처가 없다(게이트 C).
+
+그래서 모바일 `_components/EntityChips.tsx`로 뒀다. 해시태그는 `TEAM_BY_KO_NAME`으로 팀에 매핑되면 팀
+프로필 링크, 아니면 예전과 같은 글자 칩이다. 인물 칩은 사진 원 + 이름이고 감독·코치·구단주는 이름 옆에
+구분 라벨을 단다. 선수는 라벨을 뺐다. 태그 대부분이 선수라 매번 "선수"가 붙으면 글자만 는다.
+`TagChips`처럼 래퍼 없이 칩만 뿌려서 줄바꿈과 정렬은 부모가 정한다. 릴 세부 시트는 태그 줄이
+`flex items-center`였는데 칩이 늘면 넘치므로 `flex-wrap`을 붙였다. 원문 버튼의 `ml-auto`는 마지막 줄
+오른쪽에 그대로 남는다.
+
+경로 헬퍼(`figurePath`, `teamProfilePath`, `hashtagHref`)는 `@plick/domain/format`에 뒀다. `teamHubPath`·
+`articlesTeamPath`가 사는 자리라 웹이 붙을 때 같은 규약을 쓸 수 있다.
+
+## 사진 원을 공용으로 올렸다
+
+인물 사진 자리는 라이브 스코어 선수단이 쓰던 `PlayerPhoto`(사진 없거나 실패하면 `bg-avatar` 빈 원)가
+그대로 맞았다. `live/_components`에 있던 걸 `_components/`로 옮기고 라이브의 네 사용처 import를 바꿨다.
+두 번째 화면이 쓰면 공용 폴더로 올린다는 규칙 그대로다. 확인 시점 BE 인물 사진이 전원 null이라 프로필과
+칩에서는 폴백 원이 기본 경로다.
+
+## 옛 빌드에 붙어도 죽지 않게
+
+BE 새 빌드는 태그가 없어도 `figures: []`를 준다. 그런데 FE가 BE보다 먼저 배포되거나, 지금 로컬 8080처럼
+9월 8일 옛 빌드에 붙으면 키 자체가 없다. 응답 타입은 `figures?: FigureResponse[] | null`로 눕히고 변환
+`toFigureTags`가 `?? []`로 받는다. 도메인 타입 `ArticleCard.figures`는 필수 배열이라 화면은 항상 배열만
+본다. `type`도 모르는 값이 오면 OTHER로 떨어뜨린다.
+
+변환은 `packages/core/src/figures.ts` 한 곳에 두고 `articles.ts`·`reels.ts`가 가져다 쓴다. 피드·상세·릴스·
+좋아요 목록이 같은 `FigureResponse`라 변환이 넷으로 갈리면 드리프트가 난다.
+
+## 인물 관련 기사 훅
+
+`useArticleFeed`를 인물 id로 열어 쓸까 했는데 그 훅은 `Filter`(팀 코드)와 팀 탭 씨앗 규약에 묶여 있다.
+파라미터 하나를 유니온으로 늘리면 호출부마다 분기가 생긴다. 그래서 `useFigureArticles`를 따로 뒀다.
+쿼리키는 `articleKeys.figureFeed(id)`로 `["articles", "figure", id]`다. 팀 피드 `["articles", "feed", team]`과
+스코프를 갈라 두어 인물별로 따로 캐시되고, 상위 `["articles"]`로 훑는 좋아요 동기화(`syncLikeIntoFeeds`)에는
+그대로 걸린다. 씨앗·신선도·4xx 재시도 안 함은 팀 피드와 같다.
+
+`getArticles`에 `figureId`를 더했다. `teamId`와 같이 주면 AND라고 소스에서 확인했지만 지금 화면에서 둘을
+같이 쓰는 데는 없다.
+
+## 404와 에러
+
+인물 프로필과 기사 첫 페이지는 `Promise.allSettled`로 병렬로 받는다. 프로필이 404 `FIGURE_NOT_FOUND`나
+400 `COMMON_INVALID_PARAM`이면 `notFound()`로 인물 없음 화면이고, 그 밖의 에러는 던져서 에러 바운더리로
+간다. 기사 첫 페이지만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다. 목록이 클라에서 다시 받으며
+에러와 재시도를 그린다. 기사 세부의 댓글 씨앗과 같은 판단이다.
+
+팀 프로필은 slug를 레지스트리로 먼저 거르고(모르는 slug는 404) BE는 `TEAM_IDS`의 id로 부른다. 레지스트리에
+있는 slug인데 BE가 404를 주면(마스터 재시드로 id가 어긋난 경우) 그것도 not-found다.
+
+## 검증
+
+`pnpm check-types`, `pnpm lint`, `pnpm format:check`, 모바일과 웹 클린 빌드 전부 통과했다. 웹은 화면을
+안 건드렸지만 `ArticleCard`에 필수 필드가 늘어서 같이 돌렸다.
+
+화면은 BE를 둘로 나눠 봤다. 프로필은 validate를 끈 8082 빌드(`API_BASE_URL=http://localhost:8082`로
+prod 빌드 후 `next start`), 피드 카드는 옛 9월 8일 빌드 8080에 붙은 dev 서버다. 8082는 `figure_tags`가
+없어 피드가 500이고 8080은 `figures` 키 자체가 없어 둘 다 칩이 그려진 화면은 못 봤다.
+
+- `/teams/tottenham/profile`: 로고·정식명·영문명, "관련 기사 보기" 버튼, 감독 1명과 선수단 39명이
+  섹션으로 갈려 나온다. 감독 행에만 "감독" 라벨
+- `/figures/4`(달롯): 사진 폴백 원, "선수" 칩, 영문명, 맨유 로고와 이름이 팀 프로필 링크. `/figures/408`
+  (부아디): "소속 팀 정보 없음"과 한 줄 소개
+- `/figures/999999`, `/figures/abc` → 인물 없음 화면. `/teams/xyz/profile` → 팀 없음 화면
+- 기사 목록 카드: 행마다 `<a>` 셋(팀명 → 팀 프로필, 제목 → 기사, 오른쪽 로고 → 팀 프로필)이고 중첩
+  앵커 0개. 행 높이는 그대로(칩 줄 없음). 기자 이름 자리를 눌러도 기사로 간다
+- 기사 세부·릴 세부 시트: `#맨체스터 유나이티드` 칩이 팀 프로필 링크. 시트 태그 줄이 `flex-wrap`
+- 콘솔에 새 에러 없음(8082의 500과 8080의 조회 기록 403은 이 작업과 무관)
+
+못 본 게 둘 있다. 인물 프로필 아래 관련 기사의 에러·재시도 상태는 서버 씨앗이 500이라 클라가 재시도하는
+동안 스켈레톤이 보이는 것까지만 봤다. 브라우저 패널이 hidden이라 타이머가 얼어 재시도가 끝나지 않는다
+(ADR 0129에서 겪은 그 함정). 코드는 좋아요 목록·기사 목록과 같은 분기다. 그리고 칩이 실제로 그려진
+모습은 DDL과 검증 행이 들어가야 볼 수 있다.
+
+## 남은 것
+
+- 공유 DB에 `figure_tags`·`entity_trend_snapshots` DDL이 아직 안 들어갔다. 승인이 나면 넣고 검증용
+  `figure_tags` 행을 몇 개 심어 칩과 `?figureId=` 필터를 실측한다. 그 전까지 칩이 실제로 그려진 화면은
+  로컬에서 못 봤다
+- 웹에는 인물 칩도 프로필도 없다. 웹 이식 때 `EntityChips`의 경로 주입과 `@plick/ui` 승격을 같이 본다
+- 릴 카드(`ReelItem`)의 팀 칩과 홈 히어로 카드는 손대지 않았다. 릴 카드는 제스처 표면이라 칩에 링크를
+  얹으면 스와이프와 싸운다. 태그 줄은 릴 세부 시트에서 처리한다
+- 인물 프로필은 사이트맵에 싣지 않았다. 200명이 넘고 대부분 관련 기사가 없다. 태그가 쌓이면 다시 본다
+- 인물 프로필 canonical을 두지 않았다. 웹에 대응 페이지가 생기면 그쪽으로 건다

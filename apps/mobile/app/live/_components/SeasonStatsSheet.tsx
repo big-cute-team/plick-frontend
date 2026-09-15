@@ -9,7 +9,7 @@ import type { LiveTeam, SquadPlayer } from "@plick/domain/live";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { usePlayerSeasonStats } from "@/_hooks/usePlayerSeasonStats";
 import { LiveSheet } from "./LiveSheet";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@/_components/PlayerPhoto";
 
 /**
  * 선수 시즌 스탯 바텀시트(피그마 L12·L13). 스쿼드에서 선수를 누르면 열리고

@@ -13,4 +13,9 @@ export const articleKeys = {
   feed: (team: Filter) => ["articles", "feed", team] as const,
   /** 기사 상세 — 릴 세부가 기자 목록을 클라에서 받을 때 쓴다(KAN-365). */
   detail: (articleId: string) => ["articles", "detail", articleId] as const,
+  /**
+   * 인물 관련 기사 (KAN-500) — 인물 프로필 아래 무한 목록. 팀 피드와 스코프를
+   * 갈라 두어 `feed` 상위 키 무효화에 딸려 가지 않고 인물별로 따로 캐시된다.
+   */
+  figureFeed: (figureId: string) => ["articles", "figure", figureId] as const,
 };
