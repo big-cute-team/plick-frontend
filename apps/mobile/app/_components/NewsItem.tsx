@@ -45,6 +45,13 @@ import { NewBadge } from "@plick/ui/NewBadge";
  * 행 전체로 펼쳐 어디를 눌러도 기사로 가고, 로고만 `relative z-10`으로 그 위에
  * 올려 자기 목적지를 갖는다.
  *
+ * 그 `z-10`은 행 안에서만 뜻이 있어야 해서 행에 `isolate`를 건다 (KAN-514).
+ * `article`이 `relative`이긴 해도 `z-index: auto`면 쌓임 맥락이 생기지 않아,
+ * 로고의 `z-10`이 페이지 레벨까지 새어 나가 같은 `z-10`인 리스트 sticky 헤더와
+ * 겨뤘다. 값이 같으면 DOM 순서가 이기는데 행이 헤더보다 뒤라, 스크롤할 때
+ * 팀 엠블럼이 헤더와 그 위 상단 바까지 덮고 지나갔다. `isolation: isolate`로
+ * 행을 자기 맥락으로 닫으면 로고는 행 안에서만 위로 올라간다.
+ *
  * 오른쪽 칸은 고정폭(`w-22`, 88px)이다. 기자 이름 길이에 따라 칸이 늘었다
  * 줄었다 하면 행마다 제목 폭이 달라져 리스트가 들쭉날쭉해진다. 88px은 실데이터에서
  * 제일 자주 나오는 긴 이름(`Fabrizio Romano` 85px, `Match of the Day` 87px)이
@@ -75,7 +82,7 @@ export function NewsItem({
   const summary = (article.summaryShort ?? article.summary).trim();
 
   return (
-    <article className="border-border gap-gap relative flex items-start border-b py-3 active:opacity-70">
+    <article className="border-border gap-gap relative isolate flex items-start border-b py-3 active:opacity-70">
       {team && (
         <Link
           href={teamProfilePath(team.code)}
@@ -88,7 +95,7 @@ export function NewsItem({
       <div className="min-w-0 flex-1">
         {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
             보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
-        <h3 className="text-title text-text line-clamp-2 leading-snug font-bold">
+        <h3 className="text-title text-text-strong line-clamp-2 leading-snug font-bold">
           {debateLive && (
             /* -webkit-box(line-clamp) 안에서 flex 자식은 제 줄을 차지하므로
                inline-flex 래퍼로 한 번 감싸 제목 글자와 같은 줄에 흐르게 한다 */
@@ -110,7 +117,7 @@ export function NewsItem({
           </Link>
         </h3>
         {summary && (
-          <p className="text-body text-text-3 mt-1 truncate">{summary}</p>
+          <p className="text-body text-text-strong mt-1 truncate">{summary}</p>
         )}
       </div>
       <div className="mt-0.5 flex w-22 shrink-0 flex-col items-end gap-1">

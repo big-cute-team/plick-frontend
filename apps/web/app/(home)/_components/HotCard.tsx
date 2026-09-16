@@ -2,6 +2,7 @@ import Link from "next/link";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
  * 핫이슈 카드 — 미디어 위 어두운 스크림 + 흰 텍스트.
@@ -30,16 +31,21 @@ import type { HotArticle } from "@plick/domain/types";
  * 그래도 `imageUrl`이 빌 수 있다. BE가 핫이슈를 나눈 기준은 원문 X 게시물의
  * 사진 유무(`raw_articles.media_url`)이고 카드가 그리는 건 기사 대표
  * 이미지(`article_summaries.image_url`)라 서로 다른 컬럼인데, 원문 사진마저
- * 신디케이션에서 못 받는 경우가 있다. 그때는 배경색 위에 제목만 선다.
+ * 신디케이션에서 못 받는 경우가 있다.
+ *
+ * 그 빈 칸을 제목만으로 두니 사진 있는 칸들 사이에서 유독 허전해서, 방어를 한 단
+ * 더 뒀다 (KAN-514). 대표 이미지 → 홈이 원문에서 뽑아 채운 사진 → **원문 트윗
+ * 임베드** 순이다. 임베드가 KAN-484에서 걷어낸 방식이긴 하지만, 그때 문제는
+ * 임베드가 *기본* 경로였다는 것이지 마지막 방어선으로 드물게 쓰는 건 빈 칸보다 낫다.
  *
  * 스크림은 이미지 가독성용 고정 값(테마 무관)이고 모바일 히어로와 같은 농도다.
  *
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀
  * 이름 자리를 비운다. 단계·기자도 null이면 그 조각만 빠진다.
  *
- * 카드 전체가 기사 세부(`/articles/[postId]`)로 가는 링크다. 임베드를 걷어낸
- * 지금은 카드 안에 앵커가 없지만, 스크림이 텍스트를 덮는 구조라 링크를 형제로
- * 깔아 카드를 덮는 방식은 그대로 둔다.
+ * 카드 전체가 기사 세부(`/articles/[postId]`)로 가는 링크다. 스크림이 텍스트를
+ * 덮는 구조라 링크를 형제로 깔아 카드를 덮는다 — 폴백 임베드가 뜨는 칸에서도
+ * 임베드 안 링크는 전역 CSS에서 꺼져 있어(globals.css) 카드 링크만 산다.
  *
  * @param article - 표시할 핫이슈 기사
  */
@@ -69,6 +75,10 @@ export function HotCard({
           fetchPriority={fetchPriority}
           className="absolute inset-0 size-full object-cover"
         />
+      ) : article.sourceUrl ? (
+        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 트윗 링크가 아니거나
+           원문이 지워졌으면 `TweetEmbed`가 아무것도 그리지 않아 배경색만 남는다 */
+        <TweetEmbed url={article.sourceUrl} />
       ) : null}
 
       {/* pt가 스크림 윗선 — 팀·단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}

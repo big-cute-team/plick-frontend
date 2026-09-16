@@ -3,6 +3,7 @@ import { formatCount } from "@plick/domain/format";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import type { HotArticle } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
+import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
  * 핫이슈 히어로 카드 — 릴스와 같은 임베딩 전략으로 통일했다 (KAN-297).
@@ -19,8 +20,15 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 그래도 `imageUrl`이 빌 수 있다. BE가 핫이슈를 나눈 기준은 원문 X 게시물의 사진
  * 유무(`raw_articles.media_url`)이고 카드가 그리는 건 기사 대표
  * 이미지(`article_summaries.image_url`)라 서로 다른 컬럼인데, 원문 사진마저
- * 신디케이션에서 못 받는 경우가 있다. 그때는 배경색 위에 제목만 선다. 사진이
- * 아예 없는 기사는 캐러셀에 오지 않고 아래 세 칸의 {@link HotTextCard}가 받는다.
+ * 신디케이션에서 못 받는 경우가 있다. 사진이 아예 없는 기사는 캐러셀에 오지
+ * 않고 아래 세 칸의 {@link HotTextCard}가 받는다.
+ *
+ * 그 빈 칸을 배경색 위 제목만으로 두니 사진 있는 칸들 사이에서 유독 허전했다.
+ * 그래서 방어를 한 단 더 둔다 (KAN-514): 대표 이미지가 있으면 그걸 쓰고, 없으면
+ * 홈이 원문에서 뽑아 채운 사진을 쓰고, 그것도 못 구했으면 **원문 트윗을 통째로
+ * 임베드해** 칸을 메운다. 임베드는 KAN-484에서 걷어냈던 방식인데, 그때 문제는
+ * 임베드가 *기본* 경로여서 사진이 주인공이어야 할 칸에 프로필·아이디·버튼이
+ * 같이 들어온 것이었다. 마지막 방어선으로 드물게만 쓰면 빈 칸보다 낫다.
  *
  * 사진 위에는 어두운 스크림(가독성용 고정 값, 테마 무관) + 흰 텍스트를 얹는다.
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀 이름
@@ -53,6 +61,10 @@ export function HotHeroCard({
           fetchPriority={fetchPriority}
           className="absolute inset-0 size-full object-cover"
         />
+      ) : article.sourceUrl ? (
+        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 트윗 링크가 아니거나
+           원문이 지워졌으면 `TweetEmbed`가 아무것도 그리지 않아 배경색만 남는다 */
+        <TweetEmbed url={article.sourceUrl} />
       ) : null}
       {/* pt가 스크림 윗선 — 팀·루머 단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
       <div

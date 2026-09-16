@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getTeamProfile } from "@plick/core/figures";
-import { getTeamSquad } from "@plick/core/live";
+import { getStandings, getTeamSquad } from "@plick/core/live";
 import {
   TEAMS,
   TEAM_BY_SLUG,
@@ -19,6 +19,7 @@ import { ProfileTopBar } from "@/_components/ProfileTopBar";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
 import { TeamProfileTabs } from "./_components/TeamProfileTabs";
+import { TeamStandingCard } from "./_components/TeamStandingCard";
 
 /**
  * 팀 프로필 메타데이터 (KAN-500). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
@@ -60,6 +61,10 @@ export async function generateMetadata({
  * 목록의 팀 탭(`/articles/teams/[slug]`)으로 보낸다 — 같은 목록이 세 URL에
  * 있으면 어디가 원본인지 흐려진다.
  *
+ * 헤더 아래에 리그 순위 요약을 얹는다 (KAN-514) — 팀 화면에서 "지금 몇 위인가"를
+ * 보려고 순위표 탭으로 나갔다 오던 걸 없앤다. 최근 전적·직전 선발은 경기 프리뷰
+ * 안에만 있어 팀 기준으로 못 가져온다(`TeamStandingCard` 주석).
+ *
  * slug는 레지스트리로 검증하고 BE는 `TEAM_IDS`의 id로 부른다. 인물 사전이
  * 404면(마스터 재시드로 id가 어긋난 경우) 보여 줄 게 없어 not-found다. 선수단만
  * 실패하면 페이지를 죽이지 않고 그 섹션 자리에만 실패를 보여준다 — 라이브 API는
@@ -75,10 +80,12 @@ export default async function TeamProfilePage({
   if (!code) notFound();
 
   const teamId = TEAM_IDS[code];
-  const [profileResult, squadResult] = await Promise.allSettled([
-    getTeamProfile(teamId),
-    getTeamSquad(teamId, TEAMS[code].name),
-  ]);
+  const [profileResult, squadResult, standingsResult] =
+    await Promise.allSettled([
+      getTeamProfile(teamId),
+      getTeamSquad(teamId, TEAMS[code].name),
+      getStandings(),
+    ]);
 
   if (profileResult.status === "rejected") {
     const error = profileResult.reason;
@@ -90,6 +97,16 @@ export default async function TeamProfilePage({
   const squad = squadResult.status === "fulfilled" ? squadResult.value : null;
   if (squadResult.status === "rejected") {
     console.error("[team] 선수단 로드 실패:", squadResult.reason);
+  }
+
+  /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격·강등으로
+     레지스트리와 어긋난 시즌) 카드 자리를 비운다 — 부가 정보라 없는 편이 낫다 */
+  const standing =
+    standingsResult.status === "fulfilled"
+      ? (standingsResult.value.find((row) => row.team.id === teamId) ?? null)
+      : null;
+  if (standingsResult.status === "rejected") {
+    console.error("[team] 순위표 로드 실패:", standingsResult.reason);
   }
 
   const team = TEAMS[code];
@@ -110,6 +127,8 @@ export default async function TeamProfilePage({
               </p>
             </div>
           </div>
+          {standing && <TeamStandingCard row={standing} />}
+
           {/* 팀 관련 기사는 기사 목록의 팀 탭이 원본이다 */}
           <Link
             href={articlesTeamPath(code)}

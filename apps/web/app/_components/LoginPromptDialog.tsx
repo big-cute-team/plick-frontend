@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { CloseIcon } from "@plick/ui/icons";
+import { useAuth } from "./AuthProvider";
 
 /**
  * 로그인 유도 팝업 (KAN-303, web 이식 KAN-329) — 비로그인 사용자가 댓글 입력에
@@ -25,6 +26,8 @@ export function LoginPromptDialog({
   onClose: () => void;
   description?: string;
 }) {
+  const { isGuest } = useAuth();
+
   /* 포털 대상(document)은 서버 렌더에 없다. 마운트 뒤에만 그려 hydration을 맞춘다 */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -63,15 +66,19 @@ export function LoginPromptDialog({
           id="login-prompt-title"
           className="text-body-lg text-text pt-2 text-center font-extrabold"
         >
-          로그인이 필요해요
+          {isGuest ? "계정 연동이 필요해요" : "로그인이 필요해요"}
         </p>
-        <p className="text-label text-text-3 mt-2 text-center">{description}</p>
+        <p className="text-label text-text-3 mt-2 text-center">
+          {isGuest
+            ? "댓글과 신고, 채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요."
+            : description}
+        </p>
 
         <Link
           href="/login"
           className="bg-accent text-on-accent rounded-control text-body focus-visible:outline-accent mt-5 block w-full py-3 text-center font-extrabold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          로그인 하러 가기
+          {isGuest ? "계정 연동하러 가기" : "로그인 하러 가기"}
         </Link>
       </div>
     </div>,

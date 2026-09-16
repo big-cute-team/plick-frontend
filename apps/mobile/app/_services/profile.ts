@@ -20,6 +20,8 @@ interface ProfileResponse {
   email: string | null;
   nicknameChangeableAt: string | null;
   teams: ProfileTeamResponse[];
+  /** 게스트 계정인가 (KAN-514). 게스트 로그인 도입 전 응답에는 없던 필드다. */
+  isGuest?: boolean;
 }
 
 /** BE 마이팀 한 건 — `shortName`이 FE `TeamCode`와 같은 값("LIV" 등)이다. */
@@ -43,6 +45,8 @@ function toMyProfile(r: ProfileResponse): MyProfile {
     myTeams: r.teams
       .filter((t) => t.shortName in TEAMS)
       .map((t) => t.shortName as TeamCode),
+    /* 옛 BE(필드 없음)에 붙어도 화면이 소셜 사용자로 돌게 false로 떨어뜨린다 */
+    isGuest: r.isGuest ?? false,
   };
 }
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { LIVE_SEASON_LABEL, type TeamSquad } from "@plick/domain/live";
 import type { FigureTag } from "@plick/domain/types";
 import { TEAM_PROFILE_TAB_LABEL } from "@/_constants/team-profile";
-import type { TeamProfileTabKey } from "@/_types/team-profile";
+import { useViewState } from "@/_stores/view-state";
 import { SquadGrid } from "./SquadGrid";
 import { TeamFiguresList } from "./TeamFiguresList";
 
@@ -16,9 +15,15 @@ import { TeamFiguresList } from "./TeamFiguresList";
  * 이번 시즌 등록 명단, 다른 쪽은 기사에서 뽑은 인물 사전) 한 화면에 같이 있을
  * 이유는 있어도 세로로 이어 붙일 이유는 없었다. 경기 상세와 같은 탭 줄로 나눈다.
  *
- * 탭은 URL로 승격하지 않고 컴포넌트 상태로 둔다 — 경기 상세 탭과 같은 판단이고
- * (ADR 0126 스토리 2), 팀 프로필의 색인 대상은 팀 자체지 탭이 아니다. 대신 두
- * 목록 다 첫 HTML에 들어간다(서버가 받아 넘긴 값을 그대로 그린다).
+ * 탭은 URL로 승격하지 않는다 — 경기 상세 탭과 같은 판단이고 (ADR 0126 스토리 2),
+ * 팀 프로필의 색인 대상은 팀 자체지 탭이 아니다. 대신 두 목록 다 첫 HTML에
+ * 들어간다(서버가 받아 넘긴 값을 그대로 그린다).
+ *
+ * 다만 고른 탭은 `useState`가 아니라 `useViewState`에 둔다 (KAN-514). 인물 탭에서
+ * 선수를 눌러 프로필로 들어가면 이 화면의 React 트리가 통째로 언마운트되고,
+ * 뒤로 나올 때 다시 마운트되면서 초깃값인 선수단 탭으로 돌아가 있었다. Router
+ * Cache는 RSC 페이로드만 들고 있지 컴포넌트 상태는 보존하지 않아서, 트리 밖에
+ * 두는 것 말고는 방법이 없다 — 스크롤 위치를 거기 둔 것과 같은 이유다.
  *
  * 선수단 fetch만 실패하면 그 탭 자리에만 실패를 보여준다 — 라이브 API는 외부
  * (API-Football) 의존이라 인물 사전보다 덜 미덥고, 인물 탭까지 죽일 이유가 없다.
@@ -33,7 +38,8 @@ export function TeamProfileTabs({
   squad: TeamSquad | null;
   figures: FigureTag[];
 }) {
-  const [active, setActive] = useState<TeamProfileTabKey>("squad");
+  const active = useViewState((state) => state.teamProfileTab);
+  const setActive = useViewState((state) => state.setTeamProfileTab);
 
   return (
     <>
