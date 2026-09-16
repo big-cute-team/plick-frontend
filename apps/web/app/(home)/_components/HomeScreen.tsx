@@ -3,6 +3,7 @@ import {
   getArticles,
   getHotArticles,
 } from "@plick/core/articles";
+import { withTweetPhotos } from "@plick/core/tweet-media";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
@@ -64,6 +65,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   if (hotResult.status === "rejected") {
     console.error("[home] 핫이슈 로드 실패:", hotResult.reason);
   }
+  /* 캐러셀 칸은 사진이 주인공이라, 대표 이미지가 빈 카드는 원문 게시물의
+     제일 큰 사진으로 메운다 (KAN-484) */
+  const heroes = hot ? await withTweetPhotos(hot.withImage) : [];
   // BE는 그룹마다 5건까지 주는데 캐러셀 아래는 세 칸으로 정해져 있다
   const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
 
@@ -113,13 +117,13 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                   <p className="text-body text-text-4 py-8 text-center">
                     핫이슈를 불러오지 못했어요.
                   </p>
-                ) : hot.withImage.length === 0 && noImage.length === 0 ? (
+                ) : heroes.length === 0 && noImage.length === 0 ? (
                   <p className="text-body text-text-4 py-8 text-center">
                     아직 핫이슈가 없어요.
                   </p>
                 ) : (
                   <>
-                    {hot.withImage.length > 0 && (
+                    {heroes.length > 0 && (
                       /* 모바일 홈과 같은 캐러셀 (KAN-338)이지만 데스크톱에서는
                          카드를 4분의 1 폭으로 줄이고 왼쪽 정렬로 스냅시켜 네 장이
                          한 줄에 선다 (KAN-480). 폭은 간격 세 칸(30px)을 뺀 나머지를
@@ -130,7 +134,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                         className="lg:[--hot-edge:0px]"
                         slideClassName="w-[86%] snap-center aspect-[181/131] lg:w-[calc((100%-30px)/4)] lg:snap-start"
                       >
-                        {hot.withImage.map((article, i) => (
+                        {heroes.map((article, i) => (
                           <HotCard
                             key={article.id}
                             article={article}

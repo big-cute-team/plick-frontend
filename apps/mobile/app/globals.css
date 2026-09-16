@@ -94,18 +94,12 @@ body {
   );
 }
 
-/* 릴스·홈 캐러셀 안의 임베드 카드는 릴 배경(--plk-reel-bg)에 맞춰 배경을
+/* 릴스 안의 임베드 카드는 릴 배경(--plk-reel-bg)에 맞춰 배경을
  * 통일한다 — 카드가 바탕과 한 색으로 경계 없이 이어진다 (KAN-296, KAN-297).
  * 부모(.reel-embed) + 이중 클래스로 특이도를 올려 위 기본값을 확실히 이긴다. */
 .reel-embed .react-tweet-theme.react-tweet-theme {
   --tweet-bg-color: var(--plk-reel-bg);
   --tweet-bg-color-hover: var(--plk-reel-bg);
-}
-
-/* 홈 캐러셀 안의 임베드 카드는 코너 라운드를 카드(rounded-hero)와 맞춘다 —
- * react-tweet 기본 12px가 카드 22px와 어긋나 이질감이 있다 (KAN-297). */
-.hero-embed .react-tweet-theme.react-tweet-theme {
-  border-radius: var(--radius-hero);
 }
 
 /* 릴 트윗 본문 글자 축소 (KAN-296) — react-tweet 본문은 rem이라 컨테이너

@@ -5,7 +5,7 @@
  * 갈리면 무효화 규약이 조용히 어긋난다.
  */
 
-import type { Filter } from "@plick/domain/types";
+import type { Filter, TeamCode } from "@plick/domain/types";
 
 export const articleKeys = {
   all: ["articles"] as const,
@@ -18,4 +18,11 @@ export const articleKeys = {
    * 갈라 두어 `feed` 상위 키 무효화에 딸려 가지 않고 인물별로 따로 캐시된다.
    */
   figureFeed: (figureId: string) => ["articles", "figure", figureId] as const,
+  /**
+   * 경기 뉴스 (KAN-484) — 경기 상세 뉴스 탭이 양 팀 기사를 합쳐 보여준다. 팀이
+   * 둘인 한 목록이라 팀 피드 키를 재사용할 수 없고, 순서가 뒤집혀도 같은 캐시를
+   * 쓰게 코드를 정렬해 키에 담는다.
+   */
+  matchNews: (teams: TeamCode[]) =>
+    ["articles", "match-news", [...teams].sort().join("-")] as const,
 };

@@ -18,8 +18,7 @@ import { AppShell } from "@/_components/AppShell";
 import { ProfileTopBar } from "@/_components/ProfileTopBar";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
-import { SquadList } from "@/live/_components/SquadList";
-import { TeamFiguresList } from "./_components/TeamFiguresList";
+import { TeamProfileTabs } from "./_components/TeamProfileTabs";
 
 /**
  * 팀 프로필 메타데이터 (KAN-500). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
@@ -50,10 +49,11 @@ export async function generateMetadata({
  * 여기로 왔다. 같은 팀인데 어디로 들어왔느냐에 따라 다른 화면이 뜨는 게
  * 이상해서 이 한 장으로 합쳤다. 라이브 쪽 URL은 여기로 리다이렉트한다.
  *
- * 두 명단은 출처가 다르고 겹치지도 않아 섹션을 갈라 둔다. "선수단"은
- * API-Football의 이번 시즌 등록 명단이고 행을 누르면 시즌 스탯 시트가 열린다.
- * "기사에 나온 인물"은 PLick 인물 사전이라 감독·구단주까지 들어 있고 행을
- * 누르면 그 인물의 관련 기사로 간다.
+ * 두 명단은 출처가 다르고 겹치지도 않아 탭으로 갈라 둔다 (KAN-484, 그전에는
+ * 섹션을 위아래로 쌓아 선수단 33명을 다 지나야 인물이 나왔다). "선수단"은
+ * API-Football의 이번 시즌 등록 명단이고 타일을 누르면 시즌 스탯 시트가 열린다.
+ * "기사 속 인물"은 PLick 인물 사전이라 감독·구단주까지 들어 있고 행을 누르면 그
+ * 인물의 관련 기사로 간다.
  *
  * 팀 허브(`/teams/[slug]`)가 이미 홈 피드를 팀으로 걸러 그리는 자리라 프로필은
  * 그 아래 `/profile`에 뒀다. 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사
@@ -120,39 +120,7 @@ export default async function TeamProfilePage({
           </Link>
         </header>
 
-        <section className="pt-2">
-          <div className="px-edge flex items-baseline gap-2">
-            <h2 className="text-section tracking-heading text-text font-extrabold">
-              선수단
-            </h2>
-            {squad && (
-              <span className="text-label text-text-4 font-semibold">
-                {LIVE_SEASON_LABEL} · {squad.size}명
-              </span>
-            )}
-          </div>
-          {squad ? (
-            <>
-              {/* 외부 명단이라 이적 반영이 늦을 수 있다는 건 라이브 화면에서부터
-                  달고 있던 안내다 */}
-              <p className="px-edge text-caption text-text-4 pt-1">
-                이적 반영이 며칠 늦을 수 있어요
-              </p>
-              <SquadList squad={squad} />
-            </>
-          ) : (
-            <p className="text-body text-text-4 py-10 text-center">
-              선수단을 불러오지 못했어요.
-            </p>
-          )}
-        </section>
-
-        <section>
-          <h2 className="text-section tracking-heading text-text px-edge font-extrabold">
-            기사에 나온 인물
-          </h2>
-          <TeamFiguresList figures={profile.figures} />
-        </section>
+        <TeamProfileTabs squad={squad} figures={profile.figures} />
       </ScrollArea>
       <TabBar />
     </AppShell>

@@ -162,6 +162,44 @@ export async function getArticles({
 }
 
 /**
+ * 경기 뉴스 탭에 까는 건수 (KAN-484). 팀마다 이만큼 받아 합친 뒤 다시 이만큼으로
+ * 자른다 — 한 팀 기사가 몰려 있어도 상대 팀 기사가 밀려나지 않게 넉넉히 받는다.
+ */
+export const MATCH_NEWS_COUNT = 8;
+
+/**
+ * 한 경기의 양 팀 기사 모아보기 (KAN-484).
+ *
+ * 경기 전용 기사 API가 없어 팀 필터 목록(`GET /api/v1/articles?teamId=`)을 팀마다
+ * 받아 합친다. 관련 기사(`getRelatedArticles`)가 팀 하나로 같은 일을 하는 것과
+ * 같은 방식이다.
+ *
+ * 한 기사에 두 팀이 다 태그돼 있으면 양쪽 목록에 다 오므로 id로 한 번 접고,
+ * 팀별로는 최신순이지만 합치면 순서가 섞이므로 발행 시각으로 다시 정렬한다.
+ *
+ * 빅6 밖 팀은 `TeamCode`가 없어 호출부가 아예 넘기지 않는다 — 빅6가 한 팀도
+ * 없는 경기는 빈 배열이고 호출부가 빈 상태 문구를 그린다.
+ *
+ * @param teams 그 경기의 빅6 팀 코드 (0~2개)
+ */
+export async function getMatchNews(teams: TeamCode[]): Promise<ArticleCard[]> {
+  if (teams.length === 0) return [];
+
+  const pages = await Promise.all(
+    teams.map((team) => getArticles({ team, size: MATCH_NEWS_COUNT })),
+  );
+
+  const byId = new Map<string, ArticleCard>();
+  for (const item of pages.flatMap((page) => page.items)) {
+    if (!byId.has(item.id)) byId.set(item.id, item);
+  }
+
+  return [...byId.values()]
+    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+    .slice(0, MATCH_NEWS_COUNT);
+}
+
+/**
  * BE 상세 응답 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로).
  *
  * 목록·핫이슈와 또 다른 세 번째 shape다. 기자가 단일 객체가 아니라 배열이고

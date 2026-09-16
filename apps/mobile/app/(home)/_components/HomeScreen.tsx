@@ -8,6 +8,7 @@ import {
   getHotArticles,
 } from "@plick/core/articles";
 import { getDebates } from "@plick/core/debates";
+import { withTweetPhotos } from "@plick/core/tweet-media";
 import { getMatches } from "@plick/core/live";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { todayDateKeyKst } from "@plick/domain/live";
@@ -83,6 +84,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   if (debateResult.status === "rejected") {
     console.error("[home] 토론 리스트 로드 실패:", debateResult.reason);
   }
+  /* 캐러셀 칸은 사진이 주인공이라, 대표 이미지가 빈 카드는 원문 게시물의
+     제일 큰 사진으로 메운다 (KAN-484) */
+  const heroes = hot ? await withTweetPhotos(hot.withImage) : [];
   // BE는 그룹마다 5건까지 주는데 캐러셀 아래는 세 칸으로 정해져 있다
   const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
 
@@ -135,15 +139,15 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             <p className="text-body text-text-4 px-edge py-8 text-center">
               핫이슈를 불러오지 못했어요.
             </p>
-          ) : hot.withImage.length === 0 && noImage.length === 0 ? (
+          ) : heroes.length === 0 && noImage.length === 0 ? (
             <p className="text-body text-text-4 px-edge py-8 text-center">
               아직 핫이슈가 없어요.
             </p>
           ) : (
             <>
-              {hot.withImage.length > 0 && (
+              {heroes.length > 0 && (
                 <HotCarousel>
-                  {hot.withImage.map((article, i) => (
+                  {heroes.map((article, i) => (
                     <HotHeroCard
                       key={article.id}
                       article={article}
