@@ -25,23 +25,16 @@ const CHIP = "bg-elevate text-label rounded-pill inline-flex items-center";
  * 두 번째 사용처가 되면 경로를 prop으로 주입하는 모양으로 승격을 본다
  * (ADR 0011 게이트 A).
  *
- * @param hashtags - `#` 제외한 해시태그. 기사 세부·릴 세부는 넘기고, 리스트
- *   카드는 팀명이 행 머리에 따로 있어 넘기지 않는다.
+ * @param hashtags - `#` 제외한 해시태그
  * @param figures - 태그된 인물
- * @param compact - 리스트 카드용 작은 칩(사진 원과 세로 여백을 줄인다)
  */
 export function EntityChips({
   hashtags = [],
   figures,
-  compact = false,
 }: {
   hashtags?: string[];
   figures: FigureTag[];
-  compact?: boolean;
 }) {
-  const pad = compact ? "py-0.5" : "py-1";
-  const photo = compact ? 16 : 20;
-
   return (
     <>
       {hashtags.map((tag) => {
@@ -50,12 +43,12 @@ export function EntityChips({
           <Link
             key={tag}
             href={href}
-            className={`${CHIP} text-text-2 px-3 font-semibold active:opacity-70 ${pad}`}
+            className={`${CHIP} text-text-2 px-3 py-1 font-semibold active:opacity-70`}
           >
             #{tag}
           </Link>
         ) : (
-          <span key={tag} className={`${CHIP} text-text-3 px-3 ${pad}`}>
+          <span key={tag} className={`${CHIP} text-text-3 px-3 py-1`}>
             #{tag}
           </span>
         );
@@ -64,9 +57,9 @@ export function EntityChips({
         <Link
           key={figure.id}
           href={figurePath(figure.id)}
-          className={`${CHIP} text-text-2 gap-1.5 pr-3 pl-1 font-semibold active:opacity-70 ${pad}`}
+          className={`${CHIP} text-text-2 gap-1.5 py-1 pr-3 pl-1 font-semibold active:opacity-70`}
         >
-          <PlayerPhoto src={figure.imageUrl} name="" size={photo} />
+          <PlayerPhoto src={figure.imageUrl} name="" size={20} />
           {figure.name}
           {figure.type !== "PLAYER" && (
             <span className="text-caption text-text-4 font-bold">

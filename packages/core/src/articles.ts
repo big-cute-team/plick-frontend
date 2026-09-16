@@ -44,6 +44,12 @@ export interface FeedCardResponse {
   articleSummaryId: number;
   title: string;
   summary: string;
+  /**
+   * 한 줄 요약 (KAN-503). 핫이슈 카드와 같은 키로 피드 카드에도 온다
+   * (KAN-482에서 실측). 옵셔널인 이유는 FE가 BE보다 먼저 배포되면 키 자체가
+   * 없어서다 — 변환이 null로 눕힌다.
+   */
+  summaryShort?: string | null;
   rumorStage: string | null;
   /** 게시물 표시 형태 (KAN-438) — "GENERAL" | "DEBATE" | "FINISH". */
   contentType: string | null;
@@ -97,6 +103,8 @@ export function toArticleCard(r: FeedCardResponse): ArticleCard {
         : "GENERAL",
     title: r.title,
     summary: r.summary,
+    // 빈 문자열이 오면 카드에 빈 줄이 생기므로 null로 눕힌다 (핫이슈와 같다)
+    summaryShort: r.summaryShort?.trim() || null,
     stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,
     publishedAt: r.publishedAt,
     // 마스터에 없는 팀 id가 섞여 오면 표시할 이름이 없으므로 버린다
