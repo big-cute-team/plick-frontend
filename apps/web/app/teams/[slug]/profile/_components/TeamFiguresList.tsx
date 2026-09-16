@@ -10,8 +10,10 @@ import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
  * 감독·코칭스태프, 선수, 구단주·관계자 순으로 섹션을 나누고 각 행을 누르면 그
  * 인물의 프로필과 관련 기사(`/figures/[figureId]`)로 간다.
  *
- * 모바일과 다른 건 둘이다. 넓은 폭을 살려 섹션을 2열 그리드로 깔고(라이브
- * 선수단 `SquadGroups`와 같은 격자), 행에 hover·focus 상태를 얹는다.
+ * 모바일과 다른 건 둘이다. 넓은 폭을 살려 섹션을 2열 그리드로 깔고, 행에
+ * hover·focus 상태를 얹는다. 옆 탭의 선수단(`SquadGrid`)은 타일 격자인데 여기가
+ * 행인 이유는, 이 목록에는 감독·구단주가 섞여 구분 라벨이 붙고 인원도 들쭉날쭉
+ * 이라 행이 읽기 낫기 때문이다.
  *
  * BE는 구분 없이 한글명순 한 배열로 주므로 여기서 가른다. 비어 있는 섹션은
  * 그리지 않고, 전부 비면 빈 문구 하나만 남긴다. 선수 행은 구분 라벨을 생략하고
@@ -38,12 +40,12 @@ export function TeamFiguresList({ figures }: { figures: FigureTag[] }) {
         if (members.length === 0) return null;
         return (
           <section key={section.label} className="flex flex-col gap-2">
-            <h3 className="text-body-lg text-text-3 font-bold">
+            <h2 className="text-body-lg text-text-3 font-bold">
               {section.label}
               <span className="text-text-4 ml-1.5 font-semibold">
                 {members.length}
               </span>
-            </h3>
+            </h2>
             <div className="bg-elevate rounded-card flex flex-col px-5 py-1">
               {members.map((figure, i) => (
                 <Link

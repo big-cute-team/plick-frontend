@@ -17,8 +17,7 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { SquadGroups } from "@/live/_components/SquadGroups";
-import { TeamFiguresList } from "./_components/TeamFiguresList";
+import { TeamProfileTabs } from "./_components/TeamProfileTabs";
 
 /**
  * 팀 프로필 메타데이터 (KAN-507). 팀 검색어("토트넘 이적 루머")의 랜딩은 팀
@@ -55,11 +54,12 @@ export async function generateMetadata({
  * `/live/teams/[teamId]`로 갔고, 인물 사전 명단은 볼 데가 아예 없었다. 모바일과
  * 같은 한 장으로 맞추면서 라이브 쪽 URL은 여기로 리다이렉트한다.
  *
- * 두 명단은 출처가 달라 섹션을 갈라 둔다. "선수단"은 API-Football 이번 시즌
- * 등록 명단이고 행을 누르면 시즌 스탯 모달이 열린다. "기사에 나온 인물"은 PLick
- * 인물 사전이라 감독·구단주까지 있고 행을 누르면 관련 기사로 간다.
+ * 두 명단은 출처가 달라 탭으로 갈라 둔다 (KAN-484, 그전에는 섹션을 위아래로
+ * 쌓았다). "선수단"은 API-Football 이번 시즌 등록 명단이고 타일을 누르면 시즌
+ * 스탯 모달이 열린다. "기사 속 인물"은 PLick 인물 사전이라 감독·구단주까지 있고
+ * 행을 누르면 관련 기사로 간다.
  *
- * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 섹션
+ * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 탭
  * 자리에만 실패를 보여준다 — 라이브 API는 외부 의존이라 덜 미덥다.
  */
 export default async function TeamProfilePage({
@@ -118,33 +118,7 @@ export default async function TeamProfilePage({
             </Link>
           </header>
 
-          <section className="pb-10">
-            <div className="flex items-baseline gap-2.5 pb-4">
-              <h2 className="text-section text-text tracking-heading font-extrabold">
-                선수단
-              </h2>
-              {squad && (
-                <span className="text-body text-text-4 font-semibold">
-                  {LIVE_SEASON_LABEL} · {squad.size}명 · 이적 반영이 며칠 늦을
-                  수 있어요
-                </span>
-              )}
-            </div>
-            {squad ? (
-              <SquadGroups squad={squad} />
-            ) : (
-              <p className="text-body text-text-4 py-10 text-center">
-                선수단을 불러오지 못했어요.
-              </p>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-section text-text tracking-heading pb-4 font-extrabold">
-              기사에 나온 인물
-            </h2>
-            <TeamFiguresList figures={profile.figures} />
-          </section>
+          <TeamProfileTabs squad={squad} figures={profile.figures} />
         </PageContainer>
       </main>
     </>

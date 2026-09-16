@@ -2,6 +2,7 @@ import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
+import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
  * 킥오프 전 프리뷰 지면(피그마 LW5 → KAN-462에서 좌측 컬럼 안 2열로) — 왼쪽에
@@ -34,10 +35,15 @@ function Absentees({ preview }: { preview: MatchPreview }) {
       {groupAbsenteesByTeam(preview.absentees).map((group) => (
         <div key={group.team.shortName} className="flex flex-col gap-2">
           <p className="flex items-center gap-2">
-            <LiveCrest team={group.team} size={22} />
-            <span className="text-body-lg text-text font-bold">
-              {group.team.name}
-            </span>
+            <TeamProfileLink
+              team={group.team}
+              className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-2 px-1 py-0.5 transition-colors focus-visible:outline-2"
+            >
+              <LiveCrest team={group.team} size={22} />
+              <span className="text-body-lg text-text font-bold">
+                {group.team.name}
+              </span>
+            </TeamProfileLink>
             <span className="text-body text-text-4">
               {group.players.length}명
             </span>
@@ -113,18 +119,23 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
           key={position.team.shortName}
           className="flex items-center gap-2.5"
         >
-          <LiveCrest team={position.team} size={28} />
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-body-lg text-text truncate font-semibold">
-              {position.team.name}
+          <TeamProfileLink
+            team={position.team}
+            className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex min-w-0 flex-1 items-center gap-2.5 px-1 py-0.5 transition-colors focus-visible:outline-2"
+          >
+            <LiveCrest team={position.team} size={28} />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-body-lg text-text truncate font-semibold">
+                {position.team.name}
+              </span>
+              <span className="text-body text-text-4">
+                승점 {position.points} ·{" "}
+                {position.goalDiff > 0
+                  ? `+${position.goalDiff}`
+                  : position.goalDiff}
+              </span>
             </span>
-            <span className="text-body text-text-4">
-              승점 {position.points} ·{" "}
-              {position.goalDiff > 0
-                ? `+${position.goalDiff}`
-                : position.goalDiff}
-            </span>
-          </span>
+          </TeamProfileLink>
           <span className="text-title text-text font-bold">
             {position.rank}위
           </span>
@@ -147,10 +158,15 @@ function LastLineups({ preview }: { preview: MatchPreview }) {
       {preview.lastLineups.map((lineup) => (
         <div key={lineup.team.shortName} className="flex flex-col gap-1.5">
           <p className="flex items-center gap-2">
-            <LiveCrest team={lineup.team} size={22} />
-            <span className="text-body-lg text-text font-bold">
-              {lineup.team.name}
-            </span>
+            <TeamProfileLink
+              team={lineup.team}
+              className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-2 px-1 py-0.5 transition-colors focus-visible:outline-2"
+            >
+              <LiveCrest team={lineup.team} size={22} />
+              <span className="text-body-lg text-text font-bold">
+                {lineup.team.name}
+              </span>
+            </TeamProfileLink>
             <span className="bg-accent-tint text-accent rounded-badge text-label px-2 py-0.5 font-bold">
               {lineup.formation}
             </span>

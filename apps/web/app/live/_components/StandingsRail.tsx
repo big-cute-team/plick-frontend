@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { LIVE_SEASON_LABEL, type StandingRow } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
+import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
  * 대시보드 우측의 순위표 카드(피그마 LW1 우측 레일). 데스크톱은 순위를 별도
@@ -52,17 +52,14 @@ function StandingLine({ row }: { row: StandingRow }) {
     </>
   );
 
-  const lineClass = "flex items-center gap-2.5 rounded-tile px-2 py-2";
-
-  if (row.team.id === null) {
-    return <div className={lineClass}>{content}</div>;
-  }
+  /* 옛 `/live/teams/{id}`는 팀 프로필로 308이지만(KAN-507), 링크는 도착지를
+     직접 가리킨다 — 리다이렉트 한 번을 아끼고 prefetch도 실제 화면에 걸린다 */
   return (
-    <Link
-      href={`/live/teams/${row.team.id}`}
-      className={`${lineClass} hover:bg-elevate-2 focus-visible:outline-accent transition-colors focus-visible:outline-2`}
+    <TeamProfileLink
+      team={row.team}
+      className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-2.5 px-2 py-2 transition-colors focus-visible:outline-2"
     >
       {content}
-    </Link>
+    </TeamProfileLink>
   );
 }

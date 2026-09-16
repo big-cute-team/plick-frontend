@@ -5,12 +5,16 @@ import {
   type MatchSummary,
 } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
+import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
  * 경기 상세 헤더 카드(피그마 LW4·LW5 → KAN-462 확대) — 네이버 스포츠 상세
  * 헤더처럼 양 팀 크레스트와 팀명을 좌우에 크게 세우고, 가운데에 대회명·킥오프
  * 날짜·스코어(또는 킥오프 시각)·상태 칩을 쌓는다(라운드는 BE 미제공). 스코어
  * 정본은 `header.score`다(명세 규약).
+ *
+ * 양쪽 팀은 팀 프로필로 가는 링크다 (KAN-484) — 라이브 어디서든 팀을 누르면 그
+ * 팀 화면으로 가야 한다는 요구다. 빅6 밖 팀은 프로필이 없어 글자로만 남는다.
  */
 export function MatchHeaderCard({ header }: { header: MatchSummary }) {
   const scheduled =
@@ -38,14 +42,17 @@ export function MatchHeaderCard({ header }: { header: MatchSummary }) {
 
 function TeamSide({ team }: { team: MatchSummary["home"] }) {
   return (
-    <div className="flex w-36 flex-col items-center gap-3 lg:w-52">
+    <TeamProfileLink
+      team={team}
+      className="rounded-card hover:bg-elevate-2 focus-visible:outline-accent flex w-36 flex-col items-center gap-3 py-2 transition-colors focus-visible:outline-2 lg:w-52"
+    >
       <LiveCrest team={team} size={72} />
       <span
         className={`text-title w-full truncate text-center font-bold ${team.code ? "text-text" : "text-text-3"}`}
       >
         {team.name}
       </span>
-    </div>
+    </TeamProfileLink>
   );
 }
 
