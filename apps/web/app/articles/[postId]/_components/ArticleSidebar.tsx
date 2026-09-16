@@ -1,32 +1,31 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { formatRelativeTime } from "@plick/domain/format";
-import type { ArticleCard, HotArticle } from "@plick/domain/types";
+import type { ArticleCard } from "@plick/domain/types";
 import { TrendingSection } from "@/_components/TrendingSection";
+import { TrendingSectionSkeleton } from "@/_components/TrendingSectionSkeleton";
 
 /**
- * 기사 세부 우측 사이드바 — 관련 기사 + 실시간 인기 랭킹. 스크롤 시 상단 고정.
+ * 기사 세부 우측 사이드바 — 관련 기사 + 실시간 급상승 랭킹. 스크롤 시 상단 고정.
  *
  * `lg` 미만에선 숨긴다(홈 HomeSidebar와 동일). 하단 "함께 보면 좋은 기사" 행이
  * 모바일에서 관련 콘텐츠를 대신 제공한다.
  *
  * 계약 공백으로 준비 중 문구만 두던 자리를 KAN-338에서 채웠다. 관련 기사는
- * 전용 추천 API 대신 기사의 팀태그로 팀 필터 목록을 받아 5개를 보여주고
- * (`getRelatedArticles`), 실시간 인기는 홈과 같은 핫이슈 데이터를 쓴다
- * (`TrendingSection` 공용).
+ * 전용 추천 API 대신 기사의 팀태그로 팀 필터 목록을 받아 5개를 보여준다
+ * (`getRelatedArticles`). 급상승 랭킹은 홈과 공용인 `TrendingSection`이고,
+ * KAN-501부터 자기 데이터를 스스로 받아 이 컴포넌트가 넘길 게 없다 — 본문보다
+ * 늦게 와도 되는 자리라 `Suspense`로 감싼다.
  *
  * @param related - 관련 기사 목록. 로드 실패면 null. 팀태그가 없거나 같은 팀
  *   기사가 더 없으면 빈 배열 — 빈 문구를 그린다.
- * @param hot - 실시간 인기 랭킹. 핫이슈 두 그룹을 조회수로 다시 세운 것이다
- *   (KAN-480, `toTrendingArticles`). 로드 실패면 null.
  * @param className - 래퍼에 덧붙일 클래스(모바일 `hidden lg:flex` 제어)
  */
 export function ArticleSidebar({
   related,
-  hot,
   className = "",
 }: {
   related: ArticleCard[] | null;
-  hot: HotArticle[] | null;
   className?: string;
 }) {
   return (
@@ -68,7 +67,9 @@ export function ArticleSidebar({
         )}
       </section>
 
-      <TrendingSection articles={hot} />
+      <Suspense fallback={<TrendingSectionSkeleton />}>
+        <TrendingSection />
+      </Suspense>
     </aside>
   );
 }

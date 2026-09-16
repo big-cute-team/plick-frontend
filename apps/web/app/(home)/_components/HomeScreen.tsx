@@ -2,7 +2,6 @@ import {
   HOT_NO_IMAGE_COUNT,
   getArticles,
   getHotArticles,
-  toTrendingArticles,
 } from "@plick/core/articles";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
@@ -49,9 +48,8 @@ import { HomeSidebar } from "./HomeSidebar";
  * 멀쩡한 섹션까지 길동무가 된다), 한쪽이 실패해도 페이지 전체를 에러로
  * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다.
  *
- * 사이드바의 실시간 인기는 전용 엔드포인트가 없어 핫이슈와 같은 데이터를
- * prop으로 내려 쓴다(KAN-338) — 추가 fetch가 없다. 사진 유무를 가리지 않는
- * 조회수 랭킹이라 두 목록을 다시 합쳐 넘긴다({@link toTrendingArticles}).
+ * 사이드바의 실시간 급상승은 자기 데이터를 스스로 받는다 (KAN-501) — 이 화면이
+ * 넘겨줄 게 없어 `Suspense` 경계 안에서 따로 흐른다.
  *
  * @param team 서버 렌더할 팀 필터. 홈은 전체(기본값), 팀 허브는 slug의 팀.
  *   초기 HTML에 이 팀의 기사 목록이 들어가야 크롤러가 읽는다.
@@ -173,10 +171,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
               </div>
               <div className="pt-gap-lg grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <PostFeed initial={initial} initialTeam={team} variant="news" />
-                <HomeSidebar
-                  articles={hot && toTrendingArticles(hot)}
-                  className="hidden lg:flex"
-                />
+                <HomeSidebar className="hidden lg:flex" />
               </div>
             </section>
 

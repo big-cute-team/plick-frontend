@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import { figurePath, hashtagHref } from "@plick/domain/format";
 import type { FigureTag } from "@plick/domain/types";
-import { PlayerPhoto } from "@/_components/PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /** 칩 공통 모양 — `@plick/ui`의 `TagChips`와 같은 알약이다. */
 const CHIP = "bg-elevate text-label rounded-pill inline-flex items-center";

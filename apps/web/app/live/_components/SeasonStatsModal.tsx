@@ -8,7 +8,7 @@ import {
 import type { LiveTeam, SquadPlayer } from "@plick/domain/live";
 import { usePlayerSeasonStats } from "@/_hooks/usePlayerSeasonStats";
 import { LiveModal } from "./LiveModal";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 import { RetryMessage } from "./PlayerMatchStatsModal";
 
 /**

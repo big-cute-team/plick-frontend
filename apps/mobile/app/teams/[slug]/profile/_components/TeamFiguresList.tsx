@@ -3,7 +3,7 @@ import { FIGURE_SECTIONS, FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import { figurePath } from "@plick/domain/format";
 import type { FigureTag } from "@plick/domain/types";
 import { ChevronMiniIcon } from "@plick/ui/icons";
-import { PlayerPhoto } from "@/_components/PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
  * 팀 소속 인물 목록 (KAN-500) — 감독·코칭스태프, 선수단, 구단주·관계자 순으로
