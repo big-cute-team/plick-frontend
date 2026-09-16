@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   getArticle,
   getHotArticles,
+  toTrendingArticles,
   getRelatedArticles,
 } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
@@ -140,7 +141,12 @@ export default async function ArticleDetailPage({
       ? { page: commentsResult.value, fetchedAt: Date.now() }
       : undefined;
 
-  const hot = hotResult.status === "fulfilled" ? hotResult.value : null;
+  // 핫이슈 응답은 사진 유무로 갈린 두 목록이지만(KAN-480) 실시간 인기는 그걸
+  // 가리지 않는 조회수 랭킹이라 다시 합쳐 세운다
+  const trending =
+    hotResult.status === "fulfilled"
+      ? toTrendingArticles(hotResult.value)
+      : null;
   if (hotResult.status === "rejected") {
     console.error("[article] 실시간 인기 로드 실패:", hotResult.reason);
   }
@@ -189,7 +195,7 @@ export default async function ArticleDetailPage({
             />
             <ArticleSidebar
               related={related}
-              hot={hot}
+              hot={trending}
               className="hidden lg:flex"
             />
           </div>
