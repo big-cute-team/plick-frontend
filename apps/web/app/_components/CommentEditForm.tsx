@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ApiError } from "@plick/core/client";
+import { ApiError, needsSocialAccount } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import type { ArticleComment } from "@plick/domain/types";
 import { useUpdateComment } from "@/_hooks/useUpdateComment";
@@ -52,7 +52,7 @@ export function CommentEditForm({
       {
         onSuccess: onClose,
         onError: (err) => {
-          if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
+          if (needsSocialAccount(err)) {
             setShowLogin(true);
             return;
           }

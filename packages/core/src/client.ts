@@ -42,6 +42,23 @@ export class ApiError extends Error {
 }
 
 /**
+ * 소셜 계정이 있어야 되는 일을 막힌 것인가 (KAN-514).
+ *
+ * 댓글·댓글 좋아요·신고·채팅은 소셜 사용자 전용이라 두 가지로 막힌다. 세션이 아예
+ * 없으면 401 `AUTH_REQUIRED`, 게스트 세션이면 403 `AUTH_GUEST_FORBIDDEN`이다. 화면이
+ * 할 일은 둘 다 같다 — 연동/로그인 유도 팝업을 띄운다. 그래서 호출부마다 code 두 개를
+ * 늘어놓지 않게 여기서 묶는다. 어느 문구를 띄울지는 팝업이 `isGuest`로 정한다.
+ *
+ * 다른 401(토큰 만료 등)과 섞이지 않게 status가 아니라 code로 본다.
+ */
+export function needsSocialAccount(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.code === "AUTH_REQUIRED" || error.code === "AUTH_GUEST_FORBIDDEN")
+  );
+}
+
+/**
  * `apiFetch` 한 번의 결과 요약. 메트릭 관측자가 받는다 (KAN-455).
  *
  * `path`는 호출부가 넘긴 원문 그대로다. ID를 접어 라벨 카디널리티를 낮추는 일은

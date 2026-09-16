@@ -102,12 +102,14 @@ export function PostListItem({
       )}
       <div className="min-w-0 flex-1">
         <Title
-          className={`text-text mt-0.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
+          className={`text-text-strong mt-0.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
         >
           {post.title}
         </Title>
         {summary && (
-          <p className="text-body text-text-3 mt-1.5 truncate">{summary}</p>
+          <p className="text-body text-text-strong mt-1.5 truncate">
+            {summary}
+          </p>
         )}
       </div>
       <div className="flex w-28 shrink-0 flex-col items-end gap-1">

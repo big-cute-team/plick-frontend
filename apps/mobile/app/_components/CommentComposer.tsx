@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { SendMiniIcon } from "@plick/ui/icons";
-import { ApiError } from "@plick/core/client";
+import { ApiError, needsSocialAccount } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import { useCreateComment } from "@/_hooks/useCreateComment";
 import { useAuth } from "./AuthProvider";
@@ -53,7 +53,7 @@ export function CommentComposer({
   onPosted?: () => void;
   className?: string;
 }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isGuest } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -69,7 +69,7 @@ export function CommentComposer({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoggedIn) {
+    if (!isLoggedIn || isGuest) {
       setShowLogin(true);
       return;
     }
@@ -85,7 +85,7 @@ export function CommentComposer({
           onCancel?.();
         },
         onError: (err) => {
-          if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
+          if (needsSocialAccount(err)) {
             setShowLogin(true);
             return;
           }
@@ -110,7 +110,7 @@ export function CommentComposer({
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           onFocus={(e) => {
-            if (!isLoggedIn) {
+            if (!isLoggedIn || isGuest) {
               e.currentTarget.blur();
               setShowLogin(true);
             }

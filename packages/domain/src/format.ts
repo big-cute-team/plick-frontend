@@ -189,6 +189,35 @@ export function formatDateKo(iso: string): string {
 }
 
 /**
+ * 게스트 마감 안내용 날짜 — "9월 30일" (KAN-514). 연도를 빼는 이유는 마감이 항상
+ * 14일 안이라 해가 바뀌어도 한 달 안쪽이고, 토스트·카드 한 줄에 들어가야 해서다.
+ * 기기 시간대와 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.
+ *
+ * @param iso BE `guestExpiresAt` (예: "2026-09-30T15:12:04+09:00")
+ * @example guestDeadlineLabel("2026-09-30T15:12:04+09:00") → "9월 30일"
+ */
+export function guestDeadlineLabel(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
+/**
+ * 게스트 연동 안내 한 줄 (KAN-514) — 마감 값이 없거나 깨졌으면 날짜 없는 문구로
+ * 떨어뜨린다. 첫 진입 토스트와 마이페이지 연동 카드가 같은 문구를 쓰도록 여기 둔다.
+ *
+ * @param guestExpiresAt BE `guestExpiresAt`. 쿠키에서 읽어 오므로 없을 수 있다
+ */
+export function guestLinkNotice(guestExpiresAt: string | null): string {
+  if (!guestExpiresAt || Number.isNaN(Date.parse(guestExpiresAt))) {
+    return "14일 안에 소셜 계정을 연동하면 지금까지 기록이 이어져요.";
+  }
+  return `${guestDeadlineLabel(guestExpiresAt)}까지 소셜 계정을 연동하면 지금까지 기록이 이어져요.`;
+}
+
+/**
  * 로그인 화면의 `?error=` 안내 문구 (KAN-393). `oauth`는 소셜 로그인 공통 실패,
  * `rejoin`은 탈퇴 후 7일 재가입 제한(403 `AUTH_REJOIN_RESTRICTED`)이다.
  * rejoin은 `until`(BE `rejoinableAt`, KST ISO)을 받아 언제부터 다시 가입할 수

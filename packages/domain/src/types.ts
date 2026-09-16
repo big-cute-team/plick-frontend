@@ -39,6 +39,12 @@ export interface MyProfile {
    * 7일 정책 계산은 BE 몫이고, 화면은 이 값으로 입력 잠금·안내만 한다(KAN-269). */
   nicknameChangeableAt: string | null;
   myTeams: TeamCode[];
+  /**
+   * 게스트 계정인가 (KAN-514). 소셜 연동 전이면 true — 댓글·신고·채팅이 막히고
+   * 화면은 로그인이 아니라 "계정 연동" 안내로 분기한다. 토큰에도 같은 표식이
+   * 있지만 FE는 토큰을 해석하지 않고 이 값만 본다.
+   */
+  isGuest: boolean;
 }
 
 /** 팀 필터 선택값 — 전체(ALL) 또는 특정 팀. 홈·기사 등 팀 필터 탭 공용. */
