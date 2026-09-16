@@ -388,40 +388,12 @@ export async function getHotArticles(): Promise<HotArticles> {
   };
 }
 
-/** 사이드바 "실시간 인기"가 세로로 세우는 랭킹 길이. */
-export const TRENDING_COUNT = 5;
-
 /**
  * 캐러셀 아래 사진 없는 핫이슈를 몇 칸 깔지 (KAN-480). BE는 그룹마다 5건까지
  * 주는데 화면은 세 칸으로 정해져 있어 여기서 자른다 — 데스크톱은 3열 한 줄,
  * 모바일은 3행이다.
  */
 export const HOT_NO_IMAGE_COUNT = 3;
-
-/**
- * 두 핫이슈 그룹을 랭킹 한 줄로 합친다 (KAN-480).
- *
- * "실시간 인기"는 사진 유무를 가리지 않는 조회수 랭킹이라 나뉘기 전과 같은
- * 목록이어야 한다. 그런데 BE는 그룹 '안에서만' 순위를 매기므로 두 배열을 그냥
- * 이어 붙이면 사진 있는 기사가 조회수와 무관하게 전부 위로 간다. 그래서 여기서
- * 다시 조회수로 세우고, 동률이면 최신 발행을 위에 둔다 — BE의 그룹 내 정렬
- * 기준과 같다.
- *
- * @param hot 핫이슈 두 그룹
- * @param count 잘라 쓸 건수
- */
-export function toTrendingArticles(
-  hot: HotArticles,
-  count = TRENDING_COUNT,
-): HotArticle[] {
-  return [...hot.withImage, ...hot.withoutImage]
-    .sort(
-      (a, b) =>
-        b.views - a.views ||
-        Date.parse(b.publishedAt) - Date.parse(a.publishedAt),
-    )
-    .slice(0, count);
-}
 
 /**
  * 팀태그 기반 관련 기사 (KAN-338). 전용 추천 API가 없어 기사의 대표 팀

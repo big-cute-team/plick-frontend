@@ -3,7 +3,7 @@ import { FIGURE_TYPE_LABEL, TEAMS } from "@plick/domain/constants";
 import { teamProfilePath } from "@plick/domain/format";
 import type { FigureProfile } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { PlayerPhoto } from "@/_components/PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
  * 인물 프로필 머리 (KAN-500) — 사진, 이름·구분·영문명, 소속 팀, 한 줄 소개.

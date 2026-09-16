@@ -1,7 +1,7 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "./LiveCrest";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
  * 킥오프 전 프리뷰 지면(피그마 LW5 → KAN-462에서 좌측 컬럼 안 2열로) — 왼쪽에

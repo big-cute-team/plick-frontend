@@ -8,7 +8,7 @@ import {
   type TeamSquad,
 } from "@plick/domain/live";
 import { ChevronMiniIcon } from "@plick/ui/icons";
-import { PlayerPhoto } from "@/_components/PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 import { SeasonStatsSheet } from "./SeasonStatsSheet";
 
 /**

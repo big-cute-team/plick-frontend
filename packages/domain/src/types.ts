@@ -114,6 +114,60 @@ export interface FigureProfile {
 }
 
 /**
+ * 급상승 랭킹의 집계 대상 (KAN-501, `GET /api/v1/trends`). 감독은 팀당 한 명씩
+ * 여섯 명뿐이라 순위가 의미를 갖지 못해 BE가 아예 빼고 집계한다(KAN-496).
+ */
+export type TrendType = "TEAM" | "PLAYER";
+
+/**
+ * 직전 회차 대비 순위 변화 방향 (KAN-501). `NEW`는 이번 회차에 처음 들어온
+ * 항목이라 비교할 직전 순위가 없다.
+ */
+export type TrendDirection = "UP" | "DOWN" | "SAME" | "NEW";
+
+/**
+ * 급상승 랭킹 한 줄 (KAN-501).
+ *
+ * 순위·변화량은 10분마다 도는 배치가 미리 계산해 회차로 저장한 값이고 화면은
+ * 그대로 그린다(KAN-496). 지수 점수(`score`)는 화면에 쓰지 않아 버린다 —
+ * 0.612345 같은 내부 수치라 보여줄 자리가 없다.
+ */
+export interface TrendItem {
+  /**
+   * 대상 식별자. `TEAM`이면 BE `teams.team_id`(레지스트리 `TEAM_CODES`로 팀
+   * 코드를 얻는다), `PLAYER`면 인물 id다.
+   */
+  entityId: number;
+  /** 한글 표기 (예: 맨체스터 시티, 히샬리송) */
+  name: string;
+  /**
+   * 팀 로고 또는 인물 사진. 확인 시점 dev·prod 모두 전 행 null이라 대체 표시가
+   * 기본 경로다 — 마스터 데이터가 채워지면 값이 들어오기 시작한다(KAN-501).
+   */
+  imageUrl: string | null;
+  /** 이번 회차 순위. 1부터 시작한다. */
+  rank: number;
+  direction: TrendDirection;
+  /** 오른 칸 수. 양수면 상승, 음수면 하락. `NEW`면 비교 대상이 없어 null. */
+  rankDelta: number | null;
+  /** 직전 회차 대비 점수 변화율(0.1842 = +18.42%). 없을 수 있다. */
+  scoreChangeRate: number | null;
+}
+
+/**
+ * 급상승 랭킹 한 벌 (KAN-501, `GET /api/v1/trends?type=`).
+ *
+ * `items`는 요청한 `limit`보다 짧을 수 있고 빈 배열일 수도 있다 — 배치가 아직
+ * 회차를 한 번도 안 만들었으면 비어 있고, 그때 `collectedAt`도 null이다.
+ */
+export interface TrendRanking {
+  type: TrendType;
+  /** 이 회차를 집계한 시각 ISO-8601(UTC `Z`). 회차가 없으면 null. */
+  collectedAt: string | null;
+  items: TrendItem[];
+}
+
+/**
  * 기사 원문을 낸 기자 (KAN-271, `GET /api/v1/articles`). BE는 객체 자체가 없을
  * 수 있다. 모바일 `_types/articles.ts`에 있던 것을 web 이식(KAN-321)에서 승격했다.
  */
