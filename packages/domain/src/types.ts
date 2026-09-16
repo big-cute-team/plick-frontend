@@ -158,6 +158,14 @@ export interface ArticleCard {
   title: string;
   /** BE가 긴 요약(`summary_detail`)을 내려준다. 카드에서는 줄수로 자른다. */
   summary: string;
+  /**
+   * 한 줄 요약 (KAN-503). 리스트 한 줄이 제목 밑에 까는 부제목이다 (KAN-482).
+   * 핫이슈 카드의 {@link HotArticle.summaryShort}와 같은 필드다.
+   *
+   * BE 실데이터는 전 건 채워져 있지만 계약상 nullable이고, 길이도 보장하지
+   * 않는다 — 평균 37자에 최대 130자라 화면이 줄수로 자른다.
+   */
+  summaryShort: string | null;
   /** 루머 단계. BE 실데이터의 절반이 비어 있다. */
   stage: RumorStage | null;
   /** 발행 시각 ISO-8601. BE가 KST 오프셋(+09:00)을 박아 내려준다. */
