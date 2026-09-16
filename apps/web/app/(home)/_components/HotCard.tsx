@@ -9,17 +9,27 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  *
  * 원래 히어로(lg)/서브(sm) 그리드용 사이즈 변형이 있었지만, 핫이슈 섹션이
  * 모바일과 같은 캐러셀로 바뀌면서(KAN-338) 단일 스타일로 접었다. 카드 비율은
- * 캐러셀 래퍼(`HotCarousel`의 `cardClassName`)가 정하고 카드는 `h-full`로
- * 채운다. lg 미만은 모바일 히어로 카드와 같은 밀도(p-4·`text-title`),
- * lg 이상은 데스크톱 스케일(px-6·`text-hero`)로 키운다.
+ * 캐러셀 래퍼(`HotCarousel`의 `slideClassName`)가 정하고 카드는 `h-full`로
+ * 채운다.
+ *
+ * 밀도는 모바일 히어로 카드와 같다(p-4·`text-title`). KAN-480 전에는 lg 이상에서
+ * px-6·`text-hero`로 키웠는데, 데스크톱 캐러셀이 네 장을 한 줄에 깔면서 카드가
+ * 1200px에서 300px 아래로 줄어 그 스케일이 카드를 넘쳤다.
  *
  * 실계약(KAN-324)으로 갈아타면서 배경이 팀 컬러 placeholder(`MediaThumb`)에서
  * 릴 공용 단색(`bg-reel-bg`)으로 바뀌었다. 모바일이 KAN-297에서 히어로 카드를
  * 그렇게 통일했고 web 릴스도 KAN-323에서 같은 색을 따랐다.
  *
- * 사진(`imageUrl`)이 있으면 카드를 가득 덮고, 없으면(현재 발행 기사 전건이
- * 그렇다) 원문 트윗을 사진째 임베드한다 — 모바일 히어로 카드와 같은 폴백이다.
- * 임베드도 사진도 없으면 통일 배경색이 그대로 남는다.
+ * 사진(`imageUrl`)이 있으면 카드를 가득 덮고, 없으면 원문 트윗을 사진째
+ * 임베드한다 — 모바일 히어로 카드와 같은 폴백이다. 임베드도 사진도 없으면
+ * 통일 배경색이 그대로 남는다.
+ *
+ * KAN-480에서 핫이슈가 사진 유무로 갈렸는데도 이 폴백을 남기는 이유가 있다.
+ * BE가 나눈 기준은 원문 X 게시물에 사진이 붙어 있었는지(`raw_articles.media_url`)
+ * 이고, 카드가 그리는 `imageUrl`은 기사 대표 이미지(`article_summaries.image_url`)
+ * 라 서로 다른 컬럼이다. 그래서 사진 있는 그룹으로 온 기사도 `imageUrl`이 null일
+ * 수 있다. 사진이 아예 없는 기사는 이제 캐러셀에 오지 않고 아래 세 칸의
+ * `HotTextCard`가 받는다.
  *
  * 임베드는 모바일 히어로와 같은 규칙으로 앉힌다. 카드 가로를 꽉 채우고
  * (기본 max-width 550px는 globals.css에서 푼다), 세로는 카드 전체 높이 기준으로
@@ -47,7 +57,8 @@ export function HotCard({
   fetchPriority = "auto",
 }: {
   article: HotArticle;
-  /** 첫 카드(첫 화면에 실제로 보이는 1장)만 high, 나머지는 low로 대역폭 경합을 줄인다 (KAN-421) */
+  /** 첫 화면에 실제로 보이는 카드만 high, 나머지는 low로 대역폭 경합을 줄인다
+   *  (KAN-421). 데스크톱은 네 장이 한꺼번에 보이므로 호출부가 앞 네 장을 high로 준다 */
   fetchPriority?: "high" | "low" | "auto";
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
@@ -77,7 +88,7 @@ export function HotCard({
 
       {/* pt가 스크림 윗선 — 팀·단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-6 lg:px-6 lg:pt-8 lg:pb-5.5"
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 pt-6"
         style={{
           backgroundImage:
             "linear-gradient(to top, var(--plk-scrim) 0%, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 60%, color-mix(in srgb, var(--plk-scrim) 78%, transparent) 85%, transparent 100%)",
@@ -99,7 +110,7 @@ export function HotCard({
             )}
           </div>
         )}
-        <h3 className="text-media-on tracking-heading text-title lg:text-hero line-clamp-2 font-extrabold">
+        <h3 className="text-media-on tracking-heading text-title line-clamp-2 font-extrabold">
           {article.title}
         </h3>
         <p className="text-caption">

@@ -243,6 +243,12 @@ export interface HotArticle {
   /** BE `articleSummaryId`를 문자열로 담는다 (`ArticleCard.id`와 결이 같다). */
   id: string;
   title: string;
+  /**
+   * 한 줄 요약 (KAN-503). 사진 없는 핫이슈 카드가 제목 밑에 까는 본문이다
+   * (KAN-480) — 사진이 덮는 카드에는 자리가 없어 쓰지 않는다. BE가 요약을
+   * 만들지 못한 기사는 null이라 그 줄만 빠진다.
+   */
+  summaryShort: string | null;
   /** 루머 단계. null이면 배지를 그리지 않는다. */
   stage: RumorStage | null;
   /** 발행 시각 ISO-8601 (KST 오프셋 포함). */
@@ -274,6 +280,25 @@ export interface HotArticle {
   commentCount: number;
   likeCount: number;
   liked: boolean;
+}
+
+/**
+ * 핫이슈 한 묶음 — 원문 사진이 있는 기사와 없는 기사를 나눠 담는다 (KAN-480).
+ *
+ * BE가 한 응답에 두 목록을 담아 준다(KAN-487). 나눈 기준은 원문 X 게시물에
+ * 사진이 붙어 있었는지(`raw_articles.media_url`)이고, 카드의 `imageUrl`(기사
+ * 대표 이미지)과는 다른 컬럼이다. 그래서 `withImage`에 있는 카드라도
+ * `imageUrl`이 null일 수 있다 — 썸네일을 그릴지는 여전히 카드의 `imageUrl`을
+ * 보고 판단하고, 없으면 종전대로 트윗 임베드로 폴백한다.
+ *
+ * 두 목록 다 비어 있는 것이 정상 상태다. 사진 수집이 KAN-487부터 시작돼서
+ * 당분간은 `withImage`가 비고 `withoutImage`만 찬다.
+ */
+export interface HotArticles {
+  /** 사진이 있는 기사 — 캐러셀이 받는다. */
+  withImage: HotArticle[];
+  /** 사진이 없는 기사 — 캐러셀 아래 세 칸이 받는다. */
+  withoutImage: HotArticle[];
 }
 
 /**

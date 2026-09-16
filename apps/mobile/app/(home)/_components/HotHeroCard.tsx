@@ -14,6 +14,13 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 작으면 세로 가운데에 서고 크면 카드 밖으로 나간 만큼 그대로 잘린다
  * (overflow-hidden). 임베드도 사진도 없으면 통일 배경색이 그대로 남는다.
  *
+ * KAN-480에서 핫이슈가 사진 유무로 갈렸는데도 이 폴백을 남기는 이유가 있다.
+ * BE가 나눈 기준은 원문 X 게시물에 사진이 붙어 있었는지(`raw_articles.media_url`)
+ * 이고, 카드가 그리는 `imageUrl`은 기사 대표 이미지(`article_summaries.image_url`)
+ * 라 서로 다른 컬럼이다. 그래서 사진 있는 그룹으로 온 기사도 `imageUrl`이 null일
+ * 수 있다. 사진이 아예 없는 기사는 이제 캐러셀에 오지 않고 아래 세 칸의
+ * {@link HotTextCard}가 받는다.
+ *
  * 사진 위에는 어두운 스크림(가독성용 고정 값, 테마 무관) + 흰 텍스트를 얹는다.
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀 이름
  * 자리를 비운다. 단계·기자도 null이면 그 조각만 빠진다 (KAN-282).

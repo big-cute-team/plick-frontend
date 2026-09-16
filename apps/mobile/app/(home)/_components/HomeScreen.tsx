@@ -2,7 +2,11 @@ import { AppShell } from "@/_components/AppShell";
 import { HotCarousel } from "@plick/ui/HotCarousel";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { getArticles, getHotArticles } from "@plick/core/articles";
+import {
+  HOT_NO_IMAGE_COUNT,
+  getArticles,
+  getHotArticles,
+} from "@plick/core/articles";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
@@ -13,6 +17,7 @@ import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
+import { HotTextCard } from "./HotTextCard";
 import { MoreArticlesLink } from "./MoreArticlesLink";
 import { NewsFeed } from "./NewsFeed";
 
@@ -28,9 +33,15 @@ import { NewsFeed } from "./NewsFeed";
  * 내려준다. 클라가 같은 데이터를 또 부르는 이중 페치를 막는 씨앗이고, 팀 탭을
  * 바꾸는 순간부터는 클라가 이어받는다 (KAN-271).
  *
- * 핫이슈 캐러셀은 `GET /api/v1/articles/hot`을 단발로 받아 그대로 내려준다
- * (KAN-282). 홈에서 팀 탭을 골라도 핫이슈는 전체 기준 그대로이므로 팀 허브에서도
- * 같은 데이터를 그린다. 클라에서 이어 부를 일이 없어 서버 fetch로 끝낸다.
+ * 핫이슈는 `GET /api/v1/articles/hot`을 단발로 받는다 (KAN-282). 홈에서 팀 탭을
+ * 골라도 핫이슈는 전체 기준 그대로이므로 팀 허브에서도 같은 데이터를 그린다.
+ * 클라에서 이어 부를 일이 없어 서버 fetch로 끝낸다.
+ *
+ * 응답이 원문 사진 유무로 갈린 두 목록이라(KAN-480, BE는 KAN-487) 화면도 둘로
+ * 나뉜다. 사진 있는 기사는 종전대로 캐러셀이 받고, 사진 없는 기사는 그 아래
+ * 세 칸에 텍스트 카드로 깐다. 사진 없는 기사를 캐러셀에 넣으면 원문 트윗
+ * 임베드로 칸을 메워야 했는데, 임베드는 로드가 느리고 높이가 제멋대로라
+ * 캐러셀에서 가장 말썽이었다.
  *
  * 두 API는 서로 독립이라 병렬로 받고, 한쪽이 실패해도 페이지 전체를 에러로
  * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다.
@@ -48,6 +59,8 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   if (hotResult.status === "rejected") {
     console.error("[home] 핫이슈 로드 실패:", hotResult.reason);
   }
+  // BE는 그룹마다 5건까지 주는데 캐러셀 아래는 세 칸으로 정해져 있다
+  const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
 
   let initial: InitialArticleFeed | undefined;
   if (feedResult.status === "fulfilled") {
@@ -90,20 +103,33 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             <p className="text-body text-text-4 px-edge py-8 text-center">
               핫이슈를 불러오지 못했어요.
             </p>
-          ) : hot.length === 0 ? (
+          ) : hot.withImage.length === 0 && noImage.length === 0 ? (
             <p className="text-body text-text-4 px-edge py-8 text-center">
               아직 핫이슈가 없어요.
             </p>
           ) : (
-            <HotCarousel>
-              {hot.map((article, i) => (
-                <HotHeroCard
-                  key={article.id}
-                  article={article}
-                  fetchPriority={i === 0 ? "high" : "low"}
-                />
-              ))}
-            </HotCarousel>
+            <>
+              {hot.withImage.length > 0 && (
+                <HotCarousel>
+                  {hot.withImage.map((article, i) => (
+                    <HotHeroCard
+                      key={article.id}
+                      article={article}
+                      fetchPriority={i === 0 ? "high" : "low"}
+                    />
+                  ))}
+                </HotCarousel>
+              )}
+              {noImage.length > 0 && (
+                <ul className="px-edge flex flex-col gap-2 pt-2">
+                  {noImage.map((article) => (
+                    <li key={article.id}>
+                      <HotTextCard article={article} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </section>
 

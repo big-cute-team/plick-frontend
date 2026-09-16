@@ -16,7 +16,8 @@ import { TrendingSection } from "@/_components/TrendingSection";
  *
  * @param related - 관련 기사 목록. 로드 실패면 null. 팀태그가 없거나 같은 팀
  *   기사가 더 없으면 빈 배열 — 빈 문구를 그린다.
- * @param hot - 핫이슈 목록. 로드 실패면 null.
+ * @param hot - 실시간 인기 랭킹. 핫이슈 두 그룹을 조회수로 다시 세운 것이다
+ *   (KAN-480, `toTrendingArticles`). 로드 실패면 null.
  * @param className - 래퍼에 덧붙일 클래스(모바일 `hidden lg:flex` 제어)
  */
 export function ArticleSidebar({
