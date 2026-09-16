@@ -6,17 +6,19 @@ import { ChevronMiniIcon } from "@plick/ui/icons";
 import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
- * 팀 소속 인물 목록 (KAN-500) — 감독·코칭스태프, 선수단, 구단주·관계자 순으로
- * 섹션을 나누고 각 행을 누르면 그 인물의 프로필과 관련 기사로 간다.
+ * 팀 소속 인물 목록 (KAN-507) — 모바일 `TeamFiguresList`의 데스크톱 판이다.
+ * 감독·코칭스태프, 선수, 구단주·관계자 순으로 섹션을 나누고 각 행을 누르면 그
+ * 인물의 프로필과 관련 기사(`/figures/[figureId]`)로 간다.
  *
- * 구성은 라이브 선수단(`SquadList`)과 맞췄다 — 사진 원 + 이름 + 꺾쇠 행을
- * `bg-elevate` 카드에 쌓는다. 거기는 시트를 여는 버튼이고 여기는 링크라는 것만
- * 다르다. BE는 구분 없이 한글명순 한 배열로 주므로 여기서 가른다. 비어 있는
- * 섹션은 그리지 않고, 전부 비면 빈 문구 하나만 남긴다.
+ * 모바일과 다른 건 둘이다. 넓은 폭을 살려 섹션을 2열 그리드로 깔고(라이브
+ * 선수단 `SquadGroups`와 같은 격자), 행에 hover·focus 상태를 얹는다.
  *
- * 선수 행은 구분 라벨을 생략하고 그 밖(감독·코치·구단주·관계자)만 이름 옆에
- * 단다 — 섹션 제목이 이미 구분이지만 감독과 코치가 한 섹션이라 행에서
- * 갈라 준다.
+ * BE는 구분 없이 한글명순 한 배열로 주므로 여기서 가른다. 비어 있는 섹션은
+ * 그리지 않고, 전부 비면 빈 문구 하나만 남긴다. 선수 행은 구분 라벨을 생략하고
+ * 그 밖(감독·코치·구단주·관계자)만 이름 옆에 단다.
+ *
+ * @param figures 팀 프로필의 소속 인물. BE 인물 사진은 확인 시점 전원 null이라
+ *   폴백 원이 기본 경로다
  */
 export function TeamFiguresList({ figures }: { figures: FigureTag[] }) {
   if (figures.length === 0) {
@@ -28,7 +30,7 @@ export function TeamFiguresList({ figures }: { figures: FigureTag[] }) {
   }
 
   return (
-    <div className="px-edge flex flex-col gap-4 pt-2 pb-6">
+    <div className="grid grid-cols-1 items-start gap-x-8 gap-y-5 lg:grid-cols-2">
       {FIGURE_SECTIONS.map((section) => {
         const members = figures.filter((figure) =>
           section.types.includes(figure.type),
@@ -36,27 +38,27 @@ export function TeamFiguresList({ figures }: { figures: FigureTag[] }) {
         if (members.length === 0) return null;
         return (
           <section key={section.label} className="flex flex-col gap-2">
-            <h3 className="text-label text-text-3 font-bold">
+            <h3 className="text-body-lg text-text-3 font-bold">
               {section.label}
               <span className="text-text-4 ml-1.5 font-semibold">
                 {members.length}
               </span>
             </h3>
-            <div className="bg-elevate rounded-card flex flex-col px-4 py-1">
+            <div className="bg-elevate rounded-card flex flex-col px-5 py-1">
               {members.map((figure, i) => (
                 <Link
                   key={figure.id}
                   href={figurePath(figure.id)}
-                  className={`flex items-center gap-3 py-3 active:opacity-70 ${
+                  className={`group focus-visible:outline-accent flex items-center gap-4 py-3.5 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
                     i > 0 ? "border-border border-t" : ""
                   }`}
                 >
                   <PlayerPhoto
                     src={figure.imageUrl}
                     name={figure.name}
-                    size={36}
+                    size={40}
                   />
-                  <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
+                  <span className="text-body-lg text-text group-hover:text-accent min-w-0 flex-1 truncate font-semibold transition-colors">
                     {figure.name}
                   </span>
                   {figure.type !== "PLAYER" && (
@@ -64,8 +66,8 @@ export function TeamFiguresList({ figures }: { figures: FigureTag[] }) {
                       {FIGURE_TYPE_LABEL[figure.type]}
                     </span>
                   )}
-                  <span className="text-text-4">
-                    <ChevronMiniIcon size={14} />
+                  <span className="text-text-4 group-hover:text-text-2 transition-colors">
+                    <ChevronMiniIcon size={16} />
                   </span>
                 </Link>
               ))}
