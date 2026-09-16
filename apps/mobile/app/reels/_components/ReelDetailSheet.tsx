@@ -4,9 +4,9 @@ import { useState } from "react";
 import { CloseIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
-import { TagChips } from "@plick/ui/TagChips";
 import { formatCount } from "@plick/domain/format";
 import { CommentComposer } from "@/_components/CommentComposer";
+import { EntityChips } from "@/_components/EntityChips";
 import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -120,8 +120,10 @@ export function ReelDetailSheet({
             {reel.summary}
           </p>
 
-          <div className="flex items-center gap-2">
-            <TagChips tags={reel.hashtags} />
+          {/* 팀 칩·인물 칩은 각자 프로필로 간다 (KAN-500). 칩이 늘어 한 줄을
+              넘기면 접는다 — 원문 버튼은 마지막 줄 오른쪽에 남는다 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <EntityChips hashtags={reel.hashtags} figures={reel.figures} />
             {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365) */}
             <SourceLinkButton
               label="출처 원문 보기"

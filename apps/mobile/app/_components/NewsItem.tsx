@@ -10,8 +10,10 @@ import {
   formatCount,
   formatRelativeTime,
   isRecentlyPublished,
+  teamProfilePath,
 } from "@plick/domain/format";
 import { NewBadge } from "@plick/ui/NewBadge";
+import { EntityChips } from "@/_components/EntityChips";
 
 /**
  * "지금 올라온 소식" 리스트의 한 줄. 탭하면 기사 세부 페이지로 이동한다.
@@ -43,6 +45,12 @@ import { NewBadge } from "@plick/ui/NewBadge";
  * 기사가 있어야 생기는 일이라 React가 그 트리를 클라에서 다시 그리는 걸로
  * 감수한다.
  *
+ * 팀 이름·로고와 인물 칩은 각자 팀 프로필·인물 프로필로 간다 (KAN-500). 행
+ * 전체가 `<a>`였을 때는 안에 링크를 둘 수 없어(중첩 앵커는 무효 HTML) 구조를
+ * 바꿨다 — 제목 링크의 `::after`를 행 전체로 펼쳐 어디를 눌러도 기사로 가고,
+ * 팀·인물 링크만 `relative z-10`으로 그 위에 올려 자기 목적지를 갖는다.
+ * 인물 태그가 없는 기사는 칩 줄 자체를 그리지 않아 행 높이가 그대로다.
+ *
  * @param article - 표시할 기사 카드
  * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  */
@@ -63,18 +71,18 @@ export function NewsItem({
   const isNew = isRecentlyPublished(article.publishedAt);
 
   return (
-    <Link
-      href={`/articles/${article.id}`}
-      className="border-border gap-gap flex items-start border-b py-3 active:opacity-70"
-    >
+    <article className="border-border gap-gap relative flex items-start border-b py-3 active:opacity-70">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           {/* 팀명·기자명은 제목보다 어두운 text-3로 눌러 둔다 — 굵기로만 구분해
               리스트에서 밝게 남는 글자는 기사 제목 하나가 되게 한다 */}
           {team && (
-            <span className="text-body text-text-3 font-extrabold">
+            <Link
+              href={teamProfilePath(team.code)}
+              className="text-body text-text-3 relative z-10 font-extrabold"
+            >
               {team.name}
-            </span>
+            </Link>
           )}
           <span className="text-body text-text-4" suppressHydrationWarning>
             {formatRelativeTime(article.publishedAt)}
@@ -91,7 +99,14 @@ export function NewsItem({
         {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
             보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
         <h3 className="text-title text-text mt-1 line-clamp-2 leading-snug font-bold">
-          {article.title}
+          {/* 행 전체를 덮는 기사 링크. h3는 positioned가 아니라 line-clamp의
+              overflow가 ::after를 자르지 않는다 */}
+          <Link
+            href={`/articles/${article.id}`}
+            className="after:absolute after:inset-0 after:content-['']"
+          >
+            {article.title}
+          </Link>
         </h3>
         <p className="text-body text-text-3 mt-1 flex flex-wrap items-center gap-x-1.5">
           {article.reporter && (
@@ -116,6 +131,11 @@ export function NewsItem({
           <span>·</span>
           <span>댓글 {article.commentCount}</span>
         </p>
+        {article.figures.length > 0 && (
+          <div className="relative z-10 mt-2 flex flex-wrap items-center gap-1.5">
+            <EntityChips figures={article.figures} compact />
+          </div>
+        )}
       </div>
       {article.imageUrl && (
         <MediaThumb
@@ -125,8 +145,14 @@ export function NewsItem({
         />
       )}
       {team && (
-        <TeamCrest team={team} size={36} className="shrink-0 self-center" />
+        <Link
+          href={teamProfilePath(team.code)}
+          aria-label={`${team.name} 프로필`}
+          className="relative z-10 shrink-0 self-center"
+        >
+          <TeamCrest team={team} size={36} />
+        </Link>
       )}
-    </Link>
+    </article>
   );
 }

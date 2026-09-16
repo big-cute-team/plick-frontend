@@ -45,6 +45,75 @@ export interface MyProfile {
 export type Filter = "ALL" | TeamCode;
 
 /**
+ * 인물 구분 (KAN-500, BE `figures.type` enum 그대로). 실데이터에는 PLAYER와
+ * MANAGER만 있고 나머지 셋은 BE 제약이 허용하는 값이다. 화면은 선수·감독만
+ * 따로 표시하고 나머지는 기본 카드로 떨어뜨린다.
+ */
+export type FigureType = "PLAYER" | "MANAGER" | "COACH" | "OWNER" | "OTHER";
+
+/**
+ * 기사에 태그된 인물 한 명 (KAN-500). 기사 피드·릴스·상세·좋아요 목록의
+ * `figures` 배열 원소이자 팀 프로필의 소속 인물 목록 원소다 — BE가 두 자리에
+ * 같은 `FigureResponse`를 쓴다.
+ *
+ * 인물 태그는 앞으로 수집되는 기사부터 붙는다. 과거 기사는 대표 인물 한 명이
+ * 있던 것만 옮겨서 배열이 빈 기사가 대부분이다. 사진은 등록되지 않은 인물이면
+ * null인데, 확인 시점 실데이터는 전원 null이라 자리 표시가 기본 경로다.
+ */
+export interface FigureTag {
+  /** BE `figureId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */
+  id: string;
+  /** 한글 표기 (예: 손흥민) */
+  name: string;
+  type: FigureType;
+  imageUrl: string | null;
+}
+
+/**
+ * 팀 프로필 (KAN-500, `GET /api/v1/teams/{teamId}`).
+ *
+ * 로고·표기와 소속 인물 목록이다. BE `logoUrl`은 현재 6팀 모두 null이라 로고는
+ * 레지스트리(`TEAMS`)의 실제 구단 로고를 그린다 — 그래서 `code`가 여기 있다.
+ * BE가 모르는 팀 id를 돌려줄 일은 없지만(6팀 마스터) 레지스트리에 없는 id를
+ * 받았을 때 화면이 죽지 않게 null을 허용한다.
+ */
+export interface TeamProfile {
+  /** BE `teams.team_id`. */
+  id: number;
+  /** 레지스트리 팀 코드. 마스터에 없는 팀이면 null. */
+  code: TeamCode | null;
+  /** 한글 정식 명칭 (예: 토트넘 핫스퍼) */
+  name: string;
+  nameEn: string;
+  logoUrl: string | null;
+  /** 소속 인물 — BE가 한글명 오름차순으로 준다. 없으면 빈 배열. */
+  figures: FigureTag[];
+}
+
+/**
+ * 인물 프로필 (KAN-500, `GET /api/v1/figures/{figureId}`).
+ *
+ * 사진·한 줄 소개·소속 팀. 셋 다 null일 수 있다. 소속 팀은 객체째 null이고
+ * 팀 프로필과 달리 `nameEn`이 없어 팀 코드는 id로 레지스트리에서 보강한다.
+ */
+export interface FigureProfile {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  type: FigureType;
+  imageUrl: string | null;
+  /** 한 줄 소개. 등록되지 않은 인물은 null. */
+  description: string | null;
+  team: {
+    id: number;
+    /** 레지스트리 팀 코드. 마스터에 없는 팀이면 null. */
+    code: TeamCode | null;
+    name: string;
+    logoUrl: string | null;
+  } | null;
+}
+
+/**
  * 기사 원문을 낸 기자 (KAN-271, `GET /api/v1/articles`). BE는 객체 자체가 없을
  * 수 있다. 모바일 `_types/articles.ts`에 있던 것을 web 이식(KAN-321)에서 승격했다.
  */
@@ -106,6 +175,8 @@ export interface ArticleCard {
   liked: boolean;
   /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 태그 없는 기사는 빈 배열이고 칩 줄이 빠진다. */
+  figures: FigureTag[];
 }
 
 /**
@@ -157,6 +228,8 @@ export interface ArticleDetail {
   liked: boolean;
   /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. 빈 배열일 수 있다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 태그 없는 기사는 빈 배열이고 칩만 빠진다. */
+  figures: FigureTag[];
 }
 
 /**
@@ -266,6 +339,8 @@ export interface ReelCard {
   liked: boolean;
   /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 릴 세부 시트의 태그 줄에 팀 칩 옆으로 붙는다. */
+  figures: FigureTag[];
   /**
    * 게시물 표시 형태 (KAN-418). 릴에 토론이 붙어 있으면 이 값이 투표 가능
    * 여부의 실기준이다 — DEBATE는 투표 UI, FINISH는 결과 읽기 전용.

@@ -31,6 +31,7 @@ import type {
   TeamCode,
 } from "@plick/domain/types";
 import { apiFetch } from "./client";
+import { toFigureTags, type FigureResponse } from "./figures";
 
 /**
  * BE 응답 카드 (be-verify가 실제 응답으로 확인한 그대로). 내가 좋아요한 기사
@@ -61,6 +62,11 @@ export interface FeedCardResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /**
+   * 태그된 인물 (KAN-500). 새 빌드는 태그가 없어도 `[]`로 준다. 옵셔널인 이유는
+   * FE가 BE보다 먼저 배포되면 키 자체가 없어서다 — 변환이 빈 배열로 눕힌다.
+   */
+  figures?: FigureResponse[] | null;
 }
 
 interface ArticleFeedResponse {
@@ -106,6 +112,7 @@ export function toArticleCard(r: FeedCardResponse): ArticleCard {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    figures: toFigureTags(r.figures),
   };
 }
 
@@ -113,21 +120,26 @@ export function toArticleCard(r: FeedCardResponse): ArticleCard {
  * 기사 피드 한 페이지를 가져온다.
  *
  * @param team 팀 필터. `"ALL"`이면 파라미터를 싣지 않아 전체가 온다.
+ * @param figureId 인물 필터 (KAN-500). 주면 그 인물이 태그된 기사만 온다.
+ *   팀과 같이 주면 둘 다 만족하는 기사만 온다(AND).
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null.
  * @param size 한 페이지 건수 (1..30)
  * @throws {ApiError} 잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
  */
 export async function getArticles({
   team = "ALL",
+  figureId = null,
   cursor = null,
   size = ARTICLES_PAGE_SIZE,
 }: {
   team?: Filter;
+  figureId?: string | null;
   cursor?: string | null;
   size?: number;
 } = {}): Promise<ArticleFeedPage> {
   const params = new URLSearchParams({ size: String(size) });
   if (team !== "ALL") params.set("teamId", String(TEAM_IDS[team]));
+  if (figureId) params.set("figureId", figureId);
   if (cursor) params.set("cursor", cursor);
 
   const page = await apiFetch<ArticleFeedResponse>(
@@ -168,6 +180,8 @@ interface ArticleDetailResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 피드 카드와 같은 사정으로 옵셔널이다. */
+  figures?: FigureResponse[] | null;
 }
 
 /** x.com 원문 링크의 스테이터스 id. 링크가 없거나 형태가 다르면 null. */
@@ -237,6 +251,7 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    figures: toFigureTags(r.figures),
   };
 }
 
