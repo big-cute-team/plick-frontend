@@ -7,7 +7,10 @@ import {
   getArticles,
   getHotArticles,
 } from "@plick/core/articles";
+import { getDebates } from "@plick/core/debates";
+import { getMatches } from "@plick/core/live";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
+import { todayDateKeyKst } from "@plick/domain/live";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { LiveDot } from "@plick/ui/LiveDot";
@@ -20,6 +23,8 @@ import { HotHeroCard } from "./HotHeroCard";
 import { HotTextCard } from "./HotTextCard";
 import { MoreArticlesLink } from "./MoreArticlesLink";
 import { NewsFeed } from "./NewsFeed";
+import { OpenDebateBanner } from "./OpenDebateBanner";
+import { TodayMatchBanner } from "./TodayMatchBanner";
 
 /**
  * 홈 화면 본체 — 핫이슈 캐러셀 + 지금 올라온 소식 리스트 (KAN-163).
@@ -43,21 +48,40 @@ import { NewsFeed } from "./NewsFeed";
  * 임베드로 칸을 메워야 했는데, 임베드는 로드가 느리고 높이가 제멋대로라
  * 캐러셀에서 가장 말썽이었다.
  *
- * 두 API는 서로 독립이라 병렬로 받고, 한쪽이 실패해도 페이지 전체를 에러로
- * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다.
+ * 핫이슈 위에는 오늘 경기·진행 중 투표 배너가 조건부로 선다 (KAN-504). 홈에
+ * 들어온 사람이 "오늘 경기 있나", "투표할 거 있나"를 탭을 옮겨 보지 않아도 되게
+ * 하는 통로다. 둘 다 그날 있을 때만 그려지고, 판정과 문구는 각 배너가 갖는다.
+ *
+ * 네 API는 서로 독립이라 병렬로 받고, 한쪽이 실패해도 페이지 전체를 에러로
+ * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다. 배너 둘은 실패해도 자리를
+ * 남기지 않는다 — 부가 정보라 없는 날과 같이 처리하는 게 맞다.
  *
  * @param team 서버 렌더할 팀 필터. 홈은 전체(기본값), 팀 허브는 slug의 팀.
  *   초기 HTML에 이 팀의 기사 목록이 들어가야 크롤러가 읽는다.
  */
 export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
-  const [hotResult, feedResult] = await Promise.allSettled([
-    getHotArticles(),
-    getArticles({ team }),
-  ]);
+  const [hotResult, feedResult, matchResult, debateResult] =
+    await Promise.allSettled([
+      getHotArticles(),
+      getArticles({ team }),
+      getMatches(todayDateKeyKst()),
+      getDebates(),
+    ]);
 
   const hot = hotResult.status === "fulfilled" ? hotResult.value : null;
   if (hotResult.status === "rejected") {
     console.error("[home] 핫이슈 로드 실패:", hotResult.reason);
+  }
+
+  /* 배너 둘은 부가 정보라 실패를 빈 배열로 접는다 — 자리를 비워 두면 경기·투표가
+     없는 날과 똑같이 보이고, 그게 맞는 처리다(TodayMatchBanner 주석) */
+  const matches = matchResult.status === "fulfilled" ? matchResult.value : [];
+  if (matchResult.status === "rejected") {
+    console.error("[home] 오늘 경기 로드 실패:", matchResult.reason);
+  }
+  const debates = debateResult.status === "fulfilled" ? debateResult.value : [];
+  if (debateResult.status === "rejected") {
+    console.error("[home] 토론 리스트 로드 실패:", debateResult.reason);
   }
   // BE는 그룹마다 5건까지 주는데 캐러셀 아래는 세 칸으로 정해져 있다
   const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
@@ -95,6 +119,14 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             })}
           />
         )}
+        {/* 오늘 경기·진행 중 투표 배너 (KAN-504) — 있을 때만 핫이슈 위에 선다.
+            둘 다 null인 날은 이 div가 자식 없는 :empty가 되는데, 그때도 pt-3만큼
+            빈 띠가 남으므로 `empty:hidden`으로 상자째 지운다 */}
+        <div className="px-edge flex flex-col gap-2 pt-3 empty:hidden">
+          <TodayMatchBanner matches={matches} />
+          <OpenDebateBanner debates={debates} />
+        </div>
+
         <section className="pt-3">
           <h2 className="px-edge text-section tracking-heading text-text pb-2 font-extrabold">
             🔥 핫이슈

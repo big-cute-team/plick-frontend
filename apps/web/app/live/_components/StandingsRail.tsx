@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LIVE_SEASON_LABEL, type StandingRow } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /**
  * 대시보드 우측의 순위표 카드(피그마 LW1 우측 레일). 데스크톱은 순위를 별도

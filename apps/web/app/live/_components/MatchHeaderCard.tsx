@@ -4,7 +4,7 @@ import {
   matchStatusLabel,
   type MatchSummary,
 } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /**
  * 경기 상세 헤더 카드(피그마 LW4·LW5 → KAN-462 확대) — 네이버 스포츠 상세

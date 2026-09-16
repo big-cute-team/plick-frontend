@@ -4,7 +4,7 @@ import {
   type MatchStatusTone,
   type MatchSummary,
 } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /** 상태 컬럼 첫 줄의 톤 → 색 토큰 매핑(모바일 카드와 같은 규약). */
 const TONE_TEXT: Record<MatchStatusTone, string> = {

@@ -4,7 +4,7 @@ import {
   matchStatusLabel,
   type MatchSummary,
 } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /**
  * 경기 상세 헤더 — 양 팀 크레스트 사이에 스코어(라이브·종료) 또는 킥오프

@@ -10,7 +10,7 @@ import {
   TEAM_BY_SLUG,
   TEAM_FULL_NAMES,
 } from "./constants";
-import type { Filter, TeamCode } from "./types";
+import type { DebateListItem, Filter, TeamCode } from "./types";
 
 /**
  * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
@@ -277,6 +277,36 @@ export function isDebateClosed(
   const at = new Date(closesAt);
   if (Number.isNaN(at.getTime())) return false;
   return at.getTime() <= now.getTime();
+}
+
+/**
+ * 아직 열려 있는 토론만, 마감이 임박한 순으로 (KAN-504, 홈 배너).
+ *
+ * 마감 판정은 리스트 카드와 같은 두 겹이다 — 기사 `contentType`(FINISH)과
+ * `closesAt` 경과를 OR로 겹친다({@link isDebateClosed}). 한 겹만 보면 시각이
+ * 지났는데 FINISH로 안 넘어간 토론이 배너에 "진행 중"으로 서 버린다.
+ *
+ * 정렬은 마감이 가까운 순이다. 배너가 한 건만 대표로 세우는데, 목록 순서(최신순)
+ * 그대로 첫 건을 쓰면 오늘 자정에 닫히는 투표를 놔두고 일주일 뒤 마감을 보여준다.
+ * `closesAt`이 없는(상시) 토론은 재촉할 게 없어 맨 뒤로 보낸다.
+ *
+ * @param items 토론 리스트 응답(마감 포함). 원본은 건드리지 않는다.
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ */
+export function openDebates(
+  items: DebateListItem[],
+  now: Date = new Date(),
+): DebateListItem[] {
+  return items
+    .filter(
+      (item) =>
+        item.contentType !== "FINISH" && !isDebateClosed(item.closesAt, now),
+    )
+    .sort((a, b) => {
+      if (!a.closesAt) return b.closesAt ? 1 : 0;
+      if (!b.closesAt) return -1;
+      return new Date(a.closesAt).getTime() - new Date(b.closesAt).getTime();
+    });
 }
 
 /**

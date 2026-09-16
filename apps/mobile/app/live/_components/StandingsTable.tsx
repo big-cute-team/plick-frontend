@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { StandingRow } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /** 순위표 숫자 컬럼 정의 — 헤더와 행이 같은 폭을 쓴다. */
 const NUM_COLS = "w-7 text-center";
