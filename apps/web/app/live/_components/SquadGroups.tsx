@@ -14,6 +14,9 @@ import { SeasonStatsModal } from "./SeasonStatsModal";
 /**
  * 팀 스쿼드의 포지션 그룹(피그마 LW6) — 데스크톱은 2컬럼 그리드, lg 아래는
  * 1열 스택. 선수 행을 누르면 시즌 스탯 모달(LW7)이 열린다.
+ *
+ * 팀 프로필 안의 "선수단" 섹션으로 들어가면서(KAN-507) 포지션 제목이 h2에서
+ * h3로 내려갔다 — 위에 섹션 h2가 생겨 레벨을 건너뛰면 안 된다.
  */
 export function SquadGroups({ squad }: { squad: TeamSquad }) {
   const [player, setPlayer] = useState<SquadPlayer | null>(null);
@@ -28,9 +31,9 @@ export function SquadGroups({ squad }: { squad: TeamSquad }) {
           if (players.length === 0) return null;
           return (
             <section key={position} className="flex flex-col gap-2">
-              <h2 className="text-body-lg text-text-3 font-bold">
+              <h3 className="text-body-lg text-text-3 font-bold">
                 {POSITION_LABEL[position]}
-              </h2>
+              </h3>
               <div className="bg-elevate rounded-card flex flex-col px-5 py-1">
                 {players.map((player, i) => (
                   <button

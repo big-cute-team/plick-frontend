@@ -219,6 +219,6 @@ export const FIGURE_TYPE_LABEL: Record<FigureType, string> = {
  */
 export const FIGURE_SECTIONS: { types: FigureType[]; label: string }[] = [
   { types: ["MANAGER", "COACH"], label: "감독·코칭스태프" },
-  { types: ["PLAYER"], label: "선수단" },
+  { types: ["PLAYER"], label: "선수" },
   { types: ["OWNER", "OTHER"], label: "구단주·관계자" },
 ];
