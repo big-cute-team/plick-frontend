@@ -1,6 +1,6 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
