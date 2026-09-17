@@ -14,6 +14,7 @@ import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { todayDateKeyKst } from "@plick/domain/live";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { HotFlame } from "@plick/ui/HotFlame";
 import { LiveDot } from "@plick/ui/LiveDot";
 import { WEB_SITE_URL } from "@/_constants/site";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
@@ -22,6 +23,7 @@ import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
 import { HotTextCard } from "./HotTextCard";
+import { HotTextPager } from "./HotTextPager";
 import { MoreArticlesLink } from "./MoreArticlesLink";
 import { NewsFeed } from "./NewsFeed";
 import { OpenDebateBanner } from "./OpenDebateBanner";
@@ -44,10 +46,10 @@ import { TodayMatchBanner } from "./TodayMatchBanner";
  * 클라에서 이어 부를 일이 없어 서버 fetch로 끝낸다.
  *
  * 응답이 원문 사진 유무로 갈린 두 목록이라(KAN-480, BE는 KAN-487) 화면도 둘로
- * 나뉜다. 사진 있는 기사는 종전대로 캐러셀이 받고, 사진 없는 기사는 그 아래
- * 세 칸에 텍스트 카드로 깐다. 사진 없는 기사를 캐러셀에 넣으면 원문 트윗
- * 임베드로 칸을 메워야 했는데, 임베드는 로드가 느리고 높이가 제멋대로라
- * 캐러셀에서 가장 말썽이었다.
+ * 나뉜다. 사진 있는 기사는 캐러셀이 한 화면에 두 장씩 받고, 사진 없는 기사는
+ * 그 아래에서 텍스트 카드를 한 장씩 스와이프로 넘긴다 (KAN-515). 사진 없는
+ * 기사를 캐러셀에 넣으면 원문 트윗 임베드로 칸을 메워야 했는데, 임베드는 로드가
+ * 느리고 높이가 제멋대로라 캐러셀에서 가장 말썽이었다.
  *
  * 핫이슈 위에는 오늘 경기·진행 중 투표 배너가 조건부로 선다 (KAN-504). 홈에
  * 들어온 사람이 "오늘 경기 있나", "투표할 거 있나"를 탭을 옮겨 보지 않아도 되게
@@ -87,7 +89,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   /* 캐러셀 칸은 사진이 주인공이라, 대표 이미지가 빈 카드는 원문 게시물의
      제일 큰 사진으로 메운다 (KAN-484) */
   const heroes = hot ? await withTweetPhotos(hot.withImage) : [];
-  // BE는 그룹마다 5건까지 주는데 캐러셀 아래는 세 칸으로 정해져 있다
+  // BE는 그룹마다 5건까지 주는데 캐러셀 아래 텍스트 카드는 세 장으로 정해져 있다
   const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
 
   let initial: InitialArticleFeed | undefined;
@@ -132,8 +134,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
         </div>
 
         <section className="pt-3">
-          <h2 className="px-edge text-section tracking-heading text-text pb-2 font-extrabold">
-            🔥 핫이슈
+          {/* 불꽃이 번쩍여 "지금 올라온 소식"처럼 살아 있는 섹션으로 읽힌다 (KAN-515) */}
+          <h2 className="px-edge text-section tracking-heading text-text flex items-center gap-2 pb-2 font-extrabold">
+            <HotFlame />
+            핫이슈
           </h2>
           {hot === null ? (
             <p className="text-body text-text-4 px-edge py-8 text-center">
@@ -146,24 +150,29 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           ) : (
             <>
               {heroes.length > 0 && (
-                <HotCarousel>
+                /* 한 화면에 두 장을 왼쪽 정렬로 깐다 (KAN-515). 좌우 여백은
+                   트랙 밖 px-edge가 맡고 `--hot-edge`는 0으로 덮는다 — 웹 홈이
+                   네 장을 까는 방식과 같다. 두 장 이상 보이면 캐러셀이 스스로
+                   자동 넘김과 점을 끄고 핸들로 두 장씩 넘긴다 */
+                <HotCarousel
+                  className="px-edge [--hot-edge:0px]"
+                  slideClassName="w-[calc((100%-10px)/2)] snap-start aspect-[6/5]"
+                >
                   {heroes.map((article, i) => (
                     <HotHeroCard
                       key={article.id}
                       article={article}
-                      fetchPriority={i === 0 ? "high" : "low"}
+                      fetchPriority={i < 2 ? "high" : "low"}
                     />
                   ))}
                 </HotCarousel>
               )}
               {noImage.length > 0 && (
-                <ul className="px-edge flex flex-col gap-2 pt-2">
+                <HotTextPager>
                   {noImage.map((article) => (
-                    <li key={article.id}>
-                      <HotTextCard article={article} />
-                    </li>
+                    <HotTextCard key={article.id} article={article} />
                   ))}
-                </ul>
+                </HotTextPager>
               )}
             </>
           )}
