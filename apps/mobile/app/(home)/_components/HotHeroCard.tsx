@@ -30,8 +30,9 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  * 사진 위에는 어두운 스크림(가독성용 고정 값, 테마 무관) + 흰 텍스트를 얹는다.
  *
  * KAN-515부터 한 화면에 두 장이 나란히 서면서 칸 폭이 절반으로 줄었다. 팀·단계·
- * 기자·시각·조회 줄까지 다 얹으면 사진이 글자에 묻혀, 제목과 한 줄 요약만 남기고
- * 둘 다 넘치면 말줄임한다. 요약은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
+ * 기자·시각·조회 줄까지 다 얹으면 사진이 글자에 묻혀 제목과 요약만 남겼다.
+ * 제목은 두 줄, 요약은 한 줄을 넘으면 말줄임한다. 요약은 BE가 못 만든 기사도
+ * 있어(null) 있을 때만 깐다.
  *
  * 카드 전체가 기사 세부로 가는 링크다 (KAN-283).
  */
@@ -74,7 +75,7 @@ export function HotHeroCard({
           {article.title}
         </h3>
         {article.summaryShort && (
-          <p className="text-caption text-media-on/75 line-clamp-2">
+          <p className="text-caption text-media-on/75 line-clamp-1">
             {article.summaryShort}
           </p>
         )}
