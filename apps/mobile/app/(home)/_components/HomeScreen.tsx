@@ -156,7 +156,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                    자동 넘김과 점을 끄고 핸들로 두 장씩 넘긴다 */
                 <HotCarousel
                   className="px-edge [--hot-edge:0px]"
-                  slideClassName="w-[calc((100%-10px)/2)] snap-start aspect-[4/5]"
+                  slideClassName="w-[calc((100%-10px)/2)] snap-start aspect-[6/5]"
                 >
                   {heroes.map((article, i) => (
                     <HotHeroCard
