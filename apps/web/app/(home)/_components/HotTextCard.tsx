@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { STAGE_META, TEAMS } from "@plick/domain/constants";
-import { formatCount, formatRelativeTime } from "@plick/domain/format";
+import { STAGE_META } from "@plick/domain/constants";
+import { formatCount } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { HotBadge } from "@plick/ui/HotBadge";
 
 /**
  * 사진 없는 핫이슈 카드 — 캐러셀 아래 세 칸을 채운다 (KAN-480).
@@ -15,57 +16,41 @@ import type { HotArticle } from "@plick/domain/types";
  * 사이드바 랭킹 카드와 같은 면(`bg-elevate-2` + `border-border`)을 쓴다 —
  * 본문 톤이라 테마 토큰을 그대로 탄다.
  *
- * 한 줄 요약(`summaryShort`)은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
- * 요약이 빠져도 제목 줄과 메타 줄이 그대로라 카드 높이는 그리드가 맞춘다
- * (`h-full` + `mt-auto`).
+ * KAN-515에서 게시판 글 목록처럼 줄였다(모바일과 같다). 팀 태그 자리에는
+ * 깜빡이는 핫이슈 태그를 달고, 기자·시각·조회 줄은 걷고 조회수만 제목 옆
+ * `[X]`로 남겼다. 제목이 두 줄로 잘려도 조회수는 잘리지 않게 제목과 형제로 둔다.
  *
- * 팀·단계·기자는 캐러셀 카드와 같은 규칙이다 — 팀은 다중이라 첫 팀만 대표로
- * 쓰고, 없으면 그 조각만 빠진다.
+ * 한 줄 요약(`summaryShort`)은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
+ * 요약 유무로 높이가 달라도 카드는 `h-full`이라 그리드가 한 줄 높이를 맞춘다.
  *
  * @param article - 표시할 핫이슈 기사 (사진 없는 그룹)
  */
 export function HotTextCard({ article }: { article: HotArticle }) {
-  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
   const stage = article.stage ? STAGE_META[article.stage] : null;
 
   return (
     <article className="bg-elevate-2 border-border rounded-card hover:border-border-strong relative flex h-full flex-col gap-1.5 border p-4 transition-colors">
-      {(team || stage) && (
-        <div className="flex items-center gap-2">
-          {team && (
-            <span className="text-caption text-accent font-extrabold">
-              {team.name}
-            </span>
-          )}
-          {stage && (
-            <span className="text-text-4 text-micro tracking-label font-bold">
-              {stage.label}
-            </span>
-          )}
-        </div>
-      )}
-      <h3 className="text-body-lg text-text tracking-heading line-clamp-2 font-extrabold">
-        {article.title}
-      </h3>
+      <div className="flex items-center gap-2">
+        <HotBadge />
+        {stage && (
+          <span className="text-text-4 text-micro tracking-label font-bold">
+            {stage.label}
+          </span>
+        )}
+      </div>
+      <div className="flex items-start gap-1.5">
+        <h3 className="text-body-lg text-text tracking-heading line-clamp-2 min-w-0 font-extrabold">
+          {article.title}
+        </h3>
+        <span className="text-body-lg text-accent shrink-0 font-extrabold tabular-nums">
+          [{formatCount(article.views)}]
+        </span>
+      </div>
       {article.summaryShort && (
         <p className="text-body text-text-3 line-clamp-2">
           {article.summaryShort}
         </p>
       )}
-      {/* 요약 유무로 카드 높이가 달라도 메타 줄은 바닥에 붙어 줄이 맞는다 */}
-      <p className="text-caption text-text-4 mt-auto pt-1.5">
-        {article.reporter && (
-          <span className="text-text-3 font-semibold">
-            {article.reporter.name}
-          </span>
-        )}
-        {article.reporter && " · "}
-        <span suppressHydrationWarning>
-          {formatRelativeTime(article.publishedAt)}
-        </span>
-        {" · 조회 "}
-        {formatCount(article.views)}
-      </p>
       <Link
         href={`/articles/${article.id}`}
         aria-label={article.title}

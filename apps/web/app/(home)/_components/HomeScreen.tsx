@@ -8,6 +8,7 @@ import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
 import { HotCarousel } from "@plick/ui/HotCarousel";
+import { HotFlame } from "@plick/ui/HotFlame";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { LiveDot } from "@plick/ui/LiveDot";
 import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
@@ -109,8 +110,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
               />
             )}
             <section>
-              <h2 className="text-section text-text tracking-heading font-extrabold">
-                🔥 핫이슈
+              {/* 불꽃이 번쩍여 "지금 올라온 소식"처럼 살아 있는 섹션으로 읽힌다 (KAN-515) */}
+              <h2 className="text-section text-text tracking-heading flex items-center gap-2 font-extrabold">
+                <HotFlame />
+                핫이슈
               </h2>
               <div className="pt-gap-lg">
                 {hot === null ? (
