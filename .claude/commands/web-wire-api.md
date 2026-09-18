@@ -1,5 +1,5 @@
 ---
-description: 모바일에서 검증된 BE API 하나를 web 화면에 이식(mock→fetch)하고, 두 번째 사용처로서 공용화를 ADR 0011 게이트로 판단해 PR까지 올린다
+description: 모바일에서 검증된 BE API 하나를 web 화면에 이식(mock→fetch)하고, 두 번째 사용처로서 공용화를 ADR 0011 게이트로 판단해 PR 제목·본문을 채팅에 건넨다
 argument-hint: [KAN-티켓번호] <엔드포인트/화면 스코프>
 ---
 
@@ -29,9 +29,8 @@ argument-hint: [KAN-티켓번호] <엔드포인트/화면 스코프>
 6. 검증. 계약은 모바일과 같은 코드를 쓰는 것으로 갈음하되, 화면은 dev(:3000)에서 직접 밟는다.
    로딩, 성공, 에러, 빈 상태와 반응형(데스크톱 1280 기준, 330px까지)을 본다. 공용 패키지를 건드렸으면
    `pnpm --filter web build`와 `pnpm --filter mobile build`를 둘 다 돌리고 check-types, lint, format:check를 통과시킨다.
-7. 커밋과 PR. 티켓이 있으면 커밋 메시지에 Jira 키를 넣고 없으면 뺀다. `pnpm format` 후 커밋, push,
-   `gh pr create --base develop`. PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
-   CI 통과까지 확인한다. 병합은 사용자가 한다.
+7. 커밋과 PR 글. 티켓이 있으면 커밋 메시지에 Jira 키를 넣고 없으면 뺀다. `pnpm format` 후 커밋, push.
+   PR은 올리지 않고 제목과 본문(`pr-writing` 스킬의 5절 틀)을 채팅에 쓴다. 사용자가 직접 PR을 만들고 병합한다.
 
 ## 원칙
 

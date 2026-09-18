@@ -17,8 +17,10 @@ import { HotBadge } from "@plick/ui/HotBadge";
  * 본문 톤이라 테마 토큰을 그대로 탄다.
  *
  * KAN-515에서 게시판 글 목록처럼 줄였다(모바일과 같다). 팀 태그 자리에는
- * 깜빡이는 핫이슈 태그를 달고, 기자·시각·조회 줄은 걷고 조회수만 제목 옆
- * `[X]`로 남겼다. 제목이 두 줄로 잘려도 조회수는 잘리지 않게 제목과 형제로 둔다.
+ * 깜빡이는 핫이슈 태그를 달고, 기자·시각·조회 줄은 걷었다. 제목 옆 `[X]`는
+ * KAN-525부터 조회수가 아니라 댓글 수다 — 게시판이 `제목 [3]`으로 댓글 수를 다는
+ * 그 꼴이다. 0이면 아예 그리지 않는다. 제목이 두 줄로 잘려도 숫자는 잘리지 않게
+ * 제목과 형제로 둔다.
  *
  * 한 줄 요약(`summaryShort`)은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
  * 요약 유무로 높이가 달라도 카드는 `h-full`이라 그리드가 한 줄 높이를 맞춘다.
@@ -42,9 +44,11 @@ export function HotTextCard({ article }: { article: HotArticle }) {
         <h3 className="text-body-lg text-text tracking-heading line-clamp-2 min-w-0 font-extrabold">
           {article.title}
         </h3>
-        <span className="text-body-lg text-accent shrink-0 font-extrabold tabular-nums">
-          [{formatCount(article.views)}]
-        </span>
+        {article.commentCount > 0 && (
+          <span className="text-body-lg text-accent shrink-0 font-extrabold tabular-nums">
+            [{formatCount(article.commentCount)}]
+          </span>
+        )}
       </div>
       {article.summaryShort && (
         <p className="text-body text-text-3 line-clamp-2">

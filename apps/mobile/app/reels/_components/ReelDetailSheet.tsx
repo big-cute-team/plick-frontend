@@ -30,8 +30,9 @@ import { formatRelativeTime } from "@plick/domain/format";
  * 칩·제목은 이 컴포넌트가 그리지 않는다 — 릴에 원래 있던 요소(ReelItem)가
  * 같은 motion 상태로 시트 라인 위까지 따라 올라온다.
  *
- * 닫기: 그랩 존 드래그 다운, X 버튼, 또는 본문이 최상단일 때 본문 어디서든
- * 아래로 드래그(KAN-358, 유튜브 쇼츠 방식) → 내려간 뒤 motion이 스스로 언마운트.
+ * 닫기: 그랩 존 드래그 다운, X 버튼, 시트 위 배경 탭(KAN-525), 또는 본문이
+ * 최상단일 때 본문 어디서든 아래로 드래그(KAN-358, 유튜브 쇼츠 방식) → 내려간 뒤
+ * motion이 스스로 언마운트.
  *
  * 댓글(KAN-303): 릴 카드 id가 곧 BE `articleSummaryId`라 기사와 같은 댓글
  * API를 쓴다. 시트는 클라에서 열리므로 서버 씨앗 없이 열릴 때 목록을 받는다.
@@ -58,7 +59,16 @@ export function ReelDetailSheet({
   const reporters = useArticleReporters(reel.id);
 
   return (
-    <div className="absolute inset-0 z-20">
+    /* 시트 위쪽 빈 배경(릴이 비치는 자리)을 누르면 닫힌다 (KAN-525). 릴 화면
+       전체가 시트를 여는 탭 타깃이 되면서 이 층이 그 탭을 받아 주지 않으면
+       배경 탭이 릴로 새어 시트를 다시 여는 것처럼 보인다. 시트 본체 안의 탭은
+       target이 본체라 여기까지 오지 않는다 */
+    <div
+      className="absolute inset-0 z-20"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) motion.requestClose();
+      }}
+    >
       {/* 시트 본체 */}
       <div
         role="dialog"
