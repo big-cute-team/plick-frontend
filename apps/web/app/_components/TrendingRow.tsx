@@ -7,10 +7,12 @@ import { TrendDeltaBadge } from "@/_components/TrendDeltaBadge";
 import { TREND_CREST_SIZE, TREND_HIGHLIGHT_RANK } from "@/_constants/trends";
 
 /**
- * 급상승 랭킹 한 줄 (KAN-501, 이슈 전환 KAN-523) — 순위, 이름, 기사 수, 순위 변동.
+ * 급상승 랭킹 한 줄 (KAN-501, 이슈 전환 KAN-523) — 순위, 이름, 순위 변동.
  *
- * 이슈 줄은 이슈 제목을 한 줄로 자르고 그 옆에 기사 수를 단다. 누르면 이슈
- * 상세(`/stories/[storyId]`)로 간다. 원형 사진 자리는 없다 — BE `imageUrl`이
+ * 이슈 줄은 이슈 제목을 한 줄로 자른다. 누르면 이슈 상세(`/stories/[storyId]`)로
+ * 간다. KAN-523 때 제목 옆에 달았던 기사 수는 KAN-525에서 뺐다 — 순위 카드에
+ * 순위 변동 말고 다른 숫자가 서면 읽는 사람이 헷갈리고, 제목이 그만큼 더 잘렸다.
+ * `articleCount`는 이슈 상세가 계속 쓴다. 원형 사진 자리는 없다 — BE `imageUrl`이
  * 이슈의 최신 기사 이미지라 26px 원에 넣으면 무엇인지 알아볼 수 없다.
  *
  * 구단 줄은 이슈 랭킹이 없을 때의 대체다. 레지스트리 크레스트를 달고 팀
@@ -52,11 +54,6 @@ export function TrendingRow({
       <span className="text-body text-text group-hover:text-accent min-w-0 flex-1 truncate font-semibold transition-colors">
         {item.name}
       </span>
-      {item.articleCount != null && (
-        <span className="text-caption text-text-4 shrink-0">
-          기사 {item.articleCount}
-        </span>
-      )}
       <TrendDeltaBadge item={item} />
     </>
   );
