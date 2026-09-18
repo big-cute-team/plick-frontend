@@ -232,7 +232,6 @@ export const ReelItem = memo(function ReelItem({
           >
             <TweetEmbed
               url={reel.sourceUrl}
-              layout="reel"
               seedTweet={seedTweet}
               defer={!embedFetchStarted}
             />
