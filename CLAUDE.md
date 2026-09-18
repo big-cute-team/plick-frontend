@@ -150,13 +150,15 @@ PR 본문은 문체에 더해 `pr-writing` 스킬의 5절 틀(구현 사항 / �
 
 커밋 메시지에 Jira 키(`KAN-###`)를 넣어 이슈를 자동 연결한다.
 
-PR base는 `develop`이고 CI(format:check, lint, check-types, build) 통과까지 확인한다.
+PR base는 `develop`이다.
 
-PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다.
+🚫 PR은 클로드가 올리지 않는다. `gh pr create`는 금지다. 커밋과 push까지 하고, PR 제목과 본문을
+채팅에 그대로 써 준다. 사용자가 그걸 복사해 직접 PR을 만든다. 제목은 커밋 첫 줄, 본문은 `pr-writing`
+스킬의 5절 틀이다. CI(format:check, lint, check-types, build)는 로컬에서 같은 명령을 돌려 미리 확인한다.
 
 `main`은 릴리스용이다. `develop`에서 `main`으로 병합하는 건 사용자가 직접 한다.
 
-🚫 병합은 절대 하지 않는다. 클로드는 PR 생성과 CI 확인까지만 한다. `gh pr merge`는 금지다.
+🚫 병합은 절대 하지 않는다. `gh pr merge`는 금지다.
 
 환경은 Node 22(`.nvmrc`)와 pnpm 9다. `node_modules`, `.next`, `pnpm-lock.yaml`은 도구 산출물이라 손대지 않는다.
 

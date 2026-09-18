@@ -18,6 +18,9 @@ import { Children, useState, type ReactNode, type UIEvent } from "react";
  *
  * `snap-x-carousel`·`no-scrollbar`는 앱 globals.css의 커스텀 클래스다.
  *
+ * 칸의 좌우 여백은 화면 여백(px-edge)이 아니라 핫이슈 테두리 상자 안 여백
+ * px-3이다 (KAN-525) — 홈 핫이슈 상자 안에서만 쓰는 페이저라 상자에 맞춘다.
+ *
  * @param children - 카드 목록. 서버에서 그린 엘리먼트를 그대로 받는다.
  */
 export function HotTextPager({ children }: { children: ReactNode }) {
@@ -42,7 +45,7 @@ export function HotTextPager({ children }: { children: ReactNode }) {
         className="snap-x-carousel no-scrollbar flex items-stretch overflow-x-auto"
       >
         {cards.map((card, i) => (
-          <li key={i} className="px-edge w-full shrink-0 snap-center">
+          <li key={i} className="w-full shrink-0 snap-center px-3">
             {card}
           </li>
         ))}

@@ -59,9 +59,14 @@ export function HotHeroCard({
           className="absolute inset-0 size-full object-cover"
         />
       ) : article.sourceUrl ? (
-        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 트윗 링크가 아니거나
-           원문이 지워졌으면 `TweetEmbed`가 아무것도 그리지 않아 배경색만 남는다 */
-        <TweetEmbed url={article.sourceUrl} />
+        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 가로를 꽉 채우고
+           아래로 넘치는 만큼은 카드가 잘라 낸다 (KAN-525). 전에는 박스에 맞춰
+           축소해서 좁은 칸에서 양옆이 비었다. `reel-embed`로 릴과 같은 배경색·
+           작은 글자를 받고, `hot-embed`가 라이브러리 최소 폭(250px)을 풀어
+           칸에 맞춘다(globals.css). 원문이 지워졌으면 안내 문구가 선다 */
+        <div className="reel-embed hot-embed absolute inset-0 overflow-hidden">
+          <TweetEmbed url={article.sourceUrl} />
+        </div>
       ) : null}
       {/* 두 장이 나란히 서는 좁은 칸이라 제목·요약만 싣는다 (KAN-515) */}
       <div
