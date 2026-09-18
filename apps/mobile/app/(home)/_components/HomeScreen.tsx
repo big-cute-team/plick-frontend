@@ -138,7 +138,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             핫이슈인지 흐렸다. 상자 안 좌우 여백은 화면 여백(px-edge)보다 좁은
             px-3이고, 화면 여백은 상자 밖 section이 맡는다 */}
         <section className="px-edge pt-3">
-          <div className="border-border rounded-card border py-3">
+          <div className="border-text-4/40 rounded-card border py-3">
             {/* 불꽃이 번쩍여 "지금 올라온 소식"처럼 살아 있는 섹션으로 읽힌다 (KAN-515) */}
             <h2 className="text-section tracking-heading text-text flex items-center gap-2 px-3 pb-2 font-extrabold">
               <HotFlame />
