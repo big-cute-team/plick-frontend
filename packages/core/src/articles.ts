@@ -131,6 +131,7 @@ export function toArticleCard(r: FeedCardResponse): ArticleCard {
  * @param team 팀 필터. `"ALL"`이면 파라미터를 싣지 않아 전체가 온다.
  * @param figureId 인물 필터 (KAN-500). 주면 그 인물이 태그된 기사만 온다.
  *   팀과 같이 주면 둘 다 만족하는 기사만 온다(AND).
+ * @param storyId 이슈 필터 (KAN-522). 주면 그 이슈에 묶인 기사만 온다.
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null.
  * @param size 한 페이지 건수 (1..30)
  * @throws {ApiError} 잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
@@ -138,17 +139,20 @@ export function toArticleCard(r: FeedCardResponse): ArticleCard {
 export async function getArticles({
   team = "ALL",
   figureId = null,
+  storyId = null,
   cursor = null,
   size = ARTICLES_PAGE_SIZE,
 }: {
   team?: Filter;
   figureId?: string | null;
+  storyId?: string | null;
   cursor?: string | null;
   size?: number;
 } = {}): Promise<ArticleFeedPage> {
   const params = new URLSearchParams({ size: String(size) });
   if (team !== "ALL") params.set("teamId", String(TEAM_IDS[team]));
   if (figureId) params.set("figureId", figureId);
+  if (storyId) params.set("storyId", storyId);
   if (cursor) params.set("cursor", cursor);
 
   const page = await apiFetch<ArticleFeedResponse>(

@@ -24,8 +24,7 @@ function Caret({ down = false }: { down?: boolean }) {
  * 급상승 랭킹 한 줄의 오른쪽 끝 — 순위가 얼마나 움직였는지 (KAN-501).
  *
  * 무엇을 그릴지는 {@link toTrendDelta}가 정한다. 상승은 accent, 하락은 danger,
- * 새로 진입은 글자 배지다. 순위가 그대로인 줄은 점수가 눈에 띄게 움직였으면
- * 흐린 화살표에 변화율을, 아니면 가로줄만 남는다.
+ * 새로 진입은 글자 배지, 그대로면 가로줄이다. 퍼센트는 그리지 않는다(KAN-523).
  *
  * 화살표는 색으로만 방향을 알리지 않는다 — 삼각형 방향이 형태로 한 번,
  * `sr-only` 문구가 스크린리더로 한 번 더 말한다.
@@ -46,13 +45,13 @@ export function TrendDeltaBadge({ item }: { item: TrendItem }) {
   if (delta.kind === "same") {
     return (
       <span className="text-caption text-text-4" aria-label="순위 변동 없음">
-        —
+        -
       </span>
     );
   }
 
   const up = delta.kind === "up";
-  const tone = delta.muted ? "text-text-3" : up ? "text-accent" : "text-danger";
+  const tone = up ? "text-accent" : "text-danger";
 
   return (
     <span

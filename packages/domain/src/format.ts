@@ -121,6 +121,16 @@ export function figurePath(figureId: string): string {
 }
 
 /**
+ * 이슈 상세 URL (KAN-523). 급상승 카드의 이슈 줄이 여기로 간다.
+ *
+ * @example
+ * storyPath("50"); // "/stories/50"
+ */
+export function storyPath(storyId: string): string {
+  return `/stories/${encodeURIComponent(storyId)}`;
+}
+
+/**
  * 해시태그 → 팀 프로필 URL (KAN-500). 해시태그는 팀 한글 정식명만 오므로
  * (`TEAM_BY_KO_NAME` 주석) 매핑되면 그 팀 프로필이고, 안 되면 링크 없는
  * 글자 칩으로 남긴다.
