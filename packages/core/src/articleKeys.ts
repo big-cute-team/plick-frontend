@@ -18,6 +18,8 @@ export const articleKeys = {
    * 갈라 두어 `feed` 상위 키 무효화에 딸려 가지 않고 인물별로 따로 캐시된다.
    */
   figureFeed: (figureId: string) => ["articles", "figure", figureId] as const,
+  /** 이슈 기사 (KAN-523) — 이슈 상세의 무한 목록. 인물 기사와 같은 이유로 스코프를 가른다. */
+  storyFeed: (storyId: string) => ["articles", "story", storyId] as const,
   /**
    * 경기 뉴스 (KAN-484) — 경기 상세 뉴스 탭이 양 팀 기사를 합쳐 보여준다. 팀이
    * 둘인 한 목록이라 팀 피드 키를 재사용할 수 없고, 순서가 뒤집혀도 같은 캐시를

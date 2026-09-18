@@ -122,8 +122,10 @@ export interface FigureProfile {
 /**
  * 급상승 랭킹의 집계 대상 (KAN-501, `GET /api/v1/trends`). 감독은 팀당 한 명씩
  * 여섯 명뿐이라 순위가 의미를 갖지 못해 BE가 아예 빼고 집계한다(KAN-496).
+ * `STORY`는 기사 묶음(이슈) 단위 랭킹이다(KAN-522). 운영 BE가 릴리스 전이면
+ * 이 값을 몰라 400이 온다.
  */
-export type TrendType = "TEAM" | "PLAYER";
+export type TrendType = "STORY" | "TEAM" | "PLAYER";
 
 /**
  * 직전 회차 대비 순위 변화 방향 (KAN-501). `NEW`는 이번 회차에 처음 들어온
@@ -141,10 +143,10 @@ export type TrendDirection = "UP" | "DOWN" | "SAME" | "NEW";
 export interface TrendItem {
   /**
    * 대상 식별자. `TEAM`이면 BE `teams.team_id`(레지스트리 `TEAM_CODES`로 팀
-   * 코드를 얻는다), `PLAYER`면 인물 id다.
+   * 코드를 얻는다), `PLAYER`면 인물 id, `STORY`면 이슈 id다.
    */
   entityId: number;
-  /** 한글 표기 (예: 맨체스터 시티, 히샬리송) */
+  /** 한글 표기 (예: 맨체스터 시티, 히샬리송). `STORY`면 이슈 제목이다. */
   name: string;
   /**
    * 팀 로고 또는 인물 사진. 확인 시점 dev·prod 모두 전 행 null이라 대체 표시가
@@ -156,8 +158,20 @@ export interface TrendItem {
   direction: TrendDirection;
   /** 오른 칸 수. 양수면 상승, 음수면 하락. `NEW`면 비교 대상이 없어 null. */
   rankDelta: number | null;
-  /** 직전 회차 대비 점수 변화율(0.1842 = +18.42%). 없을 수 있다. */
-  scoreChangeRate: number | null;
+  /** 이슈에 묶인 발행 기사 수 (KAN-522). `STORY`에만 오고 팀·선수는 null이다. */
+  articleCount: number | null;
+}
+
+/**
+ * 이슈 한 건 (KAN-522, `GET /api/v1/stories/{storyId}`). 같은 이적설을 다룬
+ * 기사들을 BE가 하나로 묶은 단위다. 기사 목록은 `?storyId=` 피드로 따로 받는다.
+ */
+export interface Story {
+  id: string;
+  title: string;
+  articleCount: number;
+  /** 마지막 기사 발행 시각 (KST 오프셋 ISO). 기사가 없으면 null. */
+  lastArticleAt: string | null;
 }
 
 /**

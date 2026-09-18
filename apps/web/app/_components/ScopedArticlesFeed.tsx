@@ -1,20 +1,23 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { articleKeys } from "@plick/core/articleKeys";
 import { ApiError } from "@plick/core/client";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { PostListItem } from "@/_components/PostListItem";
 import { PostListItemSkeleton } from "@/_components/PostListItemSkeleton";
-import { useFigureArticles } from "@/_hooks/useFigureArticles";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
+import { useScopedArticles } from "@/_hooks/useScopedArticles";
+import type { ArticleScope } from "@/_types/articles";
+import { scopedArticlesKey } from "@/_utils/articles";
 
 /** 첫 로딩에 보여줄 자리 개수. 기사 페이지와 같다. */
 const SKELETON_COUNT = 4;
 
 /**
- * 인물 관련 기사 무한스크롤 리스트 (KAN-501). 모바일 `FigureArticlesFeed`의
+ * 범위(인물·이슈)로 거른 기사 무한스크롤 리스트 (KAN-501, 이슈 추가 KAN-523).
+ * 인물 프로필 전용 `FigureArticlesFeed`였는데 이슈 상세가 같은 목록을 쓰게
+ * 되면서 범위를 받게 넓혀 공용으로 올렸다. 모바일 `FigureArticlesFeed`의
  * 데스크톱 판이고, 줄은 기사 페이지와 같은 `PostListItem`(article 변형)이다 —
  * 응답이 기사 목록과 같은 카드라 전용 줄을 만들면 같은 카드가 둘로 갈린다.
  *
@@ -23,15 +26,18 @@ const SKELETON_COUNT = 4;
  * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`PostFeed`)와 같다. 인물
  * 태그는 앞으로 수집되는 기사부터 붙어서 빈 상태가 흔하다.
  *
- * @param figureId 인물 id
+ * @param scope 무엇으로 거를지
  * @param initial 서버가 미리 받아 둔 첫 페이지와 그 시각
+ * @param emptyText 기사가 하나도 없을 때 문구
  */
-export function FigureArticlesFeed({
-  figureId,
+export function ScopedArticlesFeed({
+  scope,
   initial,
+  emptyText,
 }: {
-  figureId: string;
+  scope: ArticleScope;
   initial?: InitialArticleFeed;
+  emptyText: string;
 }) {
   const queryClient = useQueryClient();
   const {
@@ -45,7 +51,7 @@ export function FigureArticlesFeed({
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useFigureArticles(figureId, initial);
+  } = useScopedArticles(scope, initial);
 
   /* `isFetching`으로 막는 이유는 PostFeed와 같다 (KAN-404 커서 400 루프) */
   const sentinelRef = useInfiniteScroll(
@@ -58,7 +64,7 @@ export function FigureArticlesFeed({
   /* 커서가 상해 400이면 같은 커서로 재시도해봐야 계속 400이다. 첫 페이지부터 다시 받는다 */
   function retryNextPage() {
     if (error instanceof ApiError && error.status === 400) {
-      void restartFeedQuery(queryClient, articleKeys.figureFeed(figureId));
+      void restartFeedQuery(queryClient, scopedArticlesKey(scope));
       return;
     }
     fetchNextPage();
@@ -85,9 +91,7 @@ export function FigureArticlesFeed({
 
   if (articles.length === 0) {
     return (
-      <p className="text-body text-text-4 py-12 text-center">
-        아직 이 인물의 소식이 없어요.
-      </p>
+      <p className="text-body text-text-4 py-12 text-center">{emptyText}</p>
     );
   }
 

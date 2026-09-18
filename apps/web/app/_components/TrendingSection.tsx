@@ -1,49 +1,93 @@
+import { ApiError } from "@plick/core/client";
 import { getTrends } from "@plick/core/trends";
-import type { TrendRanking, TrendType } from "@plick/domain/types";
-import { TrendingTabs } from "@/_components/TrendingTabs";
+import { formatRelativeTime } from "@plick/domain/format";
+import type { TrendRanking } from "@plick/domain/types";
+import { TrendingRow } from "@/_components/TrendingRow";
+import { STORY_TREND_MIN } from "@/_constants/trends";
 
 /**
- * "실시간 급상승" 랭킹 섹션 — 사이드바 카드 한 장 (KAN-501).
+ * 이슈 랭킹을 받고, 실패했거나 너무 짧으면 구단 랭킹으로 대신한다 (KAN-523).
  *
- * 지금 뜨는 구단과 선수를 순위로 세운다. 홈과 기사 세부 사이드바가 공용한다.
+ * 운영 BE가 이슈 집계를 릴리스하기 전에는 `type=STORY`에 400이 온다. 그때도
+ * 카드가 비지 않게 하려는 대체다. 구단 랭킹까지 실패하면 null이다.
+ */
+async function loadRanking(): Promise<TrendRanking | null> {
+  try {
+    const story = await getTrends("STORY");
+    if (story.items.length >= STORY_TREND_MIN) return story;
+  } catch (error) {
+    // 400은 STORY를 모르는 옛 BE의 정상 경로라 로그를 남기지 않는다
+    if (!(error instanceof ApiError && error.status === 400)) {
+      console.error("[trending] 이슈 급상승 로드 실패:", error);
+    }
+  }
+
+  try {
+    return await getTrends("TEAM");
+  } catch (error) {
+    console.error("[trending] 구단 급상승 로드 실패:", error);
+    return null;
+  }
+}
+
+/**
+ * "실시간 급상승" 랭킹 섹션 — 사이드바 카드 한 장 (KAN-501, 이슈 전환 KAN-523).
  *
- * 전용 엔드포인트가 생기기 전에는 이 자리가 핫이슈 조회수 랭킹("실시간 인기",
- * KAN-338)이었다. 기사 제목만 세로로 세우는 목록이라 그 아래 소식 리스트와
- * 보이는 게 겹쳤고, 무엇보다 "실시간"이라 부르면서 실제로는 최근 48시간
- * 조회수였다. `GET /api/v1/trends`가 붙으면서 그 목록을 통째로 걷어내고 팀·선수
- * 랭킹으로 바꿨다 — 기사 단위로만 나열되던 화면에 팀과 인물이라는 진입점이
- * 하나 생긴다(KAN-496).
+ * 지금 뜨는 이슈를 순위로 세운다. 홈과 기사 세부 사이드바가 공용한다.
  *
- * 두 랭킹을 여기서 병렬로 받는다. 화면이 계산할 것은 없다 — 10분마다 도는
- * 배치가 회차로 저장해 둔 순위를 그대로 그린다. 한쪽이 실패해도 다른 탭은
- * 보여야 해서 `allSettled`로 받아 실패한 탭만 null로 내린다.
+ * KAN-501 때는 구단·선수 두 탭이었다. "토트넘 1위"는 왜 뜨는지가 안 보여서,
+ * 기사 묶음(이슈) 단위 랭킹이 생기면서 "손흥민 사우디 이적설 1위"처럼 이슈
+ * 한 목록으로 바꿨다. 줄을 누르면 그 이슈의 기사 목록(`/stories/[storyId]`)으로
+ * 간다. 이슈 랭킹이 없거나 짧으면 구단 랭킹을 대신 깔고({@link loadRanking}),
+ * 그때는 제목 옆에 "구단 순위"를 달아 무엇의 순위인지 밝힌다.
+ *
+ * 상호작용이 없어 전부 서버에서 그린다. 탭이 있던 때는 클라 컴포넌트가
+ * 필요했지만 이제 고를 것이 없다.
  *
  * 부모가 이 컴포넌트를 `Suspense`로 감싼다. 사이드바는 본문보다 늦게 와도 되는
- * 자리라, 페이지가 이 두 요청을 기다리는 대신 껍데기를 먼저 흘려보내고 도착하는
+ * 자리라, 페이지가 이 요청을 기다리는 대신 껍데기를 먼저 흘려보내고 도착하는
  * 대로 채운다.
  */
 export async function TrendingSection() {
-  const [team, player] = await Promise.allSettled([
-    getTrends("TEAM"),
-    getTrends("PLAYER"),
-  ]);
-
-  if (team.status === "rejected") {
-    console.error("[trending] 구단 급상승 로드 실패:", team.reason);
-  }
-  if (player.status === "rejected") {
-    console.error("[trending] 선수 급상승 로드 실패:", player.reason);
-  }
-
-  const rankings: Record<TrendType, TrendRanking | null> = {
-    TEAM: team.status === "fulfilled" ? team.value : null,
-    PLAYER: player.status === "fulfilled" ? player.value : null,
-  };
+  const ranking = await loadRanking();
 
   return (
     <section className="bg-elevate-2 border-border rounded-card p-edge flex flex-col gap-2.5 border">
-      <h3 className="text-gnb text-text font-extrabold">실시간 급상승</h3>
-      <TrendingTabs rankings={rankings} />
+      <h3 className="text-gnb text-text flex items-baseline gap-2 font-extrabold">
+        실시간 급상승
+        {ranking?.type === "TEAM" && (
+          <span className="text-caption text-text-4 font-semibold">
+            구단 순위
+          </span>
+        )}
+      </h3>
+
+      {ranking === null ? (
+        <p className="text-body text-text-4 py-4 text-center">
+          급상승 랭킹을 불러오지 못했어요.
+        </p>
+      ) : ranking.items.length === 0 ? (
+        <p className="text-body text-text-4 py-4 text-center">
+          아직 집계된 순위가 없어요.
+        </p>
+      ) : (
+        <>
+          <ol>
+            {ranking.items.map((item) => (
+              <TrendingRow
+                key={item.entityId}
+                item={item}
+                type={ranking.type === "TEAM" ? "TEAM" : "STORY"}
+              />
+            ))}
+          </ol>
+          {ranking.collectedAt && (
+            <p className="text-caption text-text-4 text-right">
+              {formatRelativeTime(ranking.collectedAt)} 집계
+            </p>
+          )}
+        </>
+      )}
     </section>
   );
 }

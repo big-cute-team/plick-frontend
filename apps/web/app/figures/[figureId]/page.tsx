@@ -5,9 +5,9 @@ import { ApiError } from "@plick/core/client";
 import { getFigureProfile } from "@plick/core/figures";
 import { FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import type { InitialArticleFeed } from "@plick/domain/types";
+import { ScopedArticlesFeed } from "@/_components/ScopedArticlesFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { FigureArticlesFeed } from "./_components/FigureArticlesFeed";
 import { FigureHeader } from "./_components/FigureHeader";
 
 /**
@@ -106,7 +106,11 @@ export default async function FigurePage({
             <h2 className="text-section text-text tracking-heading pb-2 font-extrabold">
               관련 기사
             </h2>
-            <FigureArticlesFeed figureId={figure.id} initial={initial} />
+            <ScopedArticlesFeed
+              scope={{ kind: "figure", id: figure.id }}
+              initial={initial}
+              emptyText="아직 이 인물의 소식이 없어요."
+            />
           </section>
         </div>
       </main>
