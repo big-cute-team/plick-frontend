@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { STAGE_META } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
-import { HotBadge } from "@plick/ui/HotBadge";
 
 /**
  * 사진 없는 핫이슈 카드 — 캐러셀 아래 세 칸을 채운다 (KAN-480).
@@ -16,11 +14,11 @@ import { HotBadge } from "@plick/ui/HotBadge";
  * 사이드바 랭킹 카드와 같은 면(`bg-elevate-2` + `border-border`)을 쓴다 —
  * 본문 톤이라 테마 토큰을 그대로 탄다.
  *
- * KAN-515에서 게시판 글 목록처럼 줄였다(모바일과 같다). 팀 태그 자리에는
- * 깜빡이는 핫이슈 태그를 달고, 기자·시각·조회 줄은 걷었다. 제목 옆 `[X]`는
- * KAN-525부터 조회수가 아니라 댓글 수다 — 게시판이 `제목 [3]`으로 댓글 수를 다는
- * 그 꼴이다. 0이면 아예 그리지 않는다. 제목이 두 줄로 잘려도 숫자는 잘리지 않게
- * 제목과 형제로 둔다.
+ * KAN-515에서 게시판 글 목록처럼 줄였고, KAN-525에서 한 번 더 걷었다(모바일과
+ * 같다). 핫이슈 배지와 단계 라벨 줄을 빼고 제목과 요약만 남긴다. 제목 옆 `[X]`는
+ * 조회수가 아니라 댓글 수다 — 게시판이 `제목 [3]`으로 댓글 수를 다는 그 꼴이다.
+ * 0이면 아예 그리지 않는다. 제목이 두 줄로 잘려도 숫자는 잘리지 않게 제목과
+ * 형제로 둔다.
  *
  * 한 줄 요약(`summaryShort`)은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
  * 요약 유무로 높이가 달라도 카드는 `h-full`이라 그리드가 한 줄 높이를 맞춘다.
@@ -28,18 +26,8 @@ import { HotBadge } from "@plick/ui/HotBadge";
  * @param article - 표시할 핫이슈 기사 (사진 없는 그룹)
  */
 export function HotTextCard({ article }: { article: HotArticle }) {
-  const stage = article.stage ? STAGE_META[article.stage] : null;
-
   return (
-    <article className="bg-elevate-2 border-border rounded-card hover:border-border-strong relative flex h-full flex-col gap-1.5 border p-4 transition-colors">
-      <div className="flex items-center gap-2">
-        <HotBadge />
-        {stage && (
-          <span className="text-text-4 text-micro tracking-label font-bold">
-            {stage.label}
-          </span>
-        )}
-      </div>
+    <article className="bg-elevate-2 border-border rounded-card hover:border-border-strong relative flex h-full flex-col gap-1.5 border px-4 py-3.5 transition-colors">
       <div className="flex items-start gap-1.5">
         <h3 className="text-body-lg text-text tracking-heading line-clamp-2 min-w-0 font-extrabold">
           {article.title}

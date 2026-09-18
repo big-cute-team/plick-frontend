@@ -35,9 +35,6 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  * 있어(null) 있을 때만 깐다.
  *
  * 카드 전체가 기사 세부로 가는 링크다 (KAN-283).
- *
- * KAN-525에서 카드 둘레에 두꺼운 테두리를 둘렀다. 두 장이 붙어 서는 캐러셀에서
- * 어두운 사진끼리 경계가 묻혀 한 덩어리로 보였기 때문이다.
  */
 export function HotHeroCard({
   article,
@@ -48,10 +45,7 @@ export function HotHeroCard({
   fetchPriority?: "high" | "low" | "auto";
 }) {
   return (
-    /* 두꺼운 테두리(KAN-525) — 사진 카드가 두 장 나란히 서면서 어두운 사진끼리
-       경계가 묻혔다. 사진 위에 얹는 선이라 본문 톤 border보다 밝은 미디어용
-       칩 테두리 토큰을 쓴다 */
-    <div className="rounded-hero bg-reel-bg border-media-chip-border relative h-full overflow-hidden border-2">
+    <div className="rounded-hero bg-reel-bg relative h-full overflow-hidden">
       {article.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴·MediaThumb과 같은 이유)
         <img

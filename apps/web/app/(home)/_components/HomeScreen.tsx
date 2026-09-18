@@ -109,7 +109,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                 })}
               />
             )}
-            <section>
+            {/* 핫이슈 전체(제목·사진 캐러셀·텍스트 그리드)를 연한 테두리 상자에
+                담는다 (KAN-525, 모바일 홈과 같다). 아래 "지금 올라온 소식"과 한
+                면에 이어져 어디까지가 핫이슈인지 흐렸다 */}
+            <section className="border-border rounded-card border p-5">
               {/* 불꽃이 번쩍여 "지금 올라온 소식"처럼 살아 있는 섹션으로 읽힌다 (KAN-515) */}
               <h2 className="text-section text-text tracking-heading flex items-center gap-2 font-extrabold">
                 <HotFlame />
