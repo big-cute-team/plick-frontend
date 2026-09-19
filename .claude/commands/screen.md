@@ -1,5 +1,5 @@
 ---
-description: Jira 티켓 + Figma 노드로 모바일 화면 하나를 토큰 기반으로 구현하고 PR까지 올린다
+description: Jira 티켓 + Figma 노드로 모바일 화면 하나를 토큰 기반으로 구현하고 PR 제목·본문을 채팅에 건넨다
 argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
 ---
 
@@ -20,8 +20,8 @@ argument-hint: <KAN-티켓번호> <피그마-node-id-URL>
    재사용 조각은 `_components/`로 뽑고, 색·간격 하드코딩 금지, 좌우 패딩 `px-edge`, 다크 기준.
 6. **검증** — `pnpm --filter mobile build`(클린) + 로컬 dev(:3001) 모바일 뷰포트 스크린샷으로
    피그마와 대조(간격·정렬·타이포). 다크/라이트 토글 확인.
-7. **커밋·PR** — 커밋 메시지에 티켓 키 포함, `pnpm format` 후 커밋, push, `gh pr create --base develop`.
-   PR 본문은 `pr-writing` 스킬의 5절 틀을 따른다. CI 통과 확인. 병합은 사용자 승인 후.
+7. **커밋·PR 글** — 커밋 메시지에 티켓 키 포함, `pnpm format` 후 커밋, push. PR은 올리지 않고
+   제목과 본문(`pr-writing` 스킬의 5절 틀)을 채팅에 쓴다. 사용자가 직접 PR을 만들고 병합한다.
 
 원칙: 컨텍스트는 얇게(필요한 노드만 읽기), 작게 쪼개기, 피그마를 **그대로** 재현(근사치 금지).
 불명확하면 추측하지 말고 사용자에게 확인한다.

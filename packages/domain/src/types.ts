@@ -39,10 +39,153 @@ export interface MyProfile {
    * 7일 정책 계산은 BE 몫이고, 화면은 이 값으로 입력 잠금·안내만 한다(KAN-269). */
   nicknameChangeableAt: string | null;
   myTeams: TeamCode[];
+  /**
+   * 게스트 계정인가 (KAN-514). 소셜 연동 전이면 true — 댓글·신고·채팅이 막히고
+   * 화면은 로그인이 아니라 "계정 연동" 안내로 분기한다. 토큰에도 같은 표식이
+   * 있지만 FE는 토큰을 해석하지 않고 이 값만 본다.
+   */
+  isGuest: boolean;
 }
 
 /** 팀 필터 선택값 — 전체(ALL) 또는 특정 팀. 홈·기사 등 팀 필터 탭 공용. */
 export type Filter = "ALL" | TeamCode;
+
+/**
+ * 인물 구분 (KAN-500, BE `figures.type` enum 그대로). 실데이터에는 PLAYER와
+ * MANAGER만 있고 나머지 셋은 BE 제약이 허용하는 값이다. 화면은 선수·감독만
+ * 따로 표시하고 나머지는 기본 카드로 떨어뜨린다.
+ */
+export type FigureType = "PLAYER" | "MANAGER" | "COACH" | "OWNER" | "OTHER";
+
+/**
+ * 기사에 태그된 인물 한 명 (KAN-500). 기사 피드·릴스·상세·좋아요 목록의
+ * `figures` 배열 원소이자 팀 프로필의 소속 인물 목록 원소다 — BE가 두 자리에
+ * 같은 `FigureResponse`를 쓴다.
+ *
+ * 인물 태그는 앞으로 수집되는 기사부터 붙는다. 과거 기사는 대표 인물 한 명이
+ * 있던 것만 옮겨서 배열이 빈 기사가 대부분이다. 사진은 등록되지 않은 인물이면
+ * null인데, 확인 시점 실데이터는 전원 null이라 자리 표시가 기본 경로다.
+ */
+export interface FigureTag {
+  /** BE `figureId`를 문자열로 담는다 (라우트 파라미터와 결이 같다). */
+  id: string;
+  /** 한글 표기 (예: 손흥민) */
+  name: string;
+  type: FigureType;
+  imageUrl: string | null;
+}
+
+/**
+ * 팀 프로필 (KAN-500, `GET /api/v1/teams/{teamId}`).
+ *
+ * 로고·표기와 소속 인물 목록이다. BE `logoUrl`은 현재 6팀 모두 null이라 로고는
+ * 레지스트리(`TEAMS`)의 실제 구단 로고를 그린다 — 그래서 `code`가 여기 있다.
+ * BE가 모르는 팀 id를 돌려줄 일은 없지만(6팀 마스터) 레지스트리에 없는 id를
+ * 받았을 때 화면이 죽지 않게 null을 허용한다.
+ */
+export interface TeamProfile {
+  /** BE `teams.team_id`. */
+  id: number;
+  /** 레지스트리 팀 코드. 마스터에 없는 팀이면 null. */
+  code: TeamCode | null;
+  /** 한글 정식 명칭 (예: 토트넘 핫스퍼) */
+  name: string;
+  nameEn: string;
+  logoUrl: string | null;
+  /** 소속 인물 — BE가 한글명 오름차순으로 준다. 없으면 빈 배열. */
+  figures: FigureTag[];
+}
+
+/**
+ * 인물 프로필 (KAN-500, `GET /api/v1/figures/{figureId}`).
+ *
+ * 사진·한 줄 소개·소속 팀. 셋 다 null일 수 있다. 소속 팀은 객체째 null이고
+ * 팀 프로필과 달리 `nameEn`이 없어 팀 코드는 id로 레지스트리에서 보강한다.
+ */
+export interface FigureProfile {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  type: FigureType;
+  imageUrl: string | null;
+  /** 한 줄 소개. 등록되지 않은 인물은 null. */
+  description: string | null;
+  team: {
+    id: number;
+    /** 레지스트리 팀 코드. 마스터에 없는 팀이면 null. */
+    code: TeamCode | null;
+    name: string;
+    logoUrl: string | null;
+  } | null;
+}
+
+/**
+ * 급상승 랭킹의 집계 대상 (KAN-501, `GET /api/v1/trends`). 감독은 팀당 한 명씩
+ * 여섯 명뿐이라 순위가 의미를 갖지 못해 BE가 아예 빼고 집계한다(KAN-496).
+ * `STORY`는 기사 묶음(이슈) 단위 랭킹이다(KAN-522). 운영 BE가 릴리스 전이면
+ * 이 값을 몰라 400이 온다.
+ */
+export type TrendType = "STORY" | "TEAM" | "PLAYER";
+
+/**
+ * 직전 회차 대비 순위 변화 방향 (KAN-501). `NEW`는 이번 회차에 처음 들어온
+ * 항목이라 비교할 직전 순위가 없다.
+ */
+export type TrendDirection = "UP" | "DOWN" | "SAME" | "NEW";
+
+/**
+ * 급상승 랭킹 한 줄 (KAN-501).
+ *
+ * 순위·변화량은 10분마다 도는 배치가 미리 계산해 회차로 저장한 값이고 화면은
+ * 그대로 그린다(KAN-496). 지수 점수(`score`)는 화면에 쓰지 않아 버린다 —
+ * 0.612345 같은 내부 수치라 보여줄 자리가 없다.
+ */
+export interface TrendItem {
+  /**
+   * 대상 식별자. `TEAM`이면 BE `teams.team_id`(레지스트리 `TEAM_CODES`로 팀
+   * 코드를 얻는다), `PLAYER`면 인물 id, `STORY`면 이슈 id다.
+   */
+  entityId: number;
+  /** 한글 표기 (예: 맨체스터 시티, 히샬리송). `STORY`면 이슈 제목이다. */
+  name: string;
+  /**
+   * 팀 로고 또는 인물 사진. 확인 시점 dev·prod 모두 전 행 null이라 대체 표시가
+   * 기본 경로다 — 마스터 데이터가 채워지면 값이 들어오기 시작한다(KAN-501).
+   */
+  imageUrl: string | null;
+  /** 이번 회차 순위. 1부터 시작한다. */
+  rank: number;
+  direction: TrendDirection;
+  /** 오른 칸 수. 양수면 상승, 음수면 하락. `NEW`면 비교 대상이 없어 null. */
+  rankDelta: number | null;
+  /** 이슈에 묶인 발행 기사 수 (KAN-522). `STORY`에만 오고 팀·선수는 null이다. */
+  articleCount: number | null;
+}
+
+/**
+ * 이슈 한 건 (KAN-522, `GET /api/v1/stories/{storyId}`). 같은 이적설을 다룬
+ * 기사들을 BE가 하나로 묶은 단위다. 기사 목록은 `?storyId=` 피드로 따로 받는다.
+ */
+export interface Story {
+  id: string;
+  title: string;
+  articleCount: number;
+  /** 마지막 기사 발행 시각 (KST 오프셋 ISO). 기사가 없으면 null. */
+  lastArticleAt: string | null;
+}
+
+/**
+ * 급상승 랭킹 한 벌 (KAN-501, `GET /api/v1/trends?type=`).
+ *
+ * `items`는 요청한 `limit`보다 짧을 수 있고 빈 배열일 수도 있다 — 배치가 아직
+ * 회차를 한 번도 안 만들었으면 비어 있고, 그때 `collectedAt`도 null이다.
+ */
+export interface TrendRanking {
+  type: TrendType;
+  /** 이 회차를 집계한 시각 ISO-8601(UTC `Z`). 회차가 없으면 null. */
+  collectedAt: string | null;
+  items: TrendItem[];
+}
 
 /**
  * 기사 원문을 낸 기자 (KAN-271, `GET /api/v1/articles`). BE는 객체 자체가 없을
@@ -89,6 +232,14 @@ export interface ArticleCard {
   title: string;
   /** BE가 긴 요약(`summary_detail`)을 내려준다. 카드에서는 줄수로 자른다. */
   summary: string;
+  /**
+   * 한 줄 요약 (KAN-503). 리스트 한 줄이 제목 밑에 까는 부제목이다 (KAN-482).
+   * 핫이슈 카드의 {@link HotArticle.summaryShort}와 같은 필드다.
+   *
+   * BE 실데이터는 전 건 채워져 있지만 계약상 nullable이고, 길이도 보장하지
+   * 않는다 — 평균 37자에 최대 130자라 화면이 줄수로 자른다.
+   */
+  summaryShort: string | null;
   /** 루머 단계. BE 실데이터의 절반이 비어 있다. */
   stage: RumorStage | null;
   /** 발행 시각 ISO-8601. BE가 KST 오프셋(+09:00)을 박아 내려준다. */
@@ -106,6 +257,8 @@ export interface ArticleCard {
   liked: boolean;
   /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 태그 없는 기사는 빈 배열이고 칩 줄이 빠진다. */
+  figures: FigureTag[];
 }
 
 /**
@@ -157,6 +310,8 @@ export interface ArticleDetail {
   liked: boolean;
   /** 해시태그(`#` 제외). 팀 한국어명이 들어온다. 빈 배열일 수 있다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 태그 없는 기사는 빈 배열이고 칩만 빠진다. */
+  figures: FigureTag[];
 }
 
 /**
@@ -170,6 +325,12 @@ export interface HotArticle {
   /** BE `articleSummaryId`를 문자열로 담는다 (`ArticleCard.id`와 결이 같다). */
   id: string;
   title: string;
+  /**
+   * 한 줄 요약 (KAN-503). 사진 없는 핫이슈 카드가 제목 밑에 까는 본문이다
+   * (KAN-480) — 사진이 덮는 카드에는 자리가 없어 쓰지 않는다. BE가 요약을
+   * 만들지 못한 기사는 null이라 그 줄만 빠진다.
+   */
+  summaryShort: string | null;
   /** 루머 단계. null이면 배지를 그리지 않는다. */
   stage: RumorStage | null;
   /** 발행 시각 ISO-8601 (KST 오프셋 포함). */
@@ -201,6 +362,25 @@ export interface HotArticle {
   commentCount: number;
   likeCount: number;
   liked: boolean;
+}
+
+/**
+ * 핫이슈 한 묶음 — 원문 사진이 있는 기사와 없는 기사를 나눠 담는다 (KAN-480).
+ *
+ * BE가 한 응답에 두 목록을 담아 준다(KAN-487). 나눈 기준은 원문 X 게시물에
+ * 사진이 붙어 있었는지(`raw_articles.media_url`)이고, 카드의 `imageUrl`(기사
+ * 대표 이미지)과는 다른 컬럼이다. 그래서 `withImage`에 있는 카드라도
+ * `imageUrl`이 null일 수 있다 — 썸네일을 그릴지는 여전히 카드의 `imageUrl`을
+ * 보고 판단하고, 없으면 종전대로 트윗 임베드로 폴백한다.
+ *
+ * 두 목록 다 비어 있는 것이 정상 상태다. 사진 수집이 KAN-487부터 시작돼서
+ * 당분간은 `withImage`가 비고 `withoutImage`만 찬다.
+ */
+export interface HotArticles {
+  /** 사진이 있는 기사 — 캐러셀이 받는다. */
+  withImage: HotArticle[];
+  /** 사진이 없는 기사 — 캐러셀 아래 세 칸이 받는다. */
+  withoutImage: HotArticle[];
 }
 
 /**
@@ -266,6 +446,8 @@ export interface ReelCard {
   liked: boolean;
   /** 해시태그(`#` 제외). 태그된 팀의 한국어명이 들어온다. */
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 릴 세부 시트의 태그 줄에 팀 칩 옆으로 붙는다. */
+  figures: FigureTag[];
   /**
    * 게시물 표시 형태 (KAN-418). 릴에 토론이 붙어 있으면 이 값이 투표 가능
    * 여부의 실기준이다 — DEBATE는 투표 UI, FINISH는 결과 읽기 전용.

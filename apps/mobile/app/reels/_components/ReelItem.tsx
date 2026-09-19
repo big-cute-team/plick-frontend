@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState, type MouseEvent } from "react";
 import dynamic from "next/dynamic";
 import { TEAMS } from "@plick/domain/constants";
 import { TweetEmbed } from "@/_components/TweetEmbed";
@@ -70,7 +70,7 @@ const ShareDialog = dynamic(
  *
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
- * @param onOpenDetail - 정보 블록(제목·기자)이나 댓글 아이콘 탭 시 호출. 어느 릴인지와
+ * @param onOpenDetail - 릴 화면 어디든(버튼·링크 제외) 또는 댓글 아이콘 탭 시 호출. 어느 릴인지와
  *   칩·제목이 도킹 지점까지 이동할 거리(px, 음수)를 넘긴다 — 거리는 탭 시점에 측정한다.
  *   (릴을 인자로 받는 공유 콜백이라 정체성이 고정돼 memo가 산다)
  * @param titleMotion - 이 릴의 시트가 떠 있는 동안의 칩·제목 이동 상태 (아니면 null)
@@ -156,6 +156,30 @@ export const ReelItem = memo(function ReelItem({
   };
 
   /**
+   * 릴 화면 어디를 눌러도 세부 시트를 연다 (KAN-525). 전에는 제목·기자 줄·댓글
+   * 아이콘만 탭 타깃이라 사진이나 빈 배경을 눌러도 아무 일이 없었다.
+   *
+   * 제 기능이 있는 요소는 건드리지 않는다. 좋아요·공유 버튼, 트윗 임베드 안의
+   * 링크는 `closest`로 걸러 그대로 둔다(버튼은 이미 각자 시트를 열거나 팝업을
+   * 띄운다). 공유·로그인 팝업은 포털이라 DOM은 섹션 밖인데 React 이벤트는 트리를
+   * 따라 여기까지 올라오므로, DOM 포함 여부로 한 번 더 거른다 — 팝업 배경을 눌러
+   * 닫는 탭이 시트를 열면 안 된다.
+   *
+   * 세로 스와이프 뒤의 click은 Embla가 캡처 단계에서 삼키므로(dragThreshold를
+   * 넘긴 제스처) 넘기다 손을 떼도 시트가 열리지 않는다. 시트가 떠 있는 동안은
+   * 시트 층(z-20)이 섹션을 덮어 여기까지 오지 않지만 보험으로 한 번 더 막는다.
+   *
+   * @param e - 섹션 click 이벤트
+   */
+  const handleSurfaceClick = (e: MouseEvent<HTMLElement>) => {
+    if (titleMotion) return;
+    const target = e.target as HTMLElement;
+    if (!e.currentTarget.contains(target)) return;
+    if (target.closest("a, button, input, textarea")) return;
+    handleOpen();
+  };
+
+  /**
    * 칩·제목(과 스크림)의 transform. 드래그 오프셋은 {@link SHEET_DRAG_Y_VAR}
    * CSS 변수로 흐르므로(KAN-430) 손가락을 따라가는 동안 이 컴포넌트는 렌더되지
    * 않는다. 클램프(도킹 지점 위~원래 자리 0 사이)도 CSS `min()`이 대신한다 —
@@ -181,6 +205,7 @@ export const ReelItem = memo(function ReelItem({
     <section
       ref={sectionRef}
       inert={!active}
+      onClick={handleSurfaceClick}
       className="bg-reel-bg relative h-full w-full shrink-0 basis-full overflow-hidden"
     >
       {/* 사진이 있으면 릴을 가득 덮는다. 없으면 원문 트윗 임베드가 자리를 대신하고,
@@ -207,7 +232,6 @@ export const ReelItem = memo(function ReelItem({
           >
             <TweetEmbed
               url={reel.sourceUrl}
-              layout="reel"
               seedTweet={seedTweet}
               defer={!embedFetchStarted}
             />
@@ -235,8 +259,9 @@ export const ReelItem = memo(function ReelItem({
         }}
       />
 
-      {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 눌리지 않고 제목·기자
-          줄만 시트를 여는 탭 타깃이다. */}
+      {/* 하단 정보 블록 (스크림 위 텍스트). 블록 자체는 `pointer-events-none`이라
+          탭이 섹션까지 내려가 시트를 열고(KAN-525), 제목·기자 줄 버튼은 키보드와
+          스크린리더용 탭 타깃으로 남긴다. */}
       {/* pb는 우측 레일(bottom-27)보다 낮다 — 좌측 요소만 살짝 아래로 내린다 (KAN-299) */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pr-21 pb-22 pl-4.5 text-left">
         {/* 배지+제목 — 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.

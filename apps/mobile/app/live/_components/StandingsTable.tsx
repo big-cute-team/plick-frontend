@@ -1,14 +1,17 @@
-import Link from "next/link";
 import type { StandingRow } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
+import { TeamProfileLink } from "./TeamProfileLink";
 
 /** 순위표 숫자 컬럼 정의 — 헤더와 행이 같은 폭을 쓴다. */
 const NUM_COLS = "w-7 text-center";
 
 /**
  * 순위표(피그마 L3). 챔스권(1~4위)은 랭크 옆 악센트 바, 빅6 행은 밝은 팀명과
- * 스쿼드 링크, 마이팀(껍데기에선 리버풀 고정)은 행 하이라이트로 구분한다.
- * 빅6 밖 팀은 `team.id`가 없어 링크 없이 그린다.
+ * 팀 링크로 구분한다. 빅6 밖 팀은 `team.code`가 없어 링크 없이 그린다.
+ *
+ * 껍데기 때는 리버풀 행을 마이팀으로 못박아 하이라이트했는데, 실데이터가 붙은
+ * 뒤로는 아무 근거 없이 한 팀만 선택된 것처럼 보여서 걷어냈다. 프로필 응원팀을
+ * 읽어 진짜 마이팀을 칠하려면 이 서버 컴포넌트가 세션을 봐야 해서 따로 본다.
  */
 export function StandingsTable({ rows }: { rows: StandingRow[] }) {
   return (
@@ -37,8 +40,6 @@ export function StandingsTable({ rows }: { rows: StandingRow[] }) {
 }
 
 function StandingLine({ row }: { row: StandingRow }) {
-  /* 껍데기 단계의 마이팀 강조는 리버풀 고정 — 실배선 때 프로필 마이팀으로 */
-  const myTeam = row.team.code === "LIV";
   const content = (
     <>
       <span className="relative w-5 text-center">
@@ -69,27 +70,20 @@ function StandingLine({ row }: { row: StandingRow }) {
       <span className={`text-label text-text-3 ${NUM_COLS}`}>
         {row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}
       </span>
-      <span
-        className={`text-label font-bold ${myTeam ? "text-accent" : "text-text"} ${NUM_COLS}`}
-      >
+      <span className={`text-label text-text font-bold ${NUM_COLS}`}>
         {row.points}
       </span>
     </>
   );
 
-  const lineClass = `flex items-center gap-2 px-1 py-2 ${
-    myTeam ? "bg-accent-tint rounded-tile" : ""
-  }`;
-
-  if (row.team.id === null) {
-    return <div className={lineClass}>{content}</div>;
-  }
+  /* 옛 `/live/teams/{id}`는 팀 프로필로 308이지만(KAN-507), 링크는 도착지를
+     직접 가리킨다 — 리다이렉트 한 번을 아끼고 prefetch도 실제 화면에 걸린다 */
   return (
-    <Link
-      href={`/live/teams/${row.team.id}`}
-      className={`${lineClass} active:opacity-80`}
+    <TeamProfileLink
+      team={row.team}
+      className="flex items-center gap-2 px-1 py-2 active:opacity-80"
     >
       {content}
-    </Link>
+    </TeamProfileLink>
   );
 }

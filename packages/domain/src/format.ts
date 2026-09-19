@@ -6,10 +6,11 @@ import { BRAND_TITLE, BRAND_TITLE_TEMPLATE } from "./brand";
 import {
   NEW_ARTICLE_WINDOW_MS,
   TEAMS,
+  TEAM_BY_KO_NAME,
   TEAM_BY_SLUG,
   TEAM_FULL_NAMES,
 } from "./constants";
-import type { Filter } from "./types";
+import type { DebateListItem, Filter, TeamCode } from "./types";
 
 /**
  * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
@@ -97,6 +98,49 @@ export function articlesTeamTitle(filter: Filter): string {
 }
 
 /**
+ * 팀 프로필 URL (KAN-500). 팀 허브(`/teams/[slug]`)가 홈 피드를 그리는 자리라
+ * 프로필은 그 아래 `/profile`로 뒀다 — 같은 slug 규약이라 팀 검색어 랜딩과
+ * 프로필이 한 접두 아래 모인다.
+ *
+ * @example
+ * teamProfilePath("TOT"); // "/teams/tottenham/profile"
+ */
+export function teamProfilePath(code: TeamCode): string {
+  return `/teams/${TEAMS[code].slug}/profile`;
+}
+
+/**
+ * 인물 프로필 URL (KAN-500). 관련 기사 목록이 프로필 아래 이어지므로 인물
+ * 칩·선수 카드가 전부 이 하나로 간다.
+ *
+ * @example
+ * figurePath("12"); // "/figures/12"
+ */
+export function figurePath(figureId: string): string {
+  return `/figures/${encodeURIComponent(figureId)}`;
+}
+
+/**
+ * 이슈 상세 URL (KAN-523). 급상승 카드의 이슈 줄이 여기로 간다.
+ *
+ * @example
+ * storyPath("50"); // "/stories/50"
+ */
+export function storyPath(storyId: string): string {
+  return `/stories/${encodeURIComponent(storyId)}`;
+}
+
+/**
+ * 해시태그 → 팀 프로필 URL (KAN-500). 해시태그는 팀 한글 정식명만 오므로
+ * (`TEAM_BY_KO_NAME` 주석) 매핑되면 그 팀 프로필이고, 안 되면 링크 없는
+ * 글자 칩으로 남긴다.
+ */
+export function hashtagHref(tag: string): string | null {
+  const code = TEAM_BY_KO_NAME[tag];
+  return code ? teamProfilePath(code) : null;
+}
+
+/**
  * 수치를 축약 표기로 포맷한다.
  *
  * @example
@@ -152,6 +196,35 @@ export function formatDateKo(iso: string): string {
     month: "long",
     day: "numeric",
   }).format(new Date(iso));
+}
+
+/**
+ * 게스트 마감 안내용 날짜 — "9월 30일" (KAN-514). 연도를 빼는 이유는 마감이 항상
+ * 14일 안이라 해가 바뀌어도 한 달 안쪽이고, 토스트·카드 한 줄에 들어가야 해서다.
+ * 기기 시간대와 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.
+ *
+ * @param iso BE `guestExpiresAt` (예: "2026-09-30T15:12:04+09:00")
+ * @example guestDeadlineLabel("2026-09-30T15:12:04+09:00") → "9월 30일"
+ */
+export function guestDeadlineLabel(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
+/**
+ * 게스트 연동 안내 한 줄 (KAN-514) — 마감 값이 없거나 깨졌으면 날짜 없는 문구로
+ * 떨어뜨린다. 첫 진입 토스트와 마이페이지 연동 카드가 같은 문구를 쓰도록 여기 둔다.
+ *
+ * @param guestExpiresAt BE `guestExpiresAt`. 쿠키에서 읽어 오므로 없을 수 있다
+ */
+export function guestLinkNotice(guestExpiresAt: string | null): string {
+  if (!guestExpiresAt || Number.isNaN(Date.parse(guestExpiresAt))) {
+    return "14일 안에 소셜 계정을 연동하면 지금까지 기록이 이어져요.";
+  }
+  return `${guestDeadlineLabel(guestExpiresAt)}까지 소셜 계정을 연동하면 지금까지 기록이 이어져요.`;
 }
 
 /**
@@ -243,6 +316,36 @@ export function isDebateClosed(
   const at = new Date(closesAt);
   if (Number.isNaN(at.getTime())) return false;
   return at.getTime() <= now.getTime();
+}
+
+/**
+ * 아직 열려 있는 토론만, 마감이 임박한 순으로 (KAN-504, 홈 배너).
+ *
+ * 마감 판정은 리스트 카드와 같은 두 겹이다 — 기사 `contentType`(FINISH)과
+ * `closesAt` 경과를 OR로 겹친다({@link isDebateClosed}). 한 겹만 보면 시각이
+ * 지났는데 FINISH로 안 넘어간 토론이 배너에 "진행 중"으로 서 버린다.
+ *
+ * 정렬은 마감이 가까운 순이다. 배너가 한 건만 대표로 세우는데, 목록 순서(최신순)
+ * 그대로 첫 건을 쓰면 오늘 자정에 닫히는 투표를 놔두고 일주일 뒤 마감을 보여준다.
+ * `closesAt`이 없는(상시) 토론은 재촉할 게 없어 맨 뒤로 보낸다.
+ *
+ * @param items 토론 리스트 응답(마감 포함). 원본은 건드리지 않는다.
+ * @param now 비교 기준 시각. 테스트에서 고정값을 넣으려고 열어 둔다.
+ */
+export function openDebates(
+  items: DebateListItem[],
+  now: Date = new Date(),
+): DebateListItem[] {
+  return items
+    .filter(
+      (item) =>
+        item.contentType !== "FINISH" && !isDebateClosed(item.closesAt, now),
+    )
+    .sort((a, b) => {
+      if (!a.closesAt) return b.closesAt ? 1 : 0;
+      if (!b.closesAt) return -1;
+      return new Date(a.closesAt).getTime() - new Date(b.closesAt).getTime();
+    });
 }
 
 /**

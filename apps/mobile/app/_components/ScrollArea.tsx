@@ -21,15 +21,21 @@ import { PullSpinner } from "./PullSpinner";
  *   하단 탭 재탭에 맨 위로 올라간다. 없으면 예전 그대로 평범한 스크롤 영역이다.
  * @param onRefresh 주면 맨 위에서 당겨 새로고침할 수 있다. 이 프로미스가 끝나야
  *   스피너가 멈춘다.
+ * @param contentClassName 콘텐츠 래퍼에 더할 클래스. 내용이 짧아도 화면 끝까지
+ *   차지해야 하는 화면(라이브 경기 목록 — 빈 자리에서도 좌우 스와이프가 먹어야
+ *   한다)이 `flex min-h-full flex-col`을 준다. 스크롤러(`main`)는 셸이 높이를
+ *   못박은 flex 아이템이라 여기서 `min-h-full`이 실제 높이로 풀린다.
  */
 export function ScrollArea({
   children,
   className = "",
+  contentClassName = "",
   restoreKey,
   onRefresh,
 }: {
   children: ReactNode;
   className?: string;
+  contentClassName?: string;
   restoreKey?: ScreenKey;
   onRefresh?: () => Promise<unknown>;
 }) {
@@ -76,7 +82,7 @@ export function ScrollArea({
            relative는 스피너의 절대배치 기준 — transform이 벗겨진 평상시에도
            기준이 바뀌지 않게 늘 둔다 */
         <div
-          className="relative"
+          className={`relative ${contentClassName}`}
           style={
             active || settling
               ? {
@@ -89,6 +95,8 @@ export function ScrollArea({
           <PullSpinner distance={distance} refreshing={refreshing} />
           {children}
         </div>
+      ) : contentClassName ? (
+        <div className={contentClassName}>{children}</div>
       ) : (
         children
       )}

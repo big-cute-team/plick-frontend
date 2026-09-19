@@ -5,7 +5,7 @@ import type { LiveTeam } from "@plick/domain/live";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { usePlayerMatchStats } from "@/_hooks/usePlayerMatchStats";
 import { LiveSheet } from "./LiveSheet";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
  * 선수 경기 스탯 바텀시트(피그마 L10). 라인업·벤치에서 선수를 누르면 열리고,
