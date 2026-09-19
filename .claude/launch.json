@@ -159,6 +159,23 @@
       ],
       "port": 3030,
       "autoPort": true
+    },
+    {
+      "name": "mobile-8083",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8083",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3013"
+      ],
+      "port": 3013,
+      "autoPort": true
     }
   ]
 }
