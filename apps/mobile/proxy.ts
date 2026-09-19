@@ -1,7 +1,6 @@
 /**
- * @file 세션 프록시. 토큰이 없으면 게스트를 발급하고(KAN-514), access 토큰이 만료됐지만
- * refresh가 남아있으면 네비게이션 도중 조용히 재발급해 세션을 잇는다. 재발급이 진짜로
- * 실패하면 게스트는 새 게스트로 다시 시작하고, 소셜 세션은 끊어 로그인 화면으로 보낸다.
+ * @file 세션 갱신 프록시. access 토큰이 만료됐지만 refresh가 남아있으면 네비게이션 도중
+ * 조용히 토큰을 재발급해 로그인 상태를 잇는다. 실패하면 세션을 끊고 로그인 화면으로 보낸다.
  * BE 프록시(`/be/*`)로 나가는 브라우저 fetch에 Bearer 토큰을 실어 주는 일도 여기서 한다.
  *
  * 왜 이 자리인가: 평범한 GET 네비게이션 중에 **응답 쿠키를 심을 수 있는 유일한 자리**다.
@@ -20,17 +19,11 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
-import { issueGuest } from "@plick/core/guest";
 import { refreshTokensShared } from "@plick/core/refresh";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
   AUTH_COOKIES,
-  CRAWLER_UA_PATTERN,
-  GUEST_EXPIRES_COOKIE,
-  GUEST_NOTICE,
-  GUEST_NOTICE_COOKIE,
-  GUEST_NOTICE_MAX_AGE,
   REFRESH_RETRY_COOKIE,
   REFRESH_RETRY_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
@@ -56,119 +49,24 @@ function authorized(request: NextRequest, accessToken: string): NextResponse {
   return NextResponse.next({ request: { headers } });
 }
 
-/**
- * 게스트를 발급할 자리가 아닌 경로 (KAN-514).
- *
- * `/oauth`는 콜백이 직접 새 토큰 쿠키를 심는 구간이라 건드리면 Set-Cookie가 겹친다.
- * `/login`·`/signup`을 빼는 이유는 따로다 — 이 화면에 토큰 없이 닿는 사람은 방금
- * 로그아웃했거나 로그인하러 직접 들어온 **기존 소셜 사용자**다. 여기서 게스트를
- * 쥐어 주면 소셜 버튼이 연동(`/auth/link`) 갈래로 가고, 기록이 빈 새 게스트를 옛
- * 계정에 붙이려다 `EXISTING_ACCOUNT`로 떨어져 "이미 가입된 계정이라 활동이 이어지지
- * 않아요"라는 엉뚱한 안내를 보게 된다. 앱 안에서 넘어온 게스트는 이미 토큰이 있어
- * 이 분기에 닿지 않으므로 연동 갈래가 그대로 유지된다.
- */
-function skipsGuestIssue(pathname: string): boolean {
-  return (
-    pathname === "/login" ||
-    pathname === "/signup" ||
-    pathname.startsWith("/oauth")
-  );
-}
-
-/**
- * 게스트 세션을 열고 이번 응답에 쿠키를 심는다 (KAN-514).
- *
- * 요청 쿠키에도 같이 심는 이유는 재발급 경로와 같다 — 이번 네비게이션의 서버
- * 컴포넌트(`isLoggedIn`·`getMyProfile`)가 방금 받은 토큰을 보게 하려면 응답만으로는
- * 늦다. 응답 쿠키는 브라우저가 다음 요청부터 실어 보내게 하는 몫이다.
- *
- * 발급이 실패하면(BE 다운, 429 `COMMON_RATE_LIMITED`) 삼키고 익명으로 통과시킨다.
- * 게스트는 참여를 앞당기는 편의지 열람의 전제가 아니라서, 여기서 막으면 읽기만
- * 하려던 사람까지 빈 화면을 보게 된다. 다음 네비게이션이 다시 시도한다.
- */
-async function startGuestSession(request: NextRequest): Promise<NextResponse> {
-  let guest;
-  try {
-    guest = await issueGuest();
-  } catch (e) {
-    console.error("[guest] 게스트 발급 실패:", e);
-    /* 마감된 게스트를 갈아끼우려던 길이었다면 죽은 쿠키가 남아 다음 네비게이션이
-       또 재발급 401을 맞는다. 지워서 다음 진입이 깨끗한 발급으로 시작하게 한다 */
-    const failed = NextResponse.next();
-    failed.cookies.delete(AUTH_COOKIES.access);
-    failed.cookies.delete(AUTH_COOKIES.refresh);
-    failed.cookies.delete(GUEST_EXPIRES_COOKIE);
-    failed.cookies.delete(REFRESH_RETRY_COOKIE);
-    return failed;
-  }
-
-  request.cookies.set(AUTH_COOKIES.access, guest.accessToken);
-  request.cookies.set(AUTH_COOKIES.refresh, guest.refreshToken);
-  request.cookies.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt);
-  request.cookies.delete(REFRESH_RETRY_COOKIE);
-
-  const response = NextResponse.next({ request });
-  response.cookies.set(AUTH_COOKIES.access, guest.accessToken, {
-    ...AUTH_COOKIE_BASE,
-    maxAge: ACCESS_TOKEN_MAX_AGE,
-  });
-  response.cookies.set(AUTH_COOKIES.refresh, guest.refreshToken, {
-    ...AUTH_COOKIE_BASE,
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  });
-  response.cookies.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt, {
-    ...AUTH_COOKIE_BASE,
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  });
-  /* 첫 진입 안내 토스트를 띄울 표식 — 띄운 클라 컴포넌트가 지운다(HttpOnly 아님) */
-  response.cookies.set(GUEST_NOTICE_COOKIE, GUEST_NOTICE.issued, {
-    ...AUTH_COOKIE_BASE,
-    httpOnly: false,
-    maxAge: GUEST_NOTICE_MAX_AGE,
-  });
-  response.cookies.delete(REFRESH_RETRY_COOKIE);
-  return response;
-}
-
 export async function proxy(request: NextRequest) {
   const accessToken = request.cookies.get(AUTH_COOKIES.access)?.value;
   const refreshToken = request.cookies.get(AUTH_COOKIES.refresh)?.value;
   const isProxy = request.nextUrl.pathname.startsWith(BE_PROXY_PREFIX);
 
-  /* access가 살아있음 → 아직 미만료. 프록시 요청이면 토큰만 실어 통과시킨다 */
-  if (accessToken) {
-    return isProxy ? authorized(request, accessToken) : NextResponse.next();
-  }
-
   /**
-   * 토큰이 하나도 없는 첫 진입 — 여기서 게스트를 발급한다 (KAN-514).
-   *
-   * 예전에는 이 자리가 "비로그인 탐색이니 손대지 않는다"였다. 게스트를 깔면서
-   * 뜻이 바뀌었다 — 들어오는 순간 계정을 쥐어 줘야 좋아요·투표·조회 기록이 첫
-   * 탭부터 먹는다. 발급이 **페이지 네비게이션에서만** 일어나는 건 그래야 응답
-   * 쿠키를 심을 수 있어서다. `/be` 프록시 요청은 이미 토큰이 생긴 뒤에 나가므로
-   * 여기 걸릴 일이 없고, 걸리더라도 그냥 익명으로 통과시킨다.
-   *
-   * 크롤러는 제외한다 — 이유는 `CRAWLER_UA_PATTERN` 주석에 적어 뒀다.
-   */
-  if (!refreshToken) {
-    if (
-      isProxy ||
-      skipsGuestIssue(request.nextUrl.pathname) ||
-      CRAWLER_UA_PATTERN.test(request.headers.get("user-agent") ?? "")
-    ) {
-      return NextResponse.next();
-    }
-    return startGuestSession(request);
-  }
-
-  /**
-   * refresh만 남았지만 재발급하지 않는 자리:
+   * 손대지 않는 경우(프록시 요청이면 토큰만 실어 통과):
+   * - access가 살아있음 → 아직 미만료.
+   * - refresh가 없음 → 비로그인 탐색(둘러보기). 로그인 강제 금지.
    * - 로그인 화면 → 여기서 재발급/리다이렉트하면 루프·이상동작만 생긴다.
    * - OAuth 콜백 → 콜백 핸들러가 직접 새 토큰 쿠키를 심는다. 여기서도 심으면
    *   같은 쿠키에 Set-Cookie가 겹쳐 어느 값이 남을지 보장이 없다.
    */
+  if (accessToken) {
+    return isProxy ? authorized(request, accessToken) : NextResponse.next();
+  }
   if (
+    !refreshToken ||
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname.startsWith("/oauth")
   ) {
@@ -190,16 +88,6 @@ export async function proxy(request: NextRequest) {
      */
     request.cookies.set(AUTH_COOKIES.access, tokens.accessToken);
     request.cookies.set(AUTH_COOKIES.refresh, tokens.refreshToken);
-    /**
-     * 게스트 세션이면 마감 시각이 함께 온다 (KAN-514). 값은 고정이라 늘 같지만,
-     * 쿠키 수명을 다시 늘려 줘야 14일 내내 안내가 뜬다. 소셜 세션이면 안 실려
-     * 오므로 남아 있던 표식을 지운다 — 연동 직후처럼 갈래가 바뀐 경우의 뒷정리다.
-     */
-    if (tokens.guestExpiresAt) {
-      request.cookies.set(GUEST_EXPIRES_COOKIE, tokens.guestExpiresAt);
-    } else {
-      request.cookies.delete(GUEST_EXPIRES_COOKIE);
-    }
     const response = isProxy
       ? authorized(request, tokens.accessToken)
       : NextResponse.next({ request });
@@ -211,14 +99,6 @@ export async function proxy(request: NextRequest) {
       ...AUTH_COOKIE_BASE,
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
-    if (tokens.guestExpiresAt) {
-      response.cookies.set(GUEST_EXPIRES_COOKIE, tokens.guestExpiresAt, {
-        ...AUTH_COOKIE_BASE,
-        maxAge: REFRESH_TOKEN_MAX_AGE,
-      });
-    } else {
-      response.cookies.delete(GUEST_EXPIRES_COOKIE);
-    }
     return response;
   } catch (e) {
     /**
@@ -248,16 +128,6 @@ export async function proxy(request: NextRequest) {
         maxAge: REFRESH_RETRY_MAX_AGE,
       });
       return response;
-    }
-    /**
-     * 두 번째 401이면 진짜 만료다. 게스트였다면(마감 쿠키가 그 표식이다) 로그인
-     * 화면이 아니라 **새 게스트로 다시 시작한다** (KAN-514). 게스트에게 로그인을
-     * 요구하는 건 처음부터 로그인을 안 시키려던 취지와 정반대고, 마감은 재발급으로
-     * 늘어나지 않으니 14일이 지난 사람은 전부 이 길로 온다. 옛 게스트의 기록은
-     * 그 계정에 남지만 다시 연결되지는 않는다 — BE가 정한 1차 범위다.
-     */
-    if (request.cookies.has(GUEST_EXPIRES_COOKIE)) {
-      return startGuestSession(request);
     }
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(AUTH_COOKIES.access);

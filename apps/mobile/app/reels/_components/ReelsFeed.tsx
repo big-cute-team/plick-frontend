@@ -205,13 +205,7 @@ export function ReelsFeed({
   }
 
   return (
-    /* 시트의 기준 상자 (KAN-525). 시트는 `absolute inset-0`이라 가장 가까운
-       positioned 조상에 맞춰 크기가 잡히는데, 전에는 그게 AppShell이었다. 넓은
-       화면에서 PC 전환 배너(KAN-379)가 셸 맨 위에 서면 릴 섹션은 배너만큼
-       짧아지는데 시트는 셸 전체의 73%로 서서, 섹션 기준으로 잰 제목 리프트
-       거리보다 시트 상단이 배너 높이의 73%만큼 높아 제목 아랫줄이 시트에 가려졌다.
-       이 래퍼가 main과 같은 높이의 기준 상자가 돼 둘의 기하가 같은 자를 쓴다 */
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <>
       {/* 뷰포트 — 세로 드래그를 Embla가 쓰도록 브라우저 팬(당겨서 새로고침 포함)을 막는다 */}
       <main
         ref={viewportRef}
@@ -264,6 +258,6 @@ export function ReelsFeed({
       {motion.mounted && detail && (
         <ReelDetailSheet reel={detail.reel} motion={motion} />
       )}
-    </div>
+    </>
   );
 }

@@ -42,42 +42,6 @@ export class ApiError extends Error {
 }
 
 /**
- * 소셜 계정이 있어야 되는 일을 막힌 것인가 (KAN-514).
- *
- * 댓글·신고·채팅은 소셜 사용자 전용이라 두 가지로 막힌다(댓글 좋아요는 KAN-527부터
- * 게스트도 된다). 세션이 아예
- * 없으면 401 `AUTH_REQUIRED`, 게스트 세션이면 403 `AUTH_GUEST_FORBIDDEN`이다. 화면이
- * 할 일은 둘 다 같다 — 연동/로그인 유도 팝업을 띄운다. 그래서 호출부마다 code 두 개를
- * 늘어놓지 않게 여기서 묶는다. 어느 문구를 띄울지는 팝업이 `isGuest`로 정한다.
- *
- * 다른 401(토큰 만료 등)과 섞이지 않게 status가 아니라 code로 본다.
- */
-export function needsSocialAccount(error: unknown): boolean {
-  return (
-    error instanceof ApiError &&
-    (error.code === "AUTH_REQUIRED" || error.code === "AUTH_GUEST_FORBIDDEN")
-  );
-}
-
-/**
- * BE가 참여 쓰기 상한에 걸려 잠시 거절한 것인가 (KAN-527, BE KAN-526).
- *
- * 좋아요·댓글 좋아요(`POST`·`DELETE …/like`)는 DB가 느린 순간 같은 대상에 버스트가
- * 몰리면 503 `COMMON_SERVICE_BUSY`로 떨어진다. 서버가 죽은 게 아니라 순간 상한이라
- * 잠깐 뒤 한 번 더 보내면 대개 붙는다. 인증 문제가 아니므로 로그인 화면으로 보내면
- * 안 되고, 낙관적으로 올린 카운트는 재시도까지 실패했을 때만 되돌린다.
- */
-export function isServiceBusy(error: unknown): boolean {
-  return error instanceof ApiError && error.code === "COMMON_SERVICE_BUSY";
-}
-
-/**
- * 바쁨(503) 뒤 한 번 자동 재시도하기까지 기다리는 시간(ms). BE가 카운트 증감을
- * 1초마다 모아 반영하고 재시도도 그쯤 뒤를 권한다(KAN-526).
- */
-export const SERVICE_BUSY_RETRY_DELAY_MS = 1000;
-
-/**
  * `apiFetch` 한 번의 결과 요약. 메트릭 관측자가 받는다 (KAN-455).
  *
  * `path`는 호출부가 넘긴 원문 그대로다. ID를 접어 라벨 카디널리티를 낮추는 일은

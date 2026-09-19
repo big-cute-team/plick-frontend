@@ -18,11 +18,6 @@
 
   /* text */
   --plk-text: #eef2f8;
-  /* 최대 대비가 필요한 본문 — 기사 리스트 제목·부제목 (KAN-514).
-     text는 순백보다 살짝 눌러 장문 가독성을 잡은 값이라, 리스트처럼 짧은 줄을
-     훑는 지면에서는 한 단 더 밝은 값이 필요했다. media-on(사진 위 고정 흰색)을
-     쓰지 않는 이유는 그 토큰이 라이트에서도 흰색이라 글자가 사라져서다. */
-  --plk-text-strong: #ffffff;
   --plk-text-2: #c4cddb;
   --plk-text-3: #93a0b4;
   --plk-text-4: #5e6b80;
@@ -107,7 +102,6 @@
 
   /* text */
   --plk-text: #14171e;
-  --plk-text-strong: #000000;
   --plk-text-2: #333b47;
   --plk-text-3: #5c6673;
   --plk-text-4: #98a1ae;
@@ -147,7 +141,6 @@
   --color-border-strong: var(--plk-border-strong);
 
   --color-text: var(--plk-text);
-  --color-text-strong: var(--plk-text-strong);
   --color-text-2: var(--plk-text-2);
   --color-text-3: var(--plk-text-3);
   --color-text-4: var(--plk-text-4);

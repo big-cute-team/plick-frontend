@@ -4,16 +4,12 @@ import {
   matchStatusLabel,
   type MatchSummary,
 } from "@plick/domain/live";
-import { LiveCrest } from "@plick/ui/LiveCrest";
-import { TeamProfileLink } from "./TeamProfileLink";
+import { LiveCrest } from "./LiveCrest";
 
 /**
  * 경기 상세 헤더 — 양 팀 크레스트 사이에 스코어(라이브·종료) 또는 킥오프
  * 시각(예정)을 크게 두고 아래 상태 칩을 단다(피그마 L5·L6·L9). 스코어 정본은
  * `header.score`다(이벤트 요약과 어긋나면 이쪽을 믿는 명세 규약).
- *
- * 양쪽 팀은 팀 프로필로 가는 링크다 (KAN-484) — 라이브 어디서든 팀을 누르면 그
- * 팀 화면으로 가야 한다는 요구다. 빅6 밖 팀은 프로필이 없어 글자로만 남는다.
  */
 export function MatchHeaderBlock({ header }: { header: MatchSummary }) {
   return (
@@ -45,17 +41,14 @@ export function MatchHeaderBlock({ header }: { header: MatchSummary }) {
 
 function TeamSide({ team }: { team: MatchSummary["home"] }) {
   return (
-    <TeamProfileLink
-      team={team}
-      className="flex w-24 flex-col items-center gap-2 active:opacity-70"
-    >
+    <div className="flex w-24 flex-col items-center gap-2">
       <LiveCrest team={team} size={48} />
       <span
         className={`text-label text-center font-semibold ${team.code ? "text-text" : "text-text-3"}`}
       >
         {team.name}
       </span>
-    </TeamProfileLink>
+    </div>
   );
 }
 

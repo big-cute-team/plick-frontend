@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { ApiError, needsSocialAccount } from "@plick/core/client";
+import { ApiError } from "@plick/core/client";
 import { avatarInitials, formatCount } from "@plick/domain/format";
 import { ChevronMiniIcon, HeartMiniIcon, MoreIcon } from "@plick/ui/icons";
 import type { ArticleComment } from "@plick/domain/types";
@@ -266,7 +266,7 @@ function CommentOwnerActions({
         onDeleted?.();
       },
       onError: (err) => {
-        if (needsSocialAccount(err)) {
+        if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
           setConfirming(false);
           setNeedsLogin(true);
           return;
@@ -342,7 +342,7 @@ function CommentOwnerActions({
  * 관용). 차단 성공 시 캐시 반영은 `useBlockUser`가 한다.
  */
 function CommentMoreActions({ comment }: { comment: ArticleComment }) {
-  const { isLoggedIn, isGuest } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [dialog, setDialog] = useState<"none" | "menu" | "report" | "block">(
     "none",
   );
@@ -355,7 +355,7 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
     block.mutate(comment.userId, {
       onSuccess: () => setDialog("none"),
       onError: (err) => {
-        if (needsSocialAccount(err)) {
+        if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
           setDialog("none");
           setNeedsLogin(true);
           return;
@@ -374,9 +374,7 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
     <>
       <button
         type="button"
-        onClick={() =>
-          isLoggedIn && !isGuest ? setDialog("menu") : setNeedsLogin(true)
-        }
+        onClick={() => (isLoggedIn ? setDialog("menu") : setNeedsLogin(true))}
         aria-label="댓글 신고·차단"
         aria-haspopup="dialog"
         className="text-text-4 active:opacity-60"

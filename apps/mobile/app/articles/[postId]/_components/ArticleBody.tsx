@@ -2,6 +2,7 @@ import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
 import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
+import { TagChips } from "@plick/ui/TagChips";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount } from "@plick/domain/format";
@@ -13,7 +14,6 @@ import type {
 } from "@plick/domain/types";
 import { formatRelativeTime } from "@plick/domain/format";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
-import { EntityChips } from "@/_components/EntityChips";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
@@ -120,11 +120,10 @@ export function ArticleBody({
         </p>
       ))}
 
-      {/* 해시태그(팀)와 인물 칩 (KAN-500) — 팀 칩은 팀 프로필, 인물 칩은 인물
-          프로필로 간다. 둘 다 없는 기사는 줄 자체를 그리지 않는다 */}
-      {(article.hashtags.length > 0 || article.figures.length > 0) && (
+      {/* 해시태그 */}
+      {article.hashtags.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <EntityChips hashtags={article.hashtags} figures={article.figures} />
+          <TagChips tags={article.hashtags} />
         </div>
       )}
 

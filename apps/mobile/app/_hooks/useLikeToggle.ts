@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  ApiError,
-  isServiceBusy,
-  SERVICE_BUSY_RETRY_DELAY_MS,
-} from "@plick/core/client";
+import { ApiError } from "@plick/core/client";
 import type { LikeState, ToggleLikeResult } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
 
@@ -34,12 +30,6 @@ import { useAuth } from "@/_components/AuthProvider";
  * 서버가 심어 준 `AuthProvider`로 읽는다 — 쿠키가 HttpOnly라 클라가 직접 못 본다.
  * 쿠키는 있는데 토큰이 만료된 경우는 401 `AUTH_REQUIRED`로 드러나므로 같은 팝업으로
  * 받는다(댓글 입력바와 같은 방식).
- *
- * BE가 바쁘다는 503 `COMMON_SERVICE_BUSY`(KAN-527, BE KAN-526)는 순간 상한이라 1초
- * 뒤 한 번만 더 보낸다. 뮤테이션의 `retry`로 걸어 두면 그동안 낙관적 값과 `isPending`이
- * 그대로 유지되고, 두 번째도 실패했을 때만 `onError`가 한 번 불려 되돌린다. 안내는
- * 아래 전역 안전망이 BE 문구("지금은 처리할 수 없습니다…")로 띄운다. 로그인 화면으로
- * 보내지 않는다.
  *
  * 그 밖의 실패(없는 대상, 네트워크 순단)는 되돌린 뒤 전역 안전망(KAN-447,
  * QueryProvider의 MutationCache onError)이 토스트로 알린다. 예전엔 콘솔에만
@@ -71,8 +61,6 @@ export function useLikeToggle({
       }
       return result.likeCount;
     },
-    retry: (failureCount, error) => failureCount < 1 && isServiceBusy(error),
-    retryDelay: SERVICE_BUSY_RETRY_DELAY_MS,
     onMutate: (liked) => {
       const previous = state;
       onChange({

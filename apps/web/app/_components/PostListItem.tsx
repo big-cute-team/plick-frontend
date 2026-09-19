@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { MediaThumb } from "@plick/ui/MediaThumb";
 import { TeamCrest } from "@plick/ui/TeamCrest";
+import { HeartMiniIcon } from "@plick/ui/icons";
 import { NewBadge } from "@plick/ui/NewBadge";
 import { TEAMS } from "@plick/domain/constants";
-import { formatRelativeTime, isRecentlyPublished } from "@plick/domain/format";
+import {
+  formatCount,
+  formatRelativeTime,
+  isRecentlyPublished,
+} from "@plick/domain/format";
 import type { ArticleCard, Filter } from "@plick/domain/types";
+import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
 import type { PostListVariant } from "@/_types/app";
 
 /**
@@ -19,6 +26,7 @@ const VARIANT: Record<
   {
     row: string;
     title: string;
+    thumb: string;
     crest: number;
     heading: "h2" | "h3";
   }
@@ -26,41 +34,36 @@ const VARIANT: Record<
   news: {
     row: "gap-5 py-5",
     title: "text-title",
+    thumb: "rounded-card h-24 w-33",
     crest: 40,
     heading: "h3",
   },
   article: {
     row: "gap-3.5 py-4",
     title: "text-body-lg",
+    thumb: "rounded-control size-21.5",
     crest: 36,
     heading: "h2",
   },
 };
 
 /**
- * 피드 리스트의 한 줄 — 왼쪽 팀 로고, 가운데 제목·요약, 오른쪽 시각·기자명.
- * 클릭하면 해당 기사 세부(`/articles/[postId]`)로 이동한다. 홈·기사 페이지가
- * `variant`로 밀도만 바꿔 공용한다.
+ * 피드 리스트의 한 줄 — 왼쪽 텍스트(팀·시각 / 제목 / 기자·조회·댓글) + 오른쪽 썸네일·팀 로고.
+ * 클릭하면 해당 기사 세부(`/articles/[postId]`)로 이동한다. 홈·기사 페이지가 `variant`로 밀도만 바꿔 공용한다.
  *
- * KAN-482에서 모바일 `NewsItem`과 같은 세 칸 구성으로 다시 짰다. 그전에는
- * 팀명·시각이 제목 위에, 기자명·좋아요·조회·댓글이 제목 아래에 깔리고 로고와
- * 썸네일이 오른쪽에 붙어 있었다. 집계 숫자와 썸네일은 뺐다 — 리스트에서 읽을
- * 것은 제목과 요약이고 나머지는 기사 세부에 있다.
+ * 행 맨 오른쪽에는 대표 팀 로고(`TeamCrest`)를 세로 중앙으로 붙인다(KAN-338).
+ * 팀이 없는 기사는 로고 자리도 그리지 않는다.
  *
- * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓴다. 팀이 없는
- * 기사는 로고 자리를 그리지 않고 제목이 왼쪽 끝부터 찬다. 기자 이름도 원문이
- * 없으면 빠진다.
+ * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓰고, 없으면
+ * 팀 이름 자리를 비운다. 기자 이름도 원문이 없으면 빠진다. 사진이 null이면
+ * 썸네일 자리를 아예 그리지 않고 텍스트가 전체 폭을 쓴다(모바일 KAN-284와 동일).
  *
- * 팀 탭을 보고 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 로고로 쓴다 (KAN-368,
- * 모바일과 동일) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다. 전체
- * 탭은 기존대로 기사의 첫 팀이다.
+ * 팀 탭을 보고 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 팀 이름·로고로 쓴다
+ * (KAN-368, 모바일과 동일) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다.
+ * 전체 탭은 기존대로 기사의 첫 팀이다.
  *
  * 발행 30분 안의 기사는 시각 옆에 NEW 태그를 단다 (KAN-481). 하이드레이션
  * 경계 사정은 모바일 `NewsItem`과 같다.
- *
- * 오른쪽 칸은 고정폭(`w-28`)이다. 기자 이름 길이에 따라 칸이 늘었다 줄었다 하면
- * 행마다 제목 폭이 달라져 리스트가 들쭉날쭉해진다. 넘치는 이름은 `truncate`가
- * `…`으로 자른다.
  *
  * @param post - 표시할 기사 카드
  * @param variant - 행 변형(news=홈, article=기사)
@@ -84,15 +87,59 @@ export function PostListItem({
         ? TEAMS[post.teams[0]]
         : null;
   const isNew = isRecentlyPublished(post.publishedAt);
-  // BE 실데이터는 한 줄 요약이 전 건 채워져 있지만 계약상 null이 가능해
-  // 긴 요약으로 떨어뜨린다 — 어느 쪽이든 길이는 보장이 없어 한 줄로 자른다
-  const summary = (post.summaryShort ?? post.summary).trim();
 
   return (
     <Link
       href={`/articles/${post.id}`}
       className={`border-border focus-visible:outline-accent flex items-start border-b transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:-outline-offset-2 ${v.row}`}
     >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          {team && (
+            <span className="text-caption text-icon font-extrabold">
+              {team.name}
+            </span>
+          )}
+          <span className="text-caption text-text-4" suppressHydrationWarning>
+            {formatRelativeTime(post.publishedAt)}
+          </span>
+          {isNew && <NewBadge />}
+        </div>
+        <Title
+          className={`text-text text-title mt-1.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
+        >
+          {post.title}
+        </Title>
+        <p className="text-caption text-text-3 mt-1.5 flex flex-wrap items-center gap-x-2">
+          {post.reporter && (
+            <>
+              <span className="text-text-2 font-semibold">
+                {post.reporter.name}
+              </span>
+              <span>·</span>
+            </>
+          )}
+          {/* 목록에서는 좋아요를 보여주기만 한다 — 누르는 건 릴스와 기사 세부에서.
+              이웃한 조회·댓글과 달리 글자 없이 하트로만 표시한다 (KAN-308, 모바일과 동일).
+              내가 눌렀는지는 칠하지 않는다 — 목록 응답은 익명으로 받아
+              `liked`가 늘 false다. */}
+          <span className="inline-flex items-center gap-0.75">
+            <HeartMiniIcon />
+            {formatCount(post.likeCount)}
+          </span>
+          <span>·</span>
+          <span>조회 {formatCount(post.views)}</span>
+          <span>·</span>
+          <span>댓글 {post.commentCount}</span>
+        </p>
+      </div>
+      {post.imageUrl && (
+        <MediaThumb
+          colorVar={team ? team.colorVar : NO_TEAM_COLOR_VAR}
+          imageUrl={post.imageUrl}
+          className={`shrink-0 ${v.thumb}`}
+        />
+      )}
       {team && (
         <TeamCrest
           team={team}
@@ -100,32 +147,6 @@ export function PostListItem({
           className="shrink-0 self-center"
         />
       )}
-      <div className="min-w-0 flex-1">
-        <Title
-          className={`text-text-strong mt-0.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
-        >
-          {post.title}
-        </Title>
-        {summary && (
-          <p className="text-body text-text-strong mt-1.5 truncate">
-            {summary}
-          </p>
-        )}
-      </div>
-      <div className="flex w-28 shrink-0 flex-col items-end gap-1">
-        {/* 시각과 NEW가 한 줄에 다 안 들어가는 폭에서는 태그가 아랫줄로 내려간다 */}
-        <div className="flex w-full flex-wrap items-center justify-end gap-1.5">
-          <span className="text-caption text-text-4" suppressHydrationWarning>
-            {formatRelativeTime(post.publishedAt)}
-          </span>
-          {isNew && <NewBadge />}
-        </div>
-        {post.reporter && (
-          <span className="text-caption text-text-2 max-w-full truncate font-semibold">
-            {post.reporter.name}
-          </span>
-        )}
-      </div>
     </Link>
   );
 }

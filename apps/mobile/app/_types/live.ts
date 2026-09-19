@@ -6,14 +6,5 @@
 /**
  * 경기 상세 안의 탭. 상태별로 보이는 조합이 다르다(`MATCH_TABS_BY_STATUS`).
  * URL로 승격하지 않고 컴포넌트 상태로 둔다(ADR 0126 스토리 2).
- *
- * `news`는 양 팀 기사 모아보기다 (KAN-484) — 경기 지면에서 그 경기 팀 소식을
- * 보러 기사 탭으로 나갔다 오지 않게 한다.
  */
-export type MatchTabKey =
-  | "preview"
-  | "summary"
-  | "lineups"
-  | "stats"
-  | "news"
-  | "chat";
+export type MatchTabKey = "preview" | "summary" | "lineups" | "stats" | "chat";

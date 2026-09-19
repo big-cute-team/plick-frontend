@@ -22,67 +22,17 @@ export const LIVE_MAX_RETRIES = 1;
 
 /**
  * 경기 상태별 상세 탭 구성 (KAN-462). 예전엔 요약·라인업·스탯을 한 지면에 다
- * 펼쳤는데 세로로 너무 길어져 모바일처럼 탭으로 나눴다. 연기·취소는 탭 없이
- * 안내만 그린다. 채팅은 탭이 아니라 우측 패널이다.
- *
- * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
- * 기사 목록으로 나갔다 오는 대신 같은 지면에서 본다. 덕분에 예정 경기도 탭이
- * 둘(프리뷰·뉴스)이라 탭 줄이 선다.
+ * 펼쳤는데 세로로 너무 길어져 모바일처럼 탭으로 나눴다. 예정 경기는 프리뷰
+ * 하나라 탭 줄 없이 본문만 그리고, 연기·취소는 탭 없이 안내만 그린다. 채팅은
+ * 탭이 아니라 우측 패널이다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "news"],
-  LIVE: ["summary", "lineups", "stats", "news"],
-  FINISHED: ["summary", "lineups", "stats", "news"],
+  SCHEDULED: ["preview"],
+  LIVE: ["summary", "lineups", "stats"],
+  FINISHED: ["summary", "lineups", "stats"],
   POSTPONED: [],
   CANCELLED: [],
 };
-
-/**
- * 요약·라인업·스탯 탭이 빈 자리에 세우는 문구 (KAN-484).
- *
- * 전에는 상태와 무관하게 한 문구였다. 그래서 끝난 경기에 라인업이 안 실려 오면
- * "라인업은 킥오프 20~40분 전에 공개돼요"가 떠서, 종료된 경기를 열었는데 킥오프
- * 전이라고 말하는 꼴이 됐다. 아직 올 수 있는 경우(`pending`)와 더 올 것이 없는
- * 경우(`done`)를 갈라 둔다.
- */
-const MATCH_EMPTY_LABEL: Record<
-  "summary" | "lineups" | "stats",
-  { pending: string; done: string }
-> = {
-  summary: {
-    pending: "요약 정보가 아직 없어요",
-    done: "이 경기의 요약 정보가 없어요",
-  },
-  lineups: {
-    pending: "라인업은 킥오프 20~40분 전에 공개돼요",
-    done: "이 경기의 라인업 정보가 없어요",
-  },
-  stats: {
-    pending: "스탯 정보가 아직 없어요",
-    done: "이 경기의 스탯 정보가 없어요",
-  },
-};
-
-/**
- * 빈 탭 문구를 경기 상태에 맞춰 고른다. 끝났거나 취소·연기된 경기는 더 들어올
- * 데이터가 없으므로 기다리라는 말을 하지 않는다.
- *
- * @param tab 지금 탭
- * @param status 경기 상태
- */
-export function matchEmptyLabel(
-  tab: "summary" | "lineups" | "stats",
-  status: MatchStatus,
-): string {
-  return MATCH_EMPTY_LABEL[tab][status === "LIVE" ? "pending" : "done"];
-}
-
-/**
- * 뉴스 탭이 목록을 기다리는 동안 까는 스켈레톤 줄 수 (KAN-484). 실제로 올 건수
- * (`MATCH_NEWS_COUNT`)보다 적게 둔다 — 탭 본문은 화면 한 판이 넘어가면 어차피
- * 스크롤 밖이라, 자리만 잡아 주면 된다.
- */
-export const MATCH_NEWS_SKELETON_COUNT = 4;
 
 /** 탭 라벨. */
 export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
@@ -90,7 +40,6 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
-  news: "뉴스",
 };
 
 /**

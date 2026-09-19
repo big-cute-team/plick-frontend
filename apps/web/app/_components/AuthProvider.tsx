@@ -15,15 +15,10 @@ import { createContext, useContext } from "react";
  * BE가 댓글에 `userId`를 실어 주면서 id 대조로 바꿨다 — 닉네임은 변경 가능한 값이라 대조
  * 근거로는 약했다. 닉네임은 표시용으로 남는다.
  *
- * `isGuest`는 KAN-514에서 붙었다. 게스트 로그인을 깔면서 "비로그인"이 사실상 사라져
- * `isLoggedIn`만으로는 댓글을 막을 근거가 없어졌다 — 게스트도 세션이 있기 때문이다.
- * 그래서 "세션이 있는가"(`isLoggedIn`)와 "소셜 계정인가"(`!isGuest`)를 따로 들고 다닌다.
- *
  * 기본값 `null`은 "provider 밖"을 뜻한다(로그인 안 함 `false`와 구분해 실수 사용을 잡는다).
  */
 const AuthContext = createContext<{
   isLoggedIn: boolean;
-  isGuest: boolean;
   userId: number | null;
   nickname: string | null;
 } | null>(null);
@@ -35,29 +30,24 @@ const AuthContext = createContext<{
  * 값은 서버 렌더 시점에 박힌다. 로그인·로그아웃은 서버 액션이 redirect하며 새 렌더를 일으키므로
  * 그때 시드가 다시 뿌려진다 — 클라에서 따로 폴링하거나 갱신할 필요가 없다.
  *
- * @param isLoggedIn 서버가 읽은 세션 존재 여부(access 쿠키 존재). 게스트도 true다 —
- *   좋아요·투표·조회 기록처럼 게스트에게 열린 기능은 이 값만 보면 된다
- * @param isGuest 게스트 계정인가 (KAN-514). 댓글·신고·채팅처럼 소셜 전용 기능은
- *   이 값으로 갈라 "로그인"이 아니라 "계정 연동" 안내를 띄운다
+ * @param isLoggedIn 서버가 읽은 로그인 여부(access 쿠키 존재)
  * @param userId 내 유저 id. 비로그인·프로필 조회 실패면 null —
  *   그때는 내 댓글 판별이 항상 false로 떨어져 버튼이 안 뜰 뿐 화면은 그대로 돈다
  * @param nickname 내 닉네임(표시용). null 조건은 userId와 같고 온보딩 전에도 null이다
  */
 export function AuthProvider({
   isLoggedIn,
-  isGuest,
   userId,
   nickname,
   children,
 }: {
   isLoggedIn: boolean;
-  isGuest: boolean;
   userId: number | null;
   nickname: string | null;
   children: React.ReactNode;
 }) {
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isGuest, userId, nickname }}>
+    <AuthContext.Provider value={{ isLoggedIn, userId, nickname }}>
       {children}
     </AuthContext.Provider>
   );
@@ -69,11 +59,10 @@ export function AuthProvider({
  * 컨텍스트·provider와 한 몸이라(서로의 private 컨텍스트 객체를 공유) 훅을 이 파일에 함께 둔다 —
  * 별도 `useXxx.ts`로 떼면 컨텍스트를 밖으로 export해야 해서 오히려 캡슐화가 샌다.
  *
- * @returns `{ isLoggedIn, isGuest, userId, nickname }` — 유저 정보가 더 붙으면 이 객체를 넓힌다.
+ * @returns `{ isLoggedIn, userId, nickname }` — 유저 정보가 더 붙으면 이 객체를 넓힌다.
  */
 export function useAuth(): {
   isLoggedIn: boolean;
-  isGuest: boolean;
   userId: number | null;
   nickname: string | null;
 } {

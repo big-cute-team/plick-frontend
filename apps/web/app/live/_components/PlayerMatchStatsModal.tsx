@@ -4,7 +4,7 @@ import { POSITION_LABEL, ratingTone } from "@plick/domain/live";
 import type { LiveTeam } from "@plick/domain/live";
 import { usePlayerMatchStats } from "@/_hooks/usePlayerMatchStats";
 import { LiveModal } from "./LiveModal";
-import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
+import { PlayerPhoto } from "./PlayerPhoto";
 
 /**
  * 선수 경기 스탯 모달 — 모바일 L10 바텀시트의 데스크톱판. 라인업·벤치에서

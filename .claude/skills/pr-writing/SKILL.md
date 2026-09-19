@@ -3,9 +3,8 @@ name: pr-writing
 description: >-
   PLick의 PR 본문을 쓸 때 따르는 5절 틀(구현 사항 / 문제 상황 / 해결 방법 / 검증 / TODO)과
   절별 규칙, 제목·base·머지 규칙. 문체는 doc-style 스킬을 따른다.
-  클로드는 PR을 올리지 않고 제목과 본문을 채팅에 써 준다.
-  Use when preparing a PR title and body to hand to the user, editing or rewriting a PR
-  description, or whenever a branch is ready to be reviewed in this repo.
+  Use when creating a pull request with gh pr create, editing or rewriting a PR description,
+  or preparing a PR body in this repo.
 ---
 
 # PR 본문 쓰기
@@ -55,20 +54,11 @@ description: >-
 제목은 커밋 메시지 첫 줄과 같게 쓴다. `feat(web): KAN-322 기사 세부 API 이식` 형태다. 티켓이 있으면
 Jira 키를 넣고 없으면 뺀다.
 
-base는 `develop`이다.
+base는 `develop`이다. `gh pr create --base develop`.
 
 본문 맨 밑에 그 세션 ADR을 링크한다. 상세한 회고는 ADR이 맡고 PR 본문은 판단과 검증만 담는다.
 
-## 채팅에 건네기
-
-🚫 클로드는 PR을 만들지 않는다. `gh pr create`는 금지다. 커밋과 push까지 끝낸 뒤 제목 한 줄과
-본문 전체를 채팅에 그대로 쓴다. 본문은 그대로 붙여 넣을 수 있게 마크다운 코드 블록 하나에 담는다.
-사용자가 GitHub에서 직접 PR을 만든다. base가 `develop`임을 한 줄 덧붙인다.
-
-CI 확인은 PR이 없으니 로컬에서 대신한다. `pnpm format:check`, `pnpm lint`, `pnpm check-types`,
-`pnpm build`를 돌리고 결과를 검증 절에 쓴다.
-
-🚫 병합도 하지 않는다. `gh pr merge`는 금지다.
+🚫 병합은 하지 않는다. PR 생성과 CI 확인까지가 클로드 몫이고 `gh pr merge`는 금지다.
 
 ## 예시
 
