@@ -2,12 +2,10 @@
 
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { activityKeys } from "@plick/core/activityKeys";
 import { ApiError } from "@plick/core/client";
 import { commentKeys } from "@plick/core/commentKeys";
 import type { ArticleComment, CommentPage } from "@plick/domain/types";
 import { deleteComment } from "@/_services/comment-actions";
-import type { MyCommentPage } from "@/_types/activity";
 
 /**
  * 댓글 삭제 뮤테이션 (KAN-333). 기사 세부·릴 세부 시트 공용.
@@ -23,10 +21,6 @@ import type { MyCommentPage } from "@/_types/activity";
  *
  * 서버 액션은 실패를 값으로 돌려주므로 여기서 `ApiError`로 되살려 던진다 —
  * 호출부는 `code`로 분기한다(`AUTH_REQUIRED`면 로그인 유도 팝업).
- *
- * 마이페이지 "내가 쓴 댓글" 목록(KAN-495)에서는 tombstone이 아니라 줄을 뺀다.
- * 그 API는 삭제한 댓글을 아예 내려주지 않아서 tombstone으로 두면 다음 refetch
- * 때 사라지며 깜빡인다. 활동 개수는 stale로만 표시해 다음 마운트 때 다시 센다.
  *
  * @param articleId 이 댓글이 달린 기사(릴) id — 목록 쿼리키를 만드는 데 쓴다
  */
@@ -55,18 +49,6 @@ export function useDeleteComment(articleId: string) {
             })),
           },
       );
-      qc.setQueryData<InfiniteData<MyCommentPage, string | null>>(
-        activityKeys.comments(),
-        (data) =>
-          data && {
-            ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              items: page.items.filter((item) => item.id !== commentId),
-            })),
-          },
-      );
-      void qc.invalidateQueries({ queryKey: activityKeys.counts() });
     },
   });
 }

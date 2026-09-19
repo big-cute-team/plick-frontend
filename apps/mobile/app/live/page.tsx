@@ -33,10 +33,6 @@ export const metadata: Metadata = {
  *
  * 목록을 좌우로 끌면 전날·다음날로 넘어가고(`LiveDatePager`), 맨 위에서 당기면
  * 그 날짜 목록을 다시 받는다(`LiveScrollArea`, KAN-462).
- *
- * 스크롤 영역의 콘텐츠를 `flex min-h-full flex-col`로 열고 페이저에 `flex-1`을
- * 줘서, 경기가 두세 개뿐인 날에도 목록 아래 빈 자리까지 전부 스와이프 영역이
- * 되게 한다 — 그 전에는 카드 상자 위에서만 제스처가 먹었다.
  */
 export default async function LivePage({
   searchParams,
@@ -57,13 +53,10 @@ export default async function LivePage({
   return (
     <AppShell>
       <TopBar />
-      <LiveScrollArea
-        date={selected}
-        contentClassName="flex min-h-full flex-col"
-      >
+      <LiveScrollArea date={selected}>
         <LiveSubTabs active="matches" />
         <DateStrip selected={selected} today={today} />
-        <LiveDatePager date={selected} today={today} className="flex-1">
+        <LiveDatePager date={selected} today={today}>
           <LiveMatchesFeed date={selected} initial={initial} />
         </LiveDatePager>
       </LiveScrollArea>

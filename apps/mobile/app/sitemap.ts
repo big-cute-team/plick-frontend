@@ -64,13 +64,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily" as const,
       priority: 0.9,
     })),
-    // 팀 프로필 (KAN-500) — 소속 인물 목록. 인물 프로필은 200명이 넘고 대부분
-    // 관련 기사가 아직 없어 싣지 않는다. 인물 태그가 쌓이면 다시 본다
-    ...TEAM_ORDER.map((code) => ({
-      url: `${SITE_URL}/teams/${TEAMS[code].slug}/profile`,
-      changeFrequency: "weekly" as const,
-      priority: 0.5,
-    })),
   ];
 
   try {

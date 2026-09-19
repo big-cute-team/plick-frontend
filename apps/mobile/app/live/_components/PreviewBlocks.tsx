@@ -1,8 +1,7 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
-import { LiveCrest } from "@plick/ui/LiveCrest";
-import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
-import { TeamProfileLink } from "./TeamProfileLink";
+import { LiveCrest } from "./LiveCrest";
+import { PlayerPhoto } from "./PlayerPhoto";
 
 /**
  * 킥오프 전 프리뷰 지면(피그마 L5) — 결장자·상대전적·리그 순위·직전 경기
@@ -30,15 +29,10 @@ function Absentees({ preview }: { preview: MatchPreview }) {
       {groupAbsenteesByTeam(preview.absentees).map((group) => (
         <div key={group.team.shortName} className="flex flex-col gap-2">
           <p className="flex items-center gap-2">
-            <TeamProfileLink
-              team={group.team}
-              className="flex items-center gap-2 active:opacity-70"
-            >
-              <LiveCrest team={group.team} size={16} />
-              <span className="text-label text-text font-bold">
-                {group.team.name}
-              </span>
-            </TeamProfileLink>
+            <LiveCrest team={group.team} size={16} />
+            <span className="text-label text-text font-bold">
+              {group.team.name}
+            </span>
             <span className="text-caption text-text-4">
               {group.players.length}명
             </span>
@@ -116,15 +110,10 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
           key={position.team.shortName}
           className="flex items-center gap-2.5"
         >
-          <TeamProfileLink
-            team={position.team}
-            className="flex min-w-0 flex-1 items-center gap-2.5 active:opacity-70"
-          >
-            <LiveCrest team={position.team} size={20} />
-            <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
-              {position.team.name}
-            </span>
-          </TeamProfileLink>
+          <LiveCrest team={position.team} size={20} />
+          <span className="text-body text-text min-w-0 flex-1 truncate font-semibold">
+            {position.team.name}
+          </span>
           <span className="text-body text-text font-bold">
             {position.rank}위
           </span>
@@ -167,15 +156,10 @@ function LastLineups({ preview }: { preview: MatchPreview }) {
       {preview.lastLineups.map((lineup) => (
         <div key={lineup.team.shortName} className="flex flex-col gap-1.5">
           <p className="flex items-center gap-2">
-            <TeamProfileLink
-              team={lineup.team}
-              className="flex items-center gap-2 active:opacity-70"
-            >
-              <LiveCrest team={lineup.team} size={16} />
-              <span className="text-label text-text font-bold">
-                {lineup.team.name}
-              </span>
-            </TeamProfileLink>
+            <LiveCrest team={lineup.team} size={16} />
+            <span className="text-label text-text font-bold">
+              {lineup.team.name}
+            </span>
             <span className="bg-accent-tint text-accent rounded-badge text-micro px-1.5 py-0.5 font-bold">
               {lineup.formation}
             </span>

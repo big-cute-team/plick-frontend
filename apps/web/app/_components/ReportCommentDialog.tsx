@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ApiError, needsSocialAccount } from "@plick/core/client";
+import { ApiError } from "@plick/core/client";
 import { COMMENT_REPORT_REASONS } from "@plick/domain/constants";
 import type { CommentReportReason } from "@plick/domain/types";
 import { useReportComment } from "@/_hooks/useReportComment";
@@ -22,8 +22,7 @@ import { useReportComment } from "@/_hooks/useReportComment";
  *
  * @param commentId 신고할 댓글(대댓글) id
  * @param onClose 취소·완료·스크림 클릭으로 닫을 때
- * @param onAuthRequired 토큰 만료(401 `AUTH_REQUIRED`)나 게스트 차단(403
- *   `AUTH_GUEST_FORBIDDEN`, KAN-514)일 때 — 호출부가 이
+ * @param onAuthRequired 토큰 만료(401 `AUTH_REQUIRED`)일 때 — 호출부가 이
  *   팝업을 닫고 로그인 유도로 돌린다
  */
 export function ReportCommentDialog({
@@ -54,7 +53,7 @@ export function ReportCommentDialog({
       {
         onSuccess: () => setDone(true),
         onError: (err) => {
-          if (needsSocialAccount(err)) {
+          if (err instanceof ApiError && err.code === "AUTH_REQUIRED") {
             onAuthRequired();
             return;
           }

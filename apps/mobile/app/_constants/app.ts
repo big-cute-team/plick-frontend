@@ -34,6 +34,13 @@ export const SWITCH_BANNER_DISMISS_KEY = "plick-switch-banner-dismissed";
 export const WEB_SUGGEST_MEDIA = "(min-width: 1024px)";
 
 /**
+ * flow 임베드(기사 세부)의 카드 높이 상한 — 화면 높이 대비 비율 (KAN-283).
+ * 트윗 카드가 이보다 길면 릴스(useTweetFit)처럼 미디어를 숨겨 전문 텍스트를
+ * 살린다. X Display Requirements상 본문은 자를 수 없어 사진만 뺀다.
+ */
+export const TWEET_FLOW_MAX_HEIGHT_RATIO = 0.6;
+
+/**
  * 온보딩 진입 경로. 온보딩 흐름을 내려서(`app/_onboarding` private 폴더) 지금은
  * 라우팅되지 않는 주소다 — 잠들어 있는 온보딩 코드만 참조한다. 되살릴 때 폴더를
  * `app/onboarding`으로 되돌리고 로그인(`_services/auth.ts`)의 분기를 복원한다.

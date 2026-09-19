@@ -10,20 +10,13 @@ import {
   monthLabel,
 } from "@plick/domain/live";
 import { ChevronMiniIcon } from "@plick/ui/icons";
-import { DATE_STRIP_KEEP_PAD } from "@/_constants/live";
 
 /**
  * 경기 목록의 날짜 내비게이션 — 위에 연·월 셀렉터(드롭다운), 아래에 그 달
  * 1일~말일 전체를 담은 가로 슬라이드 스트립. 처음 들어올 때와 달을 바꿀 때만
- * 선택한 날(기본은 오늘)을 가운데로 스크롤한다(KAN-459). 오늘 칸은 요일 대신
- * "오늘" 태그를 단다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는
- * `/live`다.
- *
- * 같은 달 안에서 날짜가 바뀔 때는 가운데로 당기지 않되, 선택 칸이 스트립 밖으로
- * 밀려났으면 보이는 데까지만 민다. 목록을 좌우로 계속 스와이프하면 날짜가 하루씩
- * 가는데 스트립을 그대로 두면 지금 보는 날이 화면에서 사라져 어디쯤인지 알 수가
- * 없었다. 가운데 정렬로 되돌리면 칸을 누를 때마다 스트립이 통째로 튀는 KAN-459
- * 문제가 돌아오므로, 안 보일 때만 최소한으로 움직인다.
+ * 선택한 날(기본은 오늘)을 가운데로 스크롤하고, 같은 달 안에서 날짜를 고를
+ * 때는 스트립을 그 자리에 둔다(KAN-459). 오늘 칸은 요일 대신 "오늘" 태그를
+ * 단다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는 `/live`다.
  *
  * 스크롤 센터링·드롭다운 상태 때문에 클라 컴포넌트다. 오늘은 페이지가 KST로
  * 계산해 넘긴다 — 여기서 다시 계산하면 서버·기기 시각이 자정을 사이에 두고
@@ -71,27 +64,6 @@ export function DateStrip({
     // 처음 들어올 때와 달이 바뀔 때만 센터링한다. 같은 달 안의 날짜 선택은
     // 스트립을 그 자리에 둔다 (KAN-459) — selected를 의존성에 넣지 않는 이유
   }, [year, month]);
-
-  /* 달이 바뀌는 순간은 위 센터링이 맡으므로 여기서 비킨다 — 둘이 같은 프레임에
-     서로 다른 목표로 스크롤을 건드리면 스트립이 두 번 움직인다 */
-  const prevMonth = useRef(`${year}-${month}`);
-  useEffect(() => {
-    const monthKey = `${year}-${month}`;
-    const monthChanged = prevMonth.current !== monthKey;
-    prevMonth.current = monthKey;
-    if (monthChanged) return;
-
-    const strip = stripRef.current;
-    const cell = strip?.querySelector<HTMLElement>('[aria-current="date"]');
-    if (!strip || !cell) return;
-    const stripRect = strip.getBoundingClientRect();
-    const cellRect = cell.getBoundingClientRect();
-
-    const overLeft = stripRect.left + DATE_STRIP_KEEP_PAD - cellRect.left;
-    const overRight = cellRect.right - (stripRect.right - DATE_STRIP_KEEP_PAD);
-    const by = overLeft > 0 ? -overLeft : overRight > 0 ? overRight : 0;
-    if (by !== 0) strip.scrollBy({ left: by, behavior: "smooth" });
-  }, [selected, year, month]);
 
   useEffect(() => {
     if (open) setPickerYear(year);

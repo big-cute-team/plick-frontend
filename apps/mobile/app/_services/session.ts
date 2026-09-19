@@ -4,7 +4,7 @@
  */
 
 import { cookies } from "next/headers";
-import { AUTH_COOKIES, GUEST_EXPIRES_COOKIE } from "@/_constants/api";
+import { AUTH_COOKIES } from "@/_constants/api";
 
 /**
  * 로그인 여부 — accessToken 쿠키의 존재만으로 판단한다(BE 호출 없이 요청 컨텍스트에서).
@@ -31,15 +31,4 @@ export async function isLoggedIn(): Promise<boolean> {
 export async function getAccessToken(): Promise<string | undefined> {
   const jar = await cookies();
   return jar.get(AUTH_COOKIES.access)?.value;
-}
-
-/**
- * 게스트 마감 시각을 쿠키에서 읽는다 (KAN-514). `/users/me`는 `isGuest`만 주고 마감
- * 시각은 발급·재발급 응답에만 실려 오므로, 프록시가 받아 적어 둔 쿠키가 출처다.
- *
- * @returns 게스트면 BE `guestExpiresAt`(KST ISO), 소셜 세션이면 null
- */
-export async function getGuestExpiresAt(): Promise<string | null> {
-  const jar = await cookies();
-  return jar.get(GUEST_EXPIRES_COOKIE)?.value ?? null;
 }

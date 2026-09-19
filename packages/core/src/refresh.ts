@@ -12,20 +12,9 @@
 import { apiFetch } from "./client";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `TokenResponse` 그대로). access·refresh가 함께 회전된다. */
-export interface TokenResponse {
+interface TokenResponse {
   accessToken: string;
   refreshToken: string;
-  /**
-   * 게스트 마감(KST ISO-8601, 예: "2026-09-30T16:42:14+09:00") — KAN-514.
-   *
-   * 게스트 세션이면 값이 오고, **소셜 세션이면 키는 있고 값이 null이다**(키가 빠지지
-   * 않는다 — 로컬 BE 실호출로 확인). 회전으로 늘어나지 않는 고정값이라 게스트는
-   * 매번 같은 문자열을 받는다. 프록시는 이걸로 마감 안내 쿠키를 되살리고, null이면
-   * 소셜로 갈래가 바뀐 것으로 보고 쿠키를 지운다.
-   *
-   * 옛 BE(게스트 도입 전)는 키 자체가 없으므로 optional로 둔다.
-   */
-  guestExpiresAt?: string | null;
 }
 
 /**

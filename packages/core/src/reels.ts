@@ -20,7 +20,6 @@ import { STAGE_BY_BE_VALUE, TEAM_CODES } from "@plick/domain/constants";
 import type { ReelCard, ReelFeedPage, TeamCode } from "@plick/domain/types";
 import { apiFetch } from "./client";
 import { toDebate, type DebateResponse } from "./debates";
-import { toFigureTags, type FigureResponse } from "./figures";
 
 /** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
 interface ReelsCardResponse {
@@ -45,8 +44,6 @@ interface ReelsCardResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
-  /** 태그된 인물 (KAN-500). 기사 피드 카드와 같은 사정으로 옵셔널이다. */
-  figures?: FigureResponse[] | null;
   /** 게시물 표시 형태 (KAN-418) — "GENERAL" | "DEBATE" | "FINISH". */
   contentType: string | null;
   /** 이 릴에 붙은 토론 (KAN-418). DEBATE·FINISH 모두 인라인으로 오고(KAN-420)
@@ -97,7 +94,6 @@ function toReelCard(r: ReelsCardResponse): ReelCard {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
-    figures: toFigureTags(r.figures),
     // 모르는 값이 와도 화면이 마감 처리로 튀지 않게 GENERAL로 떨어뜨린다
     contentType:
       r.contentType === "DEBATE" || r.contentType === "FINISH"

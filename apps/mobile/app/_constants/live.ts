@@ -22,21 +22,18 @@ export const LIVE_POLL_MS = 20_000;
 export const LIVE_MAX_RETRIES = 1;
 
 /**
- * 경기 상태별 상세 탭 구성 (KAN-458). 예정 경기는 프리뷰, 라이브·종료는
- * 요약·라인업·스탯이고 여기에 양 팀 뉴스와 채팅이 붙는다. 연기·취소는 방이
- * 열리지 않아(BE가 킥오프 시각을 믿지 않는다) 탭 없이 안내만 그린다.
- *
- * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
- * 기사 탭으로 나갔다 오는 대신 같은 지면에서 본다.
+ * 경기 상태별 상세 탭 구성 (KAN-458). 예정 경기는 프리뷰와 채팅, 라이브·종료는
+ * 요약·라인업·스탯에 채팅을 더한다. 연기·취소는 방이 열리지 않아(BE가 킥오프
+ * 시각을 믿지 않는다) 탭 없이 안내만 그린다.
  *
  * 채팅이 닫혀 있는 동안(`CHAT_ENABLED`, KAN-486)은 화면이 이 표를 직접 읽지
  * 않고 {@link matchTabsFor}로 채팅을 뺀 목록을 받는다. 표는 채팅이 돌아올 때의
  * 완성형으로 그대로 둔다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "news", "chat"],
-  LIVE: ["summary", "lineups", "stats", "news", "chat"],
-  FINISHED: ["summary", "lineups", "stats", "news", "chat"],
+  SCHEDULED: ["preview", "chat"],
+  LIVE: ["summary", "lineups", "stats", "chat"],
+  FINISHED: ["summary", "lineups", "stats", "chat"],
   POSTPONED: [],
   CANCELLED: [],
 };
@@ -62,60 +59,12 @@ export function matchTabsFor(status: MatchStatus): MatchTabKey[] {
     : VISIBLE_TABS_WITHOUT_CHAT[status];
 }
 
-/**
- * 요약·라인업·스탯 탭이 빈 자리에 세우는 문구 (KAN-484).
- *
- * 전에는 상태와 무관하게 한 문구였다. 그래서 끝난 경기에 라인업이 안 실려 오면
- * "라인업은 킥오프 20~40분 전에 공개돼요"가 떠서, 종료된 경기를 열었는데 킥오프
- * 전이라고 말하는 꼴이 됐다. 아직 올 수 있는 경우(`pending`)와 더 올 것이 없는
- * 경우(`done`)를 갈라 둔다.
- */
-const MATCH_EMPTY_LABEL: Record<
-  "summary" | "lineups" | "stats",
-  { pending: string; done: string }
-> = {
-  summary: {
-    pending: "요약 정보가 아직 없어요",
-    done: "이 경기의 요약 정보가 없어요",
-  },
-  lineups: {
-    pending: "라인업은 킥오프 20~40분 전에 공개돼요",
-    done: "이 경기의 라인업 정보가 없어요",
-  },
-  stats: {
-    pending: "스탯 정보가 아직 없어요",
-    done: "이 경기의 스탯 정보가 없어요",
-  },
-};
-
-/**
- * 빈 탭 문구를 경기 상태에 맞춰 고른다. 끝났거나 취소·연기된 경기는 더 들어올
- * 데이터가 없으므로 기다리라는 말을 하지 않는다.
- *
- * @param tab 지금 탭
- * @param status 경기 상태
- */
-export function matchEmptyLabel(
-  tab: "summary" | "lineups" | "stats",
-  status: MatchStatus,
-): string {
-  return MATCH_EMPTY_LABEL[tab][status === "LIVE" ? "pending" : "done"];
-}
-
-/**
- * 뉴스 탭이 목록을 기다리는 동안 까는 스켈레톤 줄 수 (KAN-484). 실제로 올 건수
- * (`MATCH_NEWS_COUNT`)보다 적게 둔다 — 탭 본문은 화면 한 판이 넘어가면 어차피
- * 스크롤 밖이라, 자리만 잡아 주면 된다.
- */
-export const MATCH_NEWS_SKELETON_COUNT = 4;
-
 /** 탭 라벨. */
 export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   preview: "프리뷰",
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
-  news: "뉴스",
   chat: "채팅",
 };
 
@@ -129,11 +78,3 @@ export const CHAT_REJECT_MESSAGE: Record<string, string> = {
   MESSAGE_TOO_LONG: "200자까지 보낼 수 있어요",
   RATE_LIMITED: "너무 빠르게 보내고 있어요. 잠시 후 다시 보내 주세요",
 };
-
-/**
- * 날짜 스트립이 선택 칸을 화면 안으로 되돌릴 때 남기는 좌우 여백(px).
- *
- * 0으로 두면 칸이 스트립 가장자리에 딱 붙어 다음 칸이 있는지 안 보인다.
- * 한 칸 폭(44px)의 4분의 1쯤이면 옆 칸이 살짝 비쳐 더 밀 수 있다는 게 읽힌다.
- */
-export const DATE_STRIP_KEEP_PAD = 12;

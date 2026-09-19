@@ -8,7 +8,7 @@ import {
   type MatchSummary,
 } from "@plick/domain/live";
 import { useMatches } from "@/_hooks/useMatches";
-import { LiveCrest } from "@plick/ui/LiveCrest";
+import { LiveCrest } from "./LiveCrest";
 
 /** 로딩 중 자리 개수 — 카드 폭이 고정이라 실제 개수와 무관하게 줄 높이만 지킨다. */
 const SKELETON_COUNT = 4;

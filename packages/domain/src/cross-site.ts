@@ -12,15 +12,13 @@
  * 양쪽 앱에 같은 모양으로 있는 경로인지.
  *
  * 짝이 있는 건 홈(`/`), 팀 허브(`/teams/[slug]`), 릴스(`/reels`), 기사 상세
- * (`/articles/[id]`), 인물 프로필(`/figures/[id]`)이다. 인물 프로필은 모바일에만
- * 있다가 웹에 생기면서(KAN-501) 짝이 됐다. 기사 목록(`/articles`)과 그 팀별
- * 경로는 데스크톱 전용이라 제외한다 — 모바일엔 그 라우트가 없다. 로그인·온보딩처럼
- * 세션 흐름 한복판인 경로도 건너뛰게 두면 어색해서 홈으로 보낸다.
+ * (`/articles/[id]`)다. 기사 목록(`/articles`)과 그 팀별 경로는 데스크톱 전용이라
+ * 제외한다 — 모바일엔 그 라우트가 없다. 로그인·온보딩처럼 세션 흐름 한복판인
+ * 경로도 건너뛰게 두면 어색해서 홈으로 보낸다.
  */
 function isSharedPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "/reels") return true;
   if (/^\/teams\/[^/]+$/.test(pathname)) return true;
-  if (/^\/figures\/\d+$/.test(pathname)) return true;
   return /^\/articles\/\d+$/.test(pathname);
 }
 

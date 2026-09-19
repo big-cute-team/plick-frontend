@@ -82,11 +82,20 @@ body {
  * 부모(.reel-embed) + 이중 클래스로 특이도를 올려 위 기본값을 확실히 이긴다.
  * max-width도 푼다 — 데스크톱 릴 카드는 창이 크면 폭이 550px를 넘는데,
  * react-tweet 기본 max-width 550px에 걸리면 임베드가 왼쪽에 붙고 오른쪽이
- * 빈다. 릴 임베드는 카드 전폭이 의도다 (KAN-324). */
+ * 빈다. 릴 임베드는 카드 전폭이 의도다(.hot-embed와 동일, KAN-324). */
 .reel-embed .react-tweet-theme.react-tweet-theme {
   max-width: none;
   --tweet-bg-color: var(--plk-reel-bg);
   --tweet-bg-color-hover: var(--plk-reel-bg);
+}
+
+/* 홈 핫이슈 카드 안의 임베드 (KAN-324) — 카드 가로를 꽉 채운다. react-tweet
+ * 기본 max-width 550px는 좁은 모바일 카드에선 안 걸리지만 데스크톱 히어로
+ * (~750px)에선 걸려서 좌우가 비므로 푼다. 코너 라운드는 카드(rounded-hero)와
+ * 맞춘다 — 기본 12px가 카드 22px와 어긋나 이질감이 있다(모바일 KAN-297과 동일). */
+.hot-embed .react-tweet-theme.react-tweet-theme {
+  max-width: none;
+  border-radius: var(--radius-hero);
 }
 
 /* 릴 트윗 본문·헤더 축소 (KAN-296, KAN-297) — react-tweet 본문은 rem이라

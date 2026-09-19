@@ -22,7 +22,6 @@
 import { create } from "zustand";
 import type { Filter } from "@plick/domain/types";
 import type { ScreenKey } from "@/_types/app";
-import type { TeamProfileTabKey } from "@/_types/team-profile";
 
 type ViewState = {
   /**
@@ -55,14 +54,6 @@ type ViewState = {
    */
   articlesTabScrollTops: Partial<Record<Filter, number>>;
   setArticlesTabScrollTop: (filter: Filter, top: number) => void;
-  /**
-   * 팀 프로필에서 보고 있던 탭 (KAN-514). 탭은 URL로 올리지 않기로 했는데
-   * (`TeamProfileTabs` 주석), 그러면 컴포넌트 상태라 화면을 떠나는 순간 사라진다.
-   * 인물 탭에서 선수를 눌러 들어갔다 뒤로 나오면 선수단 탭으로 돌아가 있던 게
-   * 그 증상이다. 스크롤 위치와 같은 성격의 값이라 같은 자리에 둔다.
-   */
-  teamProfileTab: TeamProfileTabKey;
-  setTeamProfileTab: (tab: TeamProfileTabKey) => void;
   /** 릴스에서 보고 있던 릴의 순번 */
   reelsIndex: number;
   setReelsIndex: (index: number) => void;
@@ -94,13 +85,10 @@ export const useViewState = create<ViewState>((set) => ({
       articlesTabScrollTops: { ...state.articlesTabScrollTops, [filter]: top },
     })),
 
-  teamProfileTab: "squad",
-  setTeamProfileTab: (teamProfileTab) => set({ teamProfileTab }),
-
   reelsIndex: 0,
   setReelsIndex: (reelsIndex) => set({ reelsIndex }),
 
-  topTicks: { home: 0, reels: 0, articles: 0, debate: 0, activity: 0 },
+  topTicks: { home: 0, reels: 0, articles: 0, debate: 0 },
   requestTop: (key) =>
     set((state) => ({
       topTicks: { ...state.topTicks, [key]: state.topTicks[key] + 1 },

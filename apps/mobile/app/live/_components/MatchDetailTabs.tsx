@@ -2,28 +2,23 @@
 
 import { useState } from "react";
 import type { LiveTeam, MatchDetail } from "@plick/domain/live";
-import { matchEmptyLabel } from "@/_constants/live";
 import type { MatchTabKey } from "@/_types/live";
 import { BenchList } from "./BenchList";
 import { GoalsBlock } from "./GoalsBlock";
 import { LineupPitch } from "./LineupPitch";
-import { MatchNewsBlock } from "./MatchNewsBlock";
 import { PlayerMatchStatsSheet } from "./PlayerMatchStatsSheet";
 import { PreviewBlocks } from "./PreviewBlocks";
 import { StatsCompare } from "./StatsCompare";
 import { TimelineBlock } from "./TimelineBlock";
 
 /**
- * 경기 상세 탭의 본문(피그마 L5~L9). 프리뷰·요약·라인업·스탯·뉴스를 그린다. 채팅 탭은
+ * 경기 상세 탭의 본문(피그마 L5~L9). 프리뷰·요약·라인업·스탯을 그린다. 채팅 탭은
  * 스크롤 영역 밖에 따로 서야 해서(`MatchChatPanel`) 여기 없다. 탭 선택은
  * `MatchDetailScreen`이 갖고 여기는 받은 탭만 그린다(KAN-458에서 제어형으로).
  * 각 블록은 서버가 조각 실패 시 null로 내릴 수 있어 블록별 빈 안내가 기본이다.
  *
  * 선수를 누르면 경기 스탯 시트가 열린다. 스탯 응답엔 팀명이 없어 눌린 자리의
  * 팀을 같이 들고 간다.
- *
- * 빈 자리 문구는 경기 상태를 본다 (KAN-484) — 끝난 경기에 라인업이 안 실려 와도
- * 킥오프를 기다리라고 말하지 않게 `matchEmptyLabel`이 갈라 준다.
  *
  * @param detail 경기 상세
  * @param tab 지금 탭. `chat`은 오지 않는다
@@ -50,15 +45,6 @@ export function MatchDetailTabs({
     );
   }
 
-  if (tab === "news") {
-    /* 목록 행(`NewsItem`)은 좌우 패딩을 부모에서 받는다 — 홈 소식 리스트와 같다 */
-    return (
-      <div className="px-edge pt-2 pb-6">
-        <MatchNewsBlock header={detail.header} />
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="px-edge flex flex-col gap-3 pt-4 pb-6">
@@ -70,9 +56,7 @@ export function MatchDetailTabs({
               <Caption status={detail.header.status} />
             </>
           ) : (
-            <EmptyBlock
-              label={matchEmptyLabel("summary", detail.header.status)}
-            />
+            <EmptyBlock label="요약 정보가 아직 없어요" />
           ))}
         {tab === "lineups" &&
           (detail.lineups ? (
@@ -92,9 +76,7 @@ export function MatchDetailTabs({
               />
             </>
           ) : (
-            <EmptyBlock
-              label={matchEmptyLabel("lineups", detail.header.status)}
-            />
+            <EmptyBlock label="라인업은 킥오프 20~40분 전에 공개돼요" />
           ))}
         {tab === "stats" &&
           (detail.stats ? (
@@ -103,9 +85,7 @@ export function MatchDetailTabs({
               <Caption status={detail.header.status} />
             </>
           ) : (
-            <EmptyBlock
-              label={matchEmptyLabel("stats", detail.header.status)}
-            />
+            <EmptyBlock label="스탯 정보가 아직 없어요" />
           ))}
       </div>
       <PlayerMatchStatsSheet
