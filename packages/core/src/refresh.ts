@@ -32,15 +32,18 @@ export interface TokenResponse {
  * refresh 토큰으로 새 토큰 쌍을 재발급받는다. 회전 방식이라 응답의 refreshToken도 새 값이다.
  *
  * @param refreshToken 현재 refresh 쿠키 값
+ * @param headers 같이 실을 헤더. 프록시가 분석 헤더 넷을 넘긴다(KAN-542, `guest.ts` 참고)
  * @returns 회전된 access·refresh 쌍
  * @throws {ApiError} refresh 토큰이 만료/무효거나 BE가 2xx가 아닐 때 — 호출부(proxy)가
  *   401만 세션 종료로 처리하고 나머지는 통과시킨다
  */
 export async function refreshTokens(
   refreshToken: string,
+  headers?: HeadersInit,
 ): Promise<TokenResponse> {
   return apiFetch<TokenResponse>("/api/v1/auth/refresh", {
     method: "POST",
+    headers,
     body: JSON.stringify({ refreshToken }),
   });
 }
@@ -81,6 +84,8 @@ const ROTATION_GRACE_MS = 30_000;
  * 브라우저 하나가 같은 인스턴스로 보내는 동시 요청이라 이걸로 덮인다.
  *
  * @param refreshToken 현재 refresh 쿠키 값
+ * @param headers 같이 실을 헤더. 묶인 형제 중 첫 호출의 것만 BE로 간다 - 같은 브라우저의
+ *   버스트라 분석 헤더 값도 같다
  * @returns 회전된 access·refresh 쌍 (형제 요청끼리 같은 값)
  * @throws {ApiError} refresh 토큰이 진짜로 만료/무효일 때 — 호출부(proxy)가 401이면
  *   1회 재시도 후 세션을 끊는다. 이 dedupe는 인스턴스 안에서만 유효해, 인스턴스
@@ -88,6 +93,7 @@ const ROTATION_GRACE_MS = 30_000;
  */
 export async function refreshTokensShared(
   refreshToken: string,
+  headers?: HeadersInit,
 ): Promise<TokenResponse> {
   const now = Date.now();
   for (const [token, entry] of rotated) {
@@ -100,7 +106,7 @@ export async function refreshTokensShared(
   const pending = inFlight.get(refreshToken);
   if (pending) return pending;
 
-  const call = refreshTokens(refreshToken)
+  const call = refreshTokens(refreshToken, headers)
     .then((tokens) => {
       rotated.set(refreshToken, { tokens, at: Date.now() });
       return tokens;

@@ -5,6 +5,12 @@
  * BE 프록시(`/be/*`)로 나가는 브라우저 fetch에 Bearer 토큰을 실어 주는 일도 여기서 한다.
  * 모바일 `proxy.ts`와 같은 로직이다(KAN-318) — refresh·guest fetcher는 `@plick/core` 공용.
  *
+ * 분석 헤더 넷(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`)
+ * 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·`X-Plick-Path`·`X-Plick-Client`·
+ * `X-Plick-Entry`를 찍는다. 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
+ * 페이지 요청은 서버 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는다
+ * (`_services/analytics-headers.ts`). 값을 정하는 자리가 하나라 두 경로가 어긋나지 않는다.
+ *
  * 왜 이 자리인가: 평범한 GET 네비게이션 중에 **응답 쿠키를 심을 수 있는 유일한 자리**다.
  * 서버 액션은 POST(버튼 클릭)에 붙고, 서버 컴포넌트는 요청 쿠키를 읽기만 한다. 그래서 "페이지를
  * 여는 순간 토큰을 갈아끼우는" 일은 여기서 한다.
@@ -20,7 +26,19 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  ANALYTICS_COOKIE_MAX_AGE,
+  ANALYTICS_HEADERS,
+  DEVICE_ID_COOKIE,
+  DIRECT_PATH,
+  PATH_COOKIE,
+  isDeviceId,
+  isPathValue,
+  readPathParam,
+  resolveEntryPoint,
+} from "@plick/core/analytics";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
+import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { issueGuest } from "@plick/core/guest";
 import { refreshTokensShared } from "@plick/core/refresh";
 import {
@@ -36,10 +54,105 @@ import {
   REFRESH_RETRY_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
 } from "@/_constants/api";
+import { PLICK_CLIENT } from "@/_constants/analytics";
 
 /**
- * BE 프록시(`/be/*`)로 나가는 요청이면 access 토큰을 Bearer로 실어 통과시킨다.
- * 그 밖의 경로면 손대지 않고 통과시킨다.
+ * 이번 요청의 분석 값 (KAN-542). 프록시 맨 앞에서 한 번 정하고, 나가는 요청 헤더와 이번
+ * 응답에 심을 쿠키 양쪽에 같은 값을 쓴다.
+ */
+interface Analytics {
+  /** 메인 API로 가는 요청에 실을 헤더. 모르는 값은 키를 빼서 BE가 `unknown`으로 접게 둔다 */
+  headers: Record<string, string>;
+  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다 */
+  cookies: { name: string; value: string; httpOnly: boolean }[];
+}
+
+/**
+ * 브라우저 `/be` fetch가 어느 화면에서 나갔는지는 Referer로만 안다. same-origin fetch라
+ * 기본 Referrer-Policy에서도 경로까지 실려 온다.
+ */
+function refererPathname(request: NextRequest): string | null {
+  const referer = request.headers.get("referer");
+  if (!referer) return null;
+  try {
+    return new URL(referer).pathname;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 쿠키와 URL에서 분석 값 넷을 정한다 (KAN-542).
+ *
+ * 기기 식별자: 쿠키가 있으면 그것. 없으면 전환 배너가 쿼리(`?did=`)로 넘긴 값을 받고,
+ * 그것도 없으면 새 UUID를 만든다. 쿼리 채택은 "쿠키가 없을 때만"이다 - 있는 사람의
+ * 식별자를 남이 보낸 링크가 덮어쓰면 안 된다. 만드는 건 페이지 요청에서만 한다. `/be`
+ * fetch는 항상 페이지 뒤에 오므로 그때는 이미 쿠키가 있고, 없는 채로 여러 fetch가 동시에
+ * 오면 각자 다른 값을 만들어 마지막 Set-Cookie만 남는 꼴이 된다. 크롤러에게는 만들지
+ * 않는다 - 게스트를 안 주는 이유와 같다(쿠키를 안 들고 다녀 요청마다 새 기기가 된다).
+ *
+ * 유입 경로: 페이지 요청의 `?path=`, 없으면 `utm_source`. 새 값이 오면 갱신하고, 없으면
+ * 쿠키 값을 유지하고, 쿠키도 없으면 `direct`다. 형식이 안 맞는 쿠키 값은 없는 것으로 본다.
+ *
+ * 진입 화면: 페이지 요청은 그 경로, `/be` fetch는 Referer 경로에서 고른다. 경로로 못 정하는
+ * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
+ *
+ * @param request 이번 요청
+ * @param isProxy `/be` fetch인가
+ * @param isCrawler 검색 크롤러인가(`CRAWLER_UA_PATTERN`)
+ */
+function resolveAnalytics(
+  request: NextRequest,
+  isProxy: boolean,
+  isCrawler: boolean,
+): Analytics {
+  const cookies: Analytics["cookies"] = [];
+
+  let deviceId = request.cookies.get(DEVICE_ID_COOKIE)?.value;
+  if (!isDeviceId(deviceId)) {
+    const handed = isProxy
+      ? null
+      : request.nextUrl.searchParams.get(DEVICE_ID_QUERY_PARAM);
+    if (isDeviceId(handed)) {
+      deviceId = handed.toLowerCase();
+    } else if (!isProxy && !isCrawler) {
+      deviceId = crypto.randomUUID();
+    } else {
+      deviceId = undefined;
+    }
+    if (deviceId) {
+      cookies.push({
+        name: DEVICE_ID_COOKIE,
+        value: deviceId,
+        httpOnly: false,
+      });
+      request.cookies.set(DEVICE_ID_COOKIE, deviceId);
+    }
+  }
+
+  const stored = request.cookies.get(PATH_COOKIE)?.value;
+  const param = isProxy ? null : readPathParam(request.nextUrl.searchParams);
+  const path = param ?? (isPathValue(stored) ? stored : DIRECT_PATH);
+  if (path !== stored && !isCrawler) {
+    cookies.push({ name: PATH_COOKIE, value: path, httpOnly: true });
+    request.cookies.set(PATH_COOKIE, path);
+  }
+
+  const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
+  const entry = screen ? resolveEntryPoint(screen) : null;
+
+  const headers: Record<string, string> = {
+    [ANALYTICS_HEADERS.path]: path,
+    [ANALYTICS_HEADERS.client]: PLICK_CLIENT,
+  };
+  if (deviceId) headers[ANALYTICS_HEADERS.device] = deviceId;
+  if (entry) headers[ANALYTICS_HEADERS.entry] = entry;
+  return { headers, cookies };
+}
+
+/**
+ * 요청 헤더에 분석 헤더 넷을 찍고(KAN-542), BE 프록시(`/be/*`)면 access 토큰까지
+ * Bearer로 실어 통과시킨다. 프록시가 돌려주는 모든 `next()`가 이 함수를 거친다.
  *
  * 왜 여기서 싣나: 브라우저 fetch(릴스 다음 페이지 등)는 HttpOnly 쿠키를 읽을 수
  * 없어 스스로 `Authorization` 헤더를 만들 수 없다. 쿠키는 same-origin이라 자동으로
@@ -50,10 +163,32 @@ import {
  *
  * 안 실으면 조회 응답의 `likedByMe`가 항상 false로 와서, 좋아요를 누른 릴이
  * 다음 페이지로 다시 실려 올 때 하트가 빈 채로 보인다 (KAN-308).
+ *
+ * 분석 헤더는 페이지 요청에도 찍는다. 그 헤더는 BE로 가는 게 아니라 이번 렌더의 서버
+ * 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는 용도다. 기기·경로·앱은
+ * 브라우저가 보낸 값이 있어도 프록시 값으로 덮는다(프록시가 주인이다). 진입 화면만은
+ * 클라이언트가 직접 실은 값을 살린다 - 경로로 못 정하는 `hot`·`share_link`가 그쪽 몫이라서다.
+ *
+ * 헤더 스냅샷은 호출 시점에 뜬다. 게스트 발급·재발급이 `request.cookies.set`으로 바꾼
+ * 쿠키를 다운스트림이 보려면 그 뒤에 불러야 한다.
+ *
+ * @param request 이번 요청. `request.cookies.set`이 끝난 뒤의 상태
+ * @param analytics `resolveAnalytics`가 정한 값
+ * @param accessToken `/be` 요청에 실을 토큰. 페이지 요청이면 생략
  */
-function authorized(request: NextRequest, accessToken: string): NextResponse {
+function forward(
+  request: NextRequest,
+  analytics: Analytics,
+  accessToken?: string,
+): NextResponse {
   const headers = new Headers(request.headers);
-  headers.set("Authorization", `Bearer ${accessToken}`);
+  for (const name of Object.values(ANALYTICS_HEADERS)) {
+    const value = analytics.headers[name];
+    if (name === ANALYTICS_HEADERS.entry && headers.has(name)) continue;
+    if (value) headers.set(name, value);
+    else headers.delete(name);
+  }
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   return NextResponse.next({ request: { headers } });
 }
 
@@ -87,15 +222,18 @@ function skipsGuestIssue(pathname: string): boolean {
  * 게스트는 참여를 앞당기는 편의지 열람의 전제가 아니라서, 여기서 막으면 읽기만
  * 하려던 사람까지 빈 화면을 보게 된다. 다음 네비게이션이 다시 시도한다.
  */
-async function startGuestSession(request: NextRequest): Promise<NextResponse> {
+async function startGuestSession(
+  request: NextRequest,
+  analytics: Analytics,
+): Promise<NextResponse> {
   let guest;
   try {
-    guest = await issueGuest();
+    guest = await issueGuest(analytics.headers);
   } catch (e) {
     console.error("[guest] 게스트 발급 실패:", e);
     /* 마감된 게스트를 갈아끼우려던 길이었다면 죽은 쿠키가 남아 다음 네비게이션이
        또 재발급 401을 맞는다. 지워서 다음 진입이 깨끗한 발급으로 시작하게 한다 */
-    const failed = NextResponse.next();
+    const failed = forward(request, analytics);
     failed.cookies.delete(AUTH_COOKIES.access);
     failed.cookies.delete(AUTH_COOKIES.refresh);
     failed.cookies.delete(GUEST_EXPIRES_COOKIE);
@@ -108,7 +246,7 @@ async function startGuestSession(request: NextRequest): Promise<NextResponse> {
   request.cookies.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt);
   request.cookies.delete(REFRESH_RETRY_COOKIE);
 
-  const response = NextResponse.next({ request });
+  const response = forward(request, analytics);
   response.cookies.set(AUTH_COOKIES.access, guest.accessToken, {
     ...AUTH_COOKIE_BASE,
     maxAge: ACCESS_TOKEN_MAX_AGE,
@@ -132,13 +270,42 @@ async function startGuestSession(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function proxy(request: NextRequest) {
+  const isProxy = request.nextUrl.pathname.startsWith(BE_PROXY_PREFIX);
+  const isCrawler = CRAWLER_UA_PATTERN.test(
+    request.headers.get("user-agent") ?? "",
+  );
+  const analytics = resolveAnalytics(request, isProxy, isCrawler);
+  const response = await route(request, isProxy, isCrawler, analytics);
+  /**
+   * 분석 쿠키는 어느 갈래로 끝났든 이번 응답에 싣는다 (KAN-542). 리다이렉트 응답에
+   * 심어도 브라우저가 저장하므로 재시도 갈래에서도 새 기기가 생기지 않는다.
+   */
+  for (const cookie of analytics.cookies) {
+    response.cookies.set(cookie.name, cookie.value, {
+      ...AUTH_COOKIE_BASE,
+      httpOnly: cookie.httpOnly,
+      maxAge: ANALYTICS_COOKIE_MAX_AGE,
+    });
+  }
+  return response;
+}
+
+/**
+ * 세션 갈래를 고른다. 분석 값은 `proxy`가 앞에서 정해 넘기고, 여기서 돌려주는 응답에
+ * 쿠키를 얹는 것도 `proxy`가 한다 - 갈래가 많아 갈래마다 심으면 빠뜨린다.
+ */
+async function route(
+  request: NextRequest,
+  isProxy: boolean,
+  isCrawler: boolean,
+  analytics: Analytics,
+): Promise<NextResponse> {
   const accessToken = request.cookies.get(AUTH_COOKIES.access)?.value;
   const refreshToken = request.cookies.get(AUTH_COOKIES.refresh)?.value;
-  const isProxy = request.nextUrl.pathname.startsWith(BE_PROXY_PREFIX);
 
-  /* access가 살아있음 → 아직 미만료. 프록시 요청이면 토큰만 실어 통과시킨다 */
+  /* access가 살아있음 → 아직 미만료. 프록시 요청이면 토큰까지 실어 통과시킨다 */
   if (accessToken) {
-    return isProxy ? authorized(request, accessToken) : NextResponse.next();
+    return forward(request, analytics, isProxy ? accessToken : undefined);
   }
 
   /**
@@ -153,14 +320,10 @@ export async function proxy(request: NextRequest) {
    * 크롤러는 제외한다 — 이유는 `CRAWLER_UA_PATTERN` 주석에 적어 뒀다.
    */
   if (!refreshToken) {
-    if (
-      isProxy ||
-      skipsGuestIssue(request.nextUrl.pathname) ||
-      CRAWLER_UA_PATTERN.test(request.headers.get("user-agent") ?? "")
-    ) {
-      return NextResponse.next();
+    if (isProxy || skipsGuestIssue(request.nextUrl.pathname) || isCrawler) {
+      return forward(request, analytics);
     }
-    return startGuestSession(request);
+    return startGuestSession(request, analytics);
   }
 
   /**
@@ -173,7 +336,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname.startsWith("/oauth")
   ) {
-    return NextResponse.next();
+    return forward(request, analytics);
   }
 
   try {
@@ -183,7 +346,7 @@ export async function proxy(request: NextRequest) {
      * 각자 부르면 하나만 성공하고 나머지는 401 → 아래 catch가 멀쩡한 세션을
      * 끊어 버린다.
      */
-    const tokens = await refreshTokensShared(refreshToken);
+    const tokens = await refreshTokensShared(refreshToken, analytics.headers);
 
     /**
      * 요청 쿠키에도 심어 이번 네비게이션의 다운스트림 렌더(서버 컴포넌트)가 새 access를 보게 하고,
@@ -201,9 +364,11 @@ export async function proxy(request: NextRequest) {
     } else {
       request.cookies.delete(GUEST_EXPIRES_COOKIE);
     }
-    const response = isProxy
-      ? authorized(request, tokens.accessToken)
-      : NextResponse.next({ request });
+    const response = forward(
+      request,
+      analytics,
+      isProxy ? tokens.accessToken : undefined,
+    );
     response.cookies.set(AUTH_COOKIES.access, tokens.accessToken, {
       ...AUTH_COOKIE_BASE,
       maxAge: ACCESS_TOKEN_MAX_AGE,
@@ -240,7 +405,7 @@ export async function proxy(request: NextRequest) {
      */
     const invalid = e instanceof ApiError && e.status === 401;
     if (!invalid || isProxy) {
-      return NextResponse.next();
+      return forward(request, analytics);
     }
     if (!request.cookies.has(REFRESH_RETRY_COOKIE)) {
       const response = NextResponse.redirect(request.nextUrl);
@@ -258,7 +423,7 @@ export async function proxy(request: NextRequest) {
      * 그 계정에 남지만 다시 연결되지는 않는다 — BE가 정한 1차 범위다.
      */
     if (request.cookies.has(GUEST_EXPIRES_COOKIE)) {
-      return startGuestSession(request);
+      return startGuestSession(request, analytics);
     }
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(AUTH_COOKIES.access);

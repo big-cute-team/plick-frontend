@@ -26,10 +26,18 @@ export interface GuestResponse {
  * 게스트 계정을 발급받는다. 같은 기기에서 다시 부르면 **새 게스트가 생기므로**
  * 호출부는 토큰 쿠키가 하나도 없을 때만 불러야 한다.
  *
+ * @param headers 같이 실을 헤더. 프록시가 분석 헤더 넷(`X-Plick-*`)을 넘긴다(KAN-542) -
+ *   BE가 발급 성공 때 내는 `guest_issued` 이벤트에 기기 식별자가 실리려면 이 요청에도
+ *   있어야 한다. 프록시는 요청 컨텍스트 밖이라 `apiFetch`의 헤더 제공자가 닿지 않는다
  * @returns 토큰 쌍과 게스트 마감 시각
  * @throws {ApiError} BE가 2xx가 아닐 때 — 특히 같은 IP 분당 60회를 넘기면 429
  *   `COMMON_RATE_LIMITED`. 호출부(proxy)는 실패를 삼키고 익명으로 통과시킨다
  */
-export async function issueGuest(): Promise<GuestResponse> {
-  return apiFetch<GuestResponse>("/api/v1/auth/guest", { method: "POST" });
+export async function issueGuest(
+  headers?: HeadersInit,
+): Promise<GuestResponse> {
+  return apiFetch<GuestResponse>("/api/v1/auth/guest", {
+    method: "POST",
+    headers,
+  });
 }
