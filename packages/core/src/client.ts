@@ -6,6 +6,10 @@
  * 토큰은 여기서 찾지 않는다. 서버에서 부를 때는 호출부가 쿠키를 읽어
  * `Authorization` 헤더로 넘기고, 브라우저에서 부를 때는 HttpOnly 쿠키를 못 읽어
  * 넘길 수가 없어서 각 앱 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
+ *
+ * 분석 헤더 넷(`X-Plick-*`, `analytics.ts`)도 호출부가 붙이지 않는다. 브라우저 fetch는
+ * 프록시가 붙이고, 서버 측 fetch는 각 앱이 `setApiFetchHeaderProvider`로 꽂아 둔 제공자가
+ * 요청 헤더에서 옮겨 싣는다(KAN-542). 호출부가 같은 이름을 직접 넘기면 그쪽이 우선이다.
  */
 
 /**
@@ -141,6 +145,57 @@ function observe(outcome: ApiFetchOutcome): void {
 }
 
 /**
+ * 서버 측 `apiFetch`에 실을 헤더를 돌려주는 제공자 (KAN-542). 각 앱이 `instrumentation.ts`에서
+ * 꽂는다. 분석 헤더 넷처럼 "모든 요청에 같이 나가야 하지만 호출부는 모르는" 값이 대상이다.
+ *
+ * 관측자와 같은 이유로 `globalThis`에 둔다 - 번들마다 이 파일의 복사본이 따로 들어가
+ * 모듈 변수는 instrumentation 번들에만 꽂힌다. 브라우저에서는 영원히 비어 있고, 이 파일은
+ * Next에 의존하지 않으므로 요청 컨텍스트(`headers()`)를 읽는 일은 제공자 쪽 몫이다.
+ */
+type ApiFetchHeaderProvider = () => Promise<Record<string, string>>;
+
+const HEADER_PROVIDER_KEY = Symbol.for("plick.apiFetchHeaderProvider");
+
+function getHeaderProvider(): ApiFetchHeaderProvider | null {
+  return (
+    (globalThis as Record<symbol, ApiFetchHeaderProvider | null | undefined>)[
+      HEADER_PROVIDER_KEY
+    ] ?? null
+  );
+}
+
+/**
+ * 서버 측 `apiFetch`가 매 호출 전에 물어볼 헤더 제공자를 등록한다. 마지막 하나만 유지한다.
+ *
+ * @param provider 호출마다 실을 헤더 이름과 값. null이면 해제
+ */
+export function setApiFetchHeaderProvider(
+  provider: ApiFetchHeaderProvider | null,
+): void {
+  (globalThis as Record<symbol, ApiFetchHeaderProvider | null>)[
+    HEADER_PROVIDER_KEY
+  ] = provider;
+}
+
+/**
+ * 제공자가 준 헤더를 호출부가 안 넘긴 이름에만 채운다. 제공자가 던지면 빈 것으로 본다 -
+ * 분석 값 때문에 서비스 요청이 실패하는 일은 없어야 한다(BE 계약과 같은 원칙).
+ */
+async function applyProvidedHeaders(headers: Headers): Promise<void> {
+  const provider = getHeaderProvider();
+  if (!provider) return;
+  let provided: Record<string, string>;
+  try {
+    provided = await provider();
+  } catch {
+    return;
+  }
+  for (const [name, value] of Object.entries(provided)) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
+}
+
+/**
  * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
  *
  * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
@@ -196,6 +251,10 @@ export async function apiFetch<T>(
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+  /* 서버에서만. 브라우저 fetch는 프록시가 `/be` 요청에 붙인다(KAN-542) */
+  if (typeof window === "undefined") {
+    await applyProvidedHeaders(headers);
   }
 
   const authorized = headers.has("Authorization");

@@ -176,6 +176,23 @@
       ],
       "port": 3013,
       "autoPort": true
+    },
+    {
+      "name": "web-8083",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8083",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3003"
+      ],
+      "port": 3003,
+      "autoPort": true
     }
   ]
 }

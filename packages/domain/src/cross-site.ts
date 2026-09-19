@@ -6,7 +6,17 @@
  * 상대 앱에 없는 경로면 홈으로 보낸다 — 링크 하나 때문에 404를 띄우지 않는다.
  *
  * 두 앱이 같은 규칙을 써야 해서(한쪽만 고치면 조용히 어긋난다) 도메인에 둔다.
+ *
+ * 기기 식별자 전달(KAN-542)도 같은 이유로 여기다. 쿠키는 도메인별이라 배너를 타면
+ * 한 사람이 두 기기로 세어진다. 보내는 쪽이 링크에 쿼리로 싣고, 받는 쪽 프록시가
+ * 자기 쿠키가 없을 때만 그 값을 채택한다. 파라미터 이름이 갈리면 조용히 두 명이 된다.
  */
+
+/**
+ * 전환 배너 링크에 기기 식별자를 싣는 쿼리 파라미터 (KAN-542). 보내는 배너와 받는
+ * 프록시가 같은 이름을 봐야 한다. 쿠키 `plick_did`의 짝이다.
+ */
+export const DEVICE_ID_QUERY_PARAM = "did";
 
 /**
  * 양쪽 앱에 같은 모양으로 있는 경로인지.
@@ -29,8 +39,17 @@ function isSharedPath(pathname: string): boolean {
  *
  * @param siteUrl 상대 앱의 대표 URL (`WEB_SITE_URL` 또는 `MOBILE_SITE_URL`)
  * @param pathname 지금 보고 있는 경로
+ * @param deviceId 이 브라우저의 기기 식별자(쿠키 `plick_did`). 있으면 쿼리로 실어
+ *   상대 도메인에서도 같은 기기로 이어지게 한다(KAN-542). 아직 없으면 생략
  * @returns 짝이 있는 화면이면 같은 경로, 아니면 상대 앱 홈
+ * @example crossSiteUrl("https://plick.co.kr", "/reels", "3f1c…") → "https://plick.co.kr/reels?did=3f1c…"
  */
-export function crossSiteUrl(siteUrl: string, pathname: string): string {
-  return isSharedPath(pathname) ? `${siteUrl}${pathname}` : siteUrl;
+export function crossSiteUrl(
+  siteUrl: string,
+  pathname: string,
+  deviceId?: string | null,
+): string {
+  const url = isSharedPath(pathname) ? `${siteUrl}${pathname}` : siteUrl;
+  if (!deviceId) return url;
+  return `${url}?${DEVICE_ID_QUERY_PARAM}=${encodeURIComponent(deviceId)}`;
 }

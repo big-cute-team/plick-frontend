@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { guestLinkNotice } from "@plick/domain/format";
 import { GUEST_NOTICE, GUEST_NOTICE_COOKIE } from "@/_constants/api";
 import { GUEST_NOTICE_DURATION_MS } from "@/_constants/feedback";
+import { readCookie } from "@/_utils/cookie";
 
 /**
  * 게스트 안내 토스트 (KAN-514) — 게스트를 방금 발급했거나, 연동했더니 기존 계정이었을 때
@@ -62,10 +63,7 @@ export function GuestNoticeToast({
 
 /** 표식 쿠키를 읽는다. 아는 값이 아니면 null — 브라우저에서 고친 값을 그대로 믿지 않는다. */
 function readNoticeCookie(): string | null {
-  const hit = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith(`${GUEST_NOTICE_COOKIE}=`));
-  const value = hit?.slice(GUEST_NOTICE_COOKIE.length + 1);
+  const value = readCookie(GUEST_NOTICE_COOKIE);
   return value === GUEST_NOTICE.issued || value === GUEST_NOTICE.existing
     ? value
     : null;
