@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { DebateLiveChip } from "@plick/ui/DebateLiveChip";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsIcon } from "@plick/ui/icons";
@@ -65,9 +66,12 @@ import { NewBadge } from "@plick/ui/NewBadge";
 export function NewsItem({
   article,
   filter = "ALL",
+  rank,
 }: {
   article: ArticleCard;
   filter?: Filter;
+  /** 목록 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543). 순위 없는 자리는 생략 */
+  rank?: number;
 }) {
   const team =
     filter !== "ALL"
@@ -109,12 +113,13 @@ export function NewsItem({
           )}
           {/* 행 전체를 덮는 기사 링크. h3는 positioned가 아니라 line-clamp의
               overflow가 ::after를 자르지 않는다 */}
-          <Link
-            href={`/articles/${article.id}`}
+          <ArticleLink
+            articleId={article.id}
+            rank={rank}
             className="after:absolute after:inset-0 after:content-['']"
           >
             {article.title}
-          </Link>
+          </ArticleLink>
         </h3>
         {summary && (
           <p className="text-body text-text-strong mt-1 truncate">{summary}</p>

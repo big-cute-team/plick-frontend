@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { STAGE_META, TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
@@ -51,9 +51,12 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  */
 export function HotCard({
   article,
+  rank,
   fetchPriority = "auto",
 }: {
   article: HotArticle;
+  /** 핫이슈 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543) */
+  rank?: number;
   /** 첫 화면에 실제로 보이는 카드만 high, 나머지는 low로 대역폭 경합을 줄인다
    *  (KAN-421). 데스크톱은 네 장이 한꺼번에 보이므로 호출부가 앞 네 장을 high로 준다 */
   fetchPriority?: "high" | "low" | "auto";
@@ -125,8 +128,9 @@ export function HotCard({
         </p>
       </div>
 
-      <Link
-        href={`/articles/${article.id}`}
+      <ArticleLink
+        articleId={article.id}
+        rank={rank}
         aria-label={article.title}
         className="focus-visible:outline-accent rounded-hero absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
       />

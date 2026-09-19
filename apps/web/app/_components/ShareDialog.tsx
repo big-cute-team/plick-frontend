@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { trackShare } from "@plick/core/events";
 import { CheckIcon, CloseIcon } from "@plick/ui/icons";
 import { COPY_FALLBACK_NOTICE } from "@/_constants/share";
 import { useCopyLink } from "@/_hooks/useCopyLink";
@@ -20,14 +21,20 @@ import { shareUrl } from "@/_utils/share";
  *
  * 주소는 마운트 뒤에 만든다. `location.origin`은 서버 렌더에 없다.
  *
+ * 복사가 끝나면 공유 이벤트(`share`)를 보낸다 (KAN-543). 팝업을 연 것이 아니라 실제로
+ * 복사된 순간이 확산 신호다. 실패(클립보드 막힘)는 보내지 않는다.
+ *
  * @param path 공유할 앱 내 경로 — 절대 주소는 여기서 origin을 붙여 만든다
+ * @param articleId 공유하는 기사(릴) id. 공유 이벤트에 싣는다
  * @param onClose X 버튼 또는 스크림 클릭으로 닫을 때
  */
 export function ShareDialog({
   path,
+  articleId,
   onClose,
 }: {
   path: string;
+  articleId: string;
   onClose: () => void;
 }) {
   /* 포털 대상(document)도 origin도 서버 렌더엔 없다. 마운트 뒤에만 그린다 */
@@ -36,6 +43,10 @@ export function ShareDialog({
 
   const url = mounted ? shareUrl(path) : "";
   const { status, copy } = useCopyLink(url);
+
+  async function handleCopy() {
+    if (await copy()) trackShare(articleId);
+  }
 
   if (!mounted) return null;
 
@@ -86,7 +97,7 @@ export function ShareDialog({
 
         <button
           type="button"
-          onClick={copy}
+          onClick={handleCopy}
           className="bg-accent text-on-accent rounded-control text-body focus-visible:outline-accent mt-3 flex w-full items-center justify-center gap-1.5 py-3 font-extrabold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-80"
         >
           {status === "copied" && <CheckIcon size={14} />}

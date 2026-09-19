@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
+import { trackScreenViewed } from "@plick/core/events";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import {
@@ -86,7 +87,7 @@ export function ReelsWorkspace({
   /* 활성 릴이 되면 조회로 기록한다 (KAN-332). 모바일은 릴마다 active prop을 이미
      들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
      뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
-  useArticleView(activeReel?.id ?? "", activeReel !== undefined);
+  useArticleView(activeReel?.id ?? "", activeReel !== undefined, activeIndex);
 
   /* 미정 상태를 실제 창 폭으로 확정한다 — 서버는 창 폭을 모르니 여기서만 알 수 있다 */
   useEffect(() => {
@@ -154,7 +155,11 @@ export function ReelsWorkspace({
       ) : (
         <ReelViewer
           reels={reels}
-          onOpenDetail={() => setDetailOpen(true)}
+          onOpenDetail={() => {
+            setDetailOpen(true);
+            /* 패널은 서버 요청 없이 열리는 화면이라 여기서 화면 전환으로 센다 (KAN-543) */
+            if (activeReel) trackScreenViewed("reels.detail", activeReel.id);
+          }}
           registerReel={registerReel}
           trailing={
             isFetchNextPageError ? (

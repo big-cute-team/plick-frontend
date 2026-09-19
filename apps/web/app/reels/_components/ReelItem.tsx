@@ -221,6 +221,7 @@ export function ReelItem({
       {shareOpen && (
         <ShareDialog
           path={reelSharePath(reel.id)}
+          articleId={reel.id}
           onClose={() => setShareOpen(false)}
         />
       )}

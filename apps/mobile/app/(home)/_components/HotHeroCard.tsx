@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { HotArticle } from "@plick/domain/types";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
@@ -38,9 +38,12 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  */
 export function HotHeroCard({
   article,
+  rank,
   fetchPriority = "auto",
 }: {
   article: HotArticle;
+  /** 핫이슈 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543) */
+  rank?: number;
   /** 첫 카드(첫 화면에 실제로 보이는 1장)만 high, 나머지는 low로 대역폭 경합을 줄인다 (KAN-421) */
   fetchPriority?: "high" | "low" | "auto";
 }) {
@@ -85,8 +88,9 @@ export function HotHeroCard({
           </p>
         )}
       </div>
-      <Link
-        href={`/articles/${article.id}`}
+      <ArticleLink
+        articleId={article.id}
+        rank={rank}
         aria-label={article.title}
         className="absolute inset-0"
       />

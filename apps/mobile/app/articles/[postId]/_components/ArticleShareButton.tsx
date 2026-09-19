@@ -41,6 +41,7 @@ export function ArticleShareButton({ articleId }: { articleId: string }) {
       {open && (
         <ShareDialog
           path={articleSharePath(articleId)}
+          articleId={articleId}
           onClose={() => setOpen(false)}
         />
       )}

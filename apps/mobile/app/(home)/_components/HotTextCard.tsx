@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { formatCount } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { ArticleLink } from "@/_components/ArticleLink";
 
 /**
  * 사진 없는 핫이슈 카드 — 캐러셀 아래에서 한 장씩 가로로 넘긴다 (KAN-480, KAN-515).
@@ -23,11 +23,19 @@ import type { HotArticle } from "@plick/domain/types";
  * 좁은 폭이라 데스크톱(두 줄)보다 짧게 한 줄만 보여준다.
  *
  * @param article - 표시할 핫이슈 기사 (사진 없는 그룹)
+ * @param rank - 핫이슈 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543)
  */
-export function HotTextCard({ article }: { article: HotArticle }) {
+export function HotTextCard({
+  article,
+  rank,
+}: {
+  article: HotArticle;
+  rank?: number;
+}) {
   return (
-    <Link
-      href={`/articles/${article.id}`}
+    <ArticleLink
+      articleId={article.id}
+      rank={rank}
       aria-label={article.title}
       className="bg-elevate-2 border-border rounded-card flex h-full flex-col gap-1 border px-3.5 py-3 active:opacity-70"
     >
@@ -46,6 +54,6 @@ export function HotTextCard({ article }: { article: HotArticle }) {
           {article.summaryShort}
         </p>
       )}
-    </Link>
+    </ArticleLink>
   );
 }

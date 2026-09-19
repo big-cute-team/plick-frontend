@@ -168,6 +168,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                       <HotHeroCard
                         key={article.id}
                         article={article}
+                        rank={i}
                         fetchPriority={i < 2 ? "high" : "low"}
                       />
                     ))}
@@ -175,8 +176,13 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                 )}
                 {noImage.length > 0 && (
                   <HotTextPager>
-                    {noImage.map((article) => (
-                      <HotTextCard key={article.id} article={article} />
+                    {/* 순위는 사진 카드 뒤에 이어 붙는다 — 핫이슈 응답 순서 그대로 (KAN-543) */}
+                    {noImage.map((article, i) => (
+                      <HotTextCard
+                        key={article.id}
+                        article={article}
+                        rank={heroes.length + i}
+                      />
                     ))}
                   </HotTextPager>
                 )}

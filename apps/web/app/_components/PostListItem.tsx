@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { NewBadge } from "@plick/ui/NewBadge";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime, isRecentlyPublished } from "@plick/domain/format";
 import type { ArticleCard, Filter } from "@plick/domain/types";
 import type { PostListVariant } from "@/_types/app";
+import { ArticleLink } from "@/_components/ArticleLink";
 
 /**
  * 변형별 밀도와 제목 heading 레벨 (KAN-380).
@@ -70,10 +70,13 @@ export function PostListItem({
   post,
   variant,
   filter = "ALL",
+  rank,
 }: {
   post: ArticleCard;
   variant: PostListVariant;
   filter?: Filter;
+  /** 목록 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543). 순위 없는 자리는 생략 */
+  rank?: number;
 }) {
   const v = VARIANT[variant];
   const Title = v.heading;
@@ -89,8 +92,9 @@ export function PostListItem({
   const summary = (post.summaryShort ?? post.summary).trim();
 
   return (
-    <Link
-      href={`/articles/${post.id}`}
+    <ArticleLink
+      articleId={post.id}
+      rank={rank}
       className={`border-border focus-visible:outline-accent flex items-start border-b transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:-outline-offset-2 ${v.row}`}
     >
       {team && (
@@ -126,6 +130,6 @@ export function PostListItem({
           </span>
         )}
       </div>
-    </Link>
+    </ArticleLink>
   );
 }
