@@ -128,8 +128,9 @@ export interface FigureProfile {
 export type TrendType = "STORY" | "TEAM" | "PLAYER";
 
 /**
- * 직전 회차 대비 순위 변화 방향 (KAN-501). `NEW`는 이번 회차에 처음 들어온
- * 항목이라 비교할 직전 순위가 없다.
+ * 순위 변화 방향 (KAN-501). 항목마다 최근 24시간 안에서 가장 최근에 순위가
+ * 움직인 변동을 준다(KAN-533). `NEW`는 비교한 회차에 그 항목이 없었다는 뜻이고
+ * 최대 24시간 유지된다.
  */
 export type TrendDirection = "UP" | "DOWN" | "SAME" | "NEW";
 
@@ -163,8 +164,10 @@ export interface TrendItem {
 }
 
 /**
- * 이슈 한 건 (KAN-522, `GET /api/v1/stories/{storyId}`). 같은 이적설을 다룬
- * 기사들을 BE가 하나로 묶은 단위다. 기사 목록은 `?storyId=` 피드로 따로 받는다.
+ * 이슈 한 건 (KAN-522, `GET /api/v1/stories/{storyId}`). "히샬리송", "맨체스터
+ * 더비" 같은 짧은 키워드로 BE가 기사를 묶은 단위다(KAN-533). 기사 하나가 키워드
+ * 두 개에 속할 수 있고, 제목은 기사가 붙으면서 짧아질 수 있다. 기사 목록은
+ * `?storyId=` 피드로 따로 받는다.
  */
 export interface Story {
   id: string;
