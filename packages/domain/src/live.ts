@@ -671,3 +671,45 @@ export function groupAbsenteesByTeam(absentees: Absentee[]): AbsenteeGroup[] {
   }
   return groups;
 }
+
+/**
+ * 피치가 그리는 팀의 방향. 아래쪽 팀은 위로 공격하고(`up`), 위쪽 팀은 아래로
+ * 공격한다(`down`).
+ */
+export type PitchFacing = "up" | "down";
+
+/**
+ * 라인업 `grid`("줄:칸", GK가 1줄)를 피치에 그릴 줄 배열로 편다. 칸 번호는
+ * 그 팀이 상대 골문을 볼 때 왼쪽이 1이라(원본 API 규약, KAN-551), 위로 공격하는
+ * 아래쪽 팀은 칸 오름차순이 곧 화면 왼쪽→오른쪽이고 아래로 공격하는 위쪽 팀은
+ * 좌우가 뒤집혀 내림차순이다. BE 배열 순서는 믿지 않고 칸으로 정렬한다.
+ * grid null(벤치)은 빠진다.
+ *
+ * @param players - 선발 11명
+ * @param facing - 이 팀이 공격하는 방향
+ * @example
+ * lineupPitchLines([gk, rb("2:4"), lb("2:1")], "up"); // [[gk], [lb, rb]]
+ * lineupPitchLines([gk, rb("2:4"), lb("2:1")], "down"); // [[gk], [rb, lb]]
+ */
+export function lineupPitchLines(
+  players: LineupPlayer[],
+  facing: PitchFacing,
+): LineupPlayer[][] {
+  const lines: LineupPlayer[][] = [];
+  for (const player of players) {
+    const line = Number(player.grid?.split(":")[0] ?? 0);
+    if (!line) continue;
+    (lines[line - 1] ??= []).push(player);
+  }
+  const direction = facing === "up" ? 1 : -1;
+  return lines
+    .filter((line) => line.length > 0)
+    .map((line) =>
+      [...line].sort((a, b) => direction * (gridColumn(a) - gridColumn(b))),
+    );
+}
+
+/** grid의 칸 번호. 없으면 0이라 정렬에서 앞으로 몰린다. */
+function gridColumn(player: LineupPlayer): number {
+  return Number(player.grid?.split(":")[1] ?? 0);
+}

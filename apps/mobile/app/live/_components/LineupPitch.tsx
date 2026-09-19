@@ -1,5 +1,6 @@
 import { TEAMS } from "@plick/domain/constants";
 import {
+  lineupPitchLines,
   ratingTone,
   type LineupPlayer,
   type LiveTeam,
@@ -9,6 +10,7 @@ import {
 /**
  * 라인업 탭의 피치 렌더(피그마 L7). `grid`는 "줄:칸" 좌표(GK가 1줄)이고,
  * 어웨이는 위쪽·홈은 아래쪽으로 반전해 서로 마주 보게 그린다(명세 규약).
+ * 줄 순서와 칸 좌우는 `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551).
  * 선수 도트를 누르면 경기 스탯 시트가 열린다.
  *
  * @param onPlayerTap - 선수 도트 탭 콜백(선수 id, 소속 팀) — 클라 탭 컨테이너가 넘긴다
@@ -25,7 +27,7 @@ export function LineupPitch({
   return (
     <section className="border-accent-border/50 bg-accent/5 rounded-card relative flex flex-col gap-4 border px-2 py-3">
       <FormationTag lineup={away} />
-      {gridLines(away.players).map((line, i) => (
+      {lineupPitchLines(away.players, "down").map((line, i) => (
         <PitchLine
           key={`away-${i}`}
           lineup={away}
@@ -37,7 +39,7 @@ export function LineupPitch({
         aria-hidden
         className="border-border/70 mx-auto -my-1 size-10 rounded-full border"
       />
-      {gridLines(home.players)
+      {lineupPitchLines(home.players, "up")
         .reverse()
         .map((line, i) => (
           <PitchLine
@@ -50,17 +52,6 @@ export function LineupPitch({
       <FormationTag lineup={home} />
     </section>
   );
-}
-
-/** grid의 줄 번호(1=GK)대로 묶는다. grid null(벤치)은 여기 오지 않는다. */
-function gridLines(players: LineupPlayer[]): LineupPlayer[][] {
-  const lines: LineupPlayer[][] = [];
-  for (const player of players) {
-    const line = Number(player.grid?.split(":")[0] ?? 0);
-    if (!line) continue;
-    (lines[line - 1] ??= []).push(player);
-  }
-  return lines.filter((line) => line.length > 0);
 }
 
 function FormationTag({ lineup }: { lineup: TeamLineup }) {
