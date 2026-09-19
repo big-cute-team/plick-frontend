@@ -54,6 +54,12 @@ BE는 모든 응답을 `{ code, message, data }` 봉투로 감싼다(스웨거 `
 BE로, 서버 측 `apiFetch`는 `instrumentation.ts`가 꽂은 헤더 제공자(`_services/analytics-headers.ts`)가
 `headers()`에서 옮겨 싣는다. 계약 상수는 `@plick/core/analytics`(ADR 0161).
 
+서버가 모르는 행동(진입, 화면 전환, 원문 클릭, 읽기 종료, 링크 복사)은 브라우저가 `POST /api/v1/events`로
+모아 보낸다. 큐와 전송은 `@plick/core/events`(`trackEvent`, `trackScreenViewed` 등), 라우트 → 화면 값 표는
+`@plick/core/screens`, 읽기 세션은 `@plick/core/reading`이다. 라우트 전환은 각 앱 루트 레이아웃의
+`AnalyticsTracker`가 자동으로 보내고, 캐시 때문에 서버 요청이 없는 화면 안 탭 전환은 그 탭 컴포넌트가
+`useScreenTabView`로 보낸다. 새 라우트를 만들면 `screens.ts` 표에 한 줄 더한다(ADR 0162).
+
 ### 페칭 도구
 
 | 표면                                  | 성격                   | 도구                |

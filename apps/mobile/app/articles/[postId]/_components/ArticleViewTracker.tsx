@@ -1,5 +1,6 @@
 "use client";
 
+import { useArticleRead } from "@/_hooks/useArticleRead";
 import { useArticleView } from "@/_hooks/useArticleView";
 
 /**
@@ -13,9 +14,13 @@ import { useArticleView } from "@/_hooks/useArticleView";
  * prefetch하면서 미리 그릴 수 있어서, 목록에 스쳐 지나간 기사가 조회로 잡힐 수 있다.
  * 이펙트는 브라우저에 실제로 마운트된 뒤에만 돈다.
  *
+ * 읽기 세션도 여기서 연다 (KAN-543). 마운트에서 언마운트까지가 머문 시간이고, 화면을
+ * 닫을 때 `read_finished`가 나간다. 끝까지 내렸는지는 본문 끝의 `ReadEndSentinel` 몫이다.
+ *
  * @param articleId 이 페이지가 보여주는 기사 id
  */
 export function ArticleViewTracker({ articleId }: { articleId: string }) {
   useArticleView(articleId);
+  useArticleRead(articleId);
   return null;
 }

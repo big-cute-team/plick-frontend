@@ -1,5 +1,6 @@
 "use client";
 
+import { useArticleRead } from "@/_hooks/useArticleRead";
 import { useArticleView } from "@/_hooks/useArticleView";
 
 /**
@@ -18,5 +19,7 @@ import { useArticleView } from "@/_hooks/useArticleView";
  */
 export function ArticleViewTracker({ articleId }: { articleId: string }) {
   useArticleView(articleId);
+  /* 읽기 세션 — 마운트에서 언마운트까지가 머문 시간이다 (KAN-543) */
+  useArticleRead(articleId);
   return null;
 }

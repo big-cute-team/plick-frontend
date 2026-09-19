@@ -139,7 +139,7 @@ export default async function TeamProfilePage({
           </Link>
         </header>
 
-        <TeamProfileTabs squad={squad} figures={profile.figures} />
+        <TeamProfileTabs slug={slug} squad={squad} figures={profile.figures} />
       </ScrollArea>
       <TabBar />
     </AppShell>

@@ -63,11 +63,13 @@ const ShareDialog = dynamic(
  * 좋아요 상태는 여기서 들고 있다 (KAN-308). 비로그인 팝업이 레일이 아니라 이 층에
  * 붙는 이유는 {@link ReelActionRail} 주석에 있다. 공유 팝업(KAN-312)도 같은 자리에 둔다.
  *
- * 활성 슬라이드가 되면 조회로 기록한다 (KAN-310, {@link useArticleView}).
+ * 활성 슬라이드가 되면 조회로 기록한다 (KAN-310, {@link useArticleView}). 피드 안
+ * 순위(`rank`)를 같이 실어 서버가 `feed_rank`로 남긴다 (KAN-543).
  *
  * memo로 감싼다 (KAN-430) — 피드가 렌더될 때(개폐·activeIndex 변화) props가 그대로인
  * 릴은 건너뛴다. 시트가 붙은 릴만 titleMotion 객체가 갈리고 나머지는 null로 안정된다.
  *
+ * @param rank - 피드 안 순위(0부터). 조회 기록에 실린다
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
  * @param onOpenDetail - 릴 화면 어디든(버튼·링크 제외) 또는 댓글 아이콘 탭 시 호출. 어느 릴인지와
@@ -86,6 +88,7 @@ const ShareDialog = dynamic(
  */
 export const ReelItem = memo(function ReelItem({
   reel,
+  rank,
   active,
   onOpenDetail,
   titleMotion,
@@ -94,6 +97,7 @@ export const ReelItem = memo(function ReelItem({
   inWindow = true,
 }: {
   reel: ReelCard;
+  rank: number;
   active: boolean;
   onOpenDetail: (reel: ReelCard, lift: number) => void;
   titleMotion: TitleMotion | null;
@@ -114,8 +118,9 @@ export const ReelItem = memo(function ReelItem({
   if (nearActive && !embedFetchStarted) setEmbedFetchStarted(true);
 
   /* 활성 슬라이드가 되는 즉시 조회로 기록한다 (KAN-310). 릴스 전용 엔드포인트가
-     없어 기사와 같은 걸 쓴다 — 릴과 기사가 같은 articleSummaryId 체계다 */
-  useArticleView(reel.id, active);
+     없어 기사와 같은 걸 쓴다 — 릴과 기사가 같은 articleSummaryId 체계다. 피드 안
+     순위를 같이 실어 서버가 `feed_rank`로 남긴다 (KAN-543) */
+  useArticleView(reel.id, active, rank);
 
   /** 임베드 영역의 아래선(제목 윗선까지)까지의 거리(px, 릴 바닥 기준) */
   const [regionBottom, setRegionBottom] = useState(0);
@@ -352,6 +357,7 @@ export const ReelItem = memo(function ReelItem({
       {shareOpen && (
         <ShareDialog
           path={reelSharePath(reel.id)}
+          articleId={reel.id}
           onClose={() => setShareOpen(false)}
         />
       )}

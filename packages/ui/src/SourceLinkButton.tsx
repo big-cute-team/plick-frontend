@@ -20,21 +20,28 @@ import { ReporterTierBadge } from "./ReporterTierBadge";
  * 팝오버 바탕·닫힘 규칙(바깥 탭·Escape·pointerdown 전파 차단)은
  * `ReporterListButton`과 같다.
  *
+ * 원문으로 나가는 클릭은 `onOpen`으로 알린다 (KAN-543) — 직행 링크든 팝오버의 기자별
+ * 링크든 같은 콜백이다. 이동을 막지 않고 알리기만 하므로 새 탭 열기도 그대로다.
+ * 무엇을 기록할지는 호출부 몫이라 이 컴포넌트는 분석 모듈을 모른다.
+ *
  * @param label - 버튼 글자 (모바일 기사 세부 "원문", 나머지 "출처 원문 보기")
  * @param sourceUrl - 대표 원문 링크. 팝오버를 열 수 없을 때의 직행 링크.
  * @param reporters - 기사에 실린 기자 전원. 릴 세부는 상세를 받기 전 undefined.
  * @param className - 래퍼에 덧붙일 클래스(정렬용 `ml-auto` 등)
+ * @param onOpen - 원문 링크를 눌렀을 때. 이동할 주소를 받는다
  */
 export function SourceLinkButton({
   label,
   sourceUrl,
   reporters,
   className = "",
+  onOpen,
 }: {
   label: string;
   sourceUrl: string | null;
   reporters?: { name: string; tier: number | null; sourceUrl: string | null }[];
   className?: string;
+  onOpen?: (href: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
@@ -70,6 +77,7 @@ export function SourceLinkButton({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => onOpen?.(href)}
         className={`${trigger} ${className}`}
       >
         <LinkOutIcon size={13} />
@@ -106,7 +114,10 @@ export function SourceLinkButton({
               href={reporter.sourceUrl as string}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                onOpen?.(reporter.sourceUrl as string);
+              }}
               className="group hover:bg-elevate-2 active:bg-elevate-2 flex items-center gap-2 px-3.5 py-2"
             >
               <ReporterTierBadge reporter={reporter} />

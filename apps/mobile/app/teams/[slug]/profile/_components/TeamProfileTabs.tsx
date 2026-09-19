@@ -3,6 +3,7 @@
 import { LIVE_SEASON_LABEL, type TeamSquad } from "@plick/domain/live";
 import type { FigureTag } from "@plick/domain/types";
 import { TEAM_PROFILE_TAB_LABEL } from "@/_constants/team-profile";
+import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import { useViewState } from "@/_stores/view-state";
 import { SquadGrid } from "./SquadGrid";
 import { TeamFiguresList } from "./TeamFiguresList";
@@ -28,18 +29,23 @@ import { TeamFiguresList } from "./TeamFiguresList";
  * 선수단 fetch만 실패하면 그 탭 자리에만 실패를 보여준다 — 라이브 API는 외부
  * (API-Football) 의존이라 인물 사전보다 덜 미덥고, 인물 탭까지 죽일 이유가 없다.
  *
+ * @param slug 팀 slug. 탭 전환 이벤트의 ref (KAN-543)
  * @param squad 이번 시즌 등록 명단. 못 받았으면 null
  * @param figures 기사에서 뽑은 소속 인물
  */
 export function TeamProfileTabs({
+  slug,
   squad,
   figures,
 }: {
+  slug: string;
   squad: TeamSquad | null;
   figures: FigureTag[];
 }) {
   const active = useViewState((state) => state.teamProfileTab);
   const setActive = useViewState((state) => state.setTeamProfileTab);
+  /* 탭 전환은 서버 요청이 없어 여기서 화면 전환으로 센다 (KAN-543) */
+  useScreenTabView("team_profile", active, slug);
 
   return (
     <>

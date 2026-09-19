@@ -144,6 +144,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                           <HotCard
                             key={article.id}
                             article={article}
+                            rank={i}
                             fetchPriority={i < 4 ? "high" : "low"}
                           />
                         ))}
@@ -152,9 +153,13 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                     {noImage.length > 0 && (
                       /* 좁은 화면에서는 한 열로 쌓이고 데스크톱에서만 3열이 된다 */
                       <ul className="pt-gap-lg grid grid-cols-1 gap-4 lg:grid-cols-3">
-                        {noImage.map((article) => (
+                        {/* 순위는 사진 카드 뒤에 이어 붙는다 — 핫이슈 응답 순서 그대로 (KAN-543) */}
+                        {noImage.map((article, i) => (
                           <li key={article.id}>
-                            <HotTextCard article={article} />
+                            <HotTextCard
+                              article={article}
+                              rank={heroes.length + i}
+                            />
                           </li>
                         ))}
                       </ul>

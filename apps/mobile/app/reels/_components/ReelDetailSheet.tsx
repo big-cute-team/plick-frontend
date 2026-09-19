@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { CloseIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
-import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { formatCount } from "@plick/domain/format";
+import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { EntityChips } from "@/_components/EntityChips";
 import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
@@ -134,8 +134,10 @@ export function ReelDetailSheet({
               넘기면 접는다 — 원문 버튼은 마지막 줄 오른쪽에 남는다 */}
           <div className="flex flex-wrap items-center gap-2">
             <EntityChips hashtags={reel.hashtags} figures={reel.figures} />
-            {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365) */}
-            <SourceLinkButton
+            {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365).
+                누르면 원문 클릭 이벤트가 나간다 (KAN-543) */}
+            <ArticleSourceLink
+              articleId={reel.id}
               label="출처 원문 보기"
               sourceUrl={reel.sourceUrl}
               reporters={reporters}

@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useMyActivityCounts } from "@/_hooks/useMyActivityCounts";
+import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import { useViewState } from "@/_stores/view-state";
 import type { ActivityTab, InitialActivity } from "@/_types/activity";
 import { activityTabFrom, activityTabPath } from "@/_utils/activity";
@@ -28,6 +29,8 @@ import { MyCommentsList } from "./MyCommentsList";
 export function ActivityFeed({ initial }: { initial?: InitialActivity }) {
   const searchParams = useSearchParams();
   const tab = activityTabFrom(searchParams.get("tab"));
+  /* 탭은 `?tab=`이라 pathname이 안 바뀐다 — 라우트 추적이 못 보니 여기서 센다 (KAN-543) */
+  useScreenTabView("me_activity", tab);
   const counts = useMyActivityCounts(
     initial && { counts: initial.counts, fetchedAt: initial.fetchedAt },
   );
