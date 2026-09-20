@@ -21,15 +21,21 @@ export type MatchStatus =
  * 라이브 화면에 등장하는 팀 참조. `id`·`code`가 null이면 빅6 밖 팀이다 —
  * 마이팀 강조·스쿼드 진입(`/live/teams/[teamId]`)이 불가능하고 크레스트는
  * CDN `logo`, 그것도 실패하면 `shortName` 이니셜 제네릭으로 그린다.
+ *
+ * 표기는 자리마다 다르다(BE 명세 공통 사항): 경기 목록 카드는 `shortName`,
+ * 상세 헤더·라인업·순위표는 전체명 `name`이다.
  */
 export interface LiveTeam {
   /** BE teams.team_id — 빅6 밖이면 null */
   id: number | null;
   /** 빅6 로컬 크레스트 코드(`TEAMS` 레지스트리 키) — 빅6 밖이면 null */
   code: TeamCode | null;
-  /** 영문 팀명 그대로 — 한글 번역은 대회명에만 있다(BE 규약) */
+  /** 전체 팀명. 서버가 사전으로 한글 치환하고 미등재 팀은 영문 폴백이다(KAN-528) */
   name: string;
-  /** 제네릭 크레스트·타임라인에 넣는 축약 코드 (예: COV, BHA) */
+  /**
+   * 카드용 영문 3글자 코드(예: MCI, BRE, AVL). 서버가 전 팀에 준다(KAN-550).
+   * 목록 카드·같은 날 경기 스트립·타임라인·제네릭 크레스트가 쓴다.
+   */
   shortName: string;
   /** API-Football CDN 로고 URL — 빅6는 로컬 에셋을 써서 무시한다 */
   logo: string | null;
@@ -303,37 +309,19 @@ export const POSITION_LABEL: Record<Position, string> = {
 export const POSITION_ORDER: Position[] = ["GK", "DF", "MF", "FW"];
 
 /**
- * 빅6 밖 EPL 팀의 축약 코드. API-Football 팀명 기준이고 없으면
- * {@link teamShortName}이 이름에서 만든다.
- */
-const TEAM_SHORT_NAMES: Record<string, string> = {
-  "Aston Villa": "AVL",
-  Newcastle: "NEW",
-  Brighton: "BHA",
-  "Nottingham Forest": "NFO",
-  "West Ham": "WHU",
-  "Crystal Palace": "CRY",
-  Bournemouth: "BOU",
-  Fulham: "FUL",
-  Brentford: "BRE",
-  Everton: "EVE",
-  Wolves: "WOL",
-  Leeds: "LEE",
-  Burnley: "BUR",
-  Sunderland: "SUN",
-};
-
-/**
- * 팀명 → 축약 코드. 알려진 EPL 팀은 표에서, 그 밖(컵 상대·친선 상대)은 첫
- * 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
+ * 팀명 → 축약 코드 폴백. 첫 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
+ *
+ * 서버가 카드용 코드 `shortName`을 전 팀에 주게 되면서(KAN-550) 정상 경로에선
+ * 쓰지 않는다. `@plick/core/live`가 그 필드가 없는 구버전 응답과, 팀명만 실리는
+ * 상대 전적(headToHead) 줄에서만 부른다(KAN-553). 예전에
+ * 여기 있던 빅6 밖 EPL 팀 영문명 표(Brighton → BHA 등)는 서버 팀명이 한글로
+ * 바뀌어(KAN-528) 한 번도 맞지 않게 됐고 서버 코드가 대신하므로 지웠다.
  *
  * @example
  * teamShortName("Coventry"); // "COV"
- * teamShortName("Aston Villa"); // "AVL"
+ * teamShortName("브라이튼"); // "브라이" — 한글은 코드가 안 되니 폴백일 뿐이다
  */
 export function teamShortName(name: string): string {
-  const known = TEAM_SHORT_NAMES[name];
-  if (known) return known;
   const word = name.split(/\s+/).find((w) => w.length >= 3) ?? name;
   return word.slice(0, 3).toUpperCase();
 }
@@ -617,9 +605,10 @@ export function featuredMatch(matches: MatchSummary[]): MatchSummary | null {
 }
 
 /**
- * 팀 한 줄 표기 (KAN-504) — 빅6는 한글 약칭, 빅6 밖은 BE가 준 영문명 그대로다.
- * `LiveTeam.name`이 영문 고정이라(BE 규약) 좁은 배너에서는 빅6만이라도 한글로
- * 줄여야 두 팀 이름과 스코어가 한 줄에 들어간다.
+ * 팀 한 줄 표기 (KAN-504) — 빅6는 레지스트리의 한글 약칭(맨시티, 토트넘),
+ * 빅6 밖은 BE가 준 `name` 그대로다. 좁은 홈 배너에서 두 팀 이름과 스코어가
+ * 한 줄에 들어가게 빅6만이라도 줄인다. 서버 `name`이 한글로 바뀐 뒤(KAN-528)에도
+ * 전체명(맨체스터 시티)보다 약칭이 짧아 그대로 둔다.
  */
 export function liveTeamLabel(team: LiveTeam): string {
   return team.code ? TEAMS[team.code].name : team.name;
