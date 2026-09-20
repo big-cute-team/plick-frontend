@@ -46,7 +46,11 @@ export function MatchCard({ match }: { match: MatchSummary }) {
   );
 }
 
-/** 팀 한 줄 — 빅6 밖 팀명은 디자인대로 낮춰 그린다. */
+/**
+ * 팀 한 줄 — 표기는 서버가 준 영문 3글자 코드 `shortName`이다(KAN-553, 피그마
+ * L1의 CHE·BRE). 전체 한글명 `name`은 상세 헤더·라인업·순위표 몫이다. 빅6 밖
+ * 팀은 디자인대로 낮춰 그린다.
+ */
 function TeamLine({
   match,
   side,
@@ -61,7 +65,7 @@ function TeamLine({
       <span
         className={`text-body-lg truncate font-semibold ${team.code ? "text-text" : "text-text-3"}`}
       >
-        {team.name}
+        {team.shortName}
       </span>
     </span>
   );
