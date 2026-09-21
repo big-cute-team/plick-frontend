@@ -73,7 +73,11 @@ function stripLiterals(command) {
     /<<-?\s*(['"]?)(\w+)\1[\s\S]*?\n\2(?=\n|$)/g,
     " <<HEREDOC ",
   );
-  s = s.replace(/'[^']*'/g, "''").replace(/"(?:[^"\\]|\\.)*"/g, '""');
+  // 큰따옴표와 작은따옴표를 한 정규식으로 처리한다. 따로 두 번 돌리면 "it's" 안의 아포스트로피가
+  // 뒤의 'x'까지 한 리터럴로 묶어 그 사이 명령을 지워 버린다(2차 헤드리스 리뷰가 잡은 우회).
+  s = s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, (m) =>
+    m[0] === '"' ? '""' : "''",
+  );
   return s;
 }
 
@@ -117,7 +121,10 @@ function checkBash(command, cwd) {
   const commitPart = cmd.match(
     new RegExp(GIT("commit").source + String.raw`[^|;&]*`),
   )?.[0];
-  if (commitPart && /(^|\s)(-n|--no-verify)(\s|$)/.test(commitPart)) {
+  if (
+    commitPart &&
+    /(^|\s)(--no-verify|-[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(commitPart)
+  ) {
     return "git commit --no-verify는 husky 커밋 훅(lint-staged)을 우회한다. 훅이 실패하면 원인을 고친 뒤 다시 커밋한다.";
   }
 
@@ -131,8 +138,22 @@ function checkBash(command, cwd) {
     }
   }
 
-  if (GIT("(commit|merge|push|rebase|cherry-pick|reset|revert)").test(cmd)) {
-    const branch = currentBranch(cwd);
+  const historyOp = GIT("(commit|merge|push|rebase|cherry-pick|reset|revert)");
+  if (historyOp.test(cmd)) {
+    // 같은 명령 안에서 보호 브랜치로 옮겨 탄 뒤 히스토리를 만지는 형태는 현재 브랜치와 무관하게 막는다.
+    const switchesToProtected = new RegExp(
+      String.raw`\bgit${GLOBAL_OPTS}\s+(switch|checkout)\s+(${PROTECTED_BRANCHES.join("|")})\b[\s\S]*` +
+        historyOp.source,
+    );
+    if (switchesToProtected.test(cmd)) {
+      return "같은 명령 안에서 main이나 develop으로 옮겨 탄 뒤 commit, merge, push를 하지 않는다. feature/KAN-<번호>-<설명> 브랜치에서 작업한다.";
+    }
+    // 반대로 새 브랜치를 먼저 따고(`switch -c`, `checkout -b`) 이어서 커밋하는 건 정상 흐름이라 현재 브랜치 검사를 건너뛴다.
+    const createsBranchFirst = new RegExp(
+      String.raw`\bgit${GLOBAL_OPTS}\s+(switch\s+-c|checkout\s+-b)\s+\S+[\s\S]*` +
+        historyOp.source,
+    );
+    const branch = createsBranchFirst.test(cmd) ? "" : currentBranch(cwd);
     if (PROTECTED_BRANCHES.includes(branch)) {
       return `현재 브랜치가 ${branch}다. main과 develop에서는 commit, merge, push, rebase를 하지 않는다. develop에서 feature/KAN-<번호>-<설명> 브랜치를 먼저 딴다.`;
     }

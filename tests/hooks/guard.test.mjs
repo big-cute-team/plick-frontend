@@ -127,6 +127,32 @@ describe("guard: 리터럴 안의 글자는 보지 않는다", () => {
   });
 });
 
+describe("guard: 리뷰 게이트가 찾은 우회", () => {
+  it("아포스트로피가 든 큰따옴표 문자열 뒤의 push도 잡는다", () => {
+    assert.equal(
+      run(bash(`echo "it's" && git push origin main && echo 'x'`)).code,
+      2,
+    );
+  });
+  it("-nm처럼 결합된 -n도 막고, -m 단독은 통과한다", () => {
+    assert.equal(run(bash("git commit -nm x")).code, 2);
+    assert.equal(run(bash("git commit -an -m x")).code, 2);
+    assert.equal(run(bash("git commit -am x")).code, 0);
+  });
+  it("같은 명령에서 보호 브랜치로 옮겨 탄 뒤 commit하면 막는다", () => {
+    assert.equal(run(bash("git checkout main && git commit -m x")).code, 2);
+    assert.equal(run(bash("git switch develop; git merge feature/x")).code, 2);
+  });
+  it("develop에서 새 브랜치를 따고 이어서 commit하는 건 통과한다", () => {
+    assert.equal(
+      run(
+        bash("git switch -c feature/KAN-3-z && git commit -m x", repos.develop),
+      ).code,
+      0,
+    );
+  });
+});
+
 describe("guard: 보호 브랜치 push", () => {
   it("origin develop으로의 push를 막는다", () => {
     assert.equal(run(bash("git push origin develop")).code, 2);
