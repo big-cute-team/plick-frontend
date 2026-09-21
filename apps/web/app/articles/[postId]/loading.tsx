@@ -4,8 +4,9 @@ import { SiteHeader } from "@/_components/SiteHeader";
 /**
  * 기사 세부 로딩 스켈레톤 (KAN-322) — 상세 fetch(`GET /api/v1/articles/{id}`)
  * 동안 실제 본문(ArticleMain)과 같은 구성으로 자리를 잡아둔다: 배지 줄(로고+단계) /
- * 제목 / 기자 라인 / 본문 문단 / 해시태그 / 함께 보면 좋은 기사 / 액션 /
- * 댓글 헤더·입력. GNB는 정적이라 실물을 그대로 그린다.
+ * 제목 / 기자 라인 / 본문 문단 / 해시태그 / 액션 / 댓글 헤더·입력. GNB는
+ * 정적이라 실물을 그대로 그린다. 해시태그와 액션 사이에 두던 "함께 보면 좋은
+ * 기사" 자리는 실물이 빠지면서(KAN-563) 같이 뺐다.
  *
  * 대표 이미지 자리는 없다 — 발행 기사 사진이 전부 null이라 실제 화면도 텍스트만
  * 흐른다. 사이드바도 준비 중 문구뿐이라 스켈레톤 없이 자리만 비워 둔다.
@@ -43,11 +44,6 @@ export default function ArticleDetailLoading() {
               <div className="mt-5 flex gap-2">
                 <div className="bg-elevate rounded-pill h-7 w-20" />
                 <div className="bg-elevate rounded-pill h-7 w-24" />
-              </div>
-              {/* 함께 보면 좋은 기사 — 제목 + 준비 중/카드 자리 */}
-              <div className="mt-5 flex flex-col gap-3.5">
-                <div className="bg-elevate rounded-pill h-6 w-40" />
-                <div className="bg-elevate rounded-pill h-5 w-44 self-center" />
               </div>
               {/* 좋아요·공유 액션 */}
               <div className="border-border mt-4 flex items-center gap-2.5 border-b pb-4">
