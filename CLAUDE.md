@@ -27,7 +27,9 @@ plugins/
 scripts/
   be-verify/          로컬 BE 검증 도구 (JWT 민팅·공유 DB psql·리포트 스키마)
   review/             PR 전 헤드리스 리뷰 게이트
+  e2e/                E2E 실패 묶음 변환(bundle.mjs)과 치유 에이전트(heal.sh)
 tests/hooks/          훅 회귀 테스트 (pnpm test:hooks, CI 포함)
+tests/e2e/            배포된 dev를 타는 Playwright QA 자동화 (@plick/e2e, PR 게이트 아님)
 ```
 
 ## 명령어 (루트에서)
@@ -40,6 +42,7 @@ pnpm lint               # ESLint
 pnpm check-types        # 타입 검사
 pnpm format             # Prettier 적용 (확인만: format:check)
 pnpm test:hooks         # Claude Code 훅 회귀 테스트
+pnpm test:e2e           # 배포된 dev 상대 E2E (화면 보며: pnpm --filter @plick/e2e test:ui)
 ```
 
 ## 컨벤션
@@ -150,3 +153,7 @@ CI(format:check, test:hooks, lint, check-types, build)는 로컬에서 같은 �
 - 화면 하나를 티켓과 피그마로 구현: 모바일은 `/screen`, 데스크톱 웹은 `/web-screen`
 - 코드베이스 전수 감사(중복, 배치, 컨벤션 리스트업): `/audit`(`code-audit` 스킬)
 - 하네스를 다른 저장소에 설치: `plugins/plick-harness/README.md`
+- E2E QA 자동화(배포된 dev 대상, 실패 리플레이, 치유 에이전트): [tests/e2e/README.md](tests/e2e/README.md),
+  판단 근거는 [ADR 0169](docs/adr/0169-e2e-qa-automation.md). dev 배포 뒤와 매일 아침 `E2E` 워크플로우가
+  돌고 PR은 막지 않는다. 깨지면 `node scripts/e2e/bundle.mjs`로 묶음을 만들고 `./scripts/e2e/heal.sh`가
+  tests/e2e만 고친다

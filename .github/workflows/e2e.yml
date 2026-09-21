@@ -1,0 +1,108 @@
+name: E2E
+
+# 배포된 dev를 바깥에서 타는 QA 자동화 (KAN-565). PR을 막지 않는다.
+# 세 가지 계기로 돈다. dev 배포(Deploy 워크플로우, develop)가 끝난 직후, 매일 아침 9시(KST),
+# 그리고 수동 실행. 수동 실행은 대상(dev/prod)을 고를 수 있고 prod는 읽기 전용 스모크만 있다.
+#
+# 실패하면 Step Summary에 scripts/e2e/bundle.mjs 요약(실패 스텝, 찾던 요소, 오류)을 붙이고
+# trace·영상·스크린샷을 아티팩트로 올린다. 로컬에서 고칠 때는 아티팩트를 받아
+# `pnpm --filter @plick/e2e exec playwright show-trace <trace.zip>` 으로 연다.
+on:
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
+    branches: [develop]
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "대상 환경"
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+concurrency:
+  group: e2e-${{ github.event.inputs.target || 'dev' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright (${{ github.event.inputs.target || 'dev' }})
+    # 배포가 실패한 뒤에는 돌 이유가 없다. schedule·dispatch는 conclusion이 없어 그대로 통과한다.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_TARGET: ${{ github.event.inputs.target || 'dev' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm --filter @plick/e2e exec playwright install --with-deps chromium
+
+      # Blue/Green 전환 직후 잠깐 이전 인스턴스가 응답할 수 있다. 헬스가 200을 주는지만 확인하고
+      # 짧게 기다린다. 배포 SHA를 응답에 싣지 않아 버전 대조는 못 한다(ADR 0169 TODO).
+      - name: Wait for targets
+        run: |
+          if [ "$E2E_TARGET" = "prod" ]; then
+            urls="https://m.plick.co.kr https://plick.co.kr"
+          else
+            urls="https://dev-m.plick.co.kr https://dev.plick.co.kr"
+          fi
+          for u in $urls; do
+            for i in $(seq 1 12); do
+              code="$(curl -s -o /dev/null -w '%{http_code}' "$u/api/health" || true)"
+              [ "$code" = "200" ] && break
+              echo "$u/api/health -> $code, retry $i"; sleep 10
+            done
+          done
+          [ "${{ github.event_name }}" = "workflow_run" ] && sleep 30 || true
+
+      - name: Run E2E
+        id: run
+        continue-on-error: true
+        run: pnpm --filter @plick/e2e test
+
+      - name: Summarize failures
+        if: always()
+        run: |
+          set +e
+          node scripts/e2e/bundle.mjs > /dev/null
+          code=$?
+          cat .e2e/failure.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ env.E2E_TARGET }}-${{ github.run_number }}
+          path: |
+            tests/e2e/playwright-report
+            tests/e2e/test-results
+            .e2e
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Fail if tests failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1

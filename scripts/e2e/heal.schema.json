@@ -1,0 +1,39 @@
+{
+  "title": "E2E 치유 결과",
+  "type": "object",
+  "required": ["verdicts"],
+  "additionalProperties": false,
+  "properties": {
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["test", "kind", "reason", "changedFiles", "rerun"],
+        "additionalProperties": false,
+        "properties": {
+          "test": {
+            "type": "string",
+            "description": "failure.json의 title 그대로"
+          },
+          "kind": {
+            "enum": ["test-drift", "product-bug", "flake"],
+            "description": "test-drift: 제품은 맞고 테스트가 옛 화면을 본다. product-bug: 제품이 깨졌다, 테스트는 손대지 않는다. flake: 재실행에 통과했다"
+          },
+          "reason": {
+            "type": "string",
+            "description": "스냅샷과 오류에서 무엇을 보고 그렇게 판단했는지"
+          },
+          "changedFiles": { "type": "array", "items": { "type": "string" } },
+          "rerun": {
+            "enum": ["passed", "failed", "not-run"],
+            "description": "고친 뒤 그 테스트만 다시 돌린 결과"
+          },
+          "suspect": {
+            "type": ["string", "null"],
+            "description": "product-bug일 때 의심되는 앱 파일이나 화면"
+          }
+        }
+      }
+    }
+  }
+}

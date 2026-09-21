@@ -9,7 +9,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,css,md}\"",
     "check-types": "turbo run check-types",
     "prepare": "husky",
-    "test:hooks": "node --test tests/hooks/*.test.mjs"
+    "test:hooks": "node --test tests/hooks/*.test.mjs",
+    "test:e2e": "pnpm --filter @plick/e2e test"
   },
   "devDependencies": {
     "husky": "^9.1.7",
