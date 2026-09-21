@@ -39,12 +39,7 @@ export function LineupCard({
 
   return (
     <section className="bg-elevate rounded-card flex flex-col gap-4 p-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-title text-text font-bold">라인업</h2>
-        <span className="text-body text-text-4">
-          선수를 누르면 경기 스탯을 볼 수 있어요
-        </span>
-      </div>
+      <h2 className="text-title text-text font-bold">라인업</h2>
       <div className="border-accent-border/50 bg-accent/5 rounded-card flex flex-col gap-7 border px-4 py-6">
         <FormationTag lineup={away} />
         {lineupPitchLines(away.players, "down").map((line, i) => (

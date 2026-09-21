@@ -67,7 +67,6 @@ export function MatchDetailTabs({
             <>
               <GoalsBlock header={detail.header} goals={detail.goals} />
               <TimelineBlock header={detail.header} events={detail.events} />
-              <Caption status={detail.header.status} />
             </>
           ) : (
             <EmptyBlock
@@ -98,10 +97,7 @@ export function MatchDetailTabs({
           ))}
         {tab === "stats" &&
           (detail.stats ? (
-            <>
-              <StatsCompare stats={detail.stats} />
-              <Caption status={detail.header.status} />
-            </>
+            <StatsCompare stats={detail.stats} />
           ) : (
             <EmptyBlock
               label={matchEmptyLabel("stats", detail.header.status)}
@@ -115,17 +111,6 @@ export function MatchDetailTabs({
         onClose={() => setPlayer(null)}
       />
     </>
-  );
-}
-
-/** 라이브 중에만 폴링 안내를, 종료 후엔 확정 안내를 단다(피그마 L6·L9). */
-function Caption({ status }: { status: MatchDetail["header"]["status"] }) {
-  return (
-    <p className="text-caption text-text-4 text-center">
-      {status === "LIVE"
-        ? "라이브 중에는 20초마다 자동 갱신돼요"
-        : "경기가 끝났어요 · 선수 평점은 확정 값이에요"}
-    </p>
   );
 }
 

@@ -1,6 +1,5 @@
 import { ApiError } from "@plick/core/client";
 import { getTrends, TRENDS_COUNT } from "@plick/core/trends";
-import { formatRelativeTime } from "@plick/domain/format";
 import type { TrendRanking } from "@plick/domain/types";
 import { TrendingEmptyRow } from "@/_components/TrendingEmptyRow";
 import { TrendingRow } from "@/_components/TrendingRow";
@@ -89,25 +88,18 @@ export async function TrendingSection() {
           아직 집계된 순위가 없어요.
         </p>
       ) : (
-        <>
-          <ol>
-            {ranking.items.map((item) => (
-              <TrendingRow
-                key={item.entityId}
-                item={item}
-                type={ranking.type === "TEAM" ? "TEAM" : "STORY"}
-              />
-            ))}
-            {emptyRanks.map((rank) => (
-              <TrendingEmptyRow key={rank} rank={rank} />
-            ))}
-          </ol>
-          {ranking.collectedAt && (
-            <p className="text-caption text-text-4 text-right">
-              {formatRelativeTime(ranking.collectedAt)} 집계
-            </p>
-          )}
-        </>
+        <ol>
+          {ranking.items.map((item) => (
+            <TrendingRow
+              key={item.entityId}
+              item={item}
+              type={ranking.type === "TEAM" ? "TEAM" : "STORY"}
+            />
+          ))}
+          {emptyRanks.map((rank) => (
+            <TrendingEmptyRow key={rank} rank={rank} />
+          ))}
+        </ol>
       )}
     </section>
   );

@@ -32,9 +32,6 @@ export function StatsCompare({ stats }: { stats: MatchStat[] }) {
           </div>
         );
       })}
-      <p className="text-caption text-text-4 pt-0.5 text-center">
-        전반·후반 분리 스탯은 제공되지 않아요
-      </p>
     </section>
   );
 }

@@ -72,9 +72,6 @@ export function SquadGrid({ squad }: { squad: TeamSquad }) {
           );
         })}
       </div>
-      <p className="text-body text-text-4 pt-6 text-center">
-        선수를 누르면 시즌 스탯을 볼 수 있어요
-      </p>
       <SeasonStatsModal
         player={player}
         team={squad.team}
