@@ -69,15 +69,20 @@ function currentBranch(cwd) {
  * @param {string} command 원본 셸 명령
  */
 function stripLiterals(command) {
+  // heredoc은 본문만 지운다. 구분자 뒤 같은 줄에 이어지는 명령(`cat <<EOF; gh pr merge 3`)은 남겨야 한다.
   let s = command.replace(
-    /<<-?\s*(['"]?)(\w+)\1[\s\S]*?\n\2(?=\n|$)/g,
-    " <<HEREDOC ",
+    /(<<-?\s*(['"]?)(\w+)\2)([^\n]*)\n[\s\S]*?\n\3(?=\n|$)/g,
+    "$1$4 <<HEREDOC",
   );
   // 큰따옴표와 작은따옴표를 한 정규식으로 처리한다. 따로 두 번 돌리면 "it's" 안의 아포스트로피가
   // 뒤의 'x'까지 한 리터럴로 묶어 그 사이 명령을 지워 버린다(2차 헤드리스 리뷰가 잡은 우회).
-  s = s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, (m) =>
-    m[0] === '"' ? '""' : "''",
-  );
+  // 공백 없는 한 토큰짜리 문자열("main", "HEAD:main")은 따옴표만 벗겨 남긴다. refspec을 따옴표로 감싸는
+  // 우회를 막기 위해서다. 공백이 든 문자열(커밋 메시지)은 비운다.
+  s = s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, (m) => {
+    const inner = m.slice(1, -1);
+    if (inner && !/[\s|;&$`\\]/.test(inner)) return inner;
+    return m[0] === '"' ? '""' : "''";
+  });
   return s;
 }
 
@@ -112,27 +117,29 @@ function pushTargetsProtected(pushPart) {
  * @param {string} cwd 훅이 받은 작업 디렉터리
  */
 function checkBash(command, cwd) {
-  const cmd = stripLiterals(command).replace(/\s+/g, " ");
+  const cmd = stripLiterals(command).replace(/[ \t]+/g, " ");
 
   if (GH_PR.test(cmd)) {
     return "PR 생성과 병합은 클로드가 하지 않는다(CLAUDE.md Git · PR). 커밋과 push까지만 하고 PR 제목과 본문을 채팅에 써 준다.";
   }
 
-  const commitPart = cmd.match(
-    new RegExp(GIT("commit").source + String.raw`[^|;&]*`),
-  )?.[0];
+  // 한 명령 문자열에 commit이나 push가 여러 번 올 수 있다(개행, &&, ;). 첫 구간만 보면 뒤가 빠진다.
+  const commitParts =
+    cmd.match(new RegExp(GIT("commit").source + String.raw`[^|;&\n]*`, "g")) ??
+    [];
   if (
-    commitPart &&
-    /(^|\s)(--no-verify|-[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(commitPart)
+    commitParts.some((part) =>
+      /(^|\s)(--no-verify|-[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(part),
+    )
   ) {
     return "git commit --no-verify는 husky 커밋 훅(lint-staged)을 우회한다. 훅이 실패하면 원인을 고친 뒤 다시 커밋한다.";
   }
 
-  const pushPart = cmd.match(
-    new RegExp(GIT("push").source + String.raw`[^|;&]*`),
-  )?.[0];
-  if (pushPart) {
-    const dest = pushTargetsProtected(pushPart);
+  const pushParts =
+    cmd.match(new RegExp(GIT("push").source + String.raw`[^|;&\n]*`, "g")) ??
+    [];
+  for (const part of pushParts) {
+    const dest = pushTargetsProtected(part);
     if (dest) {
       return `${dest}으로 직접 push하지 않는다(CLAUDE.md Git · PR). feature/KAN-<번호>-<설명> 브랜치로 push하고 PR을 거친다.`;
     }
@@ -149,11 +156,13 @@ function checkBash(command, cwd) {
       return "같은 명령 안에서 main이나 develop으로 옮겨 탄 뒤 commit, merge, push를 하지 않는다. feature/KAN-<번호>-<설명> 브랜치에서 작업한다.";
     }
     // 반대로 새 브랜치를 먼저 따고(`switch -c`, `checkout -b`) 이어서 커밋하는 건 정상 흐름이라 현재 브랜치 검사를 건너뛴다.
-    const createsBranchFirst = new RegExp(
-      String.raw`\bgit${GLOBAL_OPTS}\s+(switch\s+-c|checkout\s+-b)\s+\S+[\s\S]*` +
-        historyOp.source,
+    const createsBranch = new RegExp(
+      String.raw`\bgit${GLOBAL_OPTS}\s+(switch\s+-c|checkout\s+-b)\s+\S+`,
     );
-    const branch = createsBranchFirst.test(cmd) ? "" : currentBranch(cwd);
+    const createAt = cmd.search(createsBranch);
+    const firstHistoryAt = cmd.search(historyOp);
+    const createsBranchFirst = createAt !== -1 && createAt < firstHistoryAt;
+    const branch = createsBranchFirst ? "" : currentBranch(cwd);
     if (PROTECTED_BRANCHES.includes(branch)) {
       return `현재 브랜치가 ${branch}다. main과 develop에서는 commit, merge, push, rebase를 하지 않는다. develop에서 feature/KAN-<번호>-<설명> 브랜치를 먼저 딴다.`;
     }

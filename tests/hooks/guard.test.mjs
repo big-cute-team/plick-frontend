@@ -153,6 +153,41 @@ describe("guard: 리뷰 게이트가 찾은 우회", () => {
   });
 });
 
+describe("guard: 3차 리뷰가 찾은 우회와 오탐", () => {
+  it("heredoc 구분자 뒤 같은 줄의 명령은 지우지 않는다", () => {
+    assert.equal(run(bash("cat <<EOF; gh pr merge 3\nx\nEOF")).code, 2);
+    assert.equal(
+      run(bash("cat <<EOF && git push origin main\nbody\nEOF")).code,
+      2,
+    );
+  });
+  it("개행으로 나뉜 명령의 인자는 섞이지 않는다", () => {
+    assert.equal(
+      run(bash("git push origin feature/x\ngit checkout main")).code,
+      0,
+    );
+    assert.equal(
+      run(bash("git push origin feature/x\ngit push origin develop")).code,
+      2,
+    );
+  });
+  it("commit 뒤에 오는 switch -c는 현재 브랜치 검사를 건너뛰지 못한다", () => {
+    assert.equal(
+      run(
+        bash(
+          "git commit -m a && git switch -c x && git push origin HEAD",
+          repos.develop,
+        ),
+      ).code,
+      2,
+    );
+  });
+  it("따옴표로 감싼 refspec도 잡는다", () => {
+    assert.equal(run(bash('git push origin "main"')).code, 2);
+    assert.equal(run(bash("git push origin 'HEAD:develop'")).code, 2);
+  });
+});
+
 describe("guard: 보호 브랜치 push", () => {
   it("origin develop으로의 push를 막는다", () => {
     assert.equal(run(bash("git push origin develop")).code, 2);
