@@ -201,6 +201,20 @@ describe("guard: 4차 리뷰가 찾은 우회와 오탐", () => {
   });
 });
 
+describe("guard: 5차 리뷰 반영", () => {
+  it("--no-verify의 긴 옵션 축약형도 막는다", () => {
+    assert.equal(run(bash("git commit --no-verif -m x")).code, 2);
+    assert.equal(run(bash("git commit --no-ver -m x")).code, 2);
+  });
+  it("git diff --output 파일 쓰기를 막고 리다이렉트는 통과한다", () => {
+    assert.equal(
+      run(bash("git diff --output=/tmp/x.patch develop..HEAD")).code,
+      2,
+    );
+    assert.equal(run(bash("git diff develop..HEAD > /tmp/x.patch")).code, 0);
+  });
+});
+
 describe("guard: 보호 브랜치 push", () => {
   it("origin develop으로의 push를 막는다", () => {
     assert.equal(run(bash("git push origin develop")).code, 2);

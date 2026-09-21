@@ -22,7 +22,8 @@
  *   이 경로는 문서 규칙과 리뷰에 맡긴다.
  * - 셸을 파싱하지 않는다. `git`과 `gh`의 전역 옵션(`git -C . push`, `gh -R o/r pr create`)은 허용 패턴에
  *   넣었지만 그 밖의 변형은 놓칠 수 있다. `cd other && git commit`처럼 명령 안에서 디렉터리를 옮기면
- *   현재 브랜치 검사는 훅이 받은 cwd 기준이라 다른 저장소를 본다.
+ *   현재 브랜치 검사는 훅이 받은 cwd 기준이라 다른 저장소를 본다. 앞선 명령에서 `git config core.hooksPath`를
+ *   바꿔 두고 다음 명령에서 commit하는 식의 명령 간 상태도 보지 않는다.
  *
  * @example
  *   echo '{"tool_name":"Bash","tool_input":{"command":"gh pr create"}}' | node guard.mjs; echo $?  # 2
@@ -120,6 +121,14 @@ function pushTargetsProtected(pushPart) {
 function checkBash(command, cwd) {
   const cmd = stripLiterals(command).replace(/[ \t]+/g, " ");
 
+  // git diff/log/show의 --output은 임의 경로에 파일을 쓴다. 읽기 명령으로 허용된 접두어 뒤에 숨는 쓰기라 막는다.
+  if (
+    GIT("(diff|log|show|format-patch)").test(cmd) &&
+    /\s--output(=|\s)/.test(cmd)
+  ) {
+    return "git diff/log/show의 --output은 파일을 쓴다. 결과가 필요하면 셸 리다이렉트(>)로 scratchpad에 남긴다.";
+  }
+
   if (GH_PR.test(cmd)) {
     return "PR 생성과 병합은 클로드가 하지 않는다(CLAUDE.md Git · PR). 커밋과 push까지만 하고 PR 제목과 본문을 채팅에 써 준다.";
   }
@@ -132,7 +141,7 @@ function checkBash(command, cwd) {
   // HUSKY=0 환경변수와 core.hooksPath 덮어쓰기도 같은 우회라 함께 본다.
   const bypassesHooks =
     commitParts.some((part) =>
-      /(^|\s)(--no-verify|-(?![uU])[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(part),
+      /(^|\s)(--no-v[a-z]*|-(?![uU])[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(part),
     ) ||
     (commitParts.length > 0 && /\bHUSKY=0\b|core\.hooksPath=/.test(cmd));
   if (bypassesHooks) {

@@ -36,7 +36,10 @@ BUDGET="${REVIEW_BUDGET_USD:-1.00}"
 TIMEOUT_SEC="${REVIEW_TIMEOUT_SEC:-300}"
 MODEL="${REVIEW_MODEL:-sonnet}"
 
-if ! git rev-parse --verify -q "$BASE" >/dev/null; then
+# 로컬 base가 없거나 오래됐을 수 있다. origin/<base>가 있으면 그쪽을 기준으로 잡는다.
+if git rev-parse --verify -q "origin/$BASE" >/dev/null; then
+  BASE="origin/$BASE"
+elif ! git rev-parse --verify -q "$BASE" >/dev/null; then
   echo "[pr-review] base 브랜치 '$BASE'를 찾을 수 없다. git fetch origin $BASE 먼저." >&2
   exit 3
 fi
@@ -48,7 +51,7 @@ if [ -z "$CHANGED" ]; then
   exit 0
 fi
 DIFF_FILE="$OUT_DIR/diff.patch"
-git diff "$RANGE" -- . ':(exclude)pnpm-lock.yaml' > "$DIFF_FILE"
+git diff "$RANGE" -- . ':(exclude)pnpm-lock.yaml' ':(exclude)*.png' ':(exclude)*.jpg' ':(exclude)*.svg' > "$DIFF_FILE"
 DIFF_LINES="$(wc -l < "$DIFF_FILE" | tr -d ' ')"
 
 PROMPT="$(cat <<EOF

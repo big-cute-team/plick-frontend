@@ -17,10 +17,10 @@ context: fork
 
 1. 기준 로드. CLAUDE.md 컨벤션 + `apps/CLAUDE.md` + `screen-publishing` 스킬 + ADR 0002.
 2. 전수 목록. `git ls-files`로 대상 파일 목록을 확정하고, 이 목록의 모든 파일을 빠짐없이 검사한다.
-   규모가 크면 스킬의 프로토콜대로 서브에이전트에 파일 목록을 나눠 병렬 검사.
+   규모가 크면 목록을 묶음으로 쪼개 순서대로 검사한다. 포크 컨텍스트라 서브에이전트 분할은 기대하지 않는다.
 3. 검사. 스킬 체크리스트 A(중복), B(배치), C(컨벤션), D(죽은 코드). 교차 파일 중복 비교 포함.
-   C의 기계 판정 항목(부모 탐색 import, barrel, 임의값 색)은 `.claude/hooks/convention-check.mjs`를
-   파일마다 돌려 결과를 그대로 쓴다. 사람 판단이 필요한 항목만 읽어서 본다.
+   C의 기계 판정 항목(부모 탐색 import, barrel, 임의값 색)은 `.claude/hooks/convention-check.mjs`에
+   `{"tool_input":{"file_path":"<절대경로>"}}`를 stdin으로 넣어 파일마다 돌리고 exit 2인 것만 위반으로 적는다. 사람 판단이 필요한 항목만 읽어서 본다.
 4. 리포트. `docs/audits/YYYY-MM-DD-audit.md`로 저장한다.
 5. 반환. 메인에는 리포트 경로와 심각도별 건수, 상위 5개 항목만 돌려준다.
    수정 제안은 리포트에 적고, 실제 수정은 메인 세션에서 사용자가 항목을 고른 뒤 별도로 한다.
