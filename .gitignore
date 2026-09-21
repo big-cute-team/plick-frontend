@@ -46,3 +46,6 @@ _workspace/
 # Claude Code 하네스 산출물(헤드리스 리뷰 결과, harness-eval 리포트)
 .review/
 .harness-eval/
+
+# E2E 실패 묶음·치유 결과 (scripts/e2e)
+.e2e/
