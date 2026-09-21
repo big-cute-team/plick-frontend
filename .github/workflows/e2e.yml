@@ -102,6 +102,8 @@ jobs:
             .e2e
           retention-days: 14
           if-no-files-found: ignore
+          # .e2e는 숨김 디렉터리라 v4 기본값으로는 빠진다
+          include-hidden-files: true
 
       - name: Fail if tests failed
         if: steps.run.outcome == 'failure'

@@ -23,9 +23,28 @@ E2E_TARGET=local pnpm test:e2e                              # launch.json 프로
 playwright.config.ts   대상 URL, mobile(Galaxy 360x780)·web(1280x800) 프로젝트, 실패 산출물 정책
 fixtures/failure.ts    실패 시 접근성 스냅샷·콘솔 오류·실패 요청·URL을 첨부하는 test. 모든 spec이 이걸 import한다
 fixtures/locators.ts   이름 없는 랜드마크(탭바, 보고 있는 릴, 릴 제목)를 한 번만 좁힌 로케이터
+fixtures/gestures.ts   swipeUp. 릴스는 휠이 아니라 CDP 터치 드래그에만 반응한다
+tools/explore.mjs      화면 탐색 도구. 스텝을 주면 조작하고 접근성 스냅샷을 찍는다
 specs/mobile/*.spec.ts dev-m 골든 패스
 specs/web/*.spec.ts    dev 골든 패스
 ```
+
+## 시나리오 만들기
+
+`/e2e <mobile|web> <의도 한 줄>`로 클로드에게 시킨다. 실제 dev 화면의 접근성 트리를 확인하고 spec을 쓰고 통과까지 돌린다.
+손으로 만들 때도 같은 도구를 쓴다.
+
+```bash
+pnpm --filter @plick/e2e explore -- goto:/reels snap                         # 지금 화면에 무엇이 어떤 이름으로 있나
+pnpm --filter @plick/e2e explore -- goto:/reels scope:reel click:button:공유 snap   # 보고 있는 릴 안에서만 찾아 누르고 다시 본다
+pnpm --filter @plick/e2e explore -- --web goto:/articles find:좋아요           # 그 텍스트가 든 줄만
+pnpm --filter @plick/e2e explore -- --headed goto:/reels pause                # 창을 띄우고 Inspector에서 손으로 이어 조작·녹화
+pnpm --filter @plick/e2e record                                              # 처음부터 녹화 (웹은 record:web)
+```
+
+explore 스텝은 `goto: scope: click: fill: press: swipe wait: snap find: url pause`다. 자세한 건 `tools/explore.mjs` 머리 주석.
+`click`이 여러 개에 걸리면 후보를 찍고 멈추니 `scope:main`, `scope:reel`, `scope:dialog:<이름>`으로 좁힌다.
+녹화된 코드는 그대로 쓰지 않는다. CSS와 nth, 좌표를 버리고 `getByRole`로 다시 쓴다.
 
 ## 시나리오 규칙
 

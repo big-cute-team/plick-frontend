@@ -10,8 +10,19 @@ import { test as base, expect, type Page } from "@playwright/test";
  *
  * 모든 spec은 @playwright/test 대신 이 파일의 test·expect를 import한다.
  */
+/** prod를 상대로 돌 때 막는 요청 메서드. 실수로 쓰기 시나리오가 섞여도 실서비스 데이터에 닿지 않는다 */
+const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 export const test = base.extend<{ page: Page }>({
   page: async ({ page }, use, testInfo) => {
+    if (process.env.E2E_TARGET === "prod") {
+      await page.route("**/*", (route) =>
+        READ_METHODS.has(route.request().method())
+          ? route.continue()
+          : route.abort("blockedbyclient"),
+      );
+    }
+
     const consoleErrors: string[] = [];
     const failedRequests: string[] = [];
     page.on("console", (msg) => {

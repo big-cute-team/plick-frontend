@@ -58,7 +58,7 @@ pnpm test:e2e           # 배포된 dev 상대 E2E (화면 보며: pnpm --filter
 복합 명령까지 정규식으로 보는 금지와 편집 직후 검사를 맡는다. "반드시"가 붙는 규칙은 문서에만 두지 않는다.
 훅을 고치면 `tests/hooks/`도 같이 고치고 `pnpm test:hooks`를 돌린다.
 
-커맨드형 스킬(`/screen`, `/web-screen`, `/wire-api`, `/web-wire-api`, `/audit`)은 사람이 부를 때만 돈다
+커맨드형 스킬(`/screen`, `/web-screen`, `/wire-api`, `/web-wire-api`, `/audit`, `/e2e`)은 사람이 부를 때만 돈다
 (`disable-model-invocation`). `/audit`는 격리 컨텍스트(fork)에서 돌아 리포트 경로와 요약만 돌아온다.
 
 ## 규칙 기록
@@ -156,4 +156,5 @@ CI(format:check, test:hooks, lint, check-types, build)는 로컬에서 같은 �
 - E2E QA 자동화(배포된 dev 대상, 실패 리플레이, 치유 에이전트): [tests/e2e/README.md](tests/e2e/README.md),
   판단 근거는 [ADR 0169](docs/adr/0169-e2e-qa-automation.md). dev 배포 뒤와 매일 아침 `E2E` 워크플로우가
   돌고 PR은 막지 않는다. 깨지면 `node scripts/e2e/bundle.mjs`로 묶음을 만들고 `./scripts/e2e/heal.sh`가
-  tests/e2e만 고친다
+  tests/e2e만 고친다. 시나리오는 `/e2e <mobile|web> <의도>`로 만든다(`tests/e2e/tools/explore.mjs`로 실제
+  화면을 확인하고 spec을 쓴다)
