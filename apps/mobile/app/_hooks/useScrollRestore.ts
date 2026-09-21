@@ -23,6 +23,12 @@ import type { ScreenKey } from "@/_types/app";
  * 짧아졌으면(캐시가 정리돼 첫 페이지만 남은 경우) 브라우저가 알아서 끝까지만
  * 내려 주므로 따로 막지 않는다.
  *
+ * 되돌리기는 **저장값으로 맞춘다**. 원래는 아래로만 밀었는데(`saved > scrollTop`),
+ * 그러면 저장값이 0인 첫 진입에서는 이 훅이 아무 일도 하지 않아 로드 중에 생긴
+ * 스크롤을 되돌릴 방법이 없었다 — 홈에 처음 들어가면 맨 위가 아니라 핫이슈
+ * 중간쯤에서 시작하던 게 그 증상이다(KAN-514). 위아래 양쪽으로 맞추면 첫 진입은
+ * 확실히 맨 위에서 시작하고, 돌아오는 경우의 동작은 그대로다.
+ *
  * 저장은 rAF로 한 프레임에 한 번만 한다. scroll 이벤트는 프레임보다 잦게 와서
  * 그대로 받으면 스토어 갱신이 헛돈다. 언마운트 때 마지막 위치를 한 번 더 확정한다.
  *
@@ -39,7 +45,7 @@ export function useScrollRestore(
 
     const saved = useViewState.getState().scrollTops[key] ?? 0;
     const restore = () => {
-      if (saved > el.scrollTop) el.scrollTop = saved;
+      if (el.scrollTop !== saved) el.scrollTop = saved;
     };
     restore();
 
@@ -52,14 +58,14 @@ export function useScrollRestore(
      * 돌아오는 증상이다. 한 프레임만 재시도하던 걸 도달할 때까지로 늘렸다.
      * 이미지·임베드가 늦게 자리를 잡아도 그 안에 대개 들어온다.
      *
-     * `restore`가 아래로만 밀기 때문에(`saved > scrollTop`) 사용자가 더 내려간
-     * 경우를 되돌리지는 않지만, 위로 올리는 중이면 붙잡는 꼴이 된다. 그래서
-     * 손이 닿는 순간 재시도를 접는다.
+     * 재시도가 도는 동안은 사용자가 스크롤해도 제자리로 끌려온다. 그래서 손이
+     * 닿는 순간(`touchstart`·`wheel`) 재시도를 접는다 — 주도권은 항상 손가락에
+     * 있어야 한다.
      */
     let tries = RESTORE_MAX_FRAMES;
     let retry = 0;
     const step = () => {
-      if (el.scrollTop >= saved || tries-- <= 0) return;
+      if (el.scrollTop === saved || tries-- <= 0) return;
       restore();
       retry = requestAnimationFrame(step);
     };

@@ -6,6 +6,7 @@
  * 흡수하고, 화면은 이 타입만 본다. web·mobile이 함께 쓰므로 앱 레이어가 아니라
  * 여기 둔다(ADR 0011 게이트 C).
  */
+import { TEAMS } from "./constants";
 import type { TeamCode } from "./types";
 
 /** 경기 진행 상태 — BE `MatchStatus` 5값 그대로. */
@@ -583,6 +584,70 @@ export function eventMinuteLabel(
 /** 목록에 라이브 경기가 하나라도 있는지 — 조건부 폴링의 판정. */
 export function hasLiveMatch(matches: MatchSummary[] | undefined): boolean {
   return matches?.some((match) => match.status === "LIVE") ?? false;
+}
+
+/**
+ * 취소·연기를 뺀 "실제로 열리는" 경기만 (KAN-504). 홈 배너가 "오늘 경기 N개"를
+ * 세는 기준이다 — 연기된 경기 하나만 남은 날에 배너가 서면 열지도 않는 경기를
+ * 보러 오라는 말이 된다.
+ */
+export function activeMatches(matches: MatchSummary[]): MatchSummary[] {
+  return matches.filter(
+    (match) => match.status !== "CANCELLED" && match.status !== "POSTPONED",
+  );
+}
+
+/**
+ * 목록을 대표할 경기 한 경기 (KAN-504) — 라이브 > 아직 안 한 예정 > 마지막 종료
+ * 순으로 고른다. 목록은 킥오프 오름차순이라 `find`가 곧 가장 이른 경기다.
+ *
+ * 취소·연기를 미리 걷어 낸 목록을 받는다({@link activeMatches}) — 대표를 고르는
+ * 규칙과 개수를 세는 규칙이 갈라지면 "오늘 경기 2개" 아래에 셋 중 어느 것도
+ * 아닌 경기가 서는 일이 생긴다.
+ *
+ * @param matches 킥오프 오름차순 경기 목록(취소·연기 제외). 비면 null.
+ */
+export function featuredMatch(matches: MatchSummary[]): MatchSummary | null {
+  return (
+    matches.find((match) => match.status === "LIVE") ??
+    matches.find((match) => match.status === "SCHEDULED") ??
+    matches[matches.length - 1] ??
+    null
+  );
+}
+
+/**
+ * 팀 한 줄 표기 (KAN-504) — 빅6는 한글 약칭, 빅6 밖은 BE가 준 영문명 그대로다.
+ * `LiveTeam.name`이 영문 고정이라(BE 규약) 좁은 배너에서는 빅6만이라도 한글로
+ * 줄여야 두 팀 이름과 스코어가 한 줄에 들어간다.
+ */
+export function liveTeamLabel(team: LiveTeam): string {
+  return team.code ? TEAMS[team.code].name : team.name;
+}
+
+/**
+ * 대표 경기를 한 줄로 (KAN-504, 홈 배너 두 번째 줄).
+ *
+ * 상태마다 먼저 읽혀야 할 정보가 다르다 — 예정은 몇 시에 하느냐가, 라이브는
+ * 지금 몇 대 몇에 몇 분이냐가, 종료는 결과가 먼저다. 상태 문구 자체는
+ * {@link matchStatusLabel}이 정한 것을 그대로 빌려 카드와 배너가 갈라지지 않게 한다.
+ *
+ * @example
+ * matchSummaryLine(scheduled); // "20:00 맨시티 vs 아스날"
+ * matchSummaryLine(live);      // "맨시티 2 - 1 아스날 · 67'"
+ * matchSummaryLine(finished);  // "맨시티 2 - 1 아스날 · 종료"
+ */
+export function matchSummaryLine(match: MatchSummary): string {
+  const home = liveTeamLabel(match.home);
+  const away = liveTeamLabel(match.away);
+  const { primary, secondary } = matchStatusLabel(match);
+
+  if (match.status === "SCHEDULED") return `${primary} ${home} vs ${away}`;
+
+  const score = `${home} ${match.score.home ?? 0} - ${match.score.away ?? 0} ${away}`;
+  return match.status === "LIVE"
+    ? `${score} · ${primary}`
+    : `${score} · ${secondary}`;
 }
 
 /**

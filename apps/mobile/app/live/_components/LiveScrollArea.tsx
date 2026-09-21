@@ -15,19 +15,26 @@ import { useServerRefresh } from "@/_hooks/useServerRefresh";
  * 순위표는 서버 컴포넌트가 그리므로 서버 갱신을 기다린다.
  *
  * @param date 경기 목록이면 보고 있는 날짜 키, 순위표면 없음
+ * @param contentClassName 콘텐츠 래퍼에 더할 클래스 — 경기 목록이 화면 끝까지
+ *   높이를 차지하려고 쓴다({@link ScrollArea} 참고)
  */
 export function LiveScrollArea({
   date,
+  contentClassName,
   children,
 }: {
   date?: string;
+  contentClassName?: string;
   children: ReactNode;
 }) {
   const refreshMatches = useLiveRefresh(date);
   const refreshServer = useServerRefresh();
 
   return (
-    <ScrollArea onRefresh={date ? refreshMatches : refreshServer}>
+    <ScrollArea
+      onRefresh={date ? refreshMatches : refreshServer}
+      contentClassName={contentClassName}
+    >
       {children}
     </ScrollArea>
   );

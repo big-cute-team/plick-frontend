@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getArticle,
-  getHotArticles,
-  getRelatedArticles,
-} from "@plick/core/articles";
+import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
 import { getArticleDebate } from "@plick/core/debates";
@@ -96,10 +92,12 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 사이드바는 KAN-338에서 채웠다. 실시간 인기는 홈과 같은 핫이슈 데이터를 상세와
- * 병렬로 받고, 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
- * (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고 5개). 실패해도
- * 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다. 본문 밑 추천 행은
+ * 사이드바는 KAN-338에서 채웠다. 관련 기사는 기사의 팀태그가 필요해 상세를 받은
+ * 뒤 이어 받는다 (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고
+ * 5개). 실패해도 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다.
+ * 실시간 급상승은 KAN-501에서 카드가 스스로 받게 바뀌어 이 페이지가 손대지
+ * 않는다 — 그러면서 사이드바 하나를 위해 부르던 핫이슈 호출이 빠졌다.
+ * 본문 밑 추천 행은
  * 웹에선 채우지 않기로 해서(사이드바 관련 기사와 중복) 준비 중 문구로 남긴다 —
  * 모바일 "함께 보면 좋은 기사"는 같은 데이터로 채웠다.
  */
@@ -111,11 +109,10 @@ export default async function ArticleDetailPage({
   const { postId } = await params;
   const accessToken = await getAccessToken();
 
-  const [articleResult, commentsResult, hotResult, debateResult] =
+  const [articleResult, commentsResult, debateResult] =
     await Promise.allSettled([
       getArticle(postId, accessToken),
       getComments(postId, { accessToken }),
-      getHotArticles(),
       // 투표형 게시물인지는 이 호출이 판별한다 (KAN-418) — 토론 없는 기사는
       // null이 온다. 토큰을 실어야 `myVote`가 이 유저 기준으로 온다
       getArticleDebate(postId, accessToken ? { accessToken } : undefined),
@@ -139,11 +136,6 @@ export default async function ArticleDetailPage({
     commentsResult.status === "fulfilled"
       ? { page: commentsResult.value, fetchedAt: Date.now() }
       : undefined;
-
-  const hot = hotResult.status === "fulfilled" ? hotResult.value : null;
-  if (hotResult.status === "rejected") {
-    console.error("[article] 실시간 인기 로드 실패:", hotResult.reason);
-  }
 
   // 토론 조회만 실패하면 페이지를 죽이지 않고 투표 카드 없이 내려보낸다 —
   // 댓글 씨앗과 같은 판단이다
@@ -187,11 +179,7 @@ export default async function ArticleDetailPage({
               initialComments={initialComments}
               debate={debate}
             />
-            <ArticleSidebar
-              related={related}
-              hot={hot}
-              className="hidden lg:flex"
-            />
+            <ArticleSidebar related={related} className="hidden lg:flex" />
           </div>
         </PageContainer>
       </main>
