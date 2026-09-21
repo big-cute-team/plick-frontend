@@ -5,7 +5,8 @@
 # 결과를 JSON 스키마(scripts/review/review.schema.json)로 고정해 받는다.
 # CRITICAL 항목이 하나라도 있으면 exit 1이다. 그 외 exit 0. 인증 실패 같은 실행 오류는 exit 3이다.
 #
-# 세 겹으로 잠근다. --max-turns(턴 수), --max-budget-usd(비용), timeout(벽시계). 도구는 읽기만 허용한다.
+# 세 겹으로 잠근다. --max-turns(턴 수), --max-budget-usd(비용), timeout(벽시계). 도구는 Read/Grep/Glob만 허용하고
+# diff는 미리 파일로 떠서 넘긴다. Bash(git diff:*)를 허용하면 --output 옵션으로 파일 쓰기가 열린다.
 #
 # 사용:
 #   ./scripts/review/pr-review.sh                # develop 기준, 결과는 .review/latest.json
@@ -46,7 +47,9 @@ if [ -z "$CHANGED" ]; then
   echo "[pr-review] $BASE 대비 변경 파일이 없다. 리뷰할 게 없다."
   exit 0
 fi
-DIFF_LINES="$(git diff "$RANGE" -- . ':(exclude)pnpm-lock.yaml' | wc -l | tr -d ' ')"
+DIFF_FILE="$OUT_DIR/diff.patch"
+git diff "$RANGE" -- . ':(exclude)pnpm-lock.yaml' > "$DIFF_FILE"
+DIFF_LINES="$(wc -l < "$DIFF_FILE" | tr -d ' ')"
 
 PROMPT="$(cat <<EOF
 너는 PLick 프론트엔드 저장소의 PR 리뷰어다. 아래 커밋 범위의 변경만 리뷰한다.
@@ -55,8 +58,8 @@ PROMPT="$(cat <<EOF
 변경 파일:
 $CHANGED
 
-먼저 CLAUDE.md와 apps/CLAUDE.md를 읽어 컨벤션을 파악한 뒤 \`git diff $RANGE\`로 변경을 본다.
-필요하면 변경 파일 주변 코드를 Read로 읽어 맥락을 확인한다. 파일을 수정하지 않는다.
+먼저 CLAUDE.md와 apps/CLAUDE.md를 읽어 컨벤션을 파악한 뒤 $DIFF_FILE 을 Read로 읽어 변경을 본다(미리 떠 둔 diff).
+필요하면 변경 파일 주변 코드를 Read로 읽어 맥락을 확인한다. 셸은 쓸 수 없고 파일을 수정하지 않는다.
 
 찾을 것:
 - CRITICAL: 동작이 깨지는 버그, 보안 문제(토큰 노출, 인증 우회), 데이터 손실, 컨벤션 위반 중 빌드나 런타임에 영향을 주는 것
@@ -95,7 +98,7 @@ run_with_timeout claude -p "$PROMPT" \
   --model "$MODEL" \
   --output-format json \
   --json-schema "$(cat "$SCHEMA")" \
-  --allowed-tools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)" \
+  --allowed-tools "Read,Grep,Glob" \
   --max-turns "$MAX_TURNS" \
   --max-budget-usd "$BUDGET" \
   < /dev/null > "$OUT_DIR/raw.json" 2> "$OUT_DIR/stderr.log"

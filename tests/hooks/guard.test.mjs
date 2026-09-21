@@ -188,6 +188,19 @@ describe("guard: 3차 리뷰가 찾은 우회와 오탐", () => {
   });
 });
 
+describe("guard: 4차 리뷰가 찾은 우회와 오탐", () => {
+  it("HUSKY=0과 core.hooksPath 덮어쓰기를 막는다", () => {
+    assert.equal(run(bash("HUSKY=0 git commit -m x")).code, 2);
+    assert.equal(
+      run(bash("git -c core.hooksPath=/dev/null commit -m x")).code,
+      2,
+    );
+  });
+  it("-uno(--untracked-files=no)는 -n으로 오인하지 않는다", () => {
+    assert.equal(run(bash("git commit -uno -m x")).code, 0);
+  });
+});
+
 describe("guard: 보호 브랜치 push", () => {
   it("origin develop으로의 push를 막는다", () => {
     assert.equal(run(bash("git push origin develop")).code, 2);

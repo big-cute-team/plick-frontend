@@ -13,7 +13,7 @@
  * 막는 것
  * - `gh pr create`, `gh pr merge`: PR 생성과 병합은 사용자가 직접 한다.
  * - `main`/`develop`을 목적지로 하는 push, 그 브랜치 위에서의 commit과 merge, rebase 등 히스토리 변경.
- * - `git commit --no-verify`(-n): husky 훅 우회.
+ * - `git commit --no-verify`(-n), `HUSKY=0`, `-c core.hooksPath=…`: husky 훅 우회.
  * - `pnpm-lock.yaml`, `node_modules/`, `.next/` 편집: 도구 산출물은 손대지 않는다.
  *
  * 한계(알고 두는 것)
@@ -21,7 +21,8 @@
  *   문자열로 넘기는 형태는 여기서 못 본다. settings.json의 deny 접두어 규칙이 같은 이유로 못 보므로
  *   이 경로는 문서 규칙과 리뷰에 맡긴다.
  * - 셸을 파싱하지 않는다. `git`과 `gh`의 전역 옵션(`git -C . push`, `gh -R o/r pr create`)은 허용 패턴에
- *   넣었지만 그 밖의 변형은 놓칠 수 있다.
+ *   넣었지만 그 밖의 변형은 놓칠 수 있다. `cd other && git commit`처럼 명령 안에서 디렉터리를 옮기면
+ *   현재 브랜치 검사는 훅이 받은 cwd 기준이라 다른 저장소를 본다.
  *
  * @example
  *   echo '{"tool_name":"Bash","tool_input":{"command":"gh pr create"}}' | node guard.mjs; echo $?  # 2
@@ -127,12 +128,15 @@ function checkBash(command, cwd) {
   const commitParts =
     cmd.match(new RegExp(GIT("commit").source + String.raw`[^|;&\n]*`, "g")) ??
     [];
-  if (
+  // -n 계열은 짧은 옵션 묶음(-an, -nm)까지 보되 `-u<mode>`(-uno = --untracked-files=no)는 제외한다.
+  // HUSKY=0 환경변수와 core.hooksPath 덮어쓰기도 같은 우회라 함께 본다.
+  const bypassesHooks =
     commitParts.some((part) =>
-      /(^|\s)(--no-verify|-[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(part),
-    )
-  ) {
-    return "git commit --no-verify는 husky 커밋 훅(lint-staged)을 우회한다. 훅이 실패하면 원인을 고친 뒤 다시 커밋한다.";
+      /(^|\s)(--no-verify|-(?![uU])[a-zA-Z]*n[a-zA-Z]*)(\s|$)/.test(part),
+    ) ||
+    (commitParts.length > 0 && /\bHUSKY=0\b|core\.hooksPath=/.test(cmd));
+  if (bypassesHooks) {
+    return "git commit --no-verify(HUSKY=0, core.hooksPath 포함)는 husky 커밋 훅(lint-staged)을 우회한다. 훅이 실패하면 원인을 고친 뒤 다시 커밋한다.";
   }
 
   const pushParts =
