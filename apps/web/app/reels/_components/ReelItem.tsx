@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime, isDebateClosed } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
@@ -45,7 +45,7 @@ import { ReelActionRail } from "./ReelActionRail";
  * 주소를 보여 주고 복사시킨다.
  *
  * @param reel - 표시할 릴
- * @param onOpenDetail - 제목 영역·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219)
+ * @param onOpenDetail - 카드 어디든(버튼·링크 제외)·댓글 버튼 클릭 시 세부 패널을 여는 콜백(KAN-219, KAN-525)
  * @param eager - 첫 릴(LCP 후보)이면 사진을 lazy 큐잉 없이 최우선으로 받는다 (KAN-421)
  */
 export function ReelItem({
@@ -81,11 +81,29 @@ export function ReelItem({
     return () => observer.disconnect();
   }, []);
 
+  /**
+   * 카드 어디를 눌러도 세부 패널을 연다 (KAN-525, 모바일과 같다). 전에는 제목과
+   * 댓글 버튼만 타깃이었다. 제 기능이 있는 요소(좋아요·공유 버튼, 트윗 임베드
+   * 안의 링크)는 `closest`로 걸러 그대로 두고, 포털로 뜨는 공유·로그인 팝업은
+   * React 트리로는 이 컴포넌트 자식이라 클릭이 여기까지 버블링되므로 DOM 포함
+   * 여부로 한 번 더 거른다 — 팝업 배경을 눌러 닫는 클릭이 패널을 열면 안 된다.
+   * 뷰어는 드래그가 아니라 스크롤 스냅이라 스와이프 뒤 click 문제는 없다.
+   *
+   * @param e - 카드 click 이벤트
+   */
+  const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (!e.currentTarget.contains(target)) return;
+    if (target.closest("a, button, input, textarea")) return;
+    onOpenDetail();
+  };
+
   return (
     <div className="flex h-full w-full items-end justify-center gap-4 lg:gap-6.5">
       <div
         ref={cardRef}
-        className="bg-reel-bg rounded-hero relative aspect-[9/16] h-full w-auto max-w-full min-w-0 overflow-hidden"
+        onClick={handleCardClick}
+        className="bg-reel-bg rounded-hero relative aspect-[9/16] h-full w-auto max-w-full min-w-0 cursor-pointer overflow-hidden"
       >
         {/* 사진이 있으면 카드를 가득 덮는다. 없으면 원문 트윗 임베드가 자리를
             대신하고, 로드 전에는 릴 배경색이 그대로 남고 실패가 확정되면
@@ -203,6 +221,7 @@ export function ReelItem({
       {shareOpen && (
         <ShareDialog
           path={reelSharePath(reel.id)}
+          articleId={reel.id}
           onClose={() => setShareOpen(false)}
         />
       )}

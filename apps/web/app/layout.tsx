@@ -7,7 +7,9 @@ import {
   BRAND_TITLE,
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
+import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
 import { AuthProvider } from "@/_components/AuthProvider";
+import { GuestNoticeToast } from "@/_components/GuestNoticeToast";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
@@ -17,7 +19,7 @@ import {
   SITE_URL,
 } from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
-import { isLoggedIn } from "@/_services/session";
+import { getGuestExpiresAt, isLoggedIn } from "@/_services/session";
 import "./globals.css";
 
 /**
@@ -95,6 +97,7 @@ export default async function RootLayout({
 }>) {
   const loggedIn = await isLoggedIn();
   const profile = loggedIn ? await getMyProfile().catch(() => null) : null;
+  const guestExpiresAt = await getGuestExpiresAt();
 
   return (
     <html lang="ko" data-theme="dark" className={pretendard.variable}>
@@ -107,6 +110,7 @@ export default async function RootLayout({
         <QueryProvider>
           <AuthProvider
             isLoggedIn={loggedIn}
+            isGuest={profile?.isGuest ?? false}
             userId={profile?.userId ?? null}
             nickname={profile?.nickname ?? null}
           >
@@ -117,6 +121,11 @@ export default async function RootLayout({
             {children}
           </AuthProvider>
         </QueryProvider>
+        {/* 게스트 발급·연동 결과 안내 (KAN-514) — fixed라 트리 어디든 되지만,
+            화면 트리 밖에 두어 라우트 교체와 무관하게 산다 */}
+        <GuestNoticeToast guestExpiresAt={guestExpiresAt} />
+        {/* 진입·화면 전환 행동 이벤트 (KAN-543) — 라우트가 바뀌어도 살아야 해서 화면 트리 밖 */}
+        <AnalyticsTracker />
         {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 이 컴포넌트가
             스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
             LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}

@@ -6,6 +6,7 @@
  * 흡수하고, 화면은 이 타입만 본다. web·mobile이 함께 쓰므로 앱 레이어가 아니라
  * 여기 둔다(ADR 0011 게이트 C).
  */
+import { TEAMS } from "./constants";
 import type { TeamCode } from "./types";
 
 /** 경기 진행 상태 — BE `MatchStatus` 5값 그대로. */
@@ -20,15 +21,21 @@ export type MatchStatus =
  * 라이브 화면에 등장하는 팀 참조. `id`·`code`가 null이면 빅6 밖 팀이다 —
  * 마이팀 강조·스쿼드 진입(`/live/teams/[teamId]`)이 불가능하고 크레스트는
  * CDN `logo`, 그것도 실패하면 `shortName` 이니셜 제네릭으로 그린다.
+ *
+ * 표기는 자리마다 다르다(BE 명세 공통 사항): 경기 목록 카드는 `shortName`,
+ * 상세 헤더·라인업·순위표는 전체명 `name`이다.
  */
 export interface LiveTeam {
   /** BE teams.team_id — 빅6 밖이면 null */
   id: number | null;
   /** 빅6 로컬 크레스트 코드(`TEAMS` 레지스트리 키) — 빅6 밖이면 null */
   code: TeamCode | null;
-  /** 영문 팀명 그대로 — 한글 번역은 대회명에만 있다(BE 규약) */
+  /** 전체 팀명. 서버가 사전으로 한글 치환하고 미등재 팀은 영문 폴백이다(KAN-528) */
   name: string;
-  /** 제네릭 크레스트·타임라인에 넣는 축약 코드 (예: COV, BHA) */
+  /**
+   * 카드용 영문 3글자 코드(예: MCI, BRE, AVL). 서버가 전 팀에 준다(KAN-550).
+   * 목록 카드·같은 날 경기 스트립·타임라인·제네릭 크레스트가 쓴다.
+   */
   shortName: string;
   /** API-Football CDN 로고 URL — 빅6는 로컬 에셋을 써서 무시한다 */
   logo: string | null;
@@ -302,37 +309,19 @@ export const POSITION_LABEL: Record<Position, string> = {
 export const POSITION_ORDER: Position[] = ["GK", "DF", "MF", "FW"];
 
 /**
- * 빅6 밖 EPL 팀의 축약 코드. API-Football 팀명 기준이고 없으면
- * {@link teamShortName}이 이름에서 만든다.
- */
-const TEAM_SHORT_NAMES: Record<string, string> = {
-  "Aston Villa": "AVL",
-  Newcastle: "NEW",
-  Brighton: "BHA",
-  "Nottingham Forest": "NFO",
-  "West Ham": "WHU",
-  "Crystal Palace": "CRY",
-  Bournemouth: "BOU",
-  Fulham: "FUL",
-  Brentford: "BRE",
-  Everton: "EVE",
-  Wolves: "WOL",
-  Leeds: "LEE",
-  Burnley: "BUR",
-  Sunderland: "SUN",
-};
-
-/**
- * 팀명 → 축약 코드. 알려진 EPL 팀은 표에서, 그 밖(컵 상대·친선 상대)은 첫
- * 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
+ * 팀명 → 축약 코드 폴백. 첫 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
+ *
+ * 서버가 카드용 코드 `shortName`을 전 팀에 주게 되면서(KAN-550) 정상 경로에선
+ * 쓰지 않는다. `@plick/core/live`가 그 필드가 없는 구버전 응답과, 팀명만 실리는
+ * 상대 전적(headToHead) 줄에서만 부른다(KAN-553). 예전에
+ * 여기 있던 빅6 밖 EPL 팀 영문명 표(Brighton → BHA 등)는 서버 팀명이 한글로
+ * 바뀌어(KAN-528) 한 번도 맞지 않게 됐고 서버 코드가 대신하므로 지웠다.
  *
  * @example
  * teamShortName("Coventry"); // "COV"
- * teamShortName("Aston Villa"); // "AVL"
+ * teamShortName("브라이튼"); // "브라이" — 한글은 코드가 안 되니 폴백일 뿐이다
  */
 export function teamShortName(name: string): string {
-  const known = TEAM_SHORT_NAMES[name];
-  if (known) return known;
   const word = name.split(/\s+/).find((w) => w.length >= 3) ?? name;
   return word.slice(0, 3).toUpperCase();
 }
@@ -586,6 +575,71 @@ export function hasLiveMatch(matches: MatchSummary[] | undefined): boolean {
 }
 
 /**
+ * 취소·연기를 뺀 "실제로 열리는" 경기만 (KAN-504). 홈 배너가 "오늘 경기 N개"를
+ * 세는 기준이다 — 연기된 경기 하나만 남은 날에 배너가 서면 열지도 않는 경기를
+ * 보러 오라는 말이 된다.
+ */
+export function activeMatches(matches: MatchSummary[]): MatchSummary[] {
+  return matches.filter(
+    (match) => match.status !== "CANCELLED" && match.status !== "POSTPONED",
+  );
+}
+
+/**
+ * 목록을 대표할 경기 한 경기 (KAN-504) — 라이브 > 아직 안 한 예정 > 마지막 종료
+ * 순으로 고른다. 목록은 킥오프 오름차순이라 `find`가 곧 가장 이른 경기다.
+ *
+ * 취소·연기를 미리 걷어 낸 목록을 받는다({@link activeMatches}) — 대표를 고르는
+ * 규칙과 개수를 세는 규칙이 갈라지면 "오늘 경기 2개" 아래에 셋 중 어느 것도
+ * 아닌 경기가 서는 일이 생긴다.
+ *
+ * @param matches 킥오프 오름차순 경기 목록(취소·연기 제외). 비면 null.
+ */
+export function featuredMatch(matches: MatchSummary[]): MatchSummary | null {
+  return (
+    matches.find((match) => match.status === "LIVE") ??
+    matches.find((match) => match.status === "SCHEDULED") ??
+    matches[matches.length - 1] ??
+    null
+  );
+}
+
+/**
+ * 팀 한 줄 표기 (KAN-504) — 빅6는 레지스트리의 한글 약칭(맨시티, 토트넘),
+ * 빅6 밖은 BE가 준 `name` 그대로다. 좁은 홈 배너에서 두 팀 이름과 스코어가
+ * 한 줄에 들어가게 빅6만이라도 줄인다. 서버 `name`이 한글로 바뀐 뒤(KAN-528)에도
+ * 전체명(맨체스터 시티)보다 약칭이 짧아 그대로 둔다.
+ */
+export function liveTeamLabel(team: LiveTeam): string {
+  return team.code ? TEAMS[team.code].name : team.name;
+}
+
+/**
+ * 대표 경기를 한 줄로 (KAN-504, 홈 배너 두 번째 줄).
+ *
+ * 상태마다 먼저 읽혀야 할 정보가 다르다 — 예정은 몇 시에 하느냐가, 라이브는
+ * 지금 몇 대 몇에 몇 분이냐가, 종료는 결과가 먼저다. 상태 문구 자체는
+ * {@link matchStatusLabel}이 정한 것을 그대로 빌려 카드와 배너가 갈라지지 않게 한다.
+ *
+ * @example
+ * matchSummaryLine(scheduled); // "20:00 맨시티 vs 아스날"
+ * matchSummaryLine(live);      // "맨시티 2 - 1 아스날 · 67'"
+ * matchSummaryLine(finished);  // "맨시티 2 - 1 아스날 · 종료"
+ */
+export function matchSummaryLine(match: MatchSummary): string {
+  const home = liveTeamLabel(match.home);
+  const away = liveTeamLabel(match.away);
+  const { primary, secondary } = matchStatusLabel(match);
+
+  if (match.status === "SCHEDULED") return `${primary} ${home} vs ${away}`;
+
+  const score = `${home} ${match.score.home ?? 0} - ${match.score.away ?? 0} ${away}`;
+  return match.status === "LIVE"
+    ? `${score} · ${primary}`
+    : `${score} · ${secondary}`;
+}
+
+/**
  * 결장자를 팀별로 묶는다 (KAN-459). 그룹 순서는 배열에 처음 등장한 팀 순이라
  * 경계 변환이 홈·원정 순으로 정렬해 주면 그대로 홈 그룹이 먼저다. 빅6 밖 팀은
  * `id`가 null이라 팀 식별은 `shortName`으로 한다.
@@ -605,4 +659,46 @@ export function groupAbsenteesByTeam(absentees: Absentee[]): AbsenteeGroup[] {
     else groups.push({ team: absentee.team, players: [absentee] });
   }
   return groups;
+}
+
+/**
+ * 피치가 그리는 팀의 방향. 아래쪽 팀은 위로 공격하고(`up`), 위쪽 팀은 아래로
+ * 공격한다(`down`).
+ */
+export type PitchFacing = "up" | "down";
+
+/**
+ * 라인업 `grid`("줄:칸", GK가 1줄)를 피치에 그릴 줄 배열로 편다. 칸 번호는
+ * 그 팀이 상대 골문을 볼 때 왼쪽이 1이라(원본 API 규약, KAN-551), 위로 공격하는
+ * 아래쪽 팀은 칸 오름차순이 곧 화면 왼쪽→오른쪽이고 아래로 공격하는 위쪽 팀은
+ * 좌우가 뒤집혀 내림차순이다. BE 배열 순서는 믿지 않고 칸으로 정렬한다.
+ * grid null(벤치)은 빠진다.
+ *
+ * @param players - 선발 11명
+ * @param facing - 이 팀이 공격하는 방향
+ * @example
+ * lineupPitchLines([gk, rb("2:4"), lb("2:1")], "up"); // [[gk], [lb, rb]]
+ * lineupPitchLines([gk, rb("2:4"), lb("2:1")], "down"); // [[gk], [rb, lb]]
+ */
+export function lineupPitchLines(
+  players: LineupPlayer[],
+  facing: PitchFacing,
+): LineupPlayer[][] {
+  const lines: LineupPlayer[][] = [];
+  for (const player of players) {
+    const line = Number(player.grid?.split(":")[0] ?? 0);
+    if (!line) continue;
+    (lines[line - 1] ??= []).push(player);
+  }
+  const direction = facing === "up" ? 1 : -1;
+  return lines
+    .filter((line) => line.length > 0)
+    .map((line) =>
+      [...line].sort((a, b) => direction * (gridColumn(a) - gridColumn(b))),
+    );
+}
+
+/** grid의 칸 번호. 없으면 0이라 정렬에서 앞으로 몰린다. */
+function gridColumn(player: LineupPlayer): number {
+  return Number(player.grid?.split(":")[1] ?? 0);
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { teamProfilePath } from "@plick/domain/format";
 import type { Team } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { TeamShieldIcon } from "@plick/ui/icons";
@@ -9,6 +10,9 @@ import { TeamShieldIcon } from "@plick/ui/icons";
  * 헤더 우측 "수정하기"로 프로필 카드와 같은 수정 화면(`/me/edit`)에 진입한다(KAN-379).
  * 표시 전용이라 모바일과 마크업이 같지만, 화면 표현은 앱별 유지 원칙(ADR 0011)대로
  * 승격하지 않는다.
+ *
+ * 팀 칩은 그 팀 프로필로 가는 링크다 (KAN-484) — 응원팀을 보다가 그 팀 화면으로
+ * 바로 갈 데가 없었다.
  *
  * @param teams - 응원팀 레지스트리 항목 목록 (비어 있을 수 있음)
  */
@@ -33,14 +37,16 @@ export function FavoriteTeamsCard({ teams }: { teams: Team[] }) {
       {teams.length > 0 ? (
         <ul className="mt-3 flex flex-wrap gap-2">
           {teams.map((team) => (
-            <li
-              key={team.code}
-              className="bg-elevate border-border rounded-pill flex items-center gap-1.5 border py-1.5 pr-3 pl-2"
-            >
-              <TeamCrest team={team} size={18} />
-              <span className="text-label text-text font-bold">
-                {team.name}
-              </span>
+            <li key={team.code}>
+              <Link
+                href={teamProfilePath(team.code)}
+                className="bg-elevate border-border rounded-pill hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-1.5 border py-1.5 pr-3 pl-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <TeamCrest team={team} size={18} />
+                <span className="text-label text-text font-bold">
+                  {team.name}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

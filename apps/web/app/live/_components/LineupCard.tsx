@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import {
+  lineupPitchLines,
   ratingTone,
   type LineupPlayer,
   type LiveTeam,
@@ -12,7 +13,8 @@ import { PlayerMatchStatsModal } from "./PlayerMatchStatsModal";
 
 /**
  * 라인업 탭의 카드(피그마 LW4 → KAN-462 확대) — 피치 렌더 + 양 팀 벤치. `grid`는
- * "줄:칸" 좌표(GK가 1줄), 어웨이 위·홈 아래 반전(명세 규약). 선수를 누르면
+ * "줄:칸" 좌표(GK가 1줄), 어웨이 위·홈 아래 반전(명세 규약)이고 칸 좌우는
+ * `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551). 선수를 누르면
  * 경기 스탯 모달이 열린다 — 그 상태 때문에 클라 컴포넌트다. 스탯 응답엔
  * 팀명이 없어 눌린 자리의 팀을 같이 들고 간다.
  *
@@ -37,15 +39,10 @@ export function LineupCard({
 
   return (
     <section className="bg-elevate rounded-card flex flex-col gap-4 p-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-title text-text font-bold">라인업</h2>
-        <span className="text-body text-text-4">
-          선수를 누르면 경기 스탯을 볼 수 있어요
-        </span>
-      </div>
+      <h2 className="text-title text-text font-bold">라인업</h2>
       <div className="border-accent-border/50 bg-accent/5 rounded-card flex flex-col gap-7 border px-4 py-6">
         <FormationTag lineup={away} />
-        {gridLines(away.players).map((line, i) => (
+        {lineupPitchLines(away.players, "down").map((line, i) => (
           <PitchLine
             key={`away-${i}`}
             lineup={away}
@@ -57,7 +54,7 @@ export function LineupCard({
           aria-hidden
           className="border-border/70 mx-auto -my-2 size-16 rounded-full border"
         />
-        {gridLines(home.players)
+        {lineupPitchLines(home.players, "up")
           .reverse()
           .map((line, i) => (
             <PitchLine
@@ -79,17 +76,6 @@ export function LineupCard({
       />
     </section>
   );
-}
-
-/** grid의 줄 번호(1=GK)대로 묶는다 — 벤치(grid null)는 오지 않는다. */
-function gridLines(players: LineupPlayer[]): LineupPlayer[][] {
-  const lines: LineupPlayer[][] = [];
-  for (const player of players) {
-    const line = Number(player.grid?.split(":")[0] ?? 0);
-    if (!line) continue;
-    (lines[line - 1] ??= []).push(player);
-  }
-  return lines.filter((line) => line.length > 0);
 }
 
 function FormationTag({ lineup }: { lineup: TeamLineup }) {

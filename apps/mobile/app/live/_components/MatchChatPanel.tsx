@@ -22,12 +22,13 @@ import { useMatchChat } from "@/_hooks/useMatchChat";
  * 막으면 확인이 안 된다. 거절되면 그때 킥오프 시각으로 문구를 고른다.
  *
  * 비로그인 처리(티켓 확인 항목): 탭은 보이되 안에서 로그인을 권한다. 서버가
- * 읽기도 로그인을 요구하므로 미리보기 없이 안내만 있다.
+ * 읽기도 로그인을 요구하므로 미리보기 없이 안내만 있다. 게스트도 같은 자리에서
+ * 막히지만(서버가 403 `AUTH_GUEST_FORBIDDEN`) 문구는 연동 안내로 갈린다 (KAN-514).
  *
  * @param header 경기 헤더(id·킥오프)
  */
 export function MatchChatPanel({ header }: { header: MatchSummary }) {
-  const { isLoggedIn, nickname } = useAuth();
+  const { isLoggedIn, isGuest, nickname } = useAuth();
 
   if (!isLoggedIn) {
     return (
@@ -36,6 +37,17 @@ export function MatchChatPanel({ header }: { header: MatchSummary }) {
         body="같은 경기를 보는 사람들과 채팅하려면 로그인하세요."
         href="/login"
         cta="로그인 하러 가기"
+      />
+    );
+  }
+  /* 게스트는 세션이 있어도 채팅 접속이 403이다 — 연동으로 안내한다 (KAN-514) */
+  if (isGuest) {
+    return (
+      <Gate
+        title="계정 연동이 필요해요"
+        body="채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요."
+        href="/login"
+        cta="계정 연동하러 가기"
       />
     );
   }

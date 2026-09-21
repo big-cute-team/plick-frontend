@@ -38,9 +38,6 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
           ))}
         </section>
       ))}
-      <p className="text-body text-text-4 pt-1 text-center">
-        라이브 경기는 20~30초마다 자동 갱신돼요
-      </p>
     </div>
   );
 }

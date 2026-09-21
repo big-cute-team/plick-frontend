@@ -16,6 +16,9 @@ import { copyText } from "@/_utils/share";
  *
  * 타이머는 언마운트와 재시도 때 정리한다. 안 그러면 닫힌 팝업의 상태를 늦게 건드린다.
  *
+ * `copy`는 성공 여부를 돌려준다 (KAN-543) — 호출부가 복사가 끝난 순간에 공유 이벤트를
+ * 보내려면 상태를 기다리지 않고 바로 알아야 한다.
+ *
  * @param text 복사할 문자열(공유 주소)
  */
 export function useCopyLink(text: string) {
@@ -24,13 +27,14 @@ export function useCopyLink(text: string) {
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  async function copy() {
+  async function copy(): Promise<boolean> {
     clearTimeout(timerRef.current);
     const copied = await copyText(text);
     setStatus(copied ? "copied" : "failed");
     if (copied) {
       timerRef.current = setTimeout(() => setStatus("idle"), COPY_FEEDBACK_MS);
     }
+    return copied;
   }
 
   return { status, copy };

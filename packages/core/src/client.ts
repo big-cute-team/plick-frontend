@@ -6,6 +6,10 @@
  * 토큰은 여기서 찾지 않는다. 서버에서 부를 때는 호출부가 쿠키를 읽어
  * `Authorization` 헤더로 넘기고, 브라우저에서 부를 때는 HttpOnly 쿠키를 못 읽어
  * 넘길 수가 없어서 각 앱 `proxy.ts`가 `/be` 프록시 요청에 실어 준다(KAN-308).
+ *
+ * 분석 헤더 넷(`X-Plick-*`, `analytics.ts`)도 호출부가 붙이지 않는다. 브라우저 fetch는
+ * 프록시가 붙이고, 서버 측 fetch는 각 앱이 `setApiFetchHeaderProvider`로 꽂아 둔 제공자가
+ * 요청 헤더에서 옮겨 싣는다(KAN-542). 호출부가 같은 이름을 직접 넘기면 그쪽이 우선이다.
  */
 
 /**
@@ -40,6 +44,42 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
+
+/**
+ * 소셜 계정이 있어야 되는 일을 막힌 것인가 (KAN-514).
+ *
+ * 댓글·신고·채팅은 소셜 사용자 전용이라 두 가지로 막힌다(댓글 좋아요는 KAN-527부터
+ * 게스트도 된다). 세션이 아예
+ * 없으면 401 `AUTH_REQUIRED`, 게스트 세션이면 403 `AUTH_GUEST_FORBIDDEN`이다. 화면이
+ * 할 일은 둘 다 같다 — 연동/로그인 유도 팝업을 띄운다. 그래서 호출부마다 code 두 개를
+ * 늘어놓지 않게 여기서 묶는다. 어느 문구를 띄울지는 팝업이 `isGuest`로 정한다.
+ *
+ * 다른 401(토큰 만료 등)과 섞이지 않게 status가 아니라 code로 본다.
+ */
+export function needsSocialAccount(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.code === "AUTH_REQUIRED" || error.code === "AUTH_GUEST_FORBIDDEN")
+  );
+}
+
+/**
+ * BE가 참여 쓰기 상한에 걸려 잠시 거절한 것인가 (KAN-527, BE KAN-526).
+ *
+ * 좋아요·댓글 좋아요(`POST`·`DELETE …/like`)는 DB가 느린 순간 같은 대상에 버스트가
+ * 몰리면 503 `COMMON_SERVICE_BUSY`로 떨어진다. 서버가 죽은 게 아니라 순간 상한이라
+ * 잠깐 뒤 한 번 더 보내면 대개 붙는다. 인증 문제가 아니므로 로그인 화면으로 보내면
+ * 안 되고, 낙관적으로 올린 카운트는 재시도까지 실패했을 때만 되돌린다.
+ */
+export function isServiceBusy(error: unknown): boolean {
+  return error instanceof ApiError && error.code === "COMMON_SERVICE_BUSY";
+}
+
+/**
+ * 바쁨(503) 뒤 한 번 자동 재시도하기까지 기다리는 시간(ms). BE가 카운트 증감을
+ * 1초마다 모아 반영하고 재시도도 그쯤 뒤를 권한다(KAN-526).
+ */
+export const SERVICE_BUSY_RETRY_DELAY_MS = 1000;
 
 /**
  * `apiFetch` 한 번의 결과 요약. 메트릭 관측자가 받는다 (KAN-455).
@@ -105,6 +145,57 @@ function observe(outcome: ApiFetchOutcome): void {
 }
 
 /**
+ * 서버 측 `apiFetch`에 실을 헤더를 돌려주는 제공자 (KAN-542). 각 앱이 `instrumentation.ts`에서
+ * 꽂는다. 분석 헤더 넷처럼 "모든 요청에 같이 나가야 하지만 호출부는 모르는" 값이 대상이다.
+ *
+ * 관측자와 같은 이유로 `globalThis`에 둔다 - 번들마다 이 파일의 복사본이 따로 들어가
+ * 모듈 변수는 instrumentation 번들에만 꽂힌다. 브라우저에서는 영원히 비어 있고, 이 파일은
+ * Next에 의존하지 않으므로 요청 컨텍스트(`headers()`)를 읽는 일은 제공자 쪽 몫이다.
+ */
+type ApiFetchHeaderProvider = () => Promise<Record<string, string>>;
+
+const HEADER_PROVIDER_KEY = Symbol.for("plick.apiFetchHeaderProvider");
+
+function getHeaderProvider(): ApiFetchHeaderProvider | null {
+  return (
+    (globalThis as Record<symbol, ApiFetchHeaderProvider | null | undefined>)[
+      HEADER_PROVIDER_KEY
+    ] ?? null
+  );
+}
+
+/**
+ * 서버 측 `apiFetch`가 매 호출 전에 물어볼 헤더 제공자를 등록한다. 마지막 하나만 유지한다.
+ *
+ * @param provider 호출마다 실을 헤더 이름과 값. null이면 해제
+ */
+export function setApiFetchHeaderProvider(
+  provider: ApiFetchHeaderProvider | null,
+): void {
+  (globalThis as Record<symbol, ApiFetchHeaderProvider | null>)[
+    HEADER_PROVIDER_KEY
+  ] = provider;
+}
+
+/**
+ * 제공자가 준 헤더를 호출부가 안 넘긴 이름에만 채운다. 제공자가 던지면 빈 것으로 본다 -
+ * 분석 값 때문에 서비스 요청이 실패하는 일은 없어야 한다(BE 계약과 같은 원칙).
+ */
+async function applyProvidedHeaders(headers: Headers): Promise<void> {
+  const provider = getHeaderProvider();
+  if (!provider) return;
+  let provided: Record<string, string>;
+  try {
+    provided = await provider();
+  } catch {
+    return;
+  }
+  for (const [name, value] of Object.entries(provided)) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
+}
+
+/**
  * 서버에선 절대 URL, 브라우저에선 same-origin 프록시(`/be`)를 쓴다.
  *
  * 브라우저에서 BE 오리진을 직접 부르면 CORS에 막히고 base URL도 클라 번들에
@@ -160,6 +251,10 @@ export async function apiFetch<T>(
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+  /* 서버에서만. 브라우저 fetch는 프록시가 `/be` 요청에 붙인다(KAN-542) */
+  if (typeof window === "undefined") {
+    await applyProvidedHeaders(headers);
   }
 
   const authorized = headers.has("Authorization");

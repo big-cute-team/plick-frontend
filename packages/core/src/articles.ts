@@ -28,15 +28,28 @@ import type {
   ArticleSourceReporter,
   Filter,
   HotArticle,
+  HotArticles,
   TeamCode,
 } from "@plick/domain/types";
 import { apiFetch } from "./client";
+import { toFigureTags, type FigureResponse } from "./figures";
 
-/** BE 응답 카드 (이 파일 로컬 — be-verify가 실제 응답으로 확인한 그대로). */
-interface FeedCardResponse {
+/**
+ * BE 응답 카드 (be-verify가 실제 응답으로 확인한 그대로). 내가 좋아요한 기사
+ * 목록(KAN-495, `GET /users/me/likes`)이 같은 레코드를 그대로 내려주므로 그쪽
+ * fetcher가 이 타입과 {@link toArticleCard}를 가져다 쓴다 — 댓글의
+ * `CommentResponse`·`toComment`와 같은 관용이다.
+ */
+export interface FeedCardResponse {
   articleSummaryId: number;
   title: string;
   summary: string;
+  /**
+   * 한 줄 요약 (KAN-503). 핫이슈 카드와 같은 키로 피드 카드에도 온다
+   * (KAN-482에서 실측). 옵셔널인 이유는 FE가 BE보다 먼저 배포되면 키 자체가
+   * 없어서다 — 변환이 null로 눕힌다.
+   */
+  summaryShort?: string | null;
   rumorStage: string | null;
   /** 게시물 표시 형태 (KAN-438) — "GENERAL" | "DEBATE" | "FINISH". */
   contentType: string | null;
@@ -56,6 +69,11 @@ interface FeedCardResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /**
+   * 태그된 인물 (KAN-500). 새 빌드는 태그가 없어도 `[]`로 준다. 옵셔널인 이유는
+   * FE가 BE보다 먼저 배포되면 키 자체가 없어서다 — 변환이 빈 배열로 눕힌다.
+   */
+  figures?: FigureResponse[] | null;
 }
 
 interface ArticleFeedResponse {
@@ -73,7 +91,7 @@ export const ARTICLES_PAGE_SIZE = 10;
  * BE → 도메인 경계 변환. 필드명·철자·null 차이를 전부 여기서 흡수한다.
  * 화면은 `ArticleCard`만 보고 BE 응답 모양을 모른다.
  */
-function toArticleCard(r: FeedCardResponse): ArticleCard {
+export function toArticleCard(r: FeedCardResponse): ArticleCard {
   const reporterName = r.reporter?.koName ?? r.reporter?.enName ?? null;
 
   return {
@@ -85,6 +103,8 @@ function toArticleCard(r: FeedCardResponse): ArticleCard {
         : "GENERAL",
     title: r.title,
     summary: r.summary,
+    // 빈 문자열이 오면 카드에 빈 줄이 생기므로 null로 눕힌다 (핫이슈와 같다)
+    summaryShort: r.summaryShort?.trim() || null,
     stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,
     publishedAt: r.publishedAt,
     // 마스터에 없는 팀 id가 섞여 오면 표시할 이름이 없으므로 버린다
@@ -101,6 +121,7 @@ function toArticleCard(r: FeedCardResponse): ArticleCard {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    figures: toFigureTags(r.figures),
   };
 }
 
@@ -108,21 +129,30 @@ function toArticleCard(r: FeedCardResponse): ArticleCard {
  * 기사 피드 한 페이지를 가져온다.
  *
  * @param team 팀 필터. `"ALL"`이면 파라미터를 싣지 않아 전체가 온다.
+ * @param figureId 인물 필터 (KAN-500). 주면 그 인물이 태그된 기사만 온다.
+ *   팀과 같이 주면 둘 다 만족하는 기사만 온다(AND).
+ * @param storyId 이슈 필터 (KAN-522). 주면 그 이슈에 묶인 기사만 온다.
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null.
  * @param size 한 페이지 건수 (1..30)
  * @throws {ApiError} 잘못된 파라미터·커서는 400 `COMMON_INVALID_PARAM`으로 온다
  */
 export async function getArticles({
   team = "ALL",
+  figureId = null,
+  storyId = null,
   cursor = null,
   size = ARTICLES_PAGE_SIZE,
 }: {
   team?: Filter;
+  figureId?: string | null;
+  storyId?: string | null;
   cursor?: string | null;
   size?: number;
 } = {}): Promise<ArticleFeedPage> {
   const params = new URLSearchParams({ size: String(size) });
   if (team !== "ALL") params.set("teamId", String(TEAM_IDS[team]));
+  if (figureId) params.set("figureId", figureId);
+  if (storyId) params.set("storyId", storyId);
   if (cursor) params.set("cursor", cursor);
 
   const page = await apiFetch<ArticleFeedResponse>(
@@ -133,6 +163,44 @@ export async function getArticles({
     items: page.items.map(toArticleCard),
     nextCursor: page.nextCursor,
   };
+}
+
+/**
+ * 경기 뉴스 탭에 까는 건수 (KAN-484). 팀마다 이만큼 받아 합친 뒤 다시 이만큼으로
+ * 자른다 — 한 팀 기사가 몰려 있어도 상대 팀 기사가 밀려나지 않게 넉넉히 받는다.
+ */
+export const MATCH_NEWS_COUNT = 8;
+
+/**
+ * 한 경기의 양 팀 기사 모아보기 (KAN-484).
+ *
+ * 경기 전용 기사 API가 없어 팀 필터 목록(`GET /api/v1/articles?teamId=`)을 팀마다
+ * 받아 합친다. 관련 기사(`getRelatedArticles`)가 팀 하나로 같은 일을 하는 것과
+ * 같은 방식이다.
+ *
+ * 한 기사에 두 팀이 다 태그돼 있으면 양쪽 목록에 다 오므로 id로 한 번 접고,
+ * 팀별로는 최신순이지만 합치면 순서가 섞이므로 발행 시각으로 다시 정렬한다.
+ *
+ * 빅6 밖 팀은 `TeamCode`가 없어 호출부가 아예 넘기지 않는다 — 빅6가 한 팀도
+ * 없는 경기는 빈 배열이고 호출부가 빈 상태 문구를 그린다.
+ *
+ * @param teams 그 경기의 빅6 팀 코드 (0~2개)
+ */
+export async function getMatchNews(teams: TeamCode[]): Promise<ArticleCard[]> {
+  if (teams.length === 0) return [];
+
+  const pages = await Promise.all(
+    teams.map((team) => getArticles({ team, size: MATCH_NEWS_COUNT })),
+  );
+
+  const byId = new Map<string, ArticleCard>();
+  for (const item of pages.flatMap((page) => page.items)) {
+    if (!byId.has(item.id)) byId.set(item.id, item);
+  }
+
+  return [...byId.values()]
+    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+    .slice(0, MATCH_NEWS_COUNT);
 }
 
 /**
@@ -163,6 +231,8 @@ interface ArticleDetailResponse {
   viewCount: number;
   likedByMe: boolean;
   hashtags: string[];
+  /** 태그된 인물 (KAN-500). 피드 카드와 같은 사정으로 옵셔널이다. */
+  figures?: FigureResponse[] | null;
 }
 
 /** x.com 원문 링크의 스테이터스 id. 링크가 없거나 형태가 다르면 null. */
@@ -232,6 +302,7 @@ function toArticleDetail(r: ArticleDetailResponse): ArticleDetail {
     likeCount: r.likeCount,
     liked: r.likedByMe,
     hashtags: r.hashtags,
+    figures: toFigureTags(r.figures),
   };
 }
 
@@ -280,6 +351,11 @@ export async function getArticle(
 interface HotCardResponse {
   articleSummaryId: number;
   title: string;
+  /**
+   * 한 줄 요약 (KAN-503). 사진 없는 카드가 제목 밑에 깐다. 옵셔널인 이유는
+   * FE가 BE보다 먼저 배포되면 키 자체가 없어서다 — 변환이 null로 눕힌다.
+   */
+  summaryShort?: string | null;
   rumorStage: string | null;
   publishedAt: string;
   imageUrl: string | null;
@@ -296,11 +372,19 @@ interface HotCardResponse {
   likedByMe: boolean;
 }
 
+/** 두 그룹을 담아 오는 새 응답 (KAN-487). 카드 타입은 두 목록이 같다. */
+interface HotArticlesResponse {
+  withImage: HotCardResponse[];
+  withoutImage: HotCardResponse[];
+}
+
 /** BE → 도메인 경계 변환. 피드 카드와 shape가 달라 `toArticleCard`를 못 쓴다. */
 function toHotArticle(r: HotCardResponse): HotArticle {
   return {
     id: String(r.articleSummaryId),
     title: r.title,
+    // 빈 문자열이 오면 카드에 빈 줄이 생기므로 null로 눕힌다
+    summaryShort: r.summaryShort?.trim() || null,
     stage: r.rumorStage ? (STAGE_BY_BE_VALUE[r.rumorStage] ?? null) : null,
     publishedAt: r.publishedAt,
     // 마스터에 없는 팀 id가 섞여 오면 표시할 이름이 없으므로 버린다
@@ -320,22 +404,38 @@ function toHotArticle(r: HotCardResponse): HotArticle {
 }
 
 /**
- * 홈 핫이슈 기사 목록. 서버 컴포넌트에서 await 해 쓴다.
+ * 홈 핫이슈. 원문 사진이 있는 것과 없는 것을 나눠 받는다 (KAN-480).
  *
- * 건수는 BE 기본 5건이다 (`size` 파라미터는 1..10만 유효). 선정은 최근 48시간
- * 발행분 중 조회수 상위이고 부족하면 최신순 폴백이라, 기사가 아예 없지 않는 한
- * 빈 배열이 오지 않는다. 페이지네이션은 없다.
+ * KAN-282·KAN-324 때는 카드 배열 하나가 왔는데, BE가 KAN-487에서 응답을 두
+ * 목록(`withImage`·`withoutImage`)으로 쪼갰다. 화면이 사진 있는 기사는 캐러셀로,
+ * 없는 기사는 그 아래 세 칸으로 따로 그리려면 FE가 `imageUrl`만 보고 갈라서는
+ * 안 되기 때문이다 — 나누는 기준은 카드의 `imageUrl`이 아니라 원문 게시물의
+ * 사진 유무다({@link HotArticles} 참고).
  *
- * 모바일·웹 모두 캐러셀로 넘기고(KAN-338) 사이드바 실시간 인기도 같은 데이터를
- * 쓴다 — 표시 건수는 표면이 잘라 쓰는 몫이라 fetcher는 BE 기본값을 그대로 돌려준다.
+ * 건수는 그룹마다 BE 기본 5건이다. `size`(1..10)는 전체가 아니라 그룹마다
+ * 걸리므로 한 응답의 최대 카드 수는 `2 * size`다. 표시 건수는 표면이 잘라 쓰는
+ * 몫이라 fetcher는 BE 기본값을 그대로 돌려준다.
+ *
+ * 선정은 그룹 안에서 최근 48시간 조회수 상위이고 부족하면 최신순 폴백이다.
+ * 두 목록 다 빈 배열이 정상 상태다.
  *
  * 피드와 같은 익명 허용 API라 토큰을 싣지 않는다 — 만료 토큰을 실으면
  * 401 `AUTH_EXPIRED_TOKEN`으로 오히려 죽는다.
  */
-export async function getHotArticles(): Promise<HotArticle[]> {
-  const cards = await apiFetch<HotCardResponse[]>("/api/v1/articles/hot");
-  return cards.map(toHotArticle);
+export async function getHotArticles(): Promise<HotArticles> {
+  const groups = await apiFetch<HotArticlesResponse>("/api/v1/articles/hot");
+  return {
+    withImage: groups.withImage.map(toHotArticle),
+    withoutImage: groups.withoutImage.map(toHotArticle),
+  };
 }
+
+/**
+ * 캐러셀 아래 사진 없는 핫이슈를 몇 칸 깔지 (KAN-480). BE는 그룹마다 5건까지
+ * 주는데 화면은 세 칸으로 정해져 있어 여기서 자른다 — 데스크톱은 3열 한 줄,
+ * 모바일은 3행이다.
+ */
+export const HOT_NO_IMAGE_COUNT = 3;
 
 /**
  * 팀태그 기반 관련 기사 (KAN-338). 전용 추천 API가 없어 기사의 대표 팀

@@ -98,6 +98,201 @@
       ],
       "port": 3020,
       "autoPort": true
+    },
+    {
+      "name": "backend-8082",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/dowankim/Documents/plick-backend && JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ./gradlew bootRun --args='--spring.profiles.active=local --server.port=8082 --management.server.port=9468'"
+      ],
+      "port": 8082,
+      "autoPort": false
+    },
+    {
+      "name": "mobile-8082",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3012"
+      ],
+      "port": 3012,
+      "autoPort": true
+    },
+    {
+      "name": "mobile-dev-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3031"
+      ],
+      "port": 3031,
+      "autoPort": true
+    },
+    {
+      "name": "web-dev-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8081",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3030"
+      ],
+      "port": 3030,
+      "autoPort": true
+    },
+    {
+      "name": "mobile-8083",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8083",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3013"
+      ],
+      "port": 3013,
+      "autoPort": true
+    },
+    {
+      "name": "web-8083",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8083",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3003"
+      ],
+      "port": 3003,
+      "autoPort": true
+    },
+    {
+      "name": "mobile-dev-8082",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3001"
+      ],
+      "port": 3001,
+      "autoPort": false
+    },
+    {
+      "name": "web-dev-8082",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3040"
+      ],
+      "port": 3040,
+      "autoPort": true
+    },
+    {
+      "name": "mobile-8082-cors",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3001"
+      ],
+      "port": 3001,
+      "autoPort": false
+    },
+    {
+      "name": "web-8082-cors",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=http://localhost:8082",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "start",
+        "--port",
+        "3000"
+      ],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "mobile-dev-remote",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=https://dev.plick.co.kr/be",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3051"
+      ],
+      "port": 3051
+    },
+    {
+      "name": "web-dev-remote",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=https://dev.plick.co.kr/be",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3050"
+      ],
+      "port": 3050
     }
   ]
 }

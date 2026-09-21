@@ -4,7 +4,7 @@ import {
   type MatchStatusTone,
   type MatchSummary,
 } from "@plick/domain/live";
-import { LiveCrest } from "./LiveCrest";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /** 상태 컬럼 첫 줄의 톤 → 색 토큰 매핑(모바일 카드와 같은 규약). */
 const TONE_TEXT: Record<MatchStatusTone, string> = {
@@ -45,6 +45,7 @@ export function MatchCard({ match }: { match: MatchSummary }) {
   );
 }
 
+/** 팀 한 줄 — 모바일 카드와 같이 서버 3글자 코드 `shortName`을 쓴다(KAN-553). */
 function TeamLine({
   match,
   side,
@@ -59,7 +60,7 @@ function TeamLine({
       <span
         className={`text-title truncate font-semibold ${team.code ? "text-text" : "text-text-3"}`}
       >
-        {team.name}
+        {team.shortName}
       </span>
     </span>
   );

@@ -49,6 +49,17 @@ BE는 모든 응답을 `{ code, message, data }` 봉투로 감싼다(스웨거 `
 (`apps/mobile/app/_services/users.ts`). 만료는 미들웨어가 refresh로 잇는다(ADR 0021).
 보호 API를 실제로 밟는 검증은 `be-verify` 서브에이전트가 토큰을 민팅해서 한다(§6).
 
+분석 헤더 넷(`X-Plick-Device`, `X-Plick-Path`, `X-Plick-Client`, `X-Plick-Entry`)은 호출부가 붙이지
+않는다. 각 앱 `proxy.ts`가 쿠키와 URL에서 값을 정해 요청 헤더에 찍고, 브라우저 `/be` fetch는 그대로
+BE로, 서버 측 `apiFetch`는 `instrumentation.ts`가 꽂은 헤더 제공자(`_services/analytics-headers.ts`)가
+`headers()`에서 옮겨 싣는다. 계약 상수는 `@plick/core/analytics`(ADR 0161).
+
+서버가 모르는 행동(진입, 화면 전환, 원문 클릭, 읽기 종료, 링크 복사)은 브라우저가 `POST /api/v1/events`로
+모아 보낸다. 큐와 전송은 `@plick/core/events`(`trackEvent`, `trackScreenViewed` 등), 라우트 → 화면 값 표는
+`@plick/core/screens`, 읽기 세션은 `@plick/core/reading`이다. 라우트 전환은 각 앱 루트 레이아웃의
+`AnalyticsTracker`가 자동으로 보내고, 캐시 때문에 서버 요청이 없는 화면 안 탭 전환은 그 탭 컴포넌트가
+`useScreenTabView`로 보낸다. 새 라우트를 만들면 `screens.ts` 표에 한 줄 더한다(ADR 0162).
+
 ### 페칭 도구
 
 | 표면                                  | 성격                   | 도구                |
@@ -91,7 +102,7 @@ BE가 붙으면 그 mock을 실제 응답으로 교체한다. 이때 도메인 �
 5. 로딩과 에러, 빈 상태를 처리한다(§5). mock의 항상 성공하고 즉시 오는 성질에 속지 않는다.
 6. 공용화를 판단한다(§3). 이 PR에서 뺄지 후보로만 기록할지 정한다.
 7. 검증한다(§6). 계약과 DB는 `be-verify`, 화면은 브라우저로 직접.
-8. 커밋하고 PR을 올린다. 티켓 키를 넣고 `develop` 기준 브랜치에서 CI를 통과시킨다. 병합은 사용자가 한다.
+8. 커밋하고 push한다. 티켓 키를 넣고 로컬에서 CI와 같은 명령을 통과시킨다. PR은 올리지 않고 제목과 본문을 채팅에 쓴다. PR 생성과 병합은 사용자가 한다.
 
 ## 3. 공용화 판단
 

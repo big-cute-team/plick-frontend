@@ -8,9 +8,13 @@
  * `register`는 Node와 Edge 두 런타임에서 각각 불린다. Edge에는 `node:http`가 없으니
  * Node 런타임일 때만, 그것도 동적 import로 메트릭 모듈을 불러온다. 정적 import를
  * 쓰면 Edge 번들에도 prom-client가 딸려 들어가 빌드가 깨진다.
+ *
+ * 서버 측 `apiFetch`가 분석 헤더 넷을 싣게 하는 제공자(KAN-542)도 여기서 꽂는다. 페이지와
+ * 서버 액션 번들이 각자 `apiFetch` 복사본을 갖지만 제공자 슬롯은 `globalThis`라 한 번이면 된다.
  */
 
 import type { Instrumentation } from "next";
+import { setApiFetchHeaderProvider } from "@plick/core/client";
 import type { MetricsHandle } from "@plick/core/metrics";
 
 /** 메트릭 포트. 인스턴스 하나에 web·mobile이 같이 뜨므로 앱마다 다르다. */
@@ -20,6 +24,8 @@ let metrics: MetricsHandle | null = null;
 
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { getAnalyticsHeaders } = await import("@/_services/analytics-headers");
+  setApiFetchHeaderProvider(getAnalyticsHeaders);
   const { startMetricsServer } = await import("@plick/core/metrics");
   metrics = startMetricsServer({
     app: "mobile",

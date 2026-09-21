@@ -211,8 +211,13 @@ export function ArticlesFeed({
             </div>
           ) : articles.length > 0 ? (
             <>
-              {articles.map((article) => (
-                <NewsItem key={article.id} article={article} filter={filter} />
+              {articles.map((article, i) => (
+                <NewsItem
+                  key={article.id}
+                  article={article}
+                  filter={filter}
+                  rank={i}
+                />
               ))}
 
               {isFetchingNextPage && <NewsItemSkeleton />}

@@ -9,7 +9,7 @@ import type { LiveTeam, SquadPlayer } from "@plick/domain/live";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { usePlayerSeasonStats } from "@/_hooks/usePlayerSeasonStats";
 import { LiveSheet } from "./LiveSheet";
-import { PlayerPhoto } from "./PlayerPhoto";
+import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 
 /**
  * 선수 시즌 스탯 바텀시트(피그마 L12·L13). 스쿼드에서 선수를 누르면 열리고
@@ -116,9 +116,6 @@ function SeasonStatsTable({ playerId }: { playerId: number }) {
           </span>
         </div>
       ))}
-      <p className="text-caption text-text-4 pt-3 text-center">
-        시즌 누적 스탯이에요 · 하루 1번 갱신돼요
-      </p>
     </>
   );
 }

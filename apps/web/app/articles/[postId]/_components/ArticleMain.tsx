@@ -1,7 +1,6 @@
 import { MediaThumb } from "@plick/ui/MediaThumb";
 import { PostBadges } from "@plick/ui/PostBadges";
 import { ReporterLine } from "@plick/ui/ReporterLine";
-import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
@@ -12,10 +11,12 @@ import type {
   InitialCommentPage,
 } from "@plick/domain/types";
 import { NO_TEAM_COLOR_VAR } from "@/_constants/app";
+import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
+import { ReadEndSentinel } from "./ReadEndSentinel";
 import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
@@ -65,9 +66,11 @@ export function ArticleMain({
   const meta = `${formatRelativeTime(article.publishedAt)} · 조회 ${formatCount(article.views)}`;
   const lead = article.reporters[0] ?? null;
 
-  // 기자가 여럿이면 기자별 원문 링크 팝오버, 한 명이면 대표 원문 직행 (KAN-365)
+  // 기자가 여럿이면 기자별 원문 링크 팝오버, 한 명이면 대표 원문 직행 (KAN-365).
+  // 누르면 원문 클릭 이벤트가 나간다 (KAN-543)
   const sourceLink = (
-    <SourceLinkButton
+    <ArticleSourceLink
+      articleId={article.id}
       label="출처 원문 보기"
       sourceUrl={lead?.sourceUrl ?? null}
       reporters={article.reporters}
@@ -140,6 +143,10 @@ export function ArticleMain({
           />
         </div>
       )}
+
+      {/* 본문 끝 표식 — 여기까지 내리면 읽기 종료 이벤트의 reachedEnd가 true (KAN-543).
+          추천 기사·댓글은 본문이 아니라 그 위에 둔다 */}
+      <ReadEndSentinel articleId={article.id} />
 
       {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (모바일과 같은 자리) */}
       <SuggestedArticles articles={suggested} />

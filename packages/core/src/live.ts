@@ -54,6 +54,8 @@ const sideOrder = (side: Side) => (side === "HOME" ? 0 : 1);
 interface SideResponse {
   teamId: number | null;
   name: string;
+  /** 카드용 영문 3글자 코드(KAN-550). 구버전 서버 응답엔 없어 optional로 둔다 */
+  shortName?: string;
   logo: string | null;
 }
 
@@ -327,14 +329,22 @@ export async function getPlayerSeasonStats(
 
 /* ---------- 경계 변환 ---------- */
 
-/** BE Side → 팀 참조. 빅6는 `TEAM_CODES`로 코드를 되찾고 로컬 크레스트를 쓴다. */
+/**
+ * BE Side → 팀 참조. 빅6는 `TEAM_CODES`로 코드를 되찾고 로컬 크레스트를 쓴다.
+ *
+ * `shortName`은 서버가 전 팀에 주는 영문 3글자 코드를 그대로 쓴다(KAN-550 →
+ * KAN-553). 빅6도 서버가 같은 코드(MUN, MCI, LIV, ARS, CHE, TOT)를 주므로 FE
+ * 코드로 덮지 않는다. 필드가 없는 구버전 서버 응답에서만 예전 방식(빅6 코드,
+ * 아니면 이름 앞 세 글자)으로 떨어진다 — BE보다 FE가 먼저 배포돼도 카드가
+ * 깨지지 않게 하기 위한 폴백이고, dev·prod BE가 다 반영되면 지워도 된다.
+ */
 function toLiveTeam(side: SideResponse): LiveTeam {
   const code = side.teamId === null ? null : (TEAM_CODES[side.teamId] ?? null);
   return {
     id: side.teamId,
     code,
     name: side.name,
-    shortName: code ?? teamShortName(side.name),
+    shortName: side.shortName ?? code ?? teamShortName(side.name),
     logo: side.logo,
   };
 }
