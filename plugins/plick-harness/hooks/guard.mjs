@@ -12,9 +12,16 @@
  *
  * 막는 것
  * - `gh pr create`, `gh pr merge`: PR 생성과 병합은 사용자가 직접 한다.
- * - `main`/`develop`으로의 push, 그 브랜치 위에서의 commit과 merge.
+ * - `main`/`develop`을 목적지로 하는 push, 그 브랜치 위에서의 commit과 merge, rebase 등 히스토리 변경.
  * - `git commit --no-verify`(-n): husky 훅 우회.
  * - `pnpm-lock.yaml`, `node_modules/`, `.next/` 편집: 도구 산출물은 손대지 않는다.
+ *
+ * 한계(알고 두는 것)
+ * - 따옴표와 heredoc 안 글자는 검사하지 않는다(stripLiterals). `bash -c "gh pr create"`처럼 명령을
+ *   문자열로 넘기는 형태는 여기서 못 본다. settings.json의 deny 접두어 규칙이 같은 이유로 못 보므로
+ *   이 경로는 문서 규칙과 리뷰에 맡긴다.
+ * - 셸을 파싱하지 않는다. `git`과 `gh`의 전역 옵션(`git -C . push`, `gh -R o/r pr create`)은 허용 패턴에
+ *   넣었지만 그 밖의 변형은 놓칠 수 있다.
  *
  * @example
  *   echo '{"tool_name":"Bash","tool_input":{"command":"gh pr create"}}' | node guard.mjs; echo $?  # 2
@@ -22,6 +29,16 @@
 import { execFileSync } from "node:child_process";
 
 const PROTECTED_BRANCHES = ["main", "develop"];
+
+/**
+ * `git`이나 `gh` 뒤에 올 수 있는 전역 옵션 구간. `-C <dir>`, `-c k=v`, `--no-pager`, `-R owner/repo` 같은 것.
+ * 옵션 하나(`-\S+`)와 그 값일 수 있는 토큰 하나(`\S+`)가 0회 이상 반복된다.
+ */
+const GLOBAL_OPTS = String.raw`(?:\s+-\S+(?:\s+[^-\s]\S*)?)*`;
+const GIT = (sub) => new RegExp(String.raw`\bgit${GLOBAL_OPTS}\s+${sub}\b`);
+const GH_PR = new RegExp(
+  String.raw`\bgh${GLOBAL_OPTS}\s+pr\s+(create|merge)\b`,
+);
 
 /**
  * 현재 체크아웃된 브랜치 이름을 돌려준다. git 저장소가 아니거나 실패하면 빈 문자열이다.
@@ -61,6 +78,27 @@ function stripLiterals(command) {
 }
 
 /**
+ * `git push …` 한 구간의 인자에서 목적지 브랜치가 보호 브랜치인지 본다.
+ *
+ * 단어 경계(`\b`)로 보면 `feature/KAN-600-develop-tooling`의 `develop`도 걸려 정상 push를 막는다.
+ * 그래서 토큰 단위로 보고, refspec은 `src:dst`의 dst만 본다. `+`(강제)와 `refs/heads/`는 벗긴다.
+ *
+ * @param {string} pushPart `git … push`부터 다음 `|`, `;`, `&` 전까지의 문자열
+ */
+function pushTargetsProtected(pushPart) {
+  const tokens = pushPart.split(/\s+/);
+  const afterPush = tokens.slice(tokens.indexOf("push") + 1);
+  for (const token of afterPush) {
+    if (!token || token.startsWith("-")) continue;
+    const dest = (token.includes(":") ? token.split(":").pop() : token)
+      .replace(/^\+/, "")
+      .replace(/^refs\/heads\//, "");
+    if (PROTECTED_BRANCHES.includes(dest)) return dest;
+  }
+  return null;
+}
+
+/**
  * Bash 명령 문자열을 검사해 막아야 할 이유를 돌려준다. 통과면 null이다.
  *
  * 복합 명령(`cd x && gh pr create`)이나 세미콜론 연결도 한 문자열이므로 정규식이 통째로 본다.
@@ -72,26 +110,28 @@ function stripLiterals(command) {
 function checkBash(command, cwd) {
   const cmd = stripLiterals(command).replace(/\s+/g, " ");
 
-  if (/\bgh\s+pr\s+(create|merge)\b/.test(cmd)) {
+  if (GH_PR.test(cmd)) {
     return "PR 생성과 병합은 클로드가 하지 않는다(CLAUDE.md Git · PR). 커밋과 push까지만 하고 PR 제목과 본문을 채팅에 써 준다.";
   }
 
-  if (/\bgit\s+commit\b[^|;&]*(\s-n\b|\s--no-verify\b)/.test(cmd)) {
+  const commitPart = cmd.match(
+    new RegExp(GIT("commit").source + String.raw`[^|;&]*`),
+  )?.[0];
+  if (commitPart && /(^|\s)(-n|--no-verify)(\s|$)/.test(commitPart)) {
     return "git commit --no-verify는 husky 커밋 훅(lint-staged)을 우회한다. 훅이 실패하면 원인을 고친 뒤 다시 커밋한다.";
   }
 
-  const protectedRe = new RegExp(`\\b(${PROTECTED_BRANCHES.join("|")})\\b`);
-
-  if (/\bgit\s+push\b/.test(cmd)) {
-    const pushPart = cmd.match(/\bgit\s+push\b[^|;&]*/)?.[0] ?? "";
-    if (protectedRe.test(pushPart)) {
-      return "main과 develop으로 직접 push하지 않는다(CLAUDE.md Git · PR). feature/KAN-<번호>-<설명> 브랜치로 push하고 PR을 거친다.";
+  const pushPart = cmd.match(
+    new RegExp(GIT("push").source + String.raw`[^|;&]*`),
+  )?.[0];
+  if (pushPart) {
+    const dest = pushTargetsProtected(pushPart);
+    if (dest) {
+      return `${dest}으로 직접 push하지 않는다(CLAUDE.md Git · PR). feature/KAN-<번호>-<설명> 브랜치로 push하고 PR을 거친다.`;
     }
   }
 
-  const touchesHistory =
-    /\bgit\s+(commit|merge|push|rebase|cherry-pick|reset|revert)\b/.test(cmd);
-  if (touchesHistory) {
+  if (GIT("(commit|merge|push|rebase|cherry-pick|reset|revert)").test(cmd)) {
     const branch = currentBranch(cwd);
     if (PROTECTED_BRANCHES.includes(branch)) {
       return `현재 브랜치가 ${branch}다. main과 develop에서는 commit, merge, push, rebase를 하지 않는다. develop에서 feature/KAN-<번호>-<설명> 브랜치를 먼저 딴다.`;

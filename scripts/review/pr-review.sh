@@ -46,7 +46,7 @@ if [ -z "$CHANGED" ]; then
   echo "[pr-review] $BASE 대비 변경 파일이 없다. 리뷰할 게 없다."
   exit 0
 fi
-DIFF_LINES="$(git diff "$RANGE" -- $CHANGED | wc -l | tr -d ' ')"
+DIFF_LINES="$(git diff "$RANGE" -- . ':(exclude)pnpm-lock.yaml' | wc -l | tr -d ' ')"
 
 PROMPT="$(cat <<EOF
 너는 PLick 프론트엔드 저장소의 PR 리뷰어다. 아래 커밋 범위의 변경만 리뷰한다.
@@ -109,7 +109,11 @@ fi
 
 python3 - "$OUT_DIR/raw.json" "$OUT" <<'PY'
 import json, sys
-raw = json.load(open(sys.argv[1]))
+try:
+    raw = json.load(open(sys.argv[1]))
+except Exception as e:  # 타임아웃으로 중간에 끊긴 출력 등. CRITICAL(exit 1)과 섞이지 않게 3으로 낸다
+    print(f"[pr-review] 결과 JSON을 읽지 못했다: {e}", file=sys.stderr)
+    sys.exit(3)
 if raw.get("is_error"):
     print(f"[pr-review] 실행 오류: {raw.get('result')}", file=sys.stderr)
     sys.exit(3)
