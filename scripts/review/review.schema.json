@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PR 헤드리스 리뷰 결과",
   "type": "object",
   "required": ["summary", "findings"],
@@ -16,15 +15,25 @@
         "required": ["severity", "title", "file", "reason"],
         "additionalProperties": false,
         "properties": {
-          "severity": { "enum": ["CRITICAL", "WARN", "INFO"] },
-          "title": { "type": "string" },
-          "file": { "type": "string" },
-          "line": { "type": ["integer", "null"] },
+          "severity": {
+            "enum": ["CRITICAL", "WARN", "INFO"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": ["integer", "null"]
+          },
           "reason": {
             "type": "string",
             "description": "왜 문제인지, 근거가 되는 코드"
           },
-          "suggestion": { "type": ["string", "null"] }
+          "suggestion": {
+            "type": ["string", "null"]
+          }
         }
       }
     }

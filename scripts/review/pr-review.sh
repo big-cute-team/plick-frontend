@@ -97,7 +97,7 @@ run_with_timeout claude -p "$PROMPT" \
   --allowed-tools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)" \
   --max-turns "$MAX_TURNS" \
   --max-budget-usd "$BUDGET" \
-  > "$OUT_DIR/raw.json" 2> "$OUT_DIR/stderr.log"
+  < /dev/null > "$OUT_DIR/raw.json" 2> "$OUT_DIR/stderr.log"
 CODE=$?
 set -e
 
