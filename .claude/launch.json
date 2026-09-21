@@ -261,6 +261,38 @@
       ],
       "port": 3000,
       "autoPort": false
+    },
+    {
+      "name": "mobile-dev-remote",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=https://dev.plick.co.kr/be",
+        "pnpm",
+        "--filter",
+        "mobile",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3051"
+      ],
+      "port": 3051
+    },
+    {
+      "name": "web-dev-remote",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "API_BASE_URL=https://dev.plick.co.kr/be",
+        "pnpm",
+        "--filter",
+        "web",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3050"
+      ],
+      "port": 3050
     }
   ]
 }
