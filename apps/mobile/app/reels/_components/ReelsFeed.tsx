@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
+import { trackScreenViewed } from "@plick/core/events";
 import {
   REELS_DOM_WINDOW,
   REELS_EMBED_FETCH_AHEAD,
@@ -106,6 +107,8 @@ export function ReelsFeed({
     (reel: ReelCard, lift: number) => {
       setDetail({ reel, lift });
       openSheet();
+      /* 시트는 서버 요청 없이 열리는 화면이라 여기서 화면 전환으로 센다 (KAN-543) */
+      trackScreenViewed("reels.detail", reel.id);
     },
     [openSheet],
   );
@@ -223,6 +226,7 @@ export function ReelsFeed({
             <ReelItem
               key={reel.id}
               reel={reel}
+              rank={i}
               active={i === activeIndex}
               nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
               /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —

@@ -45,6 +45,7 @@ export function MatchCard({ match }: { match: MatchSummary }) {
   );
 }
 
+/** 팀 한 줄 — 모바일 카드와 같이 서버 3글자 코드 `shortName`을 쓴다(KAN-553). */
 function TeamLine({
   match,
   side,
@@ -59,7 +60,7 @@ function TeamLine({
       <span
         className={`text-title truncate font-semibold ${team.code ? "text-text" : "text-text-3"}`}
       >
-        {team.name}
+        {team.shortName}
       </span>
     </span>
   );

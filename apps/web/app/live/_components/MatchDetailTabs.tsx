@@ -45,7 +45,6 @@ export function MatchDetailTabs({
       <div className="flex flex-col gap-3">
         <GoalsCard goals={detail.goals} />
         <TimelineCard header={header} events={detail.events} />
-        <Caption status={header.status} />
       </div>
     ) : (
       <EmptyBlock label={matchEmptyLabel("summary", header.status)} />
@@ -64,20 +63,9 @@ export function MatchDetailTabs({
     );
   }
   return detail.stats ? (
-    <StatsCard stats={detail.stats} status={header.status} />
+    <StatsCard stats={detail.stats} />
   ) : (
     <EmptyBlock label={matchEmptyLabel("stats", header.status)} />
-  );
-}
-
-/** 라이브 중에만 폴링 안내를, 종료 후엔 확정 안내를 단다. */
-function Caption({ status }: { status: MatchDetail["header"]["status"] }) {
-  return (
-    <p className="text-body text-text-4 text-center">
-      {status === "LIVE"
-        ? "라이브 중에는 20초마다 자동 갱신돼요"
-        : "경기가 끝났어요 · 선수 평점은 확정 값이에요"}
-    </p>
   );
 }
 

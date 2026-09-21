@@ -32,7 +32,7 @@ export function StandingsTable({ rows }: { rows: StandingRow[] }) {
         ))}
         <p className="text-caption text-text-4 flex items-center gap-1.5 px-1 pt-2.5 pb-1.5">
           <span aria-hidden className="bg-accent h-2.5 w-0.5 rounded-full" />
-          챔피언스리그 진출권 · 순위는 1시간마다 갱신돼요
+          챔피언스리그 진출권
         </p>
       </div>
     </div>

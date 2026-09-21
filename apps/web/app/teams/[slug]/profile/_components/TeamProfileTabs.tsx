@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LIVE_SEASON_LABEL, type TeamSquad } from "@plick/domain/live";
 import type { FigureTag } from "@plick/domain/types";
 import { TEAM_PROFILE_TAB_LABEL } from "@/_constants/team-profile";
+import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { TeamProfileTabKey } from "@/_types/team-profile";
 import { SquadGrid } from "./SquadGrid";
 import { TeamFiguresList } from "./TeamFiguresList";
@@ -25,13 +26,18 @@ import { TeamFiguresList } from "./TeamFiguresList";
  * @param figures 기사에서 뽑은 소속 인물
  */
 export function TeamProfileTabs({
+  slug,
   squad,
   figures,
 }: {
+  /** 팀 slug. 탭 전환 이벤트의 ref (KAN-543) */
+  slug: string;
   squad: TeamSquad | null;
   figures: FigureTag[];
 }) {
   const [active, setActive] = useState<TeamProfileTabKey>("squad");
+  /* 탭 전환은 서버 요청이 없어 여기서 화면 전환으로 센다 (KAN-543) */
+  useScreenTabView("team_profile", active, slug);
 
   return (
     <>

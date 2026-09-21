@@ -15,14 +15,9 @@ export function BenchList({
 
   return (
     <section className="bg-elevate rounded-card flex flex-col p-4 pb-2">
-      <div className="flex items-baseline justify-between pb-1">
-        <h2 className="text-body text-text-2 font-bold">
-          벤치 · {lineup.team.name}
-        </h2>
-        <span className="text-caption text-text-4">
-          선수를 누르면 경기 스탯을 볼 수 있어요
-        </span>
-      </div>
+      <h2 className="text-body text-text-2 pb-1 font-bold">
+        벤치 · {lineup.team.name}
+      </h2>
       {lineup.bench.map((player, i) => {
         const tone = ratingTone(player.rating);
         return (

@@ -104,9 +104,6 @@ export function SeasonStatsModal({
               </span>
             </div>
           ))}
-          <p className="text-caption text-text-4 pt-3 text-center">
-            시즌 누적 스탯이에요 · 하루 1번 갱신돼요
-          </p>
         </>
       ) : (
         <div className="flex flex-col items-center gap-2 py-8 text-center">

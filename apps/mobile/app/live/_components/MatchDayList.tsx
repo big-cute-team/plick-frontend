@@ -25,7 +25,7 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
   }
 
   return (
-    <div className="px-edge flex flex-col gap-3 pt-2">
+    <div className="px-edge flex flex-col gap-3 pt-2 pb-4">
       {groups.map((group) => (
         <section key={group.id} className="flex flex-col gap-2">
           <h2 className="flex items-center gap-1.5">
@@ -39,9 +39,6 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
           ))}
         </section>
       ))}
-      <p className="text-caption text-text-4 pt-1 pb-4 text-center">
-        라이브 경기는 20~30초마다 자동 갱신돼요
-      </p>
     </div>
   );
 }

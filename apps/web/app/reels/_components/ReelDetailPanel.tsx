@@ -5,8 +5,8 @@ import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
 import { CloseIcon } from "@plick/ui/icons";
 import { ReporterLine } from "@plick/ui/ReporterLine";
-import { SourceLinkButton } from "@plick/ui/SourceLinkButton";
 import { TagChips } from "@plick/ui/TagChips";
+import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -147,8 +147,10 @@ export function ReelDetailPanel({
 
               <div className="flex items-center gap-2">
                 <TagChips tags={rendered.hashtags} />
-                {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365) */}
-                <SourceLinkButton
+                {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 그 외엔 대표 원문 직행 (KAN-365).
+                    누르면 원문 클릭 이벤트가 나간다 (KAN-543) */}
+                <ArticleSourceLink
+                  articleId={rendered.id}
                   label="출처 원문 보기"
                   sourceUrl={rendered.sourceUrl}
                   reporters={reporters}

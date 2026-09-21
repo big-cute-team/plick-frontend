@@ -256,12 +256,13 @@ export function PostFeed({
           </div>
         ) : articles.length > 0 ? (
           <>
-            {articles.map((post) => (
+            {articles.map((post, i) => (
               <PostListItem
                 key={post.id}
                 post={post}
                 variant={variant}
                 filter={filter}
+                rank={i}
               />
             ))}
 

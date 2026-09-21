@@ -7,6 +7,7 @@ import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
+import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
 import { MatchChatPanel } from "./MatchChatPanel";
@@ -84,6 +85,8 @@ function MatchDetailBody({
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
+  /* 탭 전환은 캐시라 서버 요청이 없어 여기서 화면 전환으로 센다 (KAN-543) */
+  useScreenTabView("match_detail", active, header.id);
 
   return (
     <div

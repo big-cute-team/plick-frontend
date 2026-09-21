@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { DEVICE_ID_COOKIE, isDeviceId } from "@plick/core/analytics";
 import { crossSiteUrl } from "@plick/domain/cross-site";
 import { CloseIcon } from "@plick/ui/icons";
 import { SWITCH_BANNER_DISMISS_KEY, WEB_SUGGEST_MEDIA } from "@/_constants/app";
 import { WEB_SITE_URL } from "@/_constants/site";
+import { readCookie } from "@/_utils/cookie";
 
 /**
  * 데스크톱 전환 추천 배너 (KAN-379) — 모바일 도메인(`m.plick.co.kr`)을 넓은
@@ -24,13 +26,20 @@ import { WEB_SITE_URL } from "@/_constants/site";
  *
  * 서버에서는 창 크기도 localStorage도 알 수 없으므로 첫 렌더에는 아무것도 그리지
  * 않고, 마운트 뒤 조건이 맞을 때만 켠다. 그래야 하이드레이션이 어긋나지 않는다.
+ *
+ * 링크에는 기기 식별자 쿠키(`plick_did`)를 쿼리로 싣는다 (KAN-542). 쿠키는 도메인별이라
+ * 그냥 넘어가면 데스크톱 도메인에서 새 기기로 세어진다. 받는 쪽 프록시가 자기 쿠키가
+ * 없을 때만 이 값을 채택한다. 마운트 뒤에 읽는 것도 같은 하이드레이션 이유다.
  */
 export function SwitchToWebBanner() {
   const [show, setShow] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
     if (localStorage.getItem(SWITCH_BANNER_DISMISS_KEY)) return;
+    const did = readCookie(DEVICE_ID_COOKIE);
+    setDeviceId(isDeviceId(did) ? did : null);
     const media = window.matchMedia(WEB_SUGGEST_MEDIA);
     setShow(media.matches);
     /* 창을 넓히거나 좁히는 동안에도 따라온다 — 한 번 닫았으면 아래 dismiss가 끈다 */
@@ -47,7 +56,7 @@ export function SwitchToWebBanner() {
         더 넓은 화면에 맞춘 PC 버전이 있어요.
       </p>
       <a
-        href={crossSiteUrl(WEB_SITE_URL, pathname)}
+        href={crossSiteUrl(WEB_SITE_URL, pathname, deviceId)}
         className="text-caption text-accent shrink-0 font-bold active:opacity-60"
       >
         PC로 보기
