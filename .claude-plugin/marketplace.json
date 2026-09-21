@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "plick",
+  "metadata": {
+    "description": "PLick 팀 Claude Code 플러그인 마켓. 이 저장소를 마켓으로 등록하면 plick-harness를 다른 저장소에도 설치할 수 있다.",
+    "version": "0.1.0"
+  },
+  "owner": {
+    "name": "kimdowan",
+    "email": "whoru3918@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "plick-harness",
+      "description": "doc-style, pr-writing, adr-writing 스킬과 Git 가드 PreToolUse 훅",
+      "version": "0.1.0",
+      "source": "./plugins/plick-harness",
+      "category": "development-tools"
+    }
+  ]
+}
