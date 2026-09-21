@@ -16,9 +16,14 @@
       "Bash(git log:*)",
       "Bash(git diff:*)",
       "Bash(git show:*)",
-      "Bash(gh pr:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr status:*)",
       "Bash(node scripts/be-verify/mint-jwt.mjs:*)",
       "Bash(./scripts/be-verify/db.sh:*)",
+      "Bash(./scripts/review/pr-review.sh:*)",
       "Bash(curl -s http://localhost:8080/*)",
       "mcp__plugin_figma_figma__whoami",
       "mcp__plugin_figma_figma__get_metadata",
@@ -26,9 +31,34 @@
       "mcp__plugin_figma_figma__get_design_context",
       "mcp__plugin_figma_figma__get_screenshot"
     ],
-    "deny": []
+    "deny": [
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git push origin develop:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git commit --no-verify:*)",
+      "Edit(pnpm-lock.yaml)",
+      "Write(pnpm-lock.yaml)",
+      "Edit(**/node_modules/**)",
+      "Write(**/node_modules/**)",
+      "Edit(**/.next/**)",
+      "Write(**/.next/**)"
+    ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/plugins/plick-harness/hooks/guard.mjs\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
@@ -36,6 +66,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\""
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/convention-check.mjs\""
           }
         ]
       }
