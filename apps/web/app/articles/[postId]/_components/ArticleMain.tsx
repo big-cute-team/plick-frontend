@@ -5,7 +5,6 @@ import { TagChips } from "@plick/ui/TagChips";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import type {
-  ArticleCard,
   ArticleDetail,
   Debate,
   InitialCommentPage,
@@ -17,15 +16,15 @@ import { ArticleComments } from "./ArticleComments";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
 import { ReadEndSentinel } from "./ReadEndSentinel";
-import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
  * 기사 세부 본문 컬럼 — 칩·제목·기자 라인·대표 이미지·본문 문단·태그·액션·댓글.
  *
  * 정적 렌더(서버 컴포넌트)이며, 공용 조각(PostBadges·ReporterLine·TagChips·
  * CommentsHeader·CommentComposer)을 재사용한다. 좌우 폭은 상위 그리드가 정한다.
- * 배지 줄과 "함께 보면 좋은 기사"의 위치는 모바일 `ArticleBody`와 같게 맞췄다
- * (KAN-322) — 로고 + 알약 없는 단계 글자, 추천 행은 본문 글 바로 밑 액션 위.
+ * 배지 줄은 모바일 `ArticleBody`와 같게 맞췄다(KAN-322). 로고 + 알약 없는 단계
+ * 글자다. 본문 밑에 두던 "함께 보면 좋은 기사" 행은 KAN-563에서 뺐다. 사이드바
+ * 관련 기사와 겹치는 자리인데 채운 적 없이 준비 중 문구만 그리고 있었다.
  *
  * 실계약(KAN-322)으로 갈아타면서 마크업이 전제하던 게 몇 개 깨졌다. 팀은 단일이
  * 아니라 배열이고 비어 있을 수 있어 첫 팀만 대표로 쓰고 없으면 칩을 그리지
@@ -43,20 +42,16 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 내려가고, 이 파일은 서버가 미리 받아 둔 첫 페이지를 넘겨주기만 한다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
- * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록. BE 추천 API가 아직 없어
- *   기본은 빈 배열이고, 비어 있으면 카드 대신 준비 중 문구가 나온다.
  * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지. 댓글 fetch가
  *   실패했으면 없이 들어오고, 그때는 목록이 클라에서 직접 받는다.
  * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드가 빠진다.
  */
 export function ArticleMain({
   article,
-  suggested = [],
   initialComments,
   debate = null,
 }: {
   article: ArticleDetail;
-  suggested?: ArticleCard[];
   initialComments?: InitialCommentPage;
   debate?: Debate | null;
 }) {
@@ -145,11 +140,8 @@ export function ArticleMain({
       )}
 
       {/* 본문 끝 표식 — 여기까지 내리면 읽기 종료 이벤트의 reachedEnd가 true (KAN-543).
-          추천 기사·댓글은 본문이 아니라 그 위에 둔다 */}
+          댓글은 본문이 아니라 그 위에 둔다 */}
       <ReadEndSentinel articleId={article.id} />
-
-      {/* 함께 보면 좋은 기사 — 본문 글 바로 밑, 액션·댓글 위 (모바일과 같은 자리) */}
-      <SuggestedArticles articles={suggested} />
 
       {/* 액션 — 좋아요·공유 버튼만 클라 경계로 떼어 낸다(좋아요는 누른 상태일 때
           강조색, 공유는 링크 복사 팝업). 본문은 서버 컴포넌트로 남는다 */}
