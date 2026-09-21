@@ -22,7 +22,7 @@ export function StandingsRail({ rows }: { rows: StandingRow[] }) {
       ))}
       <p className="text-body text-text-4 flex items-center gap-1.5 px-1 pt-4">
         <span aria-hidden className="bg-accent h-3 w-0.5 rounded-full" />
-        1~4위 챔피언스리그 · 1시간마다 갱신돼요
+        1~4위 챔피언스리그
       </p>
     </section>
   );
