@@ -107,3 +107,55 @@ body {
   width: 34px;
   height: 34px;
 }
+
+/* 홈 핫이슈 카드 안의 임베드 (KAN-560) — 카드를 덮는 상자(`.hot-embed`, HotCard)가
+ * 컨테이너라 뷰포트가 아니라 카드 폭으로 축소를 건다. lg 아래에서는 카드가
+ * 컨테이너의 86%라 700px을 넘고, lg에서는 네 장이 한 줄에 서서 300px 남짓으로
+ * 준다. 큰 칸은 라이브러리 기본 크기(본문 1.25rem·아바타 48px) 그대로 두고,
+ * 좁은 칸에서만 모바일 `.hot-embed`(KAN-525)와 같은 치수로 줄인다.
+ * 배경은 릴 임베드처럼 카드 바탕(--plk-reel-bg)에 맞추고, 라이브러리
+ * max-width 550px·min-width 250px는 칸과 무관하게 푼다 — 큰 칸에서는 임베드가
+ * 왼쪽 550px에 머물고, lg 카드는 1024px 뷰포트에서 220px까지 줄어 오른쪽이
+ * 잘린다. */
+.hot-embed .react-tweet-theme.react-tweet-theme {
+  min-width: 0;
+  max-width: none;
+  --tweet-bg-color: var(--plk-reel-bg);
+  --tweet-bg-color-hover: var(--plk-reel-bg);
+}
+@container (max-width: 360px) {
+  .hot-embed .react-tweet-theme.react-tweet-theme {
+    --tweet-header-font-size: 0.7rem;
+  }
+  .hot-embed
+    .react-tweet-theme
+    [class*="tweet-container-module"][class$="__article"] {
+    padding: 0.5rem 0.625rem;
+  }
+  .hot-embed .react-tweet-theme p[class*="tweet-body-module"] {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+  .hot-embed
+    .react-tweet-theme
+    [class*="tweet-header-module"][class$="__avatar"] {
+    width: 24px;
+    height: 24px;
+  }
+  /* 좁은 칸에서는 헤더 오른쪽 X 로고와 "· Follow"가 작성자 이름 자리를 먹는다.
+   * 둘 다 눌리지 않는(pointer-events: none) 장식이라 숨기고 이름에 폭을 준다.
+   * 라이브러리는 로고 자리로 84px을 비워 두므로(.author max-width) 그것도 푼다. */
+  .hot-embed
+    .react-tweet-theme
+    [class*="tweet-header-module"][class$="__brand"],
+  .hot-embed
+    .react-tweet-theme
+    [class*="tweet-header-module"][class$="__authorFollow"] {
+    display: none;
+  }
+  .hot-embed
+    .react-tweet-theme
+    [class*="tweet-header-module"][class$="__author"] {
+    max-width: 100%;
+  }
+}

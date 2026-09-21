@@ -43,6 +43,16 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어 첫 팀만 대표로 쓰고, 없으면 팀
  * 이름 자리를 비운다. 단계·기자도 null이면 그 조각만 빠진다.
  *
+ * 폴백 임베드는 KAN-560 전까지 카드 안에 맨몸으로 놓여 있었다. react-tweet
+ * 기본 max-width 550px에 걸려 lg 아래(카드 폭 86%)에서 카드가 700px 넘게
+ * 커져도 임베드는 왼쪽 위 550px 상자에 머물렀고, 배경색도 `--plk-bg`라 카드
+ * 바탕(`bg-reel-bg`)과 톤이 달라 상자가 따로 떠 보였다. 지금은 모바일
+ * `HotHeroCard`(KAN-525)처럼 카드를 덮는 상자에 넣어 가로를 꽉 채우고, 웹 릴
+ * 임베드처럼 세로 가운데에 세운다. 카드 폭이 lg 네 장 줄(300px 남짓)과 lg 아래
+ * 큰 칸(700px 넘게) 사이를 오가므로 글자·아바타 축소는 뷰포트가 아니라 카드
+ * 폭 기준 컨테이너 쿼리로 건다. 큰 칸은 라이브러리 기본 크기 그대로 둔다 —
+ * 릴 축소값(14px)을 물리면 700px 칸에서 임베드가 작아 보인다.
+ *
  * 카드 전체가 기사 세부(`/articles/[postId]`)로 가는 링크다. 스크림이 텍스트를
  * 덮는 구조라 링크를 형제로 깔아 카드를 덮는다 — 폴백 임베드가 뜨는 칸에서도
  * 임베드 안 링크는 전역 CSS에서 꺼져 있어(globals.css) 카드 링크만 산다.
@@ -79,9 +89,15 @@ export function HotCard({
           className="absolute inset-0 size-full object-cover"
         />
       ) : article.sourceUrl ? (
-        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 트윗 링크가 아니거나
-           원문이 지워졌으면 `TweetEmbed`가 아무것도 그리지 않아 배경색만 남는다 */
-        <TweetEmbed url={article.sourceUrl} />
+        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 카드를 덮는 상자 안에서
+           가로를 꽉 채우고 세로 가운데에 서며, 카드보다 길면 위아래가 잘린다
+           (KAN-560). `hot-embed`가 카드 배경색과 max-width 해제를 주고, 좁은
+           칸(lg 네 장 줄)에서만 글자·아바타를 줄인다(globals.css, 컨테이너
+           쿼리). 트윗 링크가 아니거나 원문이 지워졌으면 `TweetEmbed`가 안내
+           문구만 세운다 */
+        <div className="hot-embed @container absolute inset-0 flex flex-col [justify-content:safe_center] overflow-hidden">
+          <TweetEmbed url={article.sourceUrl} />
+        </div>
       ) : null}
 
       {/* pt가 스크림 윗선 — 팀·단계 줄보다 조금 위까지만 어둡다 (KAN-300) */}
