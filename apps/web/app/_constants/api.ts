@@ -23,6 +23,8 @@ import type { SocialProvider } from "@/_types/api";
  *   빼면 신규 가입자의 이메일이 안 들어온다. 선택 동의 항목이라 거부해도 로그인은 이어지고,
  *   값은 BE가 저장한다(KAN-475). 콘솔에서 켜지 않은 항목을 적으면 인가가 오류로 막히니
  *   동의 항목을 먼저 켜고 배포한다.
+ *   `age_range`·`gender`는 KAN-555에서 잠시 뺐다 — 카카오 비즈 앱 심사가 아직 진행 중이라
+ *   콘솔에서 항목이 열리지 않은 상태다. 심사가 끝나면 `account_email,age_range,gender`로 되돌린다.
  * - 애플(KAN-395): scope 없이 `response_type=code`만 보내 GET 콜백으로 돌아온다 —
  *   scope를 붙이면 `response_mode=form_post`가 강제돼 콜백이 POST로 바뀐다. 유저
  *   식별은 BE가 code 교환으로 받는 id_token의 sub로 해결한다.
@@ -36,7 +38,7 @@ export const OAUTH_AUTHORIZE: Record<
     endpoint: "https://kauth.kakao.com/oauth/authorize",
     clientIdEnv: "KAKAO_CLIENT_ID",
     extraParams: {
-      scope: "account_email,age_range,gender",
+      scope: "account_email",
       prompt: "login",
     },
   },

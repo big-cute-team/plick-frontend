@@ -1,7 +1,11 @@
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { NewBadge } from "@plick/ui/NewBadge";
 import { TEAMS } from "@plick/domain/constants";
-import { formatRelativeTime, isRecentlyPublished } from "@plick/domain/format";
+import {
+  formatCount,
+  formatRelativeTime,
+  isRecentlyPublished,
+} from "@plick/domain/format";
 import type { ArticleCard, Filter } from "@plick/domain/types";
 import type { PostListVariant } from "@/_types/app";
 import { ArticleLink } from "@/_components/ArticleLink";
@@ -46,6 +50,11 @@ const VARIANT: Record<
  * 팀명·시각이 제목 위에, 기자명·좋아요·조회·댓글이 제목 아래에 깔리고 로고와
  * 썸네일이 오른쪽에 붙어 있었다. 집계 숫자와 썸네일은 뺐다 — 리스트에서 읽을
  * 것은 제목과 요약이고 나머지는 기사 세부에 있다.
+ *
+ * 댓글 수만 KAN-555에서 되살렸다(모바일 `NewsItem`과 같다). 핫이슈 텍스트 카드
+ * ({@link HotTextCard})가 게시판처럼 `제목 [3]`으로 다는 표기를 리스트에도 같게
+ * 단다. 0이면 그리지 않고, 제목이 두 줄로 잘려도 숫자는 잘리지 않게 제목과
+ * 형제로 둔다. 숫자는 제목과 같은 `title` 클래스를 타 변형마다 크기가 따라간다.
  *
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓴다. 팀이 없는
  * 기사는 로고 자리를 그리지 않고 제목이 왼쪽 끝부터 찬다. 기자 이름도 원문이
@@ -105,11 +114,20 @@ export function PostListItem({
         />
       )}
       <div className="min-w-0 flex-1">
-        <Title
-          className={`text-text-strong mt-0.5 line-clamp-2 leading-snug font-bold tracking-tight ${v.title}`}
-        >
-          {post.title}
-        </Title>
+        <div className="mt-0.5 flex items-start gap-1.5">
+          <Title
+            className={`text-text-strong line-clamp-2 min-w-0 leading-snug font-bold tracking-tight ${v.title}`}
+          >
+            {post.title}
+          </Title>
+          {post.commentCount > 0 && (
+            <span
+              className={`text-accent shrink-0 leading-snug font-bold tabular-nums ${v.title}`}
+            >
+              [{formatCount(post.commentCount)}]
+            </span>
+          )}
+        </div>
         {summary && (
           <p className="text-body text-text-strong mt-1.5 truncate">
             {summary}

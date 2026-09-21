@@ -6,6 +6,7 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsIcon } from "@plick/ui/icons";
 import type { ArticleCard, Filter } from "@plick/domain/types";
 import {
+  formatCount,
   formatRelativeTime,
   isRecentlyPublished,
   teamProfilePath,
@@ -20,6 +21,13 @@ import { NewBadge } from "@plick/ui/NewBadge";
  * 제목 아래에 깔리고 로고와 썸네일이 오른쪽에 붙어 한 줄에 표식이 아홉 개였다.
  * 집계 숫자(좋아요·조회·댓글)와 썸네일, 인물 칩은 뺐다 — 리스트에서 읽을 것은
  * 제목과 요약이고 나머지는 기사 세부에 있다.
+ *
+ * 댓글 수만 KAN-555에서 되살렸다. 핫이슈 텍스트 카드({@link HotTextCard})가
+ * 게시판처럼 `제목 [3]`으로 다는 표기를 리스트에도 같게 단다 — 홈 하단과 기사
+ * 페이지가 이 행을 공용하므로 한 곳에서 끝난다. 0이면 빈 `[0]`이 소음이라
+ * 그리지 않고, 제목이 두 줄로 잘려도 숫자는 잘리지 않게 제목과 형제로 둔다.
+ * 행 전체 링크의 `::after`는 `article`(positioned)에 붙으므로 래퍼 하나가
+ * 늘어도 덮는 범위는 그대로다.
  *
  * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓴다. 팀이 없는
  * 기사는 로고 자리를 그리지 않고 제목이 왼쪽 끝부터 찬다. 기자 이름도 원문이
@@ -97,30 +105,37 @@ export function NewsItem({
         </Link>
       )}
       <div className="min-w-0 flex-1">
-        {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
-            보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
-        <h3 className="text-title text-text-strong line-clamp-2 leading-snug font-bold">
-          {debateLive && (
-            /* -webkit-box(line-clamp) 안에서 flex 자식은 제 줄을 차지하므로
-               inline-flex 래퍼로 한 번 감싸 제목 글자와 같은 줄에 흐르게 한다 */
-            <span className="mr-1 inline-flex align-middle">
-              <DebateLiveChip
-                variant="outline"
-                icon={<VsIcon size={13} />}
-                label="VS"
-              />
+        <div className="flex items-start gap-1.5">
+          {/* 섹션 제목("지금 올라온 소식")이 h2라 카드 제목은 h3다 — 레벨을 건너뛰면
+              보조기술이 목차를 못 만든다. 크기는 클래스가 정하므로 태그와 무관하다 */}
+          <h3 className="text-title text-text-strong line-clamp-2 min-w-0 leading-snug font-bold">
+            {debateLive && (
+              /* -webkit-box(line-clamp) 안에서 flex 자식은 제 줄을 차지하므로
+                 inline-flex 래퍼로 한 번 감싸 제목 글자와 같은 줄에 흐르게 한다 */
+              <span className="mr-1 inline-flex align-middle">
+                <DebateLiveChip
+                  variant="outline"
+                  icon={<VsIcon size={13} />}
+                  label="VS"
+                />
+              </span>
+            )}
+            {/* 행 전체를 덮는 기사 링크. h3는 positioned가 아니라 line-clamp의
+                overflow가 ::after를 자르지 않는다 */}
+            <ArticleLink
+              articleId={article.id}
+              rank={rank}
+              className="after:absolute after:inset-0 after:content-['']"
+            >
+              {article.title}
+            </ArticleLink>
+          </h3>
+          {article.commentCount > 0 && (
+            <span className="text-title text-accent shrink-0 leading-snug font-bold tabular-nums">
+              [{formatCount(article.commentCount)}]
             </span>
           )}
-          {/* 행 전체를 덮는 기사 링크. h3는 positioned가 아니라 line-clamp의
-              overflow가 ::after를 자르지 않는다 */}
-          <ArticleLink
-            articleId={article.id}
-            rank={rank}
-            className="after:absolute after:inset-0 after:content-['']"
-          >
-            {article.title}
-          </ArticleLink>
-        </h3>
+        </div>
         {summary && (
           <p className="text-body text-text-strong mt-1 truncate">{summary}</p>
         )}
