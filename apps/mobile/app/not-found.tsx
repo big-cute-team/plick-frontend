@@ -11,7 +11,7 @@ export default function NotFound() {
   return (
     <AppShell>
       <main className="px-edge flex h-full flex-col items-center justify-center gap-7">
-        <Logo height={24} />
+        <Logo size={27} />
         <div className="flex flex-col items-center gap-2.5">
           <p className="text-label tracking-label text-accent font-extrabold">
             404

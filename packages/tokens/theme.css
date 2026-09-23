@@ -1,64 +1,95 @@
 /*
- * PLick 디자인 토큰 — "그린 시그널"
- * 다크가 기본(:root), 라이트는 [data-theme="light"] 오버라이드.
- * 출처: Figma "🎨 PLick 디자인 토큰" (node 122:2).
+ * 해축이모 디자인 토큰 (KAN-567 리디자인)
+ *
+ * 라이트가 기본(:root)이다. 다크는 [data-theme="dark"] 오버라이드로 옛 "그린 시그널"
+ * 팔레트를 잠재워 둔다 — 화면은 토큰만 쓰므로 그 셀렉터가 살아나면 그대로 뒤집힌다.
+ * 값의 출처는 디자인 핸드오프(design_handoff_haechukimo/README.md "Design Tokens").
  */
 
-/* ── 다크 (기본) ───────────────────────────────── */
+/* ── 라이트 (기본) ─────────────────────────────── */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* surfaces */
-  --plk-bg: #0b0d12;
-  --plk-nav-bg: #0a0b0f;
-  --plk-elevate: rgba(148, 163, 184, 0.09);
-  --plk-elevate-2: rgba(148, 163, 184, 0.06);
-  --plk-border: rgba(148, 163, 184, 0.12);
-  --plk-border-strong: rgba(148, 163, 184, 0.16);
+  --plk-bg: #ffffff;
+  --plk-nav-bg: #ffffff;
+  /* 앱 셸(480px) 밖 캔버스. 시안의 기기 프레임 바깥 바탕색 */
+  --plk-canvas: #dcdee1;
+  /* 채운 면 — 배너·핫이슈 상자·칩·입력창. 시안은 면마다 값이 미세하게 달라
+     넷을 그대로 둔다 */
+  --plk-elevate: #f6f7f8; /* 배너(LIVE·VS·채팅방), 릴 미디어 상자 */
+  --plk-elevate-2: #f7f8f9; /* 핫이슈 상자, 프로필 숫자 상자 */
+  --plk-chip: #f2f4f5; /* 태그 칩, 타임라인 분 배지, 웹 채팅 입력 */
+  --plk-input: #f4f6f5; /* 앱 댓글·채팅 입력창 */
+  /* 구분선 — 섹션(#eceef0), 목록 행(#f1f3f4), 표 머리(#e0e3e6), 레일 테두리(#dfe2e5) */
+  --plk-border: #eceef0;
+  --plk-border-soft: #f1f3f4;
+  --plk-border-table: #e0e3e6;
+  --plk-border-strong: #dfe2e5;
 
-  /* text */
-  --plk-text: #eef2f8;
-  /* 최대 대비가 필요한 본문 — 기사 리스트 제목·부제목 (KAN-514).
-     text는 순백보다 살짝 눌러 장문 가독성을 잡은 값이라, 리스트처럼 짧은 줄을
-     훑는 지면에서는 한 단 더 밝은 값이 필요했다. media-on(사진 위 고정 흰색)을
-     쓰지 않는 이유는 그 토큰이 라이트에서도 흰색이라 글자가 사라져서다. */
-  --plk-text-strong: #ffffff;
-  --plk-text-2: #c4cddb;
-  --plk-text-3: #93a0b4;
-  --plk-text-4: #5e6b80;
-  --plk-icon: #c7d2e2;
-  --plk-avatar: #33405c;
+  /* text — 회색 글자 하한은 #767676이다. 이보다 연하게 내리지 않는다 */
+  --plk-text: #26292d; /* 본문 */
+  --plk-text-strong: #16181b; /* 제목 */
+  --plk-text-2: #3c4046; /* 본문 보조·버튼 글자 */
+  --plk-text-3: #5f6368; /* 보조 텍스트 */
+  --plk-text-4: #767676; /* 메타·시각 */
+  --plk-icon: #26292d;
+  --plk-avatar: #eceef0;
 
   /* accents */
-  --plk-accent: #2fd97f;
-  --plk-on-accent: #08130c;
-  --plk-danger: #f87171;
-  /* 상태 보조색 — 루머 단계·기자 티어 배지 (KAN-281). info=파랑, warn=노랑,
-   * confirmed=보라. 루머 단계 넷이 서로 구분되게 accent(초록)까지 넷을 나눠 쓴다. */
-  --plk-info: #60a5fa;
-  --plk-warn: #fbbf24;
-  --plk-confirmed: #a78bfa;
+  --plk-accent: #0a6b42;
+  --plk-accent-hover: #064f30;
+  /* 어두운 면(피치·다크 릴) 위의 강조색 */
+  --plk-accent-bright: #4ec98a;
+  --plk-on-accent: #ffffff;
+  /* 빨강 — 댓글 수, 새 글, 좋아요 하트, BEST, VS, LIVE에만 쓴다 */
+  --plk-danger: #e8342a;
+  --plk-info: #2563eb;
+  /* 경고(옐로 카드) */
+  --plk-warn: #a86f00;
+  --plk-confirmed: #7c3aed;
 
-  /* 릴스 배경 — 사진·임베드 뒤를 채우는 단일 색. 릴마다 팀 그라데이션으로
-   * 제각각이던 걸 하나로 통일한다 (KAN-296). 라이트에서 흰색으로 뒤집힌다. */
-  --plk-reel-bg: #151e26;
+  /* 투표 카드 (VoteCard) */
+  --plk-vote-card: rgba(20, 25, 35, 0.06);
+  --plk-vote-track: rgba(20, 25, 35, 0.04);
+  --plk-vote-closed: rgba(20, 25, 35, 0.08);
+  --plk-vote-closed-on: #5c6673;
+  --plk-vote-a: #0a6b42;
+  --plk-vote-a-tint: rgba(10, 107, 66, 0.14);
+  --plk-vote-a-on: #ffffff;
+  --plk-vote-b: #4ec98a;
+  --plk-vote-b-tint: rgba(78, 201, 138, 0.22);
+  --plk-vote-b-on: #0b3d26;
 
-  /* media (기사 썸네일/영상 placeholder) */
-  --plk-media-bg: #0b101d;
+  /* 라이브 — 라인업 피치, 스탯 비교 바의 원정색, 최근 5경기 무·패 */
+  --plk-pitch: #0d5c39;
+  --plk-muted: #c9ced3;
+  --plk-form-loss: #eceef0;
+
+  /* 릴스 배경 — 앱 릴 미디어 상자. 라이트라 채운 면 색과 같다 */
+  --plk-reel-bg: #f6f7f8;
+  /* 웹 릴스 9:16 카드는 사진 위 흰 글자를 위해 어둡게 둔다 */
+  --plk-reel-dark: #1a1d21;
+  --plk-reel-dark-2: #2b3036;
+
+  /* media (기사 썸네일/영상 placeholder) — 시안의 사선 줄무늬 두 색 */
+  --plk-media-bg: #e7e9ea;
+  --plk-media-bg-2: #f1f2f3;
   --plk-media-on: #ffffff;
-  /* 사진 위 오버레이용 — 라이트에서도 사진 위는 항상 흰색 계열 */
   --plk-media-on-dim: rgba(255, 255, 255, 0.55);
   --plk-media-chip: rgba(255, 255, 255, 0.14);
   --plk-media-chip-border: rgba(255, 255, 255, 0.22);
-  /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관, 라이트 오버라이드 없음).
-   * 그라데이션에서는 color-mix(in srgb, var(--plk-scrim) N%, transparent)로 알파를 조절한다. */
+  /* 스크림 앵커색 — 사진 위 가독성용 고정 값(테마 무관) */
   --plk-scrim: #05080e;
+  /* 시트·다이얼로그 뒤의 딤 */
+  --plk-dim: rgba(15, 18, 20, 0.32);
+  --plk-dim-strong: rgba(5, 8, 14, 0.5);
 
-  /* accent 파생 (칩/배지 배경·테두리) — accent를 따라 테마 전환 */
-  --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 16%, transparent);
+  /* accent 파생 (칩/배지 배경·테두리) */
+  --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 14%, transparent);
   --plk-accent-border: color-mix(in srgb, var(--plk-accent) 40%, transparent);
+  --plk-danger-tint: color-mix(in srgb, var(--plk-danger) 14%, transparent);
 
-  /* info·warn·confirmed 파생 — 사용 시점에 var()가 풀려 라이트 오버라이드를 따라간다 */
   --plk-info-tint: color-mix(in srgb, var(--plk-info) 16%, transparent);
   --plk-info-border: color-mix(in srgb, var(--plk-info) 40%, transparent);
   --plk-warn-tint: color-mix(in srgb, var(--plk-warn) 16%, transparent);
@@ -76,74 +107,89 @@
 
   /* brand · team colors (모드 공통) */
   --plk-kakao: #fee500;
-  --plk-on-kakao: #191919; /* 카카오·구글 등 밝은 브랜드 버튼 위 글자 */
-  --plk-apple: #000000; /* Sign in with Apple 버튼 배경 (HIG 지정) */
-  --plk-on-apple: #ffffff; /* 애플 버튼 위 글자·로고 */
-  --plk-team-liv: #c8102e; /* 리버풀 */
-  --plk-team-tot: #132257; /* 토트넘 */
-  --plk-team-ars: #ef0107; /* 아스날 */
-  --plk-team-mun: #da291c; /* 맨유 */
-  --plk-team-che: #034694; /* 첼시 */
-  --plk-team-mci: #6cabdd; /* 맨시티 */
+  --plk-on-kakao: #191919;
+  --plk-apple: #000000;
+  --plk-on-apple: #ffffff;
+  --plk-team-liv: #c8102e;
+  --plk-team-tot: #132257;
+  --plk-team-ars: #ef0107;
+  --plk-team-mun: #da291c;
+  --plk-team-che: #034694;
+  --plk-team-mci: #6cabdd;
 }
 
-/* ── 라이트 (오버라이드) ─────────────────────────
+/* ── 다크 (잠재운 오버라이드) ────────────────────
  *
- * 지금은 잠들어 있는 블록이다. 앱이 <html data-theme="dark"> 고정이고 테마 토글 UI를
- * 걷어내서(KAN-312 후속) 이 셀렉터에 걸리는 화면이 없다. 남겨 둔 건 나중에 토글을
- * 되살릴 때 화면을 다시 만들지 않기 위해서다 — 화면은 계속 토큰만 쓰므로 이 블록이
- * 살아나는 순간 전체 UI가 그대로 전환된다. 색을 새로 추가할 땐 여기에도 짝을 넣는다.
+ * KAN-567 리디자인 전의 "그린 시그널" 다크 팔레트다. 앱이 라이트 고정이라 이 셀렉터에
+ * 걸리는 화면은 없다. 남겨 둔 건 다크를 되살릴 때 화면을 다시 만들지 않기 위해서다.
+ * 새 토큰(vote-*, pitch 등)은 라이트 값을 그대로 물려받으므로 되살릴 때 짝을 채운다.
  */
-:root[data-theme="light"] {
-  color-scheme: light;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-  /* surfaces */
-  --plk-bg: #ffffff;
-  --plk-nav-bg: #ffffff;
-  --plk-elevate: rgba(20, 25, 35, 0.06);
-  --plk-elevate-2: rgba(20, 25, 35, 0.04);
-  --plk-border: rgba(20, 25, 35, 0.1);
-  --plk-border-strong: rgba(20, 25, 35, 0.14);
+  --plk-bg: #0b0d12;
+  --plk-nav-bg: #0a0b0f;
+  --plk-canvas: #000000;
+  --plk-elevate: rgba(148, 163, 184, 0.09);
+  --plk-elevate-2: rgba(148, 163, 184, 0.06);
+  --plk-chip: rgba(148, 163, 184, 0.12);
+  --plk-input: rgba(148, 163, 184, 0.09);
+  --plk-border: rgba(148, 163, 184, 0.12);
+  --plk-border-soft: rgba(148, 163, 184, 0.08);
+  --plk-border-table: rgba(148, 163, 184, 0.2);
+  --plk-border-strong: rgba(148, 163, 184, 0.16);
 
-  /* text */
-  --plk-text: #14171e;
-  --plk-text-strong: #000000;
-  --plk-text-2: #333b47;
-  --plk-text-3: #5c6673;
-  --plk-text-4: #98a1ae;
-  --plk-icon: #3d4654;
-  --plk-avatar: #dde3ec;
+  --plk-text: #eef2f8;
+  --plk-text-strong: #ffffff;
+  --plk-text-2: #c4cddb;
+  --plk-text-3: #93a0b4;
+  --plk-text-4: #5e6b80;
+  --plk-icon: #c7d2e2;
+  --plk-avatar: #33405c;
 
-  /* accents */
-  --plk-accent: #12a968;
-  --plk-on-accent: #ffffff;
-  --plk-danger: #e5484d;
-  --plk-info: #2563eb;
-  --plk-warn: #d97706;
-  --plk-confirmed: #7c3aed;
+  --plk-accent: #2fd97f;
+  --plk-accent-hover: #5ee69a;
+  --plk-accent-bright: #2fd97f;
+  --plk-on-accent: #08130c;
+  --plk-danger: #f87171;
+  --plk-info: #60a5fa;
+  --plk-warn: #fbbf24;
+  --plk-confirmed: #a78bfa;
 
-  /* 릴스 배경 — 라이트에선 흰색 (KAN-296) */
-  --plk-reel-bg: #ffffff;
+  --plk-vote-card: rgba(148, 163, 184, 0.09);
+  --plk-vote-track: rgba(148, 163, 184, 0.06);
+  --plk-vote-closed: rgba(148, 163, 184, 0.12);
+  --plk-vote-closed-on: #93a0b4;
 
-  /* media */
-  --plk-media-bg: #dfe4ec;
+  --plk-reel-bg: #151e26;
+  --plk-media-bg: #0b101d;
+  --plk-media-bg-2: #141b2b;
   --plk-media-on: #ffffff;
+  --plk-dim: rgba(0, 0, 0, 0.5);
+  --plk-dim-strong: rgba(0, 0, 0, 0.7);
 }
 
 @theme inline {
-  /* 앱이 next/font/local로 정의한 --font-pretendard를 읽는다 (KAN-421).
+  /* 앱이 next/font/local로 정의한 --font-noto를 읽는다 (KAN-567, 전에는 Pretendard).
    * 변수가 없으면(스토리북 등) 시스템 폰트로 폴백 */
-  --font-sans: var(--font-pretendard, system-ui), system-ui, sans-serif;
+  --font-sans:
+    var(--font-noto, system-ui), "Apple SD Gothic Neo", "Malgun Gothic",
+    system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 
   /* 색 → Tailwind 유틸 매핑.
-   * inline이라 값을 굳히지 않고 var()를 그대로 emit → [data-theme=light]에서 자동 전환.
+   * inline이라 값을 굳히지 않고 var()를 그대로 emit → [data-theme=dark]에서 자동 전환.
    * 예) bg-bg / text-text / text-text-3 / border-border / bg-accent / text-accent */
   --color-bg: var(--plk-bg);
   --color-nav: var(--plk-nav-bg);
+  --color-canvas: var(--plk-canvas);
   --color-elevate: var(--plk-elevate);
   --color-elevate-2: var(--plk-elevate-2);
+  --color-chip: var(--plk-chip);
+  --color-input: var(--plk-input);
   --color-border: var(--plk-border);
+  --color-border-soft: var(--plk-border-soft);
+  --color-border-table: var(--plk-border-table);
   --color-border-strong: var(--plk-border-strong);
 
   --color-text: var(--plk-text);
@@ -155,21 +201,44 @@
   --color-avatar: var(--plk-avatar);
 
   --color-accent: var(--plk-accent);
+  --color-accent-hover: var(--plk-accent-hover);
+  --color-accent-bright: var(--plk-accent-bright);
   --color-on-accent: var(--plk-on-accent);
   --color-danger: var(--plk-danger);
   --color-info: var(--plk-info);
   --color-warn: var(--plk-warn);
   --color-confirmed: var(--plk-confirmed);
 
+  --color-vote-card: var(--plk-vote-card);
+  --color-vote-track: var(--plk-vote-track);
+  --color-vote-closed: var(--plk-vote-closed);
+  --color-vote-closed-on: var(--plk-vote-closed-on);
+  --color-vote-a: var(--plk-vote-a);
+  --color-vote-a-tint: var(--plk-vote-a-tint);
+  --color-vote-a-on: var(--plk-vote-a-on);
+  --color-vote-b: var(--plk-vote-b);
+  --color-vote-b-tint: var(--plk-vote-b-tint);
+  --color-vote-b-on: var(--plk-vote-b-on);
+
+  --color-pitch: var(--plk-pitch);
+  --color-muted: var(--plk-muted);
+  --color-form-loss: var(--plk-form-loss);
+
   --color-reel-bg: var(--plk-reel-bg);
+  --color-reel-dark: var(--plk-reel-dark);
+  --color-reel-dark-2: var(--plk-reel-dark-2);
   --color-media: var(--plk-media-bg);
+  --color-media-2: var(--plk-media-bg-2);
   --color-media-on: var(--plk-media-on);
   --color-media-on-dim: var(--plk-media-on-dim);
   --color-media-chip: var(--plk-media-chip);
   --color-media-chip-border: var(--plk-media-chip-border);
+  --color-dim: var(--plk-dim);
+  --color-dim-strong: var(--plk-dim-strong);
 
   --color-accent-tint: var(--plk-accent-tint);
   --color-accent-border: var(--plk-accent-border);
+  --color-danger-tint: var(--plk-danger-tint);
   --color-info-tint: var(--plk-info-tint);
   --color-info-border: var(--plk-info-border);
   --color-warn-tint: var(--plk-warn-tint);
@@ -189,75 +258,79 @@
   --color-team-mci: var(--plk-team-mci);
 }
 
-/* 타이포·형태·간격 스케일 (text-body / rounded-card / p-screen 등 유틸 생성) */
+/* 타이포·형태·간격 스케일 (text-body / rounded-card / px-edge 등 유틸 생성) */
 @theme {
   /* ── 데스크톱 웹(apps/web) 스케일 ─────────────── */
-  /* 콘텐츠 최대폭 (max-w-page) — 피그마 W1 데스크톱 프레임 1200px */
-  --container-page: 1200px;
-  /* 본문 읽기 컬럼 폭 (max-w-read) — 단일 컬럼 리스트/본문(기사 등)의 중앙 정렬 폭.
-   * 피그마 W10 기사 프레임 본문 860px(px-gutter 포함). GNB(max-w-page)보다 좁다. */
-  --container-read: 860px;
-  /* 좁은 단일 컬럼 폭 (max-w-narrow) — 마이·설정처럼 폼/리스트 위주의 중앙 정렬 컬럼.
-   * 피그마 W4 마이 프레임 콘텐츠 288px(0.45 배율) → 640px. read보다 좁다. */
-  --container-narrow: 640px;
-  /* 소셜 인증 카드 폭 (max-w-auth) — 로그인·회원가입의 중앙 카드.
-   * 피그마 W7 회원가입 카드 207px(0.45 배율) → 460px. */
+  /* 콘텐츠 최대폭 (max-w-page) — 시안 아트보드 1280px */
+  --container-page: 1280px;
+  /* 본문 읽기 컬럼 폭 (max-w-read) — 기사 본문 780px */
+  --container-read: 780px;
+  /* 좁은 단일 컬럼 폭 (max-w-narrow) — 계정·차단 목록 520px */
+  --container-narrow: 520px;
+  /* 소셜 인증 카드 폭 (max-w-auth) */
   --container-auth: 460px;
-  /* 온보딩 카드 폭 (max-w-onboarding) — 닉네임·팀 선택 등 온보딩 단계 카드.
-   * 피그마 W8 닉네임 카드 252px(0.45 배율) → 560px. auth 카드보다 넓다. */
+  /* 온보딩 카드 폭 (max-w-onboarding) */
   --container-onboarding: 560px;
-  /* 페이지 좌우 거터 (px-gutter) — 모바일 px-edge(20)의 데스크톱 대응 */
-  --spacing-gutter: 32px;
+  /* 우측 레일 폭 — 홈·투표 288, 프로필·경기 300, LIVE 순위표 340 */
+  --container-rail: 288px;
+  --container-rail-lg: 300px;
+  --container-rail-xl: 340px;
+  /* 페이지 좌우 거터 (px-gutter) — 시안 28px */
+  --spacing-gutter: 28px;
 
-  /* 데스크톱 전용 글자 크기 — 행간은 피그마 값 그대로 토큰에 내장 */
-  --text-hero: 26px; /* 핫이슈 히어로 카드 제목 · 모바일 릴/기사 세부 제목 (KAN-385) */
-  --text-hero--line-height: 1.3;
-  --text-hero-sm: 18.5px; /* 핫이슈 서브 카드 제목 */
-  --text-hero-sm--line-height: 1.3;
-  --text-section: 20px; /* 섹션 헤딩 (🔥 핫이슈 등) — 모바일 홈도 사용 (KAN-385) */
-  --text-section--line-height: 1.55;
-  /* GNB 링크·사이드 위젯 제목. 'nav'는 색 토큰(--color-nav)과 충돌해 text-nav가
-   * 색 유틸로도 해석되므로 'gnb'로 명명한다(text-gnb는 순수 폰트 크기). */
-  --text-gnb: 14.5px;
-  --text-gnb--line-height: 1.55;
-  --text-tab: 14px; /* 필터 탭 · 랭킹 번호 */
-  --text-tab--line-height: 1.55;
-  /* 기사 세부(W11) 읽기 스케일 — GNB보다 넓은 max-w-page 안 기사 본문 컬럼용 */
-  --text-read-title: 32px; /* 기사 세부 제목 (H1) */
-  --text-read-title--line-height: 1.28;
-  --text-read-title--letter-spacing: -0.5px;
-  --text-read-body: 16.5px; /* 기사 본문 문단 (leading-body-lg·tracking-snug와 함께) */
-
-  /* 데스크톱 헤딩 자간 (히어로·섹션 제목) */
-  --tracking-heading: -0.3px;
-
-  /* type scale */
-  --text-display: 44px;
-  --text-headline: 24px;
-  /* headline은 항상 이 행간·자간과 함께 쓰여 토큰에 내장 (온보딩 제목·릴 제목) */
+  /* ── 글자 크기 ─────────────────────────────────
+   * 시안의 픽셀 값을 그대로 이름 붙였다. 소수점 값(11.5·12.5·13.5)도 시안 값이다 */
+  --text-micro: 10px; /* 순위 배지, 상태 배지, 하단 탭 라벨 */
+  --text-micro-lg: 10.5px; /* 핫이슈 팀명, 표 머리 */
+  --text-caption: 11px; /* 메타(시각·기자·참여 수) */
+  --text-caption-lg: 11.5px; /* 메타 보조, 태그라인 */
+  --text-label: 12px; /* 요약 한 줄, 기자명, 프로필 링크 */
+  --text-label-lg: 12.5px; /* 댓글 닉네임, 버튼 글자, 표 본문 */
+  --text-body: 13.5px; /* 웹 목록 제목, 탭, 좋아요 수 */
+  --text-body-md: 14px; /* 앱 목록 제목, 댓글 본문 */
+  --text-body-lg: 15px; /* 기사 본문, 섹션 제목 */
+  --text-read-body: 16px; /* 웹 기사 본문 */
+  --text-title: 17px; /* 투표 질문, 시트 제목 */
+  --text-reel: 19px; /* 릴 제목, 앱 로고, 경기 목록 스코어 */
+  --text-hero: 21px; /* 앱 기사 제목 */
+  --text-hero--line-height: 1.4;
+  --text-section: 22px; /* 웹 화면 제목(LIVE·투표), 앱 닉네임 */
+  --text-section--line-height: 1.3;
+  --text-profile: 23px; /* 앱 프로필 이름, 웹 로고 */
+  --text-headline: 24px; /* 온보딩 제목, 웹 프로필 숫자 */
   --text-headline--line-height: 1.35;
   --text-headline--letter-spacing: -0.4px;
-  --text-title: 17px;
-  --text-body-lg: 15px;
-  --text-body: 13.5px;
-  --text-label: 12px;
-  --text-caption: 11px;
-  --text-micro: 10px;
+  --text-read-title: 30px; /* 웹 기사 제목, 웹 프로필 이름 */
+  --text-read-title--line-height: 1.32;
+  --text-score: 38px; /* 앱 경기 상세 스코어 */
+  --text-score--line-height: 1;
+  --text-display: 46px; /* 웹 경기 상세 스코어 */
+  --text-display--line-height: 1;
+  /* 아래 셋은 리디자인 전 이름을 남긴 별칭이다 — 값만 시안대로 */
+  --text-hero-sm: 14.5px; /* 웹 핫이슈 카드 제목 */
+  --text-gnb: 13.5px; /* 웹 GNB 링크 */
+  --text-tab: 14px; /* 앱 탭(투표·MY·경기 상세) */
 
   /* line height */
   --leading-body-lg: 1.75; /* 기사 본문 */
-  --leading-body: 1.55; /* 댓글 본문 */
+  --leading-body: 1.6; /* 댓글 본문 */
 
-  /* letter spacing — 자간 미세값도 임의 bracket 값 대신 토큰으로 */
-  --tracking-tight: -0.2px; /* 태그라인·닉네임 (기본 스케일 오버라이드) */
-  --tracking-snug: -0.1px; /* 기사 본문 */
-  --tracking-label: 1px; /* 대문자 칩·스텝 라벨 */
+  /* letter spacing — 시안은 em 단위다. 임의 bracket 값 대신 토큰으로 */
+  --tracking-logo: -0.06em; /* 로고 */
+  --tracking-title: -0.04em; /* 기사·릴·프로필 제목, 스코어 */
+  --tracking-heading: -0.03em; /* 투표 질문, 시트 제목 */
+  --tracking-section: -0.025em; /* 섹션 제목 */
+  --tracking-tight: -0.02em; /* 목록 제목 */
+  --tracking-snug: -0.01em; /* 본문 문단 */
+  --tracking-vs: 0.06em; /* VS 글자 */
+  --tracking-live: 0.08em; /* LIVE 글자 */
+  --tracking-label: 1px; /* 상태 배지 */
 
-  /* radius */
+  /* radius — 앱만 쓴다. 웹은 globals.css에서 전부 0으로 덮어 각지게 둔다 */
   --radius-badge: 6px;
-  --radius-tile: 10px; /* 설정 리스트 아이콘 칩 */
+  --radius-tile: 10px;
   --radius-control: 14px;
-  --radius-card: 16px; /* input · card */
+  --radius-card: 16px;
   --radius-hero: 22px;
   --radius-sheet: 26px;
   --radius-pill: 999px;
@@ -265,12 +338,32 @@
   /* 사진 위 요소 가독성 그림자 (릴 액션 레일 등) — 스크림 앵커색 기반 고정 값 */
   --drop-shadow-media: 0 1px 6px
     color-mix(in srgb, var(--plk-scrim) 55%, transparent);
+  /* 아트보드·다이얼로그 그림자 */
+  --shadow-dialog: 0 14px 40px rgba(20, 25, 35, 0.28);
+  --shadow-card: 0 12px 32px rgba(20, 25, 35, 0.22);
 
-  /* spacing — 'screen'은 Tailwind 예약어(w-screen 등)라 edge로 명명 */
-  --spacing-edge: 20px;
+  /* spacing — 'screen'은 Tailwind 예약어(w-screen 등)라 edge로 명명. 시안 16px */
+  --spacing-edge: 16px;
   --spacing-gap: 12px;
   --spacing-gap-lg: 14px;
   --spacing-section: 16px;
+  /* 목록 오른쪽 기자·시각 칼럼 고정폭 */
+  --spacing-reporter: 88px;
+
+  /* 투표 트랙 모프 전환 */
+  --ease-vote: ease-out;
+  --animate-rise: rise 0.3s ease both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 /* 기본 리셋 */
@@ -284,7 +377,11 @@ body {
 body {
   background: var(--plk-bg);
   color: var(--plk-text);
-  font-family: var(--font-pretendard, system-ui), system-ui, sans-serif;
+  font-family:
+    var(--font-noto, system-ui), "Apple SD Gothic Neo", "Malgun Gothic",
+    system-ui, sans-serif;
+  /* 숫자는 전부 고정폭 — 시안 규칙 */
+  font-variant-numeric: tabular-nums;
 }
 ::-webkit-scrollbar {
   display: none;
@@ -292,4 +389,8 @@ body {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration: none;
 }

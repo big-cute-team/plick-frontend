@@ -1,28 +1,24 @@
-import { formatCount } from "@plick/domain/format";
+import Link from "next/link";
+import { TEAMS } from "@plick/domain/constants";
+import {
+  formatCount,
+  formatRelativeTime,
+  teamProfilePath,
+} from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
 
 /**
- * 사진 없는 핫이슈 카드 — 캐러셀 아래에서 한 장씩 가로로 넘긴다 (KAN-480, KAN-515).
+ * 사진 없는 핫이슈 텍스트 카드 (KAN-480, 시안 KAN-567) — 사진 카드 트랙 아래에서
+ * 점으로 넘긴다. 첫 줄은 순위 배지(19px, 회색 면)·팀·VS·시각, 둘째 줄은 제목
+ * 한 줄(14/700) + `[댓글]`(빨강), 셋째 줄은 한 줄 요약(12, text-3)이다.
  *
- * BE가 핫이슈를 원문 사진 유무로 갈라 주면서(KAN-487) 생긴 자리다. 원래는 사진이
- * 없으면 원문 트윗을 통째로 임베드해 캐러셀 카드를 채웠는데({@link HotHeroCard}),
- * 임베드는 로드가 느리고 높이가 제멋대로라 캐러셀에서 가장 말썽이었다. 사진이
- * 없는 기사는 애초에 미디어 카드로 만들 이유가 없어서 텍스트 카드로 뺐다.
+ * 순위 배지가 사진 카드와 달리 회색인 건 시안 그대로다 — 사진 카드 뒤에 이어
+ * 붙는 순위라 톤을 낮춘다. 시각은 핫이슈 응답에 발행 시각이 있어 그대로 쓴다.
+ * 시안의 VS 표시는 핫이슈 응답에 `contentType`이 없어 못 단다(백엔드 후속 티켓).
  *
- * 그래서 이 카드에는 미디어가 없다. 어두운 스크림도 흰 텍스트도 쓰지 않고 본문
- * 톤의 면(`bg-elevate-2` + `border-border`)을 써서 테마 토큰을 그대로 탄다.
- *
- * KAN-515에서 게시판 글 목록처럼 줄였고, KAN-525에서 한 번 더 걷었다. 핫이슈
- * 배지와 단계 라벨 줄을 빼고 제목과 한 줄 요약만 남겨 카드 키를 낮춘다 — 사진
- * 캐러셀 밑에 붙는 자리라 홈 첫 화면을 덜 먹어야 한다. 제목 옆 `[X]`는 조회수가
- * 아니라 댓글 수다. 0이면 빈 `[0]`이 정보가 아니라 소음이라 아예 그리지 않는다.
- * 제목이 두 줄로 잘려도 숫자는 잘리지 않게 제목과 형제로 둔다.
- *
- * 한 줄 요약(`summaryShort`)은 BE가 못 만든 기사도 있어(null) 있을 때만 깐다.
- * 좁은 폭이라 데스크톱(두 줄)보다 짧게 한 줄만 보여준다.
- *
- * @param article - 표시할 핫이슈 기사 (사진 없는 그룹)
+ * @param article - 핫이슈 기사 (사진 없는 그룹)
  * @param rank - 핫이슈 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543)
  */
 export function HotTextCard({
@@ -30,30 +26,56 @@ export function HotTextCard({
   rank,
 }: {
   article: HotArticle;
-  rank?: number;
+  rank: number;
 }) {
+  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
+
   return (
-    <ArticleLink
-      articleId={article.id}
-      rank={rank}
-      aria-label={article.title}
-      className="bg-elevate-2 border-border rounded-card flex h-full flex-col gap-1 border px-3.5 py-3 active:opacity-70"
-    >
-      <div className="flex items-start gap-1.5">
-        <h3 className="text-body-lg text-text tracking-heading line-clamp-2 min-w-0 font-extrabold">
+    <div className="relative min-h-18.5">
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <span className="bg-avatar text-text-2 rounded-badge text-micro-lg grid size-4.75 shrink-0 place-items-center font-black">
+          {rank + 1}
+        </span>
+        {team && (
+          <Link
+            href={teamProfilePath(team.code)}
+            className="relative z-10 flex items-center gap-1.5 active:opacity-60"
+          >
+            <TeamCrest team={team} size={13} />
+            <span className="text-micro-lg text-text-3 font-bold">
+              {team.name}
+            </span>
+          </Link>
+        )}
+        <span className="flex-1" />
+        <span
+          className="text-micro-lg text-text-4 shrink-0"
+          suppressHydrationWarning
+        >
+          {formatRelativeTime(article.publishedAt)}
+        </span>
+      </div>
+      <div className="flex items-baseline gap-1.25">
+        <h3 className="text-body-md text-text-strong tracking-section min-w-0 flex-1 truncate leading-[1.42] font-bold">
           {article.title}
         </h3>
         {article.commentCount > 0 && (
-          <span className="text-body-lg text-accent shrink-0 font-extrabold tabular-nums">
+          <span className="text-body text-danger shrink-0 font-bold">
             [{formatCount(article.commentCount)}]
           </span>
         )}
       </div>
       {article.summaryShort && (
-        <p className="text-body text-text-3 line-clamp-1">
+        <p className="text-label text-text-3 mt-1.25 line-clamp-2 leading-normal">
           {article.summaryShort}
         </p>
       )}
-    </ArticleLink>
+      <ArticleLink
+        articleId={article.id}
+        rank={rank}
+        aria-label={article.title}
+        className="absolute inset-0"
+      />
+    </div>
   );
 }

@@ -1,34 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { trackShare } from "@plick/core/events";
-import { CheckIcon, CloseIcon } from "@plick/ui/icons";
+import { CheckIcon } from "@plick/ui/icons";
 import { COPY_FALLBACK_NOTICE } from "@/_constants/share";
 import { useCopyLink } from "@/_hooks/useCopyLink";
 import { shareUrl } from "@/_utils/share";
+import { BottomSheet } from "./BottomSheet";
 
 /**
- * 링크 공유 팝업 (KAN-312) — 기사 세부와 릴스의 공유 버튼이 함께 쓴다.
+ * 링크 공유 시트 (KAN-312, 시안 KAN-567) — 주소 원문과 복사 버튼. 웹뷰에서 복사가
+ * 막혀도 길게 눌러 집어갈 수 있게 주소는 늘 보여준다.
  *
- * 티켓대로 네이티브 공유 시트가 아니라 주소를 눈으로 보여 주고 복사 버튼을 다는
- * 팝업이다. 무엇을 공유할지는 호출부가 경로로 정한다 — 기사 세부는
- * `articleSharePath`, 릴은 `reelSharePath`(KAN-349, 받은 사람이 같은 릴
- * 화면으로 떨어진다).
- *
- * `LoginPromptDialog`와 같은 스크림 + 카드 관용에 같은 이유로 body 포털을 쓴다.
- * 릴스 액션 레일엔 `drop-shadow` 필터가 걸려 있는데, 필터가 걸린 조상은
- * `position: fixed`의 기준 상자가 돼서 그 안에 두면 `inset-0`이 화면이 아니라
- * 레일에 맞는다. body 밑으로 옮기면 어디서 부르든 화면 전체를 덮는다.
- *
- * 주소는 마운트 뒤에 만든다. `location.origin`은 서버 렌더에 없다.
- *
- * 복사가 끝나면 공유 이벤트(`share`)를 보낸다 (KAN-543). 팝업을 연 것이 아니라 실제로
- * 복사된 순간이 확산 신호다. 실패(클립보드 막힘)는 보내지 않는다.
- *
- * @param path 공유할 앱 내 경로 — 절대 주소는 여기서 origin을 붙여 만든다
- * @param articleId 공유하는 기사(릴) id. 공유 이벤트에 싣는다
- * @param onClose X 버튼 또는 스크림 탭으로 닫을 때
+ * @param path - 공유할 경로(origin은 마운트 뒤 붙인다)
+ * @param articleId - 공유 이벤트 대상 기사
  */
 export function ShareDialog({
   path,
@@ -39,7 +24,7 @@ export function ShareDialog({
   articleId: string;
   onClose: () => void;
 }) {
-  /* 포털 대상(document)도 origin도 서버 렌더엔 없다. 마운트 뒤에만 그린다 */
+  /* origin은 서버 렌더엔 없다. 마운트 뒤에만 조립한다 */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -50,72 +35,28 @@ export function ShareDialog({
     if (await copy()) trackShare(articleId);
   }
 
-  if (!mounted) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-8"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="share-dialog-title"
-    >
-      {/* 스크림 — 탭하면 닫는다 */}
+  return (
+    <BottomSheet onClose={onClose} label="링크 공유">
+      <p className="text-title text-text-strong tracking-heading font-black">
+        링크 공유
+      </p>
+      {/* `select-all`이라 한 번만 눌러도 전체가 잡힌다 */}
+      <p className="bg-input rounded-control text-label-lg text-text-2 mt-4 px-3.5 py-3 break-all select-all">
+        {url}
+      </p>
       <button
         type="button"
-        aria-label="닫기"
-        onClick={onClose}
-        className="absolute inset-0"
-        style={{
-          backgroundColor:
-            "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
-        }}
-      />
-
-      <div className="bg-bg border-border rounded-card relative w-full max-w-80 border p-6">
-        <button
-          type="button"
-          aria-label="닫기"
-          onClick={onClose}
-          className="text-icon absolute top-3 right-3 flex size-8.5 items-center justify-center active:opacity-60"
-        >
-          <CloseIcon size={18} />
-        </button>
-
-        <p
-          id="share-dialog-title"
-          className="text-body-lg text-text pt-2 text-center font-extrabold"
-        >
-          링크 공유
+        onClick={handleCopy}
+        className="bg-accent text-on-accent rounded-control text-body-md mt-3 flex h-12 w-full items-center justify-center gap-1.5 font-bold active:opacity-60"
+      >
+        {status === "copied" && <CheckIcon size={14} />}
+        {status === "copied" ? "복사했어요" : "링크 복사"}
+      </button>
+      {status === "failed" && (
+        <p role="status" className="text-caption text-warn mt-2.5 text-center">
+          {COPY_FALLBACK_NOTICE}
         </p>
-        <p className="text-label text-text-3 mt-2 text-center">
-          이 링크를 복사해 공유해 보세요.
-        </p>
-
-        {/* 주소 원문 — 복사가 막힌 웹뷰에서 길게 눌러 직접 집어갈 수 있게 늘 보여준다.
-            `select-all`이라 한 번만 눌러도 전체가 잡힌다 */}
-        <p className="bg-elevate-2 border-border rounded-control text-label text-text-2 mt-4 border px-3.5 py-3 break-all select-all">
-          {url}
-        </p>
-
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="bg-accent text-on-accent rounded-control text-body mt-3 flex w-full items-center justify-center gap-1.5 py-3 font-extrabold active:opacity-60"
-        >
-          {status === "copied" && <CheckIcon size={14} />}
-          {status === "copied" ? "복사했어요" : "링크 복사"}
-        </button>
-
-        {status === "failed" && (
-          <p
-            role="status"
-            className="text-caption text-warn mt-2.5 text-center"
-          >
-            {COPY_FALLBACK_NOTICE}
-          </p>
-        )}
-      </div>
-    </div>,
-    document.body,
+      )}
+    </BottomSheet>
   );
 }

@@ -11,7 +11,9 @@ import { useViewState } from "@/_stores/view-state";
 import type { ScreenKey } from "@/_types/app";
 
 /**
- * 하단 탭 내비게이션.
+ * 하단 탭 내비게이션 — 시안(KAN-567) 앱 셸의 54px 탭 5개(홈, LIVE, 릴스, 투표, MY).
+ * 아이콘 22px 아래 라벨 10/700, 활성 탭은 강조색이고 비활성은 보조 회색이다.
+ * 위 선은 섹션 구분선이고 바탕은 흰색이다. 릴스도 시안이 라이트라 오버레이 변형은 없앴다.
  *
  * pb에 `safe-area-inset-bottom`을 더해 홈 인디케이터/제스처 영역을 피한다.
  *
@@ -22,15 +24,8 @@ import type { ScreenKey } from "@/_types/app";
  *
  * 같은 경로로 가는 `Link`는 원래 아무 일도 하지 않으므로, 활성 탭에서는 기본
  * 동작을 막고 직접 처리한다.
- *
- * @param variant - `"solid"`(기본): bg-nav 배경 + 상단 보더.
- *   `"overlay"`: 릴스처럼 미디어 위에 얹는 그라데이션 스크림 탭(비활성은 흰색 dim).
  */
-export function TabBar({
-  variant = "solid",
-}: {
-  variant?: "solid" | "overlay";
-}) {
+export function TabBar() {
   const pathname = usePathname();
   const router = useRouter();
   const requestTop = useViewState((state) => state.requestTop);
@@ -44,7 +39,6 @@ export function TabBar({
   const refreshHome = useHomeRefresh();
   const refreshReels = useReelsRefresh();
   const refreshDebates = useDebatesRefresh();
-  const overlay = variant === "overlay";
 
   /** 지금 있는 탭을 다시 눌렀을 때 — 맨 위로 올리고 새로 받는다 */
   function retap(screen?: ScreenKey) {
@@ -69,21 +63,10 @@ export function TabBar({
 
   return (
     <nav
-      className={
-        overlay
-          ? "absolute inset-x-0 bottom-0 z-10"
-          : "border-border bg-nav/95 shrink-0 border-t backdrop-blur-md"
-      }
-      style={{
-        paddingBottom: "var(--safe-bottom)",
-        // 스크림은 이미지 가독성용 고정 값(테마 무관)
-        ...(overlay && {
-          backgroundImage:
-            "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 90%, transparent) 45%)",
-        }),
-      }}
+      className="border-border bg-nav shrink-0 border-t"
+      style={{ paddingBottom: "var(--safe-bottom)" }}
     >
-      <ul className="flex h-14 items-stretch">
+      <ul className="flex h-13.5 items-stretch">
         {TABS.map(({ href, label, Icon, match, screen }) => {
           const active = match(pathname);
           return (
@@ -96,11 +79,7 @@ export function TabBar({
                   retap(screen);
                 }}
                 className={`flex h-full flex-col items-center justify-center gap-1 ${
-                  active
-                    ? "text-accent"
-                    : overlay
-                      ? "text-media-on-dim opacity-85"
-                      : "text-text-4"
+                  active ? "text-accent" : "text-text-4"
                 } active:opacity-60`}
               >
                 <Icon size={22} />

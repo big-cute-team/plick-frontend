@@ -133,12 +133,12 @@ export function NewsFeed({
             ))
           ) : isError && articles.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+              <p className="text-body text-text-4">소식을 불러오지 못했어요</p>
               <button
                 type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+                className="border-border-strong text-label-lg text-text-2 rounded-control mt-3 border px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
               >
                 다시 시도
               </button>
@@ -157,7 +157,7 @@ export function NewsFeed({
             </>
           ) : (
             <p className="text-body text-text-4 py-12 text-center">
-              아직 이 팀 소식이 없어요.
+              아직 이 팀 소식이 없어요
             </p>
           )}
         </div>

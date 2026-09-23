@@ -112,7 +112,7 @@ export default async function ReelDeepLinkPage({
         />
       )}
       <ReelsFeed initial={initial} anchorId={postId} seedTweet={seedTweet} />
-      <TabBar variant="overlay" />
+      <TabBar />
     </AppShell>
   );
 }

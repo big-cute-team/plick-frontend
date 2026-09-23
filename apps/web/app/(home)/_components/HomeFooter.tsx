@@ -25,7 +25,7 @@ export function HomeFooter() {
   return (
     <footer className="border-border border-t">
       <PageContainer className="py-8">
-        <Logo height={12} />
+        <Logo size={13} />
 
         <nav aria-label="팀별 이적 소식" className="mt-5">
           <h2 className="text-caption text-text-4 font-bold">팀별 이적 소식</h2>

@@ -1,10 +1,11 @@
 /**
- * PLick 파비콘 세트 생성 스크립트 (KAN-346).
- * 피그마에서 내보낸 logo.svg(520x520, 다크 원형 배경)를 원본으로
+ * 해축이모 파비콘 세트 생성 스크립트 (KAN-346, 브랜드 교체 KAN-567).
+ * logo.svg(520x520, 강조색 둥근 사각 위 흰 "해" 글자)를 원본으로
  * 두 앱의 icon.png(512), apple-icon.png(180), favicon.ico(16+32)를 만든다.
+ * 글자는 apps/web/assets/og의 Noto Sans KR Black으로 렌더한다.
  *
- * icon.png는 원형 그대로(모서리 투명), apple-icon.png는 iOS가 투명을
- * 지원하지 않아 다크 토큰 배경(#0b0d12)을 정사각으로 깔아 합성한다.
+ * icon.png는 둥근 사각 그대로(모서리 투명), apple-icon.png는 iOS가 투명을
+ * 지원하지 않아 강조색(#0a6b42)을 정사각으로 깔아 합성한다.
  * favicon.ico는 16·32 BMP(BGRA) 엔트리를 직접 조립한다. PNG 엔트리는
  * 구형 파서 호환이 갈려서 전통적인 BMP 포맷으로 넣는다.
  */
@@ -18,7 +19,8 @@ const APPS = [
   join(HERE, "../../apps/mobile/app"),
   join(HERE, "../../apps/web/app"),
 ];
-const BG = "#0b0d12";
+const BG = "#0a6b42";
+const FONT = join(HERE, "../../apps/web/assets/og/NotoSansKR-Black.ttf");
 
 const logoSvg = readFileSync(join(HERE, "logo.svg"), "utf8");
 
@@ -36,6 +38,11 @@ const appleSvg = logoSvg.replace(
 function raster(svg, width) {
   const rendered = new Resvg(svg, {
     fitTo: { mode: "width", value: width },
+    font: {
+      fontFiles: [FONT],
+      loadSystemFonts: false,
+      defaultFontFamily: "Noto Sans KR",
+    },
   }).render();
   return {
     png: rendered.asPng(),

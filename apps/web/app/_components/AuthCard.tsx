@@ -52,7 +52,7 @@ export function AuthCard({
     <main className="px-edge flex min-h-dvh items-center justify-center py-16">
       <section className="border-border bg-elevate-2 rounded-hero max-w-auth gap-gap flex w-full flex-col border px-10 pt-12 pb-10">
         <div className="flex flex-col items-center gap-3.5 pb-6">
-          <Logo height={38} />
+          <Logo size={43} />
           <p className="text-body text-text-3 tracking-snug font-semibold">
             {tagline}
           </p>

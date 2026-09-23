@@ -60,7 +60,7 @@ export function AuthScreen({
         )}
 
         <section className="px-edge gap-gap-lg flex flex-1 flex-col items-center justify-center">
-          <Logo height={34} />
+          <Logo size={39} />
           <p className="text-body text-text-3 font-semibold tracking-tight">
             {tagline}
           </p>

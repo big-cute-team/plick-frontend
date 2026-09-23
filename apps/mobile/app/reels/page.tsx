@@ -59,7 +59,7 @@ export default async function ReelsPage() {
         />
       )}
       <ReelsFeed initial={initial} seedTweet={seedTweet} />
-      <TabBar variant="overlay" />
+      <TabBar />
     </AppShell>
   );
 }

@@ -5,6 +5,9 @@
  * description도 두 앱이 같은 값을 내야 한다(구글 별도 모바일 URL 가이드).
  * 루트 메타데이터와 JSON-LD, 홈 소개 문구가 전부 여기서 가져다 쓴다.
  *
+ * KAN-567 리디자인에서 브랜드가 "플릭 PLick"에서 "해축이모"로 바뀌었다. 도메인은
+ * 그대로다. 문구는 핸드오프 README의 서비스 정의("해외축구 루머, 이적 소식")를 따른다.
+ *
  * 구글은 description이 너무 짧거나 페이지 본문과 동떨어지면 무시하고 화면
  * 텍스트를 긁는다(KAN-384의 발단). 그래서 여기 문구는 핵심 검색어(프리미어리그,
  * EPL, 이적, 팀명)를 자연스럽게 포함한 문장으로 길게 쓴다.
@@ -14,16 +17,25 @@
  * 한글 브랜드명 — 검색 결과 상단 사이트명("쿠팡"처럼)에 쓰인다.
  * WebSite JSON-LD의 name과 og:site_name이 이 값이어야 구글이 채택한다.
  */
-export const BRAND_NAME_KO = "플릭";
+export const BRAND_NAME_KO = "해축이모";
 
-/** 영문 브랜드명 — 로고 표기이자 사이트명의 alternateName. */
-export const BRAND_NAME_EN = "PLick";
+/** 영문 브랜드명 — 사이트명의 alternateName. 로고는 한글 워드마크라 화면에는 안 나온다. */
+export const BRAND_NAME_EN = "Haechukimo";
 
-/** 루트 기본 title — 브랜드 검색("플릭", "plick")의 파란 제목 줄. */
-export const BRAND_TITLE = "플릭 PLick / 프리미어리그 소식을 릴스로";
+/**
+ * 로고 두 토막 — 앞 토막은 강조색, 뒤 토막은 제목색으로 그린다(`@plick/ui` Logo).
+ * 로고를 글자로 그리는 곳(OG 이미지 등)이 같은 분절을 쓴다.
+ */
+export const LOGO_PARTS = ["해축", "이모"] as const;
 
-/** 하위 페이지 title 템플릿 — "릴스 | 플릭 PLick"처럼 감싼다. */
-export const BRAND_TITLE_TEMPLATE = "%s | 플릭 PLick";
+/** 로고 옆 태그라인 — 웹 상단 바. */
+export const BRAND_TAGLINE = "해외축구 이슈 모음";
+
+/** 루트 기본 title — 브랜드 검색("해축이모")의 파란 제목 줄. */
+export const BRAND_TITLE = "해축이모 / 해외축구 이적 루머와 이슈 모음";
+
+/** 하위 페이지 title 템플릿 — "릴스 | 해축이모"처럼 감싼다. */
+export const BRAND_TITLE_TEMPLATE = "%s | 해축이모";
 
 /**
  * 루트·홈 공용 description. 80자 이내로 서비스 정의와 팀 검색어를 함께 싣는다.
@@ -33,7 +45,7 @@ export const BRAND_TITLE_TEMPLATE = "%s | 플릭 PLick";
  * 이 상수 하나다.
  */
 export const BRAND_DESCRIPTION =
-  "플릭(PLick)은 프리미어리그 이적 루머와 오피셜 소식을 릴스로 넘겨보는 축구 뉴스입니다. EPL 팀별 이적설과 핫이슈를 한곳에서 보세요.";
+  "해축이모는 해외 축구 기자들이 X에 올리는 프리미어리그 이적 루머와 이슈를 AI가 한국어로 번역, 요약해 보여주는 서비스입니다.";
 
 /**
  * 정적 페이지별 description — 두 앱이 같은 값을 낸다.
@@ -46,17 +58,17 @@ export const PAGE_DESCRIPTIONS = {
   articles:
     "프리미어리그 이적 기사 모아보기. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티 등 팀별 이적 루머와 오피셜 소식을 최신순으로 확인하세요.",
   debates:
-    "프리미어리그 이적 루머 VS. 지금 뜨거운 이적 이슈에 참여하고 팬들의 여론을 확인하세요.",
+    "프리미어리그 이적 루머 투표. 지금 뜨거운 이적 이슈에 참여하고 팬들의 여론을 확인하세요.",
   live: "프리미어리그 빅6 라이브 스코어. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티의 경기 일정과 실시간 스코어, 라인업, 경기 스탯을 확인하세요.",
   standings:
     "프리미어리그 순위표. 승점과 득실차, 챔피언스리그 진출권까지 EPL 20팀의 순위를 확인하세요.",
   login:
-    "플릭에 로그인하세요. 카카오·구글·애플 계정으로 간편하게 로그인하고 응원하는 프리미어리그 팀의 이적 소식을 받아볼 수 있습니다.",
+    "해축이모에 로그인하세요. 카카오, 구글, 애플 계정으로 간편하게 로그인하고 응원하는 프리미어리그 팀의 이적 소식을 받아볼 수 있습니다.",
   signup:
-    "플릭에 가입하세요. 카카오·구글·애플 계정으로 간편하게 가입하고 응원 팀을 등록하면 프리미어리그 이적 루머와 소식을 맞춤으로 볼 수 있습니다.",
-  faq: "플릭(PLick) 이용 중 자주 묻는 질문과 답변을 모았습니다. 계정, 응원팀 설정, 릴스 이용 방법을 확인하세요.",
-  terms: "플릭(PLick) 서비스 이용약관입니다.",
-  privacy: "플릭(PLick) 개인정보처리방침입니다.",
+    "해축이모에 가입하세요. 카카오, 구글, 애플 계정으로 간편하게 가입하고 응원 팀을 등록하면 프리미어리그 이적 루머와 소식을 맞춤으로 볼 수 있습니다.",
+  faq: "해축이모 이용 중 자주 묻는 질문과 답변을 모았습니다. 계정, 응원팀 설정, 릴스 이용 방법을 확인하세요.",
+  terms: "해축이모 서비스 이용약관입니다.",
+  privacy: "해축이모 개인정보처리방침입니다.",
 } as const;
 
 /**
@@ -64,15 +76,16 @@ export const PAGE_DESCRIPTIONS = {
  *
  * 홈 본문에 서비스가 뭔지 설명하는 텍스트가 한 줄도 없어서 구글이 탭바와 빈
  * 상태 문구를 긁어 스니펫을 만들었다. description과 본문이 겹쳐야 구글이
- * description을 채택하므로 화면에 보이는 텍스트로 싣는다.
+ * description을 채택하므로 화면에 보이는 텍스트로 싣는다. 문구는 핸드오프
+ * 시안의 홈 하단 소개문 그대로다.
  *
  * @param teamFullName 팀 허브면 팀 정식 명칭, 홈이면 생략
  */
 export function homeIntroCopy(teamFullName?: string): string {
   if (teamFullName) {
-    return `${teamFullName}의 이적 루머와 오피셜 소식을 모은 페이지예요. 플릭(PLick)에서 프리미어리그 이적시장 소식을 릴스처럼 빠르게 확인해 보세요.`;
+    return `${teamFullName}의 이적 루머와 이슈를 모은 페이지입니다. 해축이모는 해외 축구 기자들이 X에 올리는 소식을 실시간으로 모아, AI가 한국어로 번역하고 요약해 보여주는 서비스입니다.`;
   }
-  return "플릭(PLick)은 프리미어리그 이적 루머와 오피셜 이적 소식을 릴스처럼 넘겨보는 축구 뉴스 서비스예요. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티까지 EPL 팀별 이적설과 핫이슈, 팬 반응을 한곳에서 확인해 보세요.";
+  return "해축이모는 해외 축구 기자들이 X에 올리는 프리미어리그 이적 루머와 이슈를 실시간으로 모아, AI가 한국어로 번역하고 요약해 보여주는 서비스입니다.";
 }
 
 /**
@@ -84,7 +97,7 @@ export function homeIntroCopy(teamFullName?: string): string {
  */
 export function articlesOutroCopy(teamFullName?: string): string {
   if (teamFullName) {
-    return `${teamFullName}의 이적 루머와 오피셜 소식을 모은 페이지예요.`;
+    return `${teamFullName}의 이적 루머와 이슈를 모은 페이지입니다.`;
   }
-  return "프리미어리그 팀별 이적 루머와 오피셜 소식을 모은 페이지예요.";
+  return "프리미어리그 팀별 이적 루머와 이슈를 모은 페이지입니다.";
 }

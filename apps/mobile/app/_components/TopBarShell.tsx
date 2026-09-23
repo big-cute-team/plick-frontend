@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 
 /**
- * 상단바 공통 껍데기 — safe-area pt + `h-13 px-edge` 행.
+ * 상단바 공통 껍데기 — safe-area pt + 시안(KAN-567)의 46px 행.
  *
- * 크롬(보더·배경)과 행 배치(가운데 타이틀·양끝 정렬)는 화면마다 달라
- * 껍데기만 공용화한다. TopBar·EditTopBar·OnboardingTopBar·회원가입 상단이 사용.
+ * 크롬(보더·배경)과 행 배치(왼쪽 제목·양끝 정렬)는 화면마다 달라 껍데기만
+ * 공용화한다. TopBar·SubTopBar·OnboardingTopBar·회원가입 상단이 사용.
+ * 아래 구분선은 시안 규칙대로 섹션 구분선(#eceef0)이고 릴스만 선이 없다.
  *
- * @param className - header에 더할 크롬 (예: `border-b bg-nav/90`)
- * @param innerClassName - 내부 행에 더할 배치 (예: `justify-between`, `relative`)
+ * @param className - header에 더할 크롬 (예: `border-b`)
+ * @param innerClassName - 내부 행에 더할 배치 (예: `justify-between`, `gap-3.5 px-3.5`)
  */
 export function TopBarShell({
   className = "",
@@ -20,10 +21,10 @@ export function TopBarShell({
 }) {
   return (
     <header
-      className={`shrink-0 ${className}`}
+      className={`bg-nav shrink-0 ${className}`}
       style={{ paddingTop: "var(--safe-top)" }}
     >
-      <div className={`px-edge flex h-13 items-center ${innerClassName}`}>
+      <div className={`px-edge flex h-11.5 items-center ${innerClassName}`}>
         {children}
       </div>
     </header>

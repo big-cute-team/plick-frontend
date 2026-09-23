@@ -22,7 +22,7 @@ export function SiteHeader() {
           aria-label="PLick 홈"
           className="focus-visible:outline-accent shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          <Logo height={20} />
+          <Logo size={23} />
         </Link>
 
         <NavLinks className="hidden lg:flex" />

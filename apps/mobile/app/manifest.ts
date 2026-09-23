@@ -17,14 +17,14 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PLick",
-    short_name: "PLick",
-    description: "프리미어리그 소식을 릴스로",
+    name: "해축이모",
+    short_name: "해축이모",
+    description: "해외축구 이적 루머와 이슈 모음",
     lang: "ko",
     start_url: "/",
     display: "standalone",
-    background_color: "#0b0d12",
-    theme_color: "#0b0d12",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     icons: [{ src: "/icon.png", sizes: "512x512", type: "image/png" }],
   };
 }

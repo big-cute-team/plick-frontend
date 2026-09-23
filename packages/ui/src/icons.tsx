@@ -94,12 +94,20 @@ export const UserIcon = (p: IconProps) => (
 );
 
 /**
- * 햄버거 메뉴 — 표준 3선. 피그마에 데스크톱 시안만 있어 모바일 GNB용으로 추가한
- * 기하 아이콘이라(특정 노드 벡터 아님) base() 라인 스타일을 따른다.
+ * 햄버거 메뉴 — 시안(KAN-567) 상단 바의 20px 폭 1.5px 선 3개(간격 4px)를 그대로 옮겼다.
+ * 끝은 각지다.
  */
-export const MenuIcon = (p: IconProps) => (
-  <svg {...base(p)}>
-    <path d="M4 7h16M4 12h16M4 17h16" />
+export const MenuIcon = ({ size = 20, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    {...p}
+  >
+    <path d="M0 4.75h20M0 10.25h20M0 15.75h20" />
   </svg>
 );
 
@@ -616,6 +624,44 @@ export const ArrowLeftIcon = ({ size = 20, ...p }: IconProps) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
+  </svg>
+);
+
+/**
+ * 오른쪽 chevron — MY 화면의 계정·차단 목록 행 끝 (KAN-567). ArrowLeftIcon의
+ * 꺾쇠 패스를 좌우 반전한 것으로, 시안이 그 아이콘을 180도 돌려 쓴 자리다.
+ */
+export const ChevronRightIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 11 11"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...p}
+  >
+    <path
+      d="M5.95837 2.75L8.70837 5.5L5.95837 8.25"
+      stroke="currentColor"
+      strokeWidth={0.916667}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/**
+ * 위·아래 chevron — 웹 릴스의 이전·다음 릴 버튼 (KAN-567). 24 그리드 기본 선 스타일.
+ */
+export const ChevronUpIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg {...base({ size, ...p })}>
+    <path d="m6 15 6-6 6 6" />
+  </svg>
+);
+
+export const ChevronDownIcon = ({ size = 16, ...p }: IconProps) => (
+  <svg {...base({ size, ...p })}>
+    <path d="m6 9 6 6 6-6" />
   </svg>
 );
 
