@@ -15,8 +15,8 @@ import { ProfileMenu } from "./ProfileMenu";
  * 시안의 "접속 N명"과 "오늘 발행 N건 댓글 N개"는 BE에 집계가 없어 뺐다(API 공백).
  *
  * sticky다. 아래 sticky 요소(팀 탭·표 머리, 우측 레일)의 `top`은 이 바의 높이
- * (58 + 38 + 선 2 = 98px)와 짝이다 — 줄 높이를 바꾸면 `PostFeed`와 `SideRail`의
- * top도 같이 고친다.
+ * (58 + 38 + 선 2 = 98px)와 짝이다 — 줄 높이를 바꾸면 globals.css의 `--site-header-h`를
+ * 같이 고친다.
  */
 export function SiteHeader() {
   return (

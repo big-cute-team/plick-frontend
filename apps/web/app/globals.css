@@ -15,9 +15,13 @@
   --radius-sheet: 0px;
 }
 
-/* 웹 목록 행 구분선은 앱(#f1f3f4)보다 한 단 연한 #f4f5f6이다 */
+/* 웹 목록 행 구분선은 앱(#f1f3f4)보다 한 단 연한 #f4f5f6이다.
+ * --site-header-h는 sticky 상단 바의 높이(58 + 38 + 선 2)다. 바 아래에 붙는 요소
+ * (PostFeed의 팀 탭·표 머리, SideRail)가 top 오프셋을 여기서 파생한다 — 바 높이를
+ * 바꾸면 이 값 하나만 고친다. */
 :root {
   --plk-border-soft: #f4f5f6;
+  --site-header-h: 98px;
 }
 
 /* theme.css가 리셋(box-sizing / body 배경·글자)을 담당 — 데스크톱 최소 보강만. */

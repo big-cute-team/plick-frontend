@@ -217,10 +217,10 @@ export function PostFeed({
 
   return (
     <div className="min-w-0">
-      {/* 팀 탭과 표 머리를 한 덩어리로 상단 바(98px) 아래 고정한다 (KAN-386).
-          top-[97px](바 - 1px)는 소수점 스크롤의 픽셀 반올림 실금을 바 밑에
+      {/* 팀 탭과 표 머리를 한 덩어리로 상단 바 아래 고정한다 (KAN-386). 바 높이는
+          globals.css의 --site-header-h다. 바 - 1px는 소수점 스크롤의 픽셀 반올림 실금을 바 밑에
           1px 겹쳐 덮는 몫이다. 값은 SiteHeader 높이와 짝이다 */}
-      <div className="bg-bg sticky top-[97px] z-10">
+      <div className="bg-bg sticky top-[calc(var(--site-header-h)-1px)] z-10">
         <TeamFilterTabs
           value={filter}
           onChange={handleChange}

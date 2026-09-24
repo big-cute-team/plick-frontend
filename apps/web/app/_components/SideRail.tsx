@@ -12,7 +12,7 @@ import { TrendingRailSkeleton } from "@/_components/TrendingRailSkeleton";
  *
  * 폭은 부모 grid의 둘째 열(288px)이 정하고, `lg` 아래에서는 숨긴다 — 1열로
  * 스택하면 본문 밑에 급상승이 붙는데 그 자리는 푸터가 맡는다. 스크롤하면 상단
- * 바 아래에 붙는다(sticky). `top` 값은 `SiteHeader` 높이(98px)에 본문 위 여백
+ * 바 아래에 붙는다(sticky). `top` 값은 globals.css의 `--site-header-h`에 본문 위 여백
  * (22px)을 더한 것이라 바 높이를 바꾸면 같이 고친다.
  *
  * 급상승은 자기 데이터를 스스로 받는다(KAN-501). 본문보다 늦게 와도 되는 자리라
@@ -24,7 +24,7 @@ import { TrendingRailSkeleton } from "@/_components/TrendingRailSkeleton";
 export function SideRail({ className = "" }: { className?: string }) {
   return (
     <aside
-      className={`sticky top-30 hidden flex-col gap-3.5 self-start lg:flex ${className}`}
+      className={`sticky top-[calc(var(--site-header-h)+22px)] hidden flex-col gap-3.5 self-start lg:flex ${className}`}
     >
       <Suspense fallback={<TrendingRailSkeleton />}>
         <TrendingRail />
