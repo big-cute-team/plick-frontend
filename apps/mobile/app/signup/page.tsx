@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: `${WEB_SITE_URL}/signup` },
 };
 
-/** A2 회원가입 — 뒤로가기 + 로고·태그라인 + 카카오/구글 소셜 가입 + 약관·로그인 링크 (KAN-175, 피그마 104-6). */
+/** A2 회원가입. 뒤로가기 + 로고·태그라인 + 소셜 가입 + 약관·로그인 링크 (KAN-175, 피그마 104-6). */
 export default function SignupPage() {
   return (
     <AuthScreen
@@ -19,7 +19,7 @@ export default function SignupPage() {
       actionLabel="회원가입"
       backHref="/login"
       terms={
-        <p className="text-caption text-text-4 pt-0.5 text-center">
+        <p className="text-caption-lg text-text-3 pt-0.5 text-center">
           가입 시{" "}
           <Link href="/terms" className="underline">
             이용약관

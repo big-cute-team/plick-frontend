@@ -20,6 +20,7 @@ import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
 import type { ReelSeedTweet } from "@/_types/reels";
+import { ReelDots } from "./ReelDots";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";
 import { ReelSkeleton } from "./ReelSkeleton";
@@ -49,8 +50,11 @@ const ReelDetailSheet = dynamic(
  * ({@link useReelsCarousel}).
  *
  * 릴의 정보 블록/댓글 아이콘을 탭하면 세부 바텀시트(KAN-168)를 띄운다.
- * 개폐·드래그 상태(motion)는 여기서 소유 — 시트와 릴의 칩·제목이 같은 상태를
+ * 개폐·드래그 상태(motion)는 여기서 소유 — 시트와 릴의 정보 블록이 같은 상태를
  * 공유해야 하나의 요소처럼 함께 오르내린다.
+ *
+ * 왼쪽 세로 위치 점(KAN-567 시안)은 뷰포트 위에 겹쳐 서고, 누르면 캐러셀의
+ * `scrollTo`로 그 릴로 간다. 상단 바(로고)는 페이지가 이 컴포넌트 위에 둔다.
  *
  * 지금 보고 있는 릴은 주소창에 되비춘다 (KAN-349, {@link useReelUrlSync}) — 탭
  * 피드든 딥링크 진입이든 URL이 항상 `/reels/{보고 있는 릴}`이 되어, 새로고침은
@@ -94,7 +98,7 @@ export function ReelsFeed({
   }, []);
   const queryClient = useQueryClient();
   const throwAsync = useAsyncError();
-  /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
+  /** 세부 시트 대상 릴 + 그 릴의 정보 블록이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{
     reel: ReelCard;
     lift: number;
@@ -128,7 +132,7 @@ export function ReelsFeed({
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
   /** 릴 뒤에 붙는 자리(스피너 또는 재시도)도 슬라이드 한 장이다 */
   const trailingSlide = isFetchNextPageError || hasNextPage;
-  const { viewportRef, activeIndex } = useReelsCarousel(
+  const { viewportRef, activeIndex, scrollTo } = useReelsCarousel(
     reels.length + (trailingSlide ? 1 : 0),
     /* 딥링크는 진입 릴(0번)에서 시작 — 탭 피드의 보던-릴 순번을 읽지도 쓰지도 않는다 */
     !anchorId,
@@ -216,9 +220,10 @@ export function ReelsFeed({
        이 래퍼가 main과 같은 높이의 기준 상자가 돼 둘의 기하가 같은 자를 쓴다 */
     <div className="relative flex min-h-0 flex-1 flex-col">
       {/* 뷰포트 — 세로 드래그를 Embla가 쓰도록 브라우저 팬(당겨서 새로고침 포함)을 막는다 */}
+      <ReelDots count={reels.length} active={activeIndex} onPick={scrollTo} />
       <main
         ref={viewportRef}
-        className="flex-1 touch-pan-x touch-pinch-zoom overflow-hidden"
+        className="bg-bg flex-1 touch-pan-x touch-pinch-zoom overflow-hidden"
       >
         {/* 슬라이드 컨테이너 — Embla가 이 요소를 translate 해서 릴을 넘긴다 */}
         <div className="flex h-full flex-col">

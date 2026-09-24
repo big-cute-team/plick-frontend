@@ -11,9 +11,10 @@
 
 화면 좌우 패딩은 `px-edge`다. Tailwind 예약어라 `px-screen`은 안 된다([ADR 0002](../docs/adr/0002-mobile-home-layout.md) §6).
 
-앱은 다크 고정이다(`<html data-theme="dark">`). 테마 토글 UI는 없앴고 라이트 토큰
-(`[data-theme="light"]`)만 `theme.css`에 남겨 뒀다. 화면은 다크 기준으로만 만들되 색은 토큰으로
-쓴다. 나중에 토글을 되살릴 때 화면을 다시 만들지 않아도 되게 한다.
+앱은 라이트 고정이다(`<html data-theme="light">`, KAN-567 리디자인). 테마 토글 UI는 없고 옛 다크
+팔레트는 `theme.css`의 `[data-theme="dark"]` 블록에 잠들어 있다. 화면은 라이트 기준으로만 만들되 색은
+토큰으로 쓴다. 라운드 토큰은 앱만 둥글고 웹은 `globals.css`가 0으로 덮어 각지다. 빨강(`danger`)은
+댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만 쓴다. 회색 글자 하한은 `text-4`(#767676)다.
 
 파일은 kebab-case, 컴포넌트는 PascalCase, 훅은 useXxx, 상수는 UPPER_SNAKE.
 

@@ -4,6 +4,7 @@ import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
 import { getArticleDebate } from "@plick/core/debates";
+import { TEAMS } from "@plick/domain/constants";
 import { truncateText } from "@plick/domain/format";
 import { newsArticleJsonLd } from "@plick/domain/jsonld";
 import type {
@@ -160,7 +161,15 @@ export default async function ArticleDetailPage({
       />
       {/* 진입을 조회로 기록한다 (KAN-310). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
-      <ArticleTopBar />
+      {/* 상단바 제목은 `{팀명} 이슈` (KAN-567) — 대표 팀은 첫 팀이다 */}
+      <ArticleTopBar
+        teamName={
+          articleResult.value.teams[0]
+            ? TEAMS[articleResult.value.teams[0]].name
+            : null
+        }
+        articleId={articleResult.value.id}
+      />
       <ScrollArea className="pb-section">
         <ArticleBody
           article={articleResult.value}

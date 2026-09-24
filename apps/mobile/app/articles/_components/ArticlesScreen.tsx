@@ -3,15 +3,18 @@ import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { getArticles } from "@plick/core/articles";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
-import { LiveDot } from "@plick/ui/LiveDot";
 import { ArticlesFeed } from "./ArticlesFeed";
 import { ArticlesScrollArea } from "./ArticlesScrollArea";
 
 /**
- * 기사 목록 화면 본체 — 팀 필터 + 무한스크롤 리스트 (KAN-386).
+ * 기사 목록 화면 본체 — 팀 탭 + 무한스크롤 리스트 (KAN-386).
  *
  * 홈이 첫 페이지 고정 + 더보기 링크로 짧아지면서, 끝까지 내려보는 경험은 이
  * 화면이 맡는다. 웹 기사 페이지(`/articles`)의 모바일 대응이다.
+ *
+ * 시안(KAN-567)에는 이 화면의 제목 블록이 없다 — 상단 바 바로 밑에 홈 목록과 같은
+ * 팀 탭과 이슈 목록 행이 이어진다. 전에 있던 "지금 올라온 소식" 제목과 안내 부제는
+ * 시안 규칙(기능 설명 안내 문구 금지)대로 뺐다.
  *
  * 기사 목록(`/articles`)과 팀별 기사(`/articles/teams/[slug]`)가 같은 화면을
  * 그린다 — 팀 탭 선택이 URL로 남아야 새로고침·공유가 그 팀 그대로다(홈 팀
@@ -37,25 +40,7 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
     <AppShell>
       <TopBar />
       <ArticlesScrollArea>
-        {/* 제목 블록은 ArticlesFeed가 팀 탭과 한 덩어리로 sticky 고정한다 */}
-        <ArticlesFeed
-          initial={initial}
-          initialTeam={team}
-          header={
-            /* 서버가 prop으로 넘기는 JSX는 직렬화되며 정적 자식 표시를 잃어
-               React가 key를 요구한다 — 형제가 생기는 자리라 명시한다 */
-            <header key="articles-header" className="px-edge pt-3 pb-2">
-              {/* 홈 섹션 제목과 같은 라이브 점 (KAN-481) */}
-              <h1 className="text-section tracking-heading text-text flex items-center gap-2 font-extrabold">
-                <LiveDot />
-                지금 올라온 소식
-              </h1>
-              <p className="text-caption text-text-4 mt-1 font-semibold">
-                팀별 이적 소식을 모아보세요
-              </p>
-            </header>
-          }
-        />
+        <ArticlesFeed initial={initial} initialTeam={team} />
       </ArticlesScrollArea>
       <TabBar />
     </AppShell>

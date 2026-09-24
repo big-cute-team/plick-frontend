@@ -2,7 +2,8 @@
  * 릴 자리를 통째로 채우는 안내 화면 (KAN-276) — 에러와 빈 상태에 쓴다.
  *
  * 릴은 한 장이 화면 전체라 리스트처럼 문구를 아래에 덧붙일 자리가 없다.
- * 그래서 릴이 놓일 자리에 같은 크기로 대신 들어간다.
+ * 그래서 릴이 놓일 자리에 같은 크기로 대신 들어간다. 재시도는 시안(KAN-567)의
+ * 테두리 텍스트 버튼이다.
  *
  * @param message 보여줄 문구
  * @param onRetry 재시도 버튼을 달 때만 넘긴다
@@ -25,7 +26,7 @@ export function ReelStatus({
           type="button"
           onClick={onRetry}
           disabled={retryDisabled}
-          className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+          className="border-border-strong text-label-lg text-text-2 rounded-control mt-3 border px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
         >
           다시 시도
         </button>

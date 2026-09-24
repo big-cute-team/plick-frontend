@@ -3,6 +3,7 @@ import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { AppShell } from "@/_components/AppShell";
 import { ReelsFeed } from "./_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
+import { TopBar } from "@/_components/TopBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getReels } from "@plick/core/reels";
 import { getAccessToken } from "@/_services/session";
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * 릴스 화면 (KAN-167) — 풀스크린 미디어 위에 탭바를 오버레이로 얹는다.
+ * 릴스 화면 (KAN-167, 시안 KAN-567 라이트). 상단 바(구분선 없이 미디어 상자와
+ * 바로 이어진다) + 세로 피드 + 일반 하단 탭이다. 전 디자인의 풀스크린 미디어와
+ * 오버레이 탭바는 없앴다.
  *
  * 첫 페이지는 `GET /api/v1/reels`로 여기서 미리 받아 내려준다. 클라가 같은 데이터를
  * 또 부르는 이중 페치를 막는 씨앗이고, 끝에 가까워지면 클라가 커서로 이어받는다 (KAN-276).
@@ -58,6 +61,7 @@ export default async function ReelsPage() {
           fetchPriority="high"
         />
       )}
+      <TopBar divider={false} />
       <ReelsFeed initial={initial} seedTweet={seedTweet} />
       <TabBar />
     </AppShell>

@@ -6,7 +6,7 @@
 
 ## 프로젝트
 
-PLick은 프리미어리그 이적 루머를 릴스형으로 넘겨보는 앱이다. 모바일 우선.
+해축이모(구 PLick)는 프리미어리그 이적 루머와 이슈를 모아 보는 앱이다. 모바일 우선. 저장소 이름과 도메인은 plick을 유지한다.
 pnpm과 Turborepo 모노레포이고 스코프는 `@plick/*`.
 
 ## 구조
@@ -134,6 +134,8 @@ CI(format:check, test:hooks, lint, check-types, build)는 로컬에서 같은 �
   [ADR 0130](docs/adr/0130-prometheus-grafana-monitoring.md)
 - 하네스 2차 정비(사전 차단 훅, 권한 deny, be-verify JSON 계약, 측정, 스킬 이전, 헤드리스 리뷰, 플러그인화)의
   전후 비교와 판단: [ADR 0168](docs/adr/0168-harness-guardrails-second-pass.md)
+- 해축이모 리디자인(라이트 토큰, Noto Sans KR, 브랜드 교체, 두 앱 전 화면)의 판단과 시행착오:
+  [ADR 0171](docs/adr/0171-haechukimo-redesign.md). 시안 원본은 핸드오프 폴더라 저장소에 없다
 - 레이어 폴더 구조의 배경과 판단: [ADR 0029](docs/adr/0029-layered-architecture-restructure.md)
 - 모바일 화면과 컴포넌트 구현: `screen-publishing` 스킬 + [ADR 0002](docs/adr/0002-mobile-home-layout.md)
 - 데스크톱 웹(apps/web) 화면과 컴포넌트 구현: `web-publishing` 스킬(`@plick/ui` 승격 절차 포함)

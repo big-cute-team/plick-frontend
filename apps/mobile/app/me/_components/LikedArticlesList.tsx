@@ -5,30 +5,29 @@ import { activityKeys } from "@plick/core/activityKeys";
 import { ApiError } from "@plick/core/client";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialArticleFeed } from "@plick/domain/types";
-import { NewsItem } from "@/_components/NewsItem";
 import { NewsItemSkeleton } from "@/_components/NewsItemSkeleton";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { useLikedArticles } from "@/_hooks/useLikedArticles";
 import { ActivityEmpty } from "./ActivityEmpty";
 import { ActivityLoginPrompt } from "./ActivityLoginPrompt";
+import { LikedArticleItem } from "./LikedArticleItem";
 
 /** 첫 로딩에 보여줄 자리 개수. 기사 페이지와 같다. */
 const SKELETON_COUNT = 4;
 
 /**
- * 좋아요한 기사 탭의 무한스크롤 리스트 (KAN-495).
+ * 좋아요 탭의 무한스크롤 리스트 (KAN-495, KAN-567 리디자인).
  *
- * 항목은 홈 피드의 `NewsItem`을 그대로 쓴다. 카드 계약이 홈 피드와 같아서
- * 마이페이지 전용 카드를 만들면 같은 카드가 둘로 갈린다(BE 설계 결정과 같은
- * 판단). 팀 탭이 없으므로 대표 팀은 기사의 첫 팀이다.
+ * 항목은 홈 피드의 `NewsItem`에 오른쪽 하트 버튼을 붙인 `LikedArticleItem`이다.
+ * 시안대로 하트를 누르면 그 자리에서 좋아요가 풀린다.
  *
- * 하트를 끈 카드는 그리지 않는다. 세부·릴스에서 좋아요를 끄면 `syncLikeIntoFeeds`가
- * 이 캐시의 그 카드를 `liked: false`로 바꿔 두므로, 돌아왔을 때 목록에서 바로
- * 빠진 것처럼 보인다. 서버는 다음 조회부터 빼 준다. 캐시에서 항목을 지우지
+ * 하트를 끈 카드는 그리지 않는다. 여기서 끄든 세부·릴스에서 끄든
+ * `syncLikeIntoFeeds`가 이 캐시의 그 카드를 `liked: false`로 바꿔 두므로 목록에서
+ * 바로 빠진 것처럼 보인다. 서버는 다음 조회부터 빼 준다. 캐시에서 항목을 지우지
  * 않는 이유는 다시 켜면 되살아나야 해서다.
  *
  * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`ArticlesFeed`)와 같다.
- * 토큰이 만료돼 401이 오면 목록 자리에 로그인 카드를 그린다.
+ * 토큰이 만료돼 401이 오면 목록 자리에 로그인 안내를 그린다.
  *
  * @param initial 서버가 미리 받아 둔 첫 페이지와 그 시각
  */
@@ -82,22 +81,18 @@ export function LikedArticlesList({
 
   if (isError && articles.length === 0) {
     if (error instanceof ApiError && error.status === 401) {
-      return (
-        <div className="px-edge pt-4">
-          <ActivityLoginPrompt />
-        </div>
-      );
+      return <ActivityLoginPrompt />;
     }
     return (
-      <div className="py-12 text-center">
+      <div className="py-10 text-center">
         <p className="text-body text-text-4">
-          좋아요한 기사를 불러오지 못했어요.
+          좋아요한 이슈를 불러오지 못했어요
         </p>
         <button
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+          className="text-label-lg text-accent mt-2 font-bold active:opacity-60 disabled:opacity-50"
         >
           다시 시도
         </button>
@@ -112,20 +107,20 @@ export function LikedArticlesList({
   return (
     <div className="px-edge">
       {articles.map((article) => (
-        <NewsItem key={article.id} article={article} />
+        <LikedArticleItem key={article.id} article={article} />
       ))}
 
       {isFetchingNextPage && <NewsItemSkeleton />}
 
       {isFetchNextPageError && (
         <div className="py-6 text-center">
-          <p className="text-caption text-text-4">
-            다음 기사를 불러오지 못했어요.
+          <p className="text-caption-lg text-text-4">
+            다음 이슈를 불러오지 못했어요
           </p>
           <button
             type="button"
             onClick={retryNextPage}
-            className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
+            className="text-label-lg text-accent mt-2 font-bold active:opacity-60"
           >
             다시 시도
           </button>
@@ -134,12 +129,6 @@ export function LikedArticlesList({
 
       {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다 */}
       <div ref={sentinelRef} aria-hidden className="h-px" />
-
-      {!hasNextPage && (
-        <p className="text-caption text-text-4 pt-6 pb-4 text-center">
-          좋아요한 기사를 전부 봤어요.
-        </p>
-      )}
     </div>
   );
 }

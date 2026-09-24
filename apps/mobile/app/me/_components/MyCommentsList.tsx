@@ -16,9 +16,9 @@ import { MyCommentSkeleton } from "./MyCommentSkeleton";
 const SKELETON_COUNT = 3;
 
 /**
- * 내가 쓴 댓글 탭의 무한스크롤 리스트 (KAN-495).
+ * 내 댓글 탭의 무한스크롤 리스트 (KAN-495, KAN-567 리디자인).
  *
- * 로딩·에러·빈 상태와 커서 400 복구, 401 로그인 카드는 좋아요 탭
+ * 로딩·에러·빈 상태와 커서 400 복구, 401 로그인 안내는 좋아요 탭
  * (`LikedArticlesList`)과 같다. 삭제한 댓글은 `useDeleteComment`가 캐시에서
  * 빼 두므로 여기서 걸러낼 게 없다.
  *
@@ -70,20 +70,16 @@ export function MyCommentsList({
 
   if (isError && comments.length === 0) {
     if (error instanceof ApiError && error.status === 401) {
-      return (
-        <div className="px-edge pt-4">
-          <ActivityLoginPrompt />
-        </div>
-      );
+      return <ActivityLoginPrompt />;
     }
     return (
-      <div className="py-12 text-center">
-        <p className="text-body text-text-4">내 댓글을 불러오지 못했어요.</p>
+      <div className="py-10 text-center">
+        <p className="text-body text-text-4">내 댓글을 불러오지 못했어요</p>
         <button
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+          className="text-label-lg text-accent mt-2 font-bold active:opacity-60 disabled:opacity-50"
         >
           다시 시도
         </button>
@@ -105,13 +101,13 @@ export function MyCommentsList({
 
       {isFetchNextPageError && (
         <div className="py-6 text-center">
-          <p className="text-caption text-text-4">
-            다음 댓글을 불러오지 못했어요.
+          <p className="text-caption-lg text-text-4">
+            다음 댓글을 불러오지 못했어요
           </p>
           <button
             type="button"
             onClick={retryNextPage}
-            className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
+            className="text-label-lg text-accent mt-2 font-bold active:opacity-60"
           >
             다시 시도
           </button>
@@ -119,12 +115,6 @@ export function MyCommentsList({
       )}
 
       <div ref={sentinelRef} aria-hidden className="h-px" />
-
-      {!hasNextPage && (
-        <p className="text-caption text-text-4 pt-6 pb-4 text-center">
-          내가 쓴 댓글을 전부 봤어요.
-        </p>
-      )}
     </div>
   );
 }

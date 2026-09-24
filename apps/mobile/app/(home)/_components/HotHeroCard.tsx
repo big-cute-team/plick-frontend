@@ -36,7 +36,7 @@ export function HotHeroCard({
     <div className="relative w-42 shrink-0 snap-start">
       <div className="rounded-tile bg-media relative mb-2 aspect-[6/5] overflow-hidden">
         {article.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴·MediaThumb과 같은 이유)
+          // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유)
           <img
             src={article.imageUrl}
             alt=""

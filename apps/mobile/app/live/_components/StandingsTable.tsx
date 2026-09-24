@@ -1,89 +1,123 @@
-import type { StandingRow } from "@plick/domain/live";
+import type { ReactNode } from "react";
+import { LIVE_SEASON_LABEL, type StandingRow } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 import { TeamProfileLink } from "./TeamProfileLink";
 
-/** 순위표 숫자 컬럼 정의 — 헤더와 행이 같은 폭을 쓴다. */
-const NUM_COLS = "w-7 text-center";
-
 /**
- * 순위표(피그마 L3). 챔스권(1~4위)은 랭크 옆 악센트 바, 빅6 행은 밝은 팀명과
- * 팀 링크로 구분한다. 빅6 밖 팀은 `team.code`가 없어 링크 없이 그린다.
+ * 순위표 (시안 KAN-567). 표 머리 28px 아래 20행 32px. 칸은 순위, 엠블럼 18,
+ * 팀명, 경기, 승, (무), 패, 득실, 승점이다. 1~4위 순위 숫자는 강조색이고 빅6는
+ * 팀명을 진하게(700), 나머지는 본문색 500이다. 행 전체가 팀 프로필 링크인데
+ * 빅6 밖 팀은 프로필이 없어 `TeamProfileLink`가 글자로만 남긴다.
  *
- * 껍데기 때는 리버풀 행을 마이팀으로 못박아 하이라이트했는데, 실데이터가 붙은
- * 뒤로는 아무 근거 없이 한 팀만 선택된 것처럼 보여서 걷어냈다. 프로필 응원팀을
- * 읽어 진짜 마이팀을 칠하려면 이 서버 컴포넌트가 세션을 봐야 해서 따로 본다.
+ * 목록 화면(제목 "순위표", 시즌 라벨, 아래 챔피언스리그 범례)과 경기 상세의 순위
+ * 탭(제목·범례 없이 무 열이 더 있다), `/live/standings`가 같이 쓴다. 시안의 두
+ * 표가 열 구성이 달라 `showDraw`로 가른다.
+ *
+ * 전에는 채운 면 카드 안에 넣고 챔스권을 순위 옆 막대로 표시했다. 시안은 면 없이
+ * 선으로만 나누고 순위 색으로 구분한다. 마이팀 강조는 실데이터가 붙은 뒤 걷어냈고
+ * (근거 없는 한 팀 하이라이트), 프로필 응원팀을 읽으려면 세션이 필요해 따로 본다.
+ *
+ * @param rows 순위표 20행
+ * @param title 표 위 제목. 없으면 시즌 라벨만 오른쪽에 둔다
+ * @param legend "1~4위 챔피언스리그" 범례를 아래 그릴지
+ * @param showDraw 무승부 열을 넣을지(경기 상세 순위 탭)
+ * @param highlight 옅게 칠할 팀의 `shortName`(경기 상세에서 양 팀)
  */
-export function StandingsTable({ rows }: { rows: StandingRow[] }) {
+export function StandingsTable({
+  rows,
+  title,
+  legend = false,
+  showDraw = false,
+  highlight = [],
+}: {
+  rows: StandingRow[];
+  title?: string;
+  legend?: boolean;
+  showDraw?: boolean;
+  highlight?: string[];
+}) {
+  const cols = showDraw
+    ? "grid-cols-[20px_20px_minmax(0,1fr)_26px_26px_26px_26px_32px_32px]"
+    : "grid-cols-[20px_20px_minmax(0,1fr)_26px_26px_26px_32px_32px]";
+
   return (
-    <div className="px-edge pt-3 pb-4">
-      <div className="bg-elevate rounded-card px-3 py-2">
-        <div className="border-border text-caption text-text-4 flex items-center gap-2 border-b px-1 py-2 font-medium">
-          <span className="w-5 text-center">#</span>
-          <span className="min-w-0 flex-1">팀</span>
-          <span className={NUM_COLS}>경기</span>
-          <span className="w-5 text-center">승</span>
-          <span className="w-5 text-center">무</span>
-          <span className="w-5 text-center">패</span>
-          <span className={NUM_COLS}>득실</span>
-          <span className={NUM_COLS}>승점</span>
-        </div>
-        {rows.map((row) => (
-          <StandingLine key={row.rank} row={row} />
-        ))}
-        <p className="text-caption text-text-4 flex items-center gap-1.5 px-1 pt-2.5 pb-1.5">
-          <span aria-hidden className="bg-accent h-2.5 w-0.5 rounded-full" />
-          챔피언스리그 진출권
-        </p>
+    <div>
+      <div className="flex items-baseline pb-2">
+        {title && (
+          <h2 className="text-body-lg text-text-strong tracking-section font-black">
+            {title}
+          </h2>
+        )}
+        <span className="flex-1" />
+        <span className="text-caption-lg text-text-3">
+          {LIVE_SEASON_LABEL} 시즌
+        </span>
       </div>
+      <div
+        className={`border-border-table text-micro-lg text-text-4 grid h-7 items-center gap-1.5 border-b ${cols}`}
+      >
+        <span className="text-center">#</span>
+        <span />
+        <span>팀</span>
+        <span className="text-center">경기</span>
+        <span className="text-center">승</span>
+        {showDraw && <span className="text-center">무</span>}
+        <span className="text-center">패</span>
+        <span className="text-center">득실</span>
+        <span className="text-center">승점</span>
+      </div>
+      {rows.map((row) => (
+        <TeamProfileLink
+          key={row.rank}
+          team={row.team}
+          className={`border-border-soft grid h-8 items-center gap-1.5 border-b active:opacity-70 ${cols} ${
+            highlight.includes(row.team.shortName) ? "bg-elevate-2" : ""
+          }`}
+        >
+          <span
+            className={`text-caption-lg text-center font-bold ${
+              row.zone === "UCL" ? "text-accent" : "text-text-4"
+            }`}
+          >
+            {row.rank}
+          </span>
+          <span className="flex justify-center">
+            <LiveCrest team={row.team} size={18} />
+          </span>
+          <span
+            className={`text-label-lg min-w-0 truncate ${
+              row.team.code
+                ? "text-text-strong font-bold"
+                : "text-text font-medium"
+            }`}
+          >
+            {row.team.name}
+          </span>
+          <Num>{row.played}</Num>
+          <Num>{row.win}</Num>
+          {showDraw && <Num>{row.draw}</Num>}
+          <Num>{row.lose}</Num>
+          <Num>{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</Num>
+          <span className="text-label-lg text-text-strong text-center font-black">
+            {row.points}
+          </span>
+        </TeamProfileLink>
+      ))}
+      {legend && (
+        <p className="flex items-center gap-1.75 pt-2.75">
+          <span aria-hidden className="bg-accent h-2.75 w-0.5" />
+          <span className="text-caption-lg text-text-3">
+            1~4위 챔피언스리그
+          </span>
+        </p>
+      )}
     </div>
   );
 }
 
-function StandingLine({ row }: { row: StandingRow }) {
-  const content = (
-    <>
-      <span className="relative w-5 text-center">
-        {row.zone === "UCL" && (
-          <span
-            aria-hidden
-            className="bg-accent absolute top-1/2 -left-2.5 h-3.5 w-0.5 -translate-y-1/2 rounded-full"
-          />
-        )}
-        <span
-          className={`text-label font-semibold ${row.zone === "UCL" ? "text-accent" : "text-text-4"}`}
-        >
-          {row.rank}
-        </span>
-      </span>
-      <span className="flex min-w-0 flex-1 items-center gap-2">
-        <LiveCrest team={row.team} size={18} />
-        <span
-          className={`text-label truncate ${row.team.code ? "text-text font-semibold" : "text-text-3"}`}
-        >
-          {row.team.name}
-        </span>
-      </span>
-      <span className={`text-label text-text-3 ${NUM_COLS}`}>{row.played}</span>
-      <span className="text-label text-text-3 w-5 text-center">{row.win}</span>
-      <span className="text-label text-text-3 w-5 text-center">{row.draw}</span>
-      <span className="text-label text-text-3 w-5 text-center">{row.lose}</span>
-      <span className={`text-label text-text-3 ${NUM_COLS}`}>
-        {row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}
-      </span>
-      <span className={`text-label text-text font-bold ${NUM_COLS}`}>
-        {row.points}
-      </span>
-    </>
-  );
-
-  /* 옛 `/live/teams/{id}`는 팀 프로필로 308이지만(KAN-507), 링크는 도착지를
-     직접 가리킨다 — 리다이렉트 한 번을 아끼고 prefetch도 실제 화면에 걸린다 */
+/** 숫자 칸. 11.5 보조색 가운데 정렬 */
+function Num({ children }: { children: ReactNode }) {
   return (
-    <TeamProfileLink
-      team={row.team}
-      className="flex items-center gap-2 px-1 py-2 active:opacity-80"
-    >
-      {content}
-    </TeamProfileLink>
+    <span className="text-caption-lg text-text-3 text-center">{children}</span>
   );
 }

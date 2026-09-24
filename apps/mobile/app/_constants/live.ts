@@ -1,6 +1,6 @@
 /**
  * @file 라이브 스코어 클라 쿼리 정책 상수 (KAN-452). web `_constants/live.ts`와
- * 같은 값의 수동 동기화 복제다 — 캐시·폴링 정책은 앱 정책이라 승격하지 않는다.
+ * 같은 값의 수동 동기화 복제다. 캐시·폴링 정책은 앱 정책이라 승격하지 않는다.
  * 경기 상세 탭 구성(KAN-458)도 화면 정책이라 여기 둔다.
  */
 
@@ -23,20 +23,24 @@ export const LIVE_MAX_RETRIES = 1;
 
 /**
  * 경기 상태별 상세 탭 구성 (KAN-458). 예정 경기는 프리뷰, 라이브·종료는
- * 요약·라인업·스탯이고 여기에 양 팀 뉴스와 채팅이 붙는다. 연기·취소는 방이
+ * 요약·라인업·스탯이고 여기에 순위표, 양 팀 뉴스, 채팅이 붙는다. 연기·취소는 방이
  * 열리지 않아(BE가 킥오프 시각을 믿지 않는다) 탭 없이 안내만 그린다.
  *
- * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
+ * 뉴스는 KAN-484에서 붙였다. 경기를 보다가 그 팀 소식이 궁금해지는 자리라
  * 기사 탭으로 나갔다 오는 대신 같은 지면에서 본다.
+ *
+ * 순서는 시안(KAN-567)의 채팅, 요약, 라인업, 스탯, 순위, 뉴스다. 채팅이 맨 앞이라
+ * 열려 있을 때는 채팅이 기본 탭이 된다(시안 규칙: 스코어를 보면서 채팅한다).
+ * 순위 탭(`table`)은 같은 시안에서 들어왔다.
  *
  * 채팅이 닫혀 있는 동안(`CHAT_ENABLED`, KAN-486)은 화면이 이 표를 직접 읽지
  * 않고 {@link matchTabsFor}로 채팅을 뺀 목록을 받는다. 표는 채팅이 돌아올 때의
  * 완성형으로 그대로 둔다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "news", "chat"],
-  LIVE: ["summary", "lineups", "stats", "news", "chat"],
-  FINISHED: ["summary", "lineups", "stats", "news", "chat"],
+  SCHEDULED: ["chat", "preview", "table", "news"],
+  LIVE: ["chat", "summary", "lineups", "stats", "table", "news"],
+  FINISHED: ["chat", "summary", "lineups", "stats", "table", "news"],
   POSTPONED: [],
   CANCELLED: [],
 };
@@ -104,19 +108,20 @@ export function matchEmptyLabel(
 
 /**
  * 뉴스 탭이 목록을 기다리는 동안 까는 스켈레톤 줄 수 (KAN-484). 실제로 올 건수
- * (`MATCH_NEWS_COUNT`)보다 적게 둔다 — 탭 본문은 화면 한 판이 넘어가면 어차피
+ * (`MATCH_NEWS_COUNT`)보다 적게 둔다. 탭 본문은 화면 한 판이 넘어가면 어차피
  * 스크롤 밖이라, 자리만 잡아 주면 된다.
  */
 export const MATCH_NEWS_SKELETON_COUNT = 4;
 
-/** 탭 라벨. */
+/** 탭 라벨. 시안(KAN-567)의 탭 줄 문구 그대로다. */
 export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
+  chat: "채팅",
   preview: "프리뷰",
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
+  table: "순위",
   news: "뉴스",
-  chat: "채팅",
 };
 
 /**
@@ -131,9 +136,9 @@ export const CHAT_REJECT_MESSAGE: Record<string, string> = {
 };
 
 /**
- * 날짜 스트립이 선택 칸을 화면 안으로 되돌릴 때 남기는 좌우 여백(px).
- *
- * 0으로 두면 칸이 스트립 가장자리에 딱 붙어 다음 칸이 있는지 안 보인다.
- * 한 칸 폭(44px)의 4분의 1쯤이면 옆 칸이 살짝 비쳐 더 밀 수 있다는 게 읽힌다.
+ * 날짜 줄이 선택한 날 앞뒤로 보여 주는 날 수 (KAN-567). 시안의 날짜 줄은 7칸
+ * 한 줄이라 선택일을 가운데 두고 양쪽 3일씩 편다. 전에는 한 달 전체를 가로
+ * 스크롤 스트립에 담고 선택 칸을 화면 안으로 되돌리는 계산(KAN-459)이 있었는데,
+ * 칸이 항상 7개라 그 계산이 필요 없어졌다.
  */
-export const DATE_STRIP_KEEP_PAD = 12;
+export const DATE_STRIP_SPAN = 3;

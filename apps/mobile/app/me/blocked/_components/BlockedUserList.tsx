@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ApiError } from "@plick/core/client";
-import { avatarInitials, formatDateKo } from "@plick/domain/format";
+import { formatDateKo } from "@plick/domain/format";
 import type { BlockedUser } from "@plick/domain/types";
 import { useUnblockUser } from "@/_hooks/useUnblockUser";
 
@@ -17,14 +17,15 @@ const LoginPromptDialog = dynamic(
 );
 
 /**
- * 차단 목록 카드 (KAN-411) — 서버가 준 목록을 초깃값으로 들고, 해제하면 그 줄을
- * 로컬 state에서 뺀다. 이 화면 밖에서 목록이 바뀔 일이 없고(차단은 댓글에서만
- * 늘고, 이 화면은 서버 컴포넌트라 재진입마다 새로 받는다) 해제는 완전 멱등이라
- * RQ 캐시 없이 로컬 상태로 충분하다.
+ * 차단 목록 (KAN-411, KAN-567 리디자인, 시안 MY 차단 목록). 서버가 준 목록을
+ * 초깃값으로 들고, 해제하면 그 줄을 로컬 state에서 뺀다. 이 화면 밖에서 목록이
+ * 바뀔 일이 없고(차단은 댓글에서만 늘고, 이 화면은 서버 컴포넌트라 재진입마다
+ * 새로 받는다) 해제는 완전 멱등이라 RQ 캐시 없이 로컬 상태로 충분하다.
  *
- * 해제는 티켓대로 확인 팝업 없이 바로 보낸다 — 멱등이라 오탭 비용이 낮고,
- * 잘못 눌렀으면 그 유저 댓글에서 다시 차단하면 된다. 댓글 캐시 정리(원문 복원을
- * 위한 refetch 유도)는 `useUnblockUser`가 한다.
+ * 행은 닉네임 14/700과 "차단일 차단" 11.5, 오른쪽 "차단 해제" 텍스트 버튼이다.
+ * 아바타 원과 카드 섀시는 걷어냈다. 해제는 티켓대로 확인 시트 없이 바로 보낸다.
+ * 멱등이라 오탭 비용이 낮고, 잘못 눌렀으면 그 유저 댓글에서 다시 차단하면 된다.
+ * 댓글 캐시 정리(원문 복원을 위한 refetch 유도)는 `useUnblockUser`가 한다.
  *
  * 실패 문구는 목록 밑에 남기고, 토큰 만료(401)만 로그인 유도로 돌린다.
  *
@@ -57,28 +58,25 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
 
   if (users.length === 0) {
     return (
-      <p className="text-body text-text-4 pt-10 text-center">
-        아직 차단한 사용자가 없어요.
+      <p className="text-body text-text-4 py-12 text-center">
+        차단한 사용자가 없어요
       </p>
     );
   }
 
   return (
     <>
-      <ul className="bg-elevate-2 border-border rounded-card divide-border divide-y overflow-hidden border">
+      <ul>
         {users.map((user) => (
           <li
             key={user.userId}
-            className="flex items-center gap-2.5 px-4 py-3.5"
+            className="border-border-soft flex items-center gap-3 border-b py-3.25"
           >
-            <span className="bg-avatar text-icon rounded-pill text-micro flex size-8 shrink-0 items-center justify-center font-extrabold">
-              {avatarInitials(user.nickname)}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="text-label text-text truncate font-bold">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+              <span className="text-body-md text-text-strong truncate font-bold">
                 {user.nickname}
               </span>
-              <span className="text-caption text-text-4">
+              <span className="text-caption-lg text-text-3">
                 {formatDateKo(user.blockedAt)} 차단
               </span>
             </div>
@@ -86,7 +84,7 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
               type="button"
               onClick={() => handleUnblock(user.userId)}
               disabled={isPending}
-              className="border-border text-text-2 rounded-control text-caption shrink-0 border px-3 py-1.5 font-bold active:opacity-60 disabled:opacity-40"
+              className="text-label-lg text-text-3 flex h-11 shrink-0 items-center font-bold active:opacity-60 disabled:opacity-40"
             >
               {isPending && variables === user.userId ? "해제 중" : "차단 해제"}
             </button>
@@ -97,7 +95,7 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
       {error && (
         <p
           role="status"
-          className="text-caption text-danger mt-2.5 text-center"
+          className="text-caption-lg text-danger mt-2.5 text-center"
         >
           {error}
         </p>

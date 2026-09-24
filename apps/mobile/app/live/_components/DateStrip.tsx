@@ -2,35 +2,31 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import {
-  dateKeyParts,
-  dateKeyYearMonth,
-  monthDateKeys,
-  monthLabel,
-} from "@plick/domain/live";
-import { ChevronMiniIcon } from "@plick/ui/icons";
-import { DATE_STRIP_KEEP_PAD } from "@/_constants/live";
+import { useEffect, useState } from "react";
+import { dateKeyParts, dateKeyYearMonth } from "@plick/domain/live";
+import { ChevronDownIcon, ChevronRightIcon } from "@plick/ui/icons";
+import { dateStripKeys, dateStripLabel } from "@/_utils/live";
 
 /**
- * 경기 목록의 날짜 내비게이션 — 위에 연·월 셀렉터(드롭다운), 아래에 그 달
- * 1일~말일 전체를 담은 가로 슬라이드 스트립. 처음 들어올 때와 달을 바꿀 때만
- * 선택한 날(기본은 오늘)을 가운데로 스크롤한다(KAN-459). 오늘 칸은 요일 대신
- * "오늘" 태그를 단다. 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는
- * `/live`다.
+ * 경기 목록의 날짜 줄 (KAN-567 시안). 위에 지금 보는 날짜 라벨(12px 회색), 아래에
+ * 선택일을 가운데 둔 7칸 날짜 줄이다. 칸은 요일 11/700 위에 일 15이고, 선택 칸은
+ * 아래 2px 강조색 밑줄(시안의 inset box-shadow를 border-b로 옮겼다)에 일 900이다.
+ * 일요일 요일은 빨강이고, 오늘 칸은 요일 대신 "오늘"을 적어 어디쯤인지 알린다.
+ * 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는 `/live`다.
  *
- * 같은 달 안에서 날짜가 바뀔 때는 가운데로 당기지 않되, 선택 칸이 스트립 밖으로
- * 밀려났으면 보이는 데까지만 민다. 목록을 좌우로 계속 스와이프하면 날짜가 하루씩
- * 가는데 스트립을 그대로 두면 지금 보는 날이 화면에서 사라져 어디쯤인지 알 수가
- * 없었다. 가운데 정렬로 되돌리면 칸을 누를 때마다 스트립이 통째로 튀는 KAN-459
- * 문제가 돌아오므로, 안 보일 때만 최소한으로 움직인다.
+ * 전에는 한 달 전체를 가로 스크롤 스트립에 담고 선택 칸을 가운데로 당기는 계산
+ * (KAN-459)이 있었다. 칸이 늘 7개고 선택일이 늘 가운데라 그 계산은 지웠다. 좌우
+ * 스와이프로 하루씩 옮기면 줄 전체가 한 칸씩 따라 흐른다.
  *
- * 스크롤 센터링·드롭다운 상태 때문에 클라 컴포넌트다. 오늘은 페이지가 KST로
- * 계산해 넘긴다 — 여기서 다시 계산하면 서버·기기 시각이 자정을 사이에 두고
- * 갈릴 때 하이드레이션이 어긋난다.
+ * 달을 건너뛰는 길은 남겼다. 라벨을 누르면 연·월 목록이 열리고 고른 달의 1일
+ * (오늘이 속한 달이면 오늘)로 간다. 시안에는 없는 동작이지만 하루씩만 넘기면
+ * 지난 라운드를 찾기 어렵다. 그 드롭다운 상태 때문에 클라 컴포넌트다.
  *
- * @param selected - 현재 보고 있는 날짜 키(YYYY-MM-DD). 이 값이 스트립의 달을 정한다
- * @param today - KST 오늘 날짜 키. 쿼리 없는 `/live`가 가리키는 날이다
+ * 오늘은 페이지가 KST로 계산해 넘긴다. 여기서 다시 계산하면 서버·기기 시각이
+ * 자정을 사이에 두고 갈릴 때 하이드레이션이 어긋난다.
+ *
+ * @param selected 현재 보고 있는 날짜 키(YYYY-MM-DD)
+ * @param today KST 오늘 날짜 키. 쿼리 없는 `/live`가 가리키는 날이다
  */
 export function DateStrip({
   selected,
@@ -41,57 +37,8 @@ export function DateStrip({
 }) {
   const router = useRouter();
   const { year, month } = dateKeyYearMonth(selected);
-  const days = monthDateKeys(year, month);
-  const stripRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
-
-  /* 선택 날짜를 스트립 가운데로. scrollIntoView는 조상 스크롤까지 건드려
-     페이지가 튈 수 있어 직접 계산하고, 하이드레이션 직후 스트립 폭이 0으로
-     측정되는 프레임은 rAF로 넘긴다 */
-  useEffect(() => {
-    let raf = 0;
-    const center = () => {
-      const strip = stripRef.current;
-      const cell = strip?.querySelector<HTMLElement>('[aria-current="date"]');
-      if (!strip || !cell) return;
-      const stripRect = strip.getBoundingClientRect();
-      if (stripRect.width === 0) {
-        raf = requestAnimationFrame(center);
-        return;
-      }
-      const cellRect = cell.getBoundingClientRect();
-      strip.scrollLeft +=
-        cellRect.left +
-        cellRect.width / 2 -
-        (stripRect.left + stripRect.width / 2);
-    };
-    raf = requestAnimationFrame(center);
-    return () => cancelAnimationFrame(raf);
-    // 처음 들어올 때와 달이 바뀔 때만 센터링한다. 같은 달 안의 날짜 선택은
-    // 스트립을 그 자리에 둔다 (KAN-459) — selected를 의존성에 넣지 않는 이유
-  }, [year, month]);
-
-  /* 달이 바뀌는 순간은 위 센터링이 맡으므로 여기서 비킨다 — 둘이 같은 프레임에
-     서로 다른 목표로 스크롤을 건드리면 스트립이 두 번 움직인다 */
-  const prevMonth = useRef(`${year}-${month}`);
-  useEffect(() => {
-    const monthKey = `${year}-${month}`;
-    const monthChanged = prevMonth.current !== monthKey;
-    prevMonth.current = monthKey;
-    if (monthChanged) return;
-
-    const strip = stripRef.current;
-    const cell = strip?.querySelector<HTMLElement>('[aria-current="date"]');
-    if (!strip || !cell) return;
-    const stripRect = strip.getBoundingClientRect();
-    const cellRect = cell.getBoundingClientRect();
-
-    const overLeft = stripRect.left + DATE_STRIP_KEEP_PAD - cellRect.left;
-    const overRight = cellRect.right - (stripRect.right - DATE_STRIP_KEEP_PAD);
-    const by = overLeft > 0 ? -overLeft : overRight > 0 ? overRight : 0;
-    if (by !== 0) strip.scrollBy({ left: by, behavior: "smooth" });
-  }, [selected, year, month]);
 
   useEffect(() => {
     if (open) setPickerYear(year);
@@ -112,23 +59,17 @@ export function DateStrip({
   };
 
   return (
-    <div className="relative">
-      <div className="px-edge flex items-center pt-3 pb-2">
-        <button
-          type="button"
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          className="text-body-lg text-text flex items-center gap-1.5 font-bold active:opacity-70"
-        >
-          {monthLabel(year, month)}
-          <span
-            className={`text-text-3 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
-          >
-            <ChevronMiniIcon size={13} />
-          </span>
-        </button>
-      </div>
+    <div className="px-edge relative pt-4">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="text-label text-text-3 mb-1 flex items-center gap-0.5 active:opacity-70"
+      >
+        {dateStripLabel(selected)}
+        <ChevronDownIcon size={12} className="text-text-4" />
+      </button>
       {open && (
         <>
           <button
@@ -139,8 +80,8 @@ export function DateStrip({
           />
           <div
             role="listbox"
-            aria-label="연·월 선택"
-            className="bg-nav border-border rounded-card drop-shadow-media absolute top-12 left-5 z-30 w-60 border p-3"
+            aria-label="연월 선택"
+            className="bg-bg border-border rounded-card shadow-dialog absolute top-10 left-4 z-30 w-60 border p-3"
           >
             <div className="flex items-center justify-between pb-2">
               <button
@@ -149,9 +90,9 @@ export function DateStrip({
                 onClick={() => setPickerYear((y) => y - 1)}
                 className="text-icon grid size-8 rotate-180 place-items-center active:opacity-60"
               >
-                <ChevronMiniIcon size={14} />
+                <ChevronRightIcon size={14} />
               </button>
-              <span className="text-body text-text font-bold">
+              <span className="text-body text-text-strong font-bold">
                 {pickerYear}년
               </span>
               <button
@@ -160,7 +101,7 @@ export function DateStrip({
                 onClick={() => setPickerYear((y) => y + 1)}
                 className="text-icon grid size-8 place-items-center active:opacity-60"
               >
-                <ChevronMiniIcon size={14} />
+                <ChevronRightIcon size={14} />
               </button>
             </div>
             <div className="grid grid-cols-4 gap-1">
@@ -173,10 +114,10 @@ export function DateStrip({
                     role="option"
                     aria-selected={on}
                     onClick={() => goMonth(pickerYear, m)}
-                    className={`rounded-control text-body py-2 font-semibold active:opacity-70 ${
+                    className={`rounded-tile text-body py-2 active:opacity-70 ${
                       on
-                        ? "bg-accent-tint text-accent font-extrabold"
-                        : "text-text-2"
+                        ? "bg-chip text-accent font-black"
+                        : "text-text-2 font-medium"
                     }`}
                   >
                     {m}월
@@ -187,41 +128,31 @@ export function DateStrip({
           </div>
         </>
       )}
-      <div
-        ref={stripRef}
-        className="no-scrollbar px-edge flex gap-1.5 overflow-x-auto pb-1"
-      >
-        {days.map((dateKey) => {
+      <div className="border-border grid grid-cols-7 border-b">
+        {dateStripKeys(selected).map((dateKey) => {
           const on = dateKey === selected;
           const { weekday, day } = dateKeyParts(dateKey);
+          const sunday = weekday === "일";
           return (
             <Link
               key={dateKey}
               href={hrefFor(dateKey)}
               aria-current={on ? "date" : undefined}
-              className={`rounded-control flex w-11 shrink-0 flex-col items-center gap-0.5 py-2 active:opacity-80 ${
-                on ? "bg-accent-tint" : ""
+              className={`-mb-px flex flex-col items-center gap-0.75 border-b-2 pt-2 pb-2.25 active:opacity-70 ${
+                on ? "border-accent" : "border-transparent"
               }`}
             >
-              {dateKey === today ? (
-                <span
-                  className={`rounded-badge text-micro px-1.5 font-bold ${
-                    on
-                      ? "bg-accent text-on-accent"
-                      : "bg-accent-tint text-accent"
-                  }`}
-                >
-                  오늘
-                </span>
-              ) : (
-                <span
-                  className={`text-micro font-semibold ${on ? "text-accent" : "text-text-4"}`}
-                >
-                  {weekday}
-                </span>
-              )}
               <span
-                className={`text-body-lg font-bold ${on ? "text-accent" : "text-text-2"}`}
+                className={`text-caption font-bold ${
+                  sunday ? "text-danger" : on ? "text-accent" : "text-text-4"
+                }`}
+              >
+                {dateKey === today ? "오늘" : weekday}
+              </span>
+              <span
+                className={`text-body-lg ${
+                  on ? "text-text-strong font-black" : "text-text-3 font-medium"
+                }`}
               >
                 {day}
               </span>

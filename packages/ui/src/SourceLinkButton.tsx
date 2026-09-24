@@ -1,32 +1,21 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 import { LinkOutIcon } from "./icons";
-import { ReporterTierBadge } from "./ReporterTierBadge";
 
 /**
- * 원문 버튼 (KAN-365) — 기사 세부·릴 세부의 "원문"/"출처 원문 보기" 자리 공용.
+ * 원문 링크 (KAN-365, 시안 KAN-567). 기사 세부 "원문 보기"·릴 세부 "출처 원문 보기"
+ * 자리 공용. 강조색 12/700 글자 뒤에 12px 바깥 링크 아이콘이 붙는 텍스트 링크다.
  *
- * 원문 링크를 든 기자가 두 명 이상이면 바로 이동하지 않고 기자 목록 팝오버를
- * 연다 — 각 행이 그 기자의 원문 트윗으로 나가는 링크고(기자당 최신 한 건,
- * 중복 제거는 경계 변환 몫), 포인터가 있는 환경에선 행에 호버하면
- * "원문 보러가기"가 나타난다. 버튼에 숫자는 붙이지 않는다 — 인원수 표기는
- * 기자 줄(`ReporterListButton`) 몫이다.
- *
- * 그 외에는 지금까지처럼 대표 원문으로 바로 나가는 링크다 — 기자가 한 명이거나,
- * 릴 세부가 아직 상세(기자 배열)를 받기 전이거나. 링크도 기자도 없으면 아무것도
+ * KAN-365의 기자 여럿 팝오버(기자별 원문 목록)는 시안이 기자를 대표 한 명만
+ * 표기하는 규칙이라 걷어 냈다. 대표 원문으로 바로 나가고, 대표 링크가 비어 있으면
+ * 기자 배열에서 원문을 든 첫 기자의 링크로 대신한다. 둘 다 없으면 아무것도
  * 그리지 않는다.
  *
- * 팝오버 바탕·닫힘 규칙(바깥 탭·Escape·pointerdown 전파 차단)은
- * `ReporterListButton`과 같다.
+ * 원문으로 나가는 클릭은 `onOpen`으로 알린다 (KAN-543). 이동을 막지 않고 알리기만
+ * 하므로 새 탭 열기도 그대로다. 무엇을 기록할지는 호출부 몫이라 이 컴포넌트는
+ * 분석 모듈을 모른다.
  *
- * 원문으로 나가는 클릭은 `onOpen`으로 알린다 (KAN-543) — 직행 링크든 팝오버의 기자별
- * 링크든 같은 콜백이다. 이동을 막지 않고 알리기만 하므로 새 탭 열기도 그대로다.
- * 무엇을 기록할지는 호출부 몫이라 이 컴포넌트는 분석 모듈을 모른다.
- *
- * @param label - 버튼 글자 (모바일 기사 세부 "원문", 나머지 "출처 원문 보기")
- * @param sourceUrl - 대표 원문 링크. 팝오버를 열 수 없을 때의 직행 링크.
- * @param reporters - 기사에 실린 기자 전원. 릴 세부는 상세를 받기 전 undefined.
+ * @param label - 링크 글자 ("원문 보기", "출처 원문 보기")
+ * @param sourceUrl - 대표 원문 링크
+ * @param reporters - 기사에 실린 기자 전원. 대표 링크가 없을 때의 폴백 출처
  * @param className - 래퍼에 덧붙일 클래스(정렬용 `ml-auto` 등)
  * @param onOpen - 원문 링크를 눌렀을 때. 이동할 주소를 받는다
  */
@@ -39,98 +28,24 @@ export function SourceLinkButton({
 }: {
   label: string;
   sourceUrl: string | null;
-  reporters?: { name: string; tier: number | null; sourceUrl: string | null }[];
+  reporters?: { name: string; sourceUrl: string | null }[];
   className?: string;
   onOpen?: (href: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLSpanElement>(null);
-
-  /* 열려 있는 동안만 바깥 탭·Escape 감지를 단다 */
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  const linkable = (reporters ?? []).filter((rep) => rep.sourceUrl);
-  const trigger =
-    "text-label text-accent flex items-center gap-1.25 rounded font-bold hover:opacity-80 active:opacity-60 focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2";
-
-  if (linkable.length < 2) {
-    const href = sourceUrl ?? linkable[0]?.sourceUrl ?? null;
-    if (!href) return null;
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => onOpen?.(href)}
-        className={`${trigger} ${className}`}
-      >
-        <LinkOutIcon size={13} />
-        {label}
-      </a>
-    );
-  }
+  const href =
+    sourceUrl ?? reporters?.find((rep) => rep.sourceUrl)?.sourceUrl ?? null;
+  if (!href) return null;
 
   return (
-    <span ref={rootRef} className={`relative flex ${className}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label={`${label} 목록 ${open ? "닫기" : "열기"}`}
-        className={trigger}
-      >
-        <LinkOutIcon size={13} />
-        {label}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          aria-label="기자별 원문 링크"
-          onPointerDown={(e) => e.stopPropagation()}
-          className="bg-bg border-border rounded-control absolute top-full right-0 z-50 mt-2 flex max-h-64 min-w-44 flex-col overflow-y-auto border py-1.5"
-        >
-          {linkable.map((reporter, i) => (
-            <a
-              key={i}
-              role="menuitem"
-              href={reporter.sourceUrl as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                setOpen(false);
-                onOpen?.(reporter.sourceUrl as string);
-              }}
-              className="group hover:bg-elevate-2 active:bg-elevate-2 flex items-center gap-2 px-3.5 py-2"
-            >
-              <ReporterTierBadge reporter={reporter} />
-              <span className="text-body text-text truncate font-semibold">
-                {reporter.name}
-              </span>
-              <span className="text-label text-accent ml-auto hidden shrink-0 pl-2 font-bold group-hover:inline">
-                원문 보러가기
-              </span>
-            </a>
-          ))}
-        </div>
-      )}
-    </span>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => onOpen?.(href)}
+      className={`text-label text-accent hover:text-accent-hover flex items-center gap-1 font-bold active:opacity-60 ${className}`}
+    >
+      {label}
+      <LinkOutIcon size={12} />
+    </a>
   );
 }

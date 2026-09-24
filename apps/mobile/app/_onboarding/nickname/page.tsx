@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default async function OnboardingNicknamePage() {
   const profile = await getMyProfile();
   if (!profile) {
-    redirect("/login"); // 온보딩은 가입 직후 흐름 — 세션 없이는 저장도 못 한다
+    redirect("/login"); // 온보딩은 가입 직후 흐름이라 세션 없이는 저장도 못 한다
   }
 
   return (

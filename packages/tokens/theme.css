@@ -390,7 +390,6 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
-a {
-  color: inherit;
-  text-decoration: none;
-}
+/* a { color } 같은 규칙을 여기(레이어 밖)에 두면 Tailwind 유틸리티(@layer utilities)를
+ * 이긴다 — 레이어 밖 CSS가 레이어 안 CSS보다 우선이라 text-accent가 먹지 않는다.
+ * 링크 색 상속은 preflight가 base 레이어에서 이미 한다. */

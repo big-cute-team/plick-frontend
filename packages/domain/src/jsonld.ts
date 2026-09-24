@@ -17,7 +17,7 @@ function organizationId(siteUrl: string): string {
 }
 
 /**
- * 서비스 발행 주체 Organization — 홈에 싣는다. "plick"·"플릭" 브랜드 검색의
+ * 서비스 발행 주체 Organization — 홈에 싣는다. "해축이모" 브랜드 검색의
  * 지식 패널 후보가 되는 노드다(SEO 전략 G2).
  *
  * @param siteUrl canonical 도메인 절대 URL (예: https://plick.co.kr)
@@ -45,8 +45,8 @@ export function organizationJsonLd({
 /**
  * 사이트 자체를 선언하는 WebSite — 홈에 Organization과 나란히 싣는다.
  * 검색 결과 상단의 사이트명 표기를 정하는 노드다 (KAN-384) — 구글 사이트명
- * 문서가 이 name을 1순위 소스로 쓴다. 한글 "플릭"을 대표명으로, 영문
- * "PLick"을 alternateName으로 둬 두 표기 검색을 다 받는다.
+ * 문서가 이 name을 1순위 소스로 쓴다. 한글 "해축이모"를 대표명으로, 영문
+ * 표기를 alternateName으로 둬 두 표기 검색을 다 받는다(KAN-567 브랜드 교체).
  *
  * @param siteUrl canonical 도메인 절대 URL
  */

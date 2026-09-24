@@ -16,32 +16,26 @@ description: >-
 ## 1. 디자인 토큰만 사용 — 모바일과 동일 (하드코딩 금지)
 
 `@plick/tokens/theme.css` 하나를 양쪽 앱이 공유한다(웹 `globals.css`에 이미 import됨).
-색·간격·글자·라운드는 전부 토큰 유틸. 임의 hex/px 쓰지 않는다.
+색·글자·자간 토큰 이름은 `screen-publishing` 스킬 §1과 같다. 값의 출처는 KAN-567 핸드오프 시안이다.
 
-- 색: `bg-bg` `bg-nav` `bg-elevate` `text-text` `text-text-2/3/4` `text-icon`
-  `bg-accent` `text-accent` `text-on-accent` `border-border` `text-danger`
-- 미디어(사진 자리): `bg-media` / `text-media-on`, 팀색: `bg-team-liv` 등
-- 글자: `text-display`(44) `text-headline`(24, 행간·자간 내장) `text-title`(17)
-  `text-body-lg`(15) `text-body` `text-label` `text-caption`(11) `text-micro`(10)
-- 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px)
-  `tracking-heading`(-0.3px, 데스크톱 헤딩) — `tracking-[…]` 임의값 금지
-- **데스크톱 전용 스케일**(KAN-200에서 확정, theme.css에 있음): `max-w-page`(1200)
-  `px-gutter`(32) `text-hero`(26) `text-hero-sm`(18.5) `text-section`(20) `text-gnb`(14.5)
-  `text-tab`(14) — 데스크톱 피그마는 0.45 배율 프레임이니 **값을 0.45로 나눠** 실제 px를 구한다.
-- 라운드: `rounded-card`(16) `rounded-hero`(22) `rounded-control`(14) `rounded-pill`
-- 간격: `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16) 등 시맨틱 간격은 토큰 유틸로
-- 사진 위 스크림: `color-mix(in srgb, var(--plk-scrim) N%, transparent)` — rgba 하드코딩 금지
+- **데스크톱 전용 스케일**(theme.css에 있음): `max-w-page`(1280) `px-gutter`(28) `max-w-read`(기사 본문 780)
+  `max-w-narrow`(계정 520) `w-rail`(288)·`w-rail-lg`(300)·`w-rail-xl`(340, 우측 레일) `text-hero-sm`(14.5, 핫이슈 카드 제목)
+  `text-gnb`(13.5) `text-read-body`(16) `text-read-title`(30) `text-display`(46, 스코어) `shadow-dialog` `shadow-card` `animate-rise`
+- 라운드: 웹은 전부 각지다. `globals.css`가 `rounded-badge`~`rounded-sheet` 토큰을 0으로 덮으므로 공용 컴포넌트가 같은 유틸을
+  써도 웹에서는 각지게 나온다. `rounded-pill`·`rounded-full`만 둥글다(응원팀 칩, 폴백 엠블럼 원)
+- 목록 행 구분선은 `border-border-soft`인데 웹은 `globals.css`가 #f4f5f6으로 한 단 연하게 덮는다
 
-데스크톱에서 새 시맨틱 값(예: 콘텐츠 최대폭, 데스크톱 거터)이 반복되면 **`packages/tokens/theme.css`에
-토큰으로 추가**하고 양쪽 앱이 쓰게 한다 — 웹 전용 CSS에 숨기지 않는다. 색은 `@theme inline` 매핑 함께.
+데스크톱에서 새 시맨틱 값이 반복되면 **`packages/tokens/theme.css`에 토큰으로 추가**하고 양쪽 앱이 쓰게 한다.
 
-⚠️ `px-edge`(20px)는 **모바일 화면 가장자리** 토큰이다. 데스크톱 페이지 좌우 여백에 그대로 쓰지 말고
-컨테이너 패턴(§3)을 쓴다. 카드 내부 패딩처럼 의미가 같은 곳엔 써도 된다.
+⚠️ `px-edge`(16px)는 **모바일 화면 가장자리** 토큰이다. 데스크톱 페이지 좌우 여백에 그대로 쓰지 말고
+컨테이너 패턴(§3)을 쓴다.
 
-## 2. 다크/라이트 — 모바일과 동일
+## 2. 라이트 고정 — 모바일과 동일
 
-다크가 기본(`:root`), 라이트는 `[data-theme="light"]` 오버라이드로 자동 전환.
-→ **화면은 다크 기준으로만 만든다.** 라이트를 따로 만들지 않는다.
+라이트가 기본이고 `<html data-theme="light">` 고정이다(KAN-567). 화면은 라이트 기준으로만 만든다.
+시안 규칙: 본문 영역 카드에 테두리를 두르지 않고 우측 레일만 `border-border-strong` 1px 테두리다. 본문에 굵은 검정
+구분선을 쓰지 않고 섹션은 여백으로 끊는다. 링크 hover 색은 `hover:text-accent`. 확인 다이얼로그는 가운데 각진 상자
+(`border-border-strong` + `shadow-dialog`)다.
 
 ## 3. 데스크톱 레이아웃
 
@@ -51,7 +45,7 @@ description: >-
 - **페이지 뼈대**: 상단 `SiteHeader`(GNB) + 본문 컨테이너 + (필요 시) 푸터.
   뼈대 컴포넌트는 `apps/web/app/_components/`에 있다 — `SiteHeader`(GNB, notif prop)와
   `PageContainer`는 KAN-200에서 만들었으니 새 화면은 그대로 가져다 쓴다.
-- **컨테이너**: `PageContainer`(= `max-w-page`(1200px) + `mx-auto` + `px-gutter`(32px)) 하나로
+- **컨테이너**: `PageContainer`(= `max-w-page`(1280px) + `mx-auto` + `px-gutter`(28px)) 하나로
   통일하고, 페이지마다 max-width를 따로 적지 않는다.
 - ⚠️ 웹 `globals.css`의 가로 오버플로 방지는 `overflow-x: clip`이어야 한다 — `hidden`으로 바꾸면
   body가 스크롤 컨테이너가 되어 `position: sticky`(GNB·사이드바)가 깨진다.

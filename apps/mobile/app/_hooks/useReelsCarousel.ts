@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaOptionsType } from "embla-carousel";
 import {
@@ -33,6 +33,7 @@ import { useViewState } from "@/_stores/view-state";
  *   달라서 순번을 스토어에 쓰면 탭 피드의 복원 자리를 오염시킨다.
  * @returns `viewportRef`는 `overflow-hidden` 뷰포트에, 그 안에 슬라이드를 담는 컨테이너를 둔다.
  *   `activeIndex`는 지금 보고 있는 릴 — 화면 밖 릴 비활성화와 다음 페이지 프리페치에 쓴다.
+ *   `scrollTo`는 왼쪽 위치 점(KAN-567 시안)이 릴을 고를 때 쓴다. 캐러셀이 아직 없으면 무시한다.
  */
 export function useReelsCarousel(slideCount: number, remember = true) {
   /**
@@ -163,5 +164,10 @@ export function useReelsCarousel(slideCount: number, remember = true) {
     return () => cancelAnimationFrame(frame);
   }, [embla, slideCount]);
 
-  return { viewportRef, activeIndex };
+  const scrollTo = useCallback(
+    (index: number) => embla?.scrollTo(index),
+    [embla],
+  );
+
+  return { viewportRef, activeIndex, scrollTo };
 }
