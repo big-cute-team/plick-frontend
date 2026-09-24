@@ -40,6 +40,8 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
     <AppShell>
       <TopBar />
       <ArticlesScrollArea>
+        {/* 페이지의 h1 — 시안에 제목 블록이 없어 보이지 않게 둔다(크롤러·보조기술용) */}
+        <h1 className="sr-only">이슈</h1>
         <ArticlesFeed initial={initial} initialTeam={team} />
       </ArticlesScrollArea>
       <TabBar />

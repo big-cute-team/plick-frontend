@@ -1,78 +1,54 @@
-import { TeamCrest } from "@plick/ui/TeamCrest";
+import Link from "next/link";
 import { NewBadge } from "@plick/ui/NewBadge";
+import { TeamCrest } from "@plick/ui/TeamCrest";
+import { VsMark } from "@plick/ui/VsMark";
 import { TEAMS } from "@plick/domain/constants";
 import {
   formatCount,
   formatRelativeTime,
   isRecentlyPublished,
+  teamProfilePath,
 } from "@plick/domain/format";
 import type { ArticleCard, Filter } from "@plick/domain/types";
+import { POST_TABLE_CELL_LG, POST_TABLE_GRID } from "@/_constants/app";
 import type { PostListVariant } from "@/_types/app";
 import { ArticleLink } from "@/_components/ArticleLink";
 
 /**
- * 변형별 밀도와 제목 heading 레벨 (KAN-380).
- *
- * heading이 변형마다 다른 건 이 줄이 놓이는 자리가 달라서다. 홈은 "지금 올라온
- * 소식" h2 섹션 안이라 h3고, 기사 목록은 페이지 h1("기사") 바로 아래라 h2다.
- * 레벨을 건너뛰면 보조기술이 목차를 못 만든다. 글자 크기는 `title` 클래스가
- * 정하므로 태그가 바뀌어도 보이는 결과는 같다.
+ * 변형별 제목 heading 레벨 (KAN-380). 홈은 "새로 올라온 이슈" h2 섹션 안이라 h3고,
+ * 기사 목록은 페이지 h1 바로 아래라 h2다. 레벨을 건너뛰면 보조기술이 목차를 못
+ * 만든다. 시안(KAN-567)에서 두 변형의 행 모양은 같아졌고 heading만 다르다.
  */
-const VARIANT: Record<
-  PostListVariant,
-  {
-    row: string;
-    title: string;
-    crest: number;
-    heading: "h2" | "h3";
-  }
-> = {
-  news: {
-    row: "gap-5 py-5",
-    title: "text-title",
-    crest: 40,
-    heading: "h3",
-  },
-  article: {
-    row: "gap-3.5 py-4",
-    title: "text-body-lg",
-    crest: 36,
-    heading: "h2",
-  },
+const HEADING: Record<PostListVariant, "h2" | "h3"> = {
+  news: "h3",
+  article: "h2",
 };
 
 /**
- * 피드 리스트의 한 줄 — 왼쪽 팀 로고, 가운데 제목·요약, 오른쪽 시각·기자명.
- * 클릭하면 해당 기사 세부(`/articles/[postId]`)로 이동한다. 홈·기사 페이지가
- * `variant`로 밀도만 바꿔 공용한다.
+ * 이슈 표의 한 행 (KAN-567, 시안 홈 표) — 팀 엠블럼 20, `VS` + 제목 13.5/700 한 줄
+ * 말줄임 + 댓글 수 12.5/900 빨강 + 새 글 `N`, 출처 기자 12, 보도 시각 12, 조회 12,
+ * 좋아요 12/700 강조색. 행 높이는 최소 38, hover에 연한 면. 홈, 기사 페이지, 이슈
+ * 상세가 같이 쓴다. 전에는 로고 36~40에 제목 두 줄과 요약이 있는 카드 행이었는데
+ * (KAN-482) 시안이 게시판 표라 여섯 열로 다시 짰다. 요약은 표에 자리가 없어 뺐다.
  *
- * KAN-482에서 모바일 `NewsItem`과 같은 세 칸 구성으로 다시 짰다. 그전에는
- * 팀명·시각이 제목 위에, 기자명·좋아요·조회·댓글이 제목 아래에 깔리고 로고와
- * 썸네일이 오른쪽에 붙어 있었다. 집계 숫자와 썸네일은 뺐다 — 리스트에서 읽을
- * 것은 제목과 요약이고 나머지는 기사 세부에 있다.
+ * 댓글 수는 `[96]`처럼 대괄호로 쓴다(시안 목록 표기 규칙). 0이면 그리지 않고,
+ * 제목이 잘려도 숫자와 `VS`는 잘리지 않게 제목 박스 밖에 형제로 둔다.
  *
- * 댓글 수만 KAN-555에서 되살렸다(모바일 `NewsItem`과 같다). 핫이슈 텍스트 카드
- * ({@link HotTextCard})가 게시판처럼 `제목 [3]`으로 다는 표기를 리스트에도 같게
- * 단다. 0이면 그리지 않고, 제목이 두 줄로 잘려도 숫자는 잘리지 않게 제목과
- * 형제로 둔다. 숫자는 제목과 같은 `title` 클래스를 타 변형마다 크기가 따라간다.
+ * 행 전체가 `<a>`였을 때는 안에 링크를 둘 수 없어(중첩 앵커는 무효 HTML) 제목
+ * 링크의 `::after`를 행 전체로 펼쳐 어디를 눌러도 기사로 가고, 엠블럼만
+ * `relative z-10`으로 그 위에 올려 팀 프로필로 간다(모바일 `NewsItem`과 같은 수).
+ * 그 `z-10`은 행 안에서만 뜻이 있어야 해서 행에 `isolate`를 건다.
  *
- * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓴다. 팀이 없는
- * 기사는 로고 자리를 그리지 않고 제목이 왼쪽 끝부터 찬다. 기자 이름도 원문이
- * 없으면 빠진다.
+ * BE는 팀을 다중으로 주고 아예 없을 수도 있어서 첫 팀만 대표로 쓴다. 팀 탭을 보고
+ * 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 엠블럼으로 쓴다 (KAN-368, 모바일과
+ * 동일). 기자는 대표 한 명만 표기하고 기자 프로필이 없어 링크가 아니다.
  *
- * 팀 탭을 보고 있을 때는 기사의 첫 팀 대신 그 탭의 팀을 로고로 쓴다 (KAN-368,
- * 모바일과 동일) — 팀별 목록에서 다른 팀 표식이 섞여 보이는 걸 막는다. 전체
- * 탭은 기존대로 기사의 첫 팀이다.
- *
- * 발행 30분 안의 기사는 시각 옆에 NEW 태그를 단다 (KAN-481). 하이드레이션
- * 경계 사정은 모바일 `NewsItem`과 같다.
- *
- * 오른쪽 칸은 고정폭(`w-28`)이다. 기자 이름 길이에 따라 칸이 늘었다 줄었다 하면
- * 행마다 제목 폭이 달라져 리스트가 들쭉날쭉해진다. 넘치는 이름은 `truncate`가
- * `…`으로 자른다.
+ * 발행 30분 안의 기사는 `N` 배지를 단다 (KAN-481). 판정은 렌더 시각 기준이라
+ * 서버 HTML과 클라 첫 렌더가 어긋날 수 있는데, 경계를 넘는 몇 초의 일이라 React가
+ * 그 트리를 클라에서 다시 그리는 걸로 감수한다.
  *
  * @param post - 표시할 기사 카드
- * @param variant - 행 변형(news=홈, article=기사)
+ * @param variant - 행 변형(news=홈, article=기사). heading 레벨만 다르다
  * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  */
 export function PostListItem({
@@ -87,8 +63,7 @@ export function PostListItem({
   /** 목록 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543). 순위 없는 자리는 생략 */
   rank?: number;
 }) {
-  const v = VARIANT[variant];
-  const Title = v.heading;
+  const Title = HEADING[variant];
   const team =
     filter !== "ALL"
       ? TEAMS[filter]
@@ -96,58 +71,59 @@ export function PostListItem({
         ? TEAMS[post.teams[0]]
         : null;
   const isNew = isRecentlyPublished(post.publishedAt);
-  // BE 실데이터는 한 줄 요약이 전 건 채워져 있지만 계약상 null이 가능해
-  // 긴 요약으로 떨어뜨린다 — 어느 쪽이든 길이는 보장이 없어 한 줄로 자른다
-  const summary = (post.summaryShort ?? post.summary).trim();
 
   return (
-    <ArticleLink
-      articleId={post.id}
-      rank={rank}
-      className={`border-border focus-visible:outline-accent flex items-start border-b transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:-outline-offset-2 ${v.row}`}
+    <article
+      className={`${POST_TABLE_GRID} border-border-soft hover:bg-elevate-2 relative isolate min-h-9.5 border-b py-1.75`}
     >
-      {team && (
-        <TeamCrest
-          team={team}
-          size={v.crest}
-          className="shrink-0 self-center"
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="mt-0.5 flex items-start gap-1.5">
-          <Title
-            className={`text-text-strong line-clamp-2 min-w-0 leading-snug font-bold tracking-tight ${v.title}`}
+      <span className="flex justify-center">
+        {team && (
+          <Link
+            href={teamProfilePath(team.code)}
+            aria-label={`${team.name} 프로필`}
+            className="focus-visible:outline-accent relative z-10 shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <TeamCrest team={team} size={20} />
+          </Link>
+        )}
+      </span>
+      <span className="flex min-w-0 items-center gap-1.75">
+        {post.contentType === "DEBATE" && <VsMark />}
+        <Title className="text-body text-text-strong min-w-0 truncate font-bold">
+          <ArticleLink
+            articleId={post.id}
+            rank={rank}
+            className="focus-visible:outline-accent after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:-outline-offset-2"
           >
             {post.title}
-          </Title>
-          {post.commentCount > 0 && (
-            <span
-              className={`text-accent shrink-0 leading-snug font-bold tabular-nums ${v.title}`}
-            >
-              [{formatCount(post.commentCount)}]
-            </span>
-          )}
-        </div>
-        {summary && (
-          <p className="text-body text-text-strong mt-1.5 truncate">
-            {summary}
-          </p>
-        )}
-      </div>
-      <div className="flex w-28 shrink-0 flex-col items-end gap-1">
-        {/* 시각과 NEW가 한 줄에 다 안 들어가는 폭에서는 태그가 아랫줄로 내려간다 */}
-        <div className="flex w-full flex-wrap items-center justify-end gap-1.5">
-          <span className="text-caption text-text-4" suppressHydrationWarning>
-            {formatRelativeTime(post.publishedAt)}
-          </span>
-          {isNew && <NewBadge />}
-        </div>
-        {post.reporter && (
-          <span className="text-caption text-text-2 max-w-full truncate font-semibold">
-            {post.reporter.name}
+          </ArticleLink>
+        </Title>
+        {post.commentCount > 0 && (
+          <span className="text-label-lg text-danger shrink-0 font-black">
+            [{formatCount(post.commentCount)}]
           </span>
         )}
-      </div>
-    </ArticleLink>
+        {isNew && <NewBadge />}
+      </span>
+      <span className={`${POST_TABLE_CELL_LG} text-label text-text-3 truncate`}>
+        {post.reporter?.name}
+      </span>
+      <span
+        className="text-label text-text-3 text-center whitespace-nowrap"
+        suppressHydrationWarning
+      >
+        {formatRelativeTime(post.publishedAt)}
+      </span>
+      <span
+        className={`${POST_TABLE_CELL_LG} text-label text-text-3 text-center`}
+      >
+        {formatCount(post.views)}
+      </span>
+      <span
+        className={`${POST_TABLE_CELL_LG} text-label text-accent text-center font-bold`}
+      >
+        {formatCount(post.likeCount)}
+      </span>
+    </article>
   );
 }

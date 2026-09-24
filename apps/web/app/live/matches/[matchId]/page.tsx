@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApiError } from "@plick/core/client";
-import { getMatchDetail } from "@plick/core/live";
-import type { InitialMatchDetail } from "@plick/domain/live";
+import { getMatchDetail, getStandings } from "@plick/core/live";
+import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { MatchDetailScreen } from "@/live/_components/MatchDetailScreen";
 
@@ -23,7 +23,7 @@ export async function generateMetadata({
     const title = `${header.home.name} vs ${header.away.name}`;
     return {
       title,
-      description: `${header.competition} ${title} 라이브 스코어와 라인업, 경기 스탯을 플릭에서 확인하세요.`,
+      description: `${header.competition} ${title} 라이브 스코어와 라인업, 경기 스탯을 해축이모에서 확인하세요`,
       alternates: {
         canonical: `/live/matches/${id}`,
         media: {
@@ -37,9 +37,12 @@ export async function generateMetadata({
 }
 
 /**
- * 경기 상세(피그마 LW4·LW5, KAN-452). 첫 상세는 서버 씨앗, 라이브 폴링은 클라
- * 훅. 없는 경기·빅6 밖 경기(404 MATCH_NOT_FOUND)는 notFound로, 그 밖의
+ * 경기 상세 (KAN-452 → KAN-567 리디자인). 첫 상세는 서버 씨앗, 라이브 폴링은 클라
+ * 훅. 없는 경기, 빅6 밖 경기(404 MATCH_NOT_FOUND)는 notFound로, 그 밖의
  * 실패는 씨앗 없이 내려보내 클라가 다시 받는다.
+ *
+ * 순위 탭(KAN-567)의 표는 여기서 `GET /standings`를 함께 받아 내려준다. 단발 읽기라
+ * 서버 컴포넌트 fetch가 맞고, 못 받으면 탭 자리에 실패 안내만 뜬다.
  */
 export default async function MatchDetailPage({
   params,
@@ -50,14 +53,29 @@ export default async function MatchDetailPage({
   if (id === null) notFound();
 
   let initial: InitialMatchDetail | undefined;
-  try {
-    initial = { detail: await getMatchDetail(id), fetchedAt: Date.now() };
-  } catch (error) {
+  let standings: StandingRow[] | null = null;
+  const [detailResult, standingsResult] = await Promise.allSettled([
+    getMatchDetail(id),
+    getStandings(),
+  ]);
+
+  if (detailResult.status === "fulfilled") {
+    initial = { detail: detailResult.value, fetchedAt: Date.now() };
+  } else {
+    const error = detailResult.reason;
     if (error instanceof ApiError && error.status === 404) notFound();
     console.error("[live] 경기 상세 초기 로드 실패:", error);
   }
 
-  return <MatchDetailScreen matchId={id} initial={initial} />;
+  if (standingsResult.status === "fulfilled") {
+    standings = standingsResult.value;
+  } else {
+    console.error("[live] 순위표 로드 실패:", standingsResult.reason);
+  }
+
+  return (
+    <MatchDetailScreen matchId={id} initial={initial} standings={standings} />
+  );
 }
 
 /** 경로 세그먼트 → fixture id. 양의 정수가 아니면 null(404 동선). */

@@ -1,20 +1,36 @@
+import Link from "next/link";
 import { getDebates } from "@plick/core/debates";
 import type { InitialDebateList } from "@plick/domain/types";
+import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { getAccessToken } from "@/_services/session";
-import { DebatesFeed } from "./DebatesFeed";
+import { DebatesFeed, type DebateTab } from "./DebatesFeed";
+import { SiteFooter } from "@/_components/SiteFooter";
+import { LiveStrip } from "@/_components/LiveStrip";
+import { SideRail } from "@/_components/SideRail";
+
+/** 탭 나열 순서와 라벨 (시안 `pollTabs`). */
+const TABS: { key: DebateTab; label: string; href: string }[] = [
+  { key: "open", label: "진행 중", href: "/debates" },
+  { key: "closed", label: "마감", href: "/debates?tab=closed" },
+];
 
 /**
- * 데스크톱 토론 리스트 화면 본체 (KAN-418, 시안 W13) — GNB + 중앙 정렬 단일
- * 컬럼(max-w-read)에 제목·부제 + 투표 카드 리스트.
+ * 데스크톱 투표 화면 본체 (KAN-418 → KAN-567 시안 투표 1064-1213행). GNB 아래
+ * `minmax(0,1fr) 288px` 그리드에 제목 "투표" 22/900, 진행 중, 마감 탭 줄, 투표 목록을
+ * 두고 우측 aside는 급상승과 채팅방 레일 자리다. 전에는 "VS" 제목에 안내 부제가
+ * 있는 단일 컬럼이었다.
  *
- * 카드를 누르면 소속 기사 상세로 간다 — 실제 투표는 기사 상세가 맡는다. BE에
- * 필터·페이지네이션이 없어 기사 목록과 달리 팀 탭도 무한스크롤도 없다.
+ * 카드는 여기서 바로 투표한다(`DebateVoteCard`). 전에는 표시 전용 카드를 눌러 기사
+ * 상세로 보냈다. BE에 필터, 페이지네이션이 없어 팀 탭도 무한스크롤도 없다. 탭의
+ * 원본은 URL `?tab=`이라 링크로 그린다.
  *
  * 첫 리스트는 서버에서 받아 씨앗으로 내려준다. `myVote`(내가 투표한 카드 표시)가
- * 유저별 값이라 토큰을 실어 부른다 — 기사 상세와 같은 규약이다.
+ * 유저별 값이라 토큰을 실어 부른다. 기사 상세와 같은 규약이다.
+ *
+ * @param tab 지금 탭
  */
-export async function DebatesScreen() {
+export async function DebatesScreen({ tab }: { tab: DebateTab }) {
   let initial: InitialDebateList | undefined;
   try {
     const accessToken = await getAccessToken();
@@ -30,19 +46,43 @@ export async function DebatesScreen() {
   return (
     <>
       <SiteHeader />
+      <LiveStrip />
       <main>
-        <div className="max-w-read px-gutter mx-auto w-full pb-22">
-          <header className="pt-7 pb-4.5">
-            <h1 className="text-hero text-text tracking-heading font-extrabold">
-              VS
+        <PageContainer className="grid grid-cols-1 gap-10 pt-6.5 pb-12 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-11">
+          <div className="min-w-0">
+            <h1 className="text-section text-text-strong tracking-title pb-5 font-black">
+              투표
             </h1>
-            <p className="text-body text-text-3 mt-1.5 font-semibold">
-              투표에 참여하고 팬들의 여론을 확인해보세요
-            </p>
-          </header>
-          <DebatesFeed initial={initial} />
-        </div>
+            <div
+              role="tablist"
+              aria-label="투표 상태"
+              className="border-border flex items-center gap-5 border-b"
+            >
+              {TABS.map(({ key, label, href }) => {
+                const on = key === tab;
+                return (
+                  <Link
+                    key={key}
+                    href={href}
+                    role="tab"
+                    aria-selected={on}
+                    className={`text-body focus-visible:outline-accent -mb-px border-b-2 pb-2.25 focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                      on
+                        ? "border-accent text-text-strong font-bold"
+                        : "hover:text-text-strong text-text-3 border-transparent font-medium"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+            <DebatesFeed initial={initial} tab={tab} />
+          </div>
+          <SideRail />
+        </PageContainer>
       </main>
+      <SiteFooter />
     </>
   );
 }

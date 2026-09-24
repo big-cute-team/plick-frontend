@@ -1,22 +1,20 @@
 import Link from "next/link";
 import { FIGURE_TYPE_LABEL, TEAMS } from "@plick/domain/constants";
-import { teamHubPath } from "@plick/domain/format";
+import { teamProfilePath } from "@plick/domain/format";
 import type { FigureProfile } from "@plick/domain/types";
-import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 
 /**
- * 인물 프로필 머리 (KAN-501) — 사진, 이름·구분·영문명, 소속 팀, 한 줄 소개.
- * 모바일 `figures/[figureId]/_components/FigureHeader.tsx`의 데스크톱 판이다.
+ * 인물 프로필 머리 (KAN-501 → KAN-567 시안 프로필 1225-1249행). 왼쪽 72px 자리는
+ * 시안이 선수면 등번호 상자, 아니면 회색 원인데 인물 사전에 등번호가 없어 늘 회색 원
+ * (이름 첫 글자)이다. 오른쪽에 종류 라벨 12/700 강조색, 이름 30/900 -.045em, 그
+ * 아래 영문명 13 보조색과 소속 팀 링크(엠블럼 16 + 13/700, hover 강조색). 소속 팀
+ * 링크는 팀 프로필(`/teams/[slug]/profile`)로 간다. 웹에도 팀 프로필이 생겨
+ * (KAN-507) 모바일과 같은 곳을 가리킨다.
  *
- * 모바일과 다른 곳이 둘이다. 소속 팀 링크가 팀 프로필(`/teams/[slug]/profile`)이
- * 아니라 팀 허브(`/teams/[slug]`)다 — 웹에는 팀 프로필 화면이 없고 팀 허브가
- * 그 팀 기사를 모아 보여주는 자리다. 그리고 데스크톱이라 링크에 hover·focus
- * 상태를 얹는다.
- *
- * 사진·소개는 확인 시점 실데이터가 대부분 null이다. 둘 다 없으면 자리를 그리지
- * 않는다 — 빈 원을 깔아 두면 로드에 실패한 것처럼 보인다. 레지스트리에 없는
- * 팀이면(BE 마스터가 6팀이라 실제로는 안 생긴다) 로고와 링크 없이 이름만 둔다.
+ * 사진과 소개는 시안 규칙(프로필 이미지 없음, 안내 문구 없음)대로 머리에 두지 않는다.
+ * 소개는 우측 기본 정보에 있다. 레지스트리에 없는 팀이면(BE 마스터가 6팀이라 실제로는
+ * 안 생긴다) 엠블럼과 링크 없이 이름만 둔다.
  *
  * @param figure 인물 프로필
  */
@@ -25,45 +23,44 @@ export function FigureHeader({ figure }: { figure: FigureProfile }) {
   const registry = team?.code ? TEAMS[team.code] : null;
 
   return (
-    <header className="flex flex-col gap-4 pt-7 pb-5">
-      <div className="flex items-center gap-5">
-        {figure.imageUrl && (
-          <PlayerPhoto src={figure.imageUrl} name={figure.name} size={80} />
-        )}
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h1 className="text-hero text-text tracking-heading truncate font-extrabold">
-            {figure.name}
-          </h1>
-          <p className="text-label text-text-3 flex items-center gap-2">
-            <span className="bg-elevate rounded-pill text-text-2 px-2 py-0.5 font-bold">
-              {FIGURE_TYPE_LABEL[figure.type]}
-            </span>
-            {figure.nameEn && <span className="truncate">{figure.nameEn}</span>}
-          </p>
-          {team ? (
-            registry ? (
-              <Link
-                href={teamHubPath(registry.code)}
-                className="text-body text-text-2 hover:text-accent focus-visible:outline-accent flex w-fit items-center gap-1.5 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                <TeamCrest team={registry} size={20} />
-                {team.name}
-              </Link>
-            ) : (
-              <span className="text-body text-text-2 font-semibold">
-                {team.name}
-              </span>
-            )
-          ) : (
-            <span className="text-body text-text-4">소속 팀 정보 없음</span>
-          )}
-        </div>
-      </div>
-      {figure.description && (
-        <p className="text-read-body text-text-2 leading-body-lg tracking-snug">
-          {figure.description}
+    <header className="border-border flex items-center gap-5 border-b pb-5.5">
+      <span
+        aria-hidden
+        className="bg-avatar text-text-4 grid size-18 shrink-0 place-items-center rounded-full text-xl font-bold"
+      >
+        {figure.name.slice(0, 1)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-label text-accent pb-1.5 font-bold">
+          {FIGURE_TYPE_LABEL[figure.type]}
         </p>
-      )}
+        <h1 className="text-read-title text-text-strong tracking-title truncate leading-[1.2] font-black">
+          {figure.name}
+        </h1>
+        {(figure.nameEn || team) && (
+          <div className="flex items-center gap-2.5 pt-2.25">
+            {figure.nameEn && (
+              <span className="text-body text-text-3 truncate">
+                {figure.nameEn}
+              </span>
+            )}
+            {team &&
+              (registry ? (
+                <Link
+                  href={teamProfilePath(registry.code)}
+                  className="text-body text-text hover:text-accent focus-visible:outline-accent flex shrink-0 items-center gap-1.25 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  <TeamCrest team={registry} size={16} />
+                  {team.name}
+                </Link>
+              ) : (
+                <span className="text-body text-text font-bold">
+                  {team.name}
+                </span>
+              ))}
+          </div>
+        )}
+      </div>
     </header>
   );
 }

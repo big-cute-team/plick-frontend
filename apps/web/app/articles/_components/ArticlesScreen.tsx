@@ -1,13 +1,19 @@
 import { getArticles } from "@plick/core/articles";
+import { formatChatTime } from "@plick/domain/format";
 import type { Filter, InitialArticleFeed } from "@plick/domain/types";
-import { LiveDot } from "@plick/ui/LiveDot";
 import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
+import { LiveStrip } from "@/_components/LiveStrip";
+import { PageContainer } from "@/_components/PageContainer";
 import { PostFeed } from "@/_components/PostFeed";
+import { SideRail } from "@/_components/SideRail";
+import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 
 /**
- * 데스크톱 기사 화면 본체 (KAN-207) — GNB + 중앙 정렬 단일 컬럼(max-w-read)에
- * 제목·부제 + 팀 필터 탭 + 팀별 이적 기사 리스트. 피그마 W10(node 222-2).
+ * 데스크톱 기사 화면 본체 (KAN-207, 시안 KAN-567) — 홈과 같은 2열(표 + 우측 레일)에
+ * 홈의 "새로 올라온 이슈" 표를 무한 스크롤로 끝까지 잇는다. 전에는 `max-w-read`
+ * 단일 컬럼에 제목·부제 + 팀 탭 + 카드 행이었다. 시안에 기사 목록 화면은 따로
+ * 없어 홈 표를 전폭으로 이어 그리는 것으로 정했다.
  *
  * 기사 목록(`/articles`)과 팀별 기사(`/articles/teams/[slug]`)가 같은 화면을
  * 그린다 (KAN-350) — 팀 탭 선택이 URL로 남아야 새로고침·공유가 그 팀 그대로다.
@@ -27,39 +33,41 @@ export async function ArticlesScreen({ team = "ALL" }: { team?: Filter }) {
   } catch (error) {
     console.error("[articles] 기사 피드 초기 로드 실패:", error);
   }
+  const renderedAt = formatChatTime(new Date().toISOString());
 
   return (
     <>
       <SiteHeader />
+      <LiveStrip />
       <main>
         {/* 좁은 화면에서 맨 위를 당기면 새로고침 (KAN-379). sticky인 SiteHeader는
             transform 껍데기 밖에 둬야 해서 본문만 감싼다 */}
         <FeedPullRefresh surface="article">
-          <div className="max-w-read px-gutter mx-auto w-full pb-22">
-            {/* 제목 블록은 PostFeed가 팀 탭과 한 덩어리로 GNB 아래 sticky
-                고정한다 (KAN-386) — 리스트를 내려도 제목·부제·탭이 남는다.
-                위 여백(pt-7)도 블록 안에 있어야 고정 중에 틈이 비치지 않는다 */}
-            <PostFeed
-              initial={initial}
-              initialTeam={team}
-              variant="article"
-              header={
-                /* 서버가 prop으로 넘기는 JSX는 직렬화되며 정적 자식 표시를
-                   잃어 React가 key를 요구한다 (모바일과 같은 사정) */
-                <header key="articles-header" className="pt-7 pb-4.5">
-                  {/* 홈 섹션 제목과 같은 라이브 점 — hero 크기라 한 단계 키운다 (KAN-481) */}
-                  <h1 className="text-hero text-text tracking-heading flex items-center gap-2.5 font-extrabold">
-                    <LiveDot size="size-2.5" />
-                    지금 올라온 소식
-                  </h1>
-                  <p className="text-body text-text-3 mt-1.5 font-semibold">
-                    팀별 이적 소식을 모아보세요
-                  </p>
-                </header>
-              }
-            />
-          </div>
+          <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_288px]">
+            <section className="min-w-0">
+              <div className="flex items-baseline gap-2.5 pb-1.5">
+                <h1 className="text-body-lg text-text-strong font-black tracking-tight">
+                  이슈
+                </h1>
+                <span className="text-caption-lg text-text-3">
+                  {renderedAt} 갱신
+                </span>
+                <div aria-hidden className="flex-1" />
+                {/* 정렬 API가 없어 최신순 하나만 굳혀 둔다 */}
+                <span className="text-label-lg text-text-strong font-bold">
+                  최신순
+                </span>
+              </div>
+              <PostFeed
+                initial={initial}
+                initialTeam={team}
+                variant="article"
+              />
+            </section>
+            <SideRail />
+          </PageContainer>
         </FeedPullRefresh>
+        <SiteFooter />
       </main>
     </>
   );

@@ -12,6 +12,7 @@ import { readCookie } from "@/_utils/cookie";
 /**
  * 모바일 전환 추천 배너 (KAN-379) — 데스크톱 도메인(`plick.co.kr`)을 좁은
  * 화면에서 열었을 때 상단에 뜬다. 모바일 앱의 `SwitchToWebBanner`와 짝이다.
+ * 라이트 시안(KAN-567)의 채운 면(`bg-elevate`) 톤이고 링크 hover는 강조색이다.
  *
  * 이 앱도 좁은 화면에서 깨지지는 않지만(lg 미만 대응이 있다), 릴스처럼 모바일에
  * 맞춰 만든 화면은 모바일 도메인이 낫다. 그걸 알려 주기만 하고 보내지는 않는다 —
@@ -49,13 +50,13 @@ export function SwitchToMobileBanner() {
   if (!show) return null;
 
   return (
-    <div className="bg-elevate-2 border-border px-gutter gap-gap flex items-center border-b py-2.5">
-      <p className="text-caption text-text-2 min-w-0 flex-1">
-        모바일에 맞춘 화면이 따로 있어요.
+    <div className="bg-elevate border-border px-gutter flex items-center gap-3 border-b py-2.5">
+      <p className="text-caption-lg text-text-2 min-w-0 flex-1">
+        모바일에 맞춘 화면이 따로 있어요
       </p>
       <a
         href={crossSiteUrl(MOBILE_SITE_URL, pathname, deviceId)}
-        className="text-caption text-accent focus-visible:outline-accent shrink-0 font-bold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60"
+        className="text-caption-lg text-accent hover:text-accent-hover focus-visible:outline-accent shrink-0 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         모바일로 보기
       </a>
@@ -66,7 +67,7 @@ export function SwitchToMobileBanner() {
           localStorage.setItem(SWITCH_BANNER_DISMISS_KEY, "1");
           setShow(false);
         }}
-        className="text-text-4 focus-visible:outline-accent -mr-1 shrink-0 p-1 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60"
+        className="text-text-3 hover:text-text-strong focus-visible:outline-accent -mr-1 shrink-0 p-1 focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         <CloseIcon size={16} />
       </button>

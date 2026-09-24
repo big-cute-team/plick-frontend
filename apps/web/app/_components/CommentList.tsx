@@ -5,8 +5,10 @@ import { useComments } from "@/_hooks/useComments";
 import { CommentThread } from "./CommentThread";
 
 /**
- * 댓글 목록 (KAN-303, web 이식 KAN-329) — 로딩·에러·빈 상태와 "댓글 더 보기"
- * 페이지네이션까지 담는 클라 컴포넌트. 기사 세부·릴 세부 패널 공용.
+ * 댓글 목록 (KAN-303, web 이식 KAN-329, 시안 KAN-567) — 로딩·에러·빈 상태와
+ * "댓글 더 보기" 페이지네이션까지 담는 클라 컴포넌트. 기사 세부·릴 세부 패널 공용.
+ * 스레드는 각자 위아래 14px 여백과 연한 밑선으로 나뉘고, 더 보기는 36px 높이
+ * 12.5/700 보조색 글자 버튼이다(시안).
  *
  * 새 댓글은 여기서 그리지 않아도 나타난다 — 작성 뮤테이션(`useCreateComment`)이
  * 같은 쿼리키의 캐시에 성공 응답을 끼워 넣는다(원 댓글은 맨 앞, 답글은 부모 밑).
@@ -50,12 +52,12 @@ export function CommentList({
   if (isError && comments.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-8">
-        <p className="text-body text-text-4">댓글을 불러오지 못했어요.</p>
+        <p className="text-body text-text-4">댓글을 불러오지 못했어요</p>
         <button
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="border-border text-text-2 rounded-pill text-label hover:border-border-strong hover:text-text focus-visible:outline-accent border px-4 py-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
+          className="border-border-strong text-label-lg text-text-2 hover:text-accent focus-visible:outline-accent h-8.5 border px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
         >
           다시 시도
         </button>
@@ -72,7 +74,7 @@ export function CommentList({
   }
 
   return (
-    <div className="flex flex-col gap-3.75">
+    <div className="flex flex-col">
       {comments.map((comment) => (
         <CommentThread
           key={comment.id}
@@ -88,12 +90,12 @@ export function CommentList({
           type="button"
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="text-label text-text-3 hover:text-text-2 focus-visible:outline-accent rounded py-2 text-center font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
+          className="text-label-lg text-text-3 hover:text-accent focus-visible:outline-accent mt-3.5 h-9 text-center font-bold focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:opacity-40"
         >
           {isFetchingNextPage
-            ? "불러오는 중…"
+            ? "불러오는 중"
             : isFetchNextPageError
-              ? "더 불러오지 못했어요 · 다시 시도"
+              ? "더 불러오지 못했어요, 다시 시도"
               : "댓글 더 보기"}
         </button>
       )}

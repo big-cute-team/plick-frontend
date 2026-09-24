@@ -27,12 +27,13 @@ export const LIVE_MAX_RETRIES = 1;
  *
  * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
  * 기사 목록으로 나갔다 오는 대신 같은 지면에서 본다. 덕분에 예정 경기도 탭이
- * 둘(프리뷰·뉴스)이라 탭 줄이 선다.
+ * 둘(프리뷰·뉴스)이라 탭 줄이 선다. 순위 탭은 KAN-567 시안(경기 상세 탭 줄)대로
+ * 붙였다. 시안의 채팅 탭은 웹에서 우측 aside가 맡으므로 탭에 없다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "news"],
-  LIVE: ["summary", "lineups", "stats", "news"],
-  FINISHED: ["summary", "lineups", "stats", "news"],
+  SCHEDULED: ["preview", "table", "news"],
+  LIVE: ["summary", "lineups", "stats", "table", "news"],
+  FINISHED: ["summary", "lineups", "stats", "table", "news"],
   POSTPONED: [],
   CANCELLED: [],
 };
@@ -90,6 +91,7 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
+  table: "순위",
   news: "뉴스",
 };
 

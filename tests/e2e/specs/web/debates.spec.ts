@@ -1,11 +1,11 @@
 import { test, expect } from "../../fixtures/failure";
 
 /** 데스크톱 VS 목록. 카드가 있고 기사로 이어진다 */
-test.describe("VS", () => {
+test.describe("투표", () => {
   test("목록이 뜨고 첫 카드가 기사로 이어진다", async ({ page }) => {
     await page.goto("/debates");
     await expect(
-      page.getByRole("heading", { level: 1, name: "VS" }),
+      page.getByRole("heading", { level: 1, name: "투표" }),
     ).toBeVisible();
     const cards = page
       .getByRole("main")

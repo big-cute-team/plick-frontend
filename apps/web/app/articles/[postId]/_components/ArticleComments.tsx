@@ -7,7 +7,8 @@ import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 
 /**
- * 기사 세부의 댓글 섹션 (KAN-329) — 헤더 카운트·입력바·목록을 묶는 클라 경계.
+ * 기사 세부의 댓글 섹션 (KAN-329, 시안 KAN-567) — 헤더 카운트·입력바·목록을 묶는 클라 경계.
+ * 여백은 시안대로 관련 기사 밑 34px, 헤더 밑 12px이다.
  * 모바일 `ArticleComments`와 같은 구성이다.
  *
  * 서버 컴포넌트(`ArticleMain`)에서 이 덩어리만 클라로 내려온다. 카운트를 여기서
@@ -36,12 +37,8 @@ export function ArticleComments({
 
   return (
     <>
-      <CommentsHeader count={initialCount + added} className="mt-4" />
-      <CommentComposer
-        articleId={articleId}
-        onPosted={bump}
-        className="mt-3 mb-4"
-      />
+      <CommentsHeader count={initialCount + added} className="mt-8.5 pb-3" />
+      <CommentComposer articleId={articleId} onPosted={bump} className="pb-1" />
       <CommentList
         articleId={articleId}
         initial={initialComments}

@@ -6,9 +6,13 @@ import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
 
 /**
- * 팀 필터 탭 (전체 + 빅6) — 데스크톱은 밑줄형 탭에 hover 상태를 더한다.
- * 홈("지금 올라온 소식")·기사 페이지가 공용으로 쓴다. 제어형: 선택 상태는
- * 부모(PostFeed)가 소유한다.
+ * 팀 탭 (전체 + 빅6) — 표 위의 글자 탭 줄. 홈과 기사 페이지가 공용으로 쓴다.
+ * 제어형: 선택 상태는 부모(PostFeed)가 소유한다.
+ *
+ * 시안(KAN-567)은 높이 32에 밑선 하나, 항목은 12.5px이고 활성은 강조색 700,
+ * 비활성은 보조 회색이다. 항목 사이는 오른쪽 여백 15px이다. 전에는 밑줄형
+ * 탭(14px, 활성 2px 밑줄)이었다. 시안의 "기타" 탭은 빅6 밖 팀 필터 API가 없어
+ * 뺐다(API 공백).
  *
  * 버튼이 아니라 앵커다 (KAN-350). href가 그 surface의 팀 필터 URL을 가리켜야
  * 크롤러가 내부 링크를 따라 팀 페이지를 발견한다 — 어디서도 링크 안 된
@@ -16,9 +20,8 @@ import type { Filter } from "@plick/domain/types";
  * `onChange`에 넘기므로 페이지 이동 없이 기존 필터 UX 그대로다. 새 탭 열기
  * (cmd/ctrl·중클릭)는 가로채지 않고 링크 본연의 동작에 맡긴다.
  *
- * GNB(h-16) 바로 아래에 붙는다(sticky) — 리스트를 한참 내린 뒤에도 맨 위로
- * 돌아오지 않고 팀을 바꿀 수 있다. 밑으로 지나가는 리스트가 비치지 않게
- * 배경(`bg-bg`)을 깐다. top 값은 `SiteHeader` 높이와 짝이다.
+ * sticky는 `PostFeed`가 표 머리와 한 덩어리로 건다 — 리스트를 한참 내린 뒤에도
+ * 맨 위로 돌아오지 않고 팀을 바꿀 수 있다.
  *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
@@ -65,12 +68,9 @@ export function TeamFilterTabs({
   return (
     <div
       ref={listRef}
-      /* top-[63px] = GNB(h-16) - 1px: 소수점 스크롤 위치에서 sticky 레이어와
-         콘텐츠 레이어의 픽셀 반올림이 어긋나 GNB와의 사이에 실금이 비친다
-         (KAN-386). 1px 겹친 부분은 GNB(z-40)가 위에서 덮는다 */
-      className="border-border bg-bg sticky top-[63px] z-10 flex gap-5.5 overflow-x-auto border-b"
+      className="border-border no-scrollbar flex h-8 items-center overflow-x-auto border-b"
     >
-      {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 theme.css가 전역으로 숨긴다 */}
+      {/* 좁은 폭(≤330)에서 탭이 넘치면 가로 스크롤 — 스크롤바는 no-scrollbar가 숨긴다 */}
       {items.map(({ key, label }) => {
         const on = value === key;
         return (
@@ -79,10 +79,10 @@ export function TeamFilterTabs({
             href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-tab focus-visible:outline-accent shrink-0 scroll-mx-6 border-b-2 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 ${
+            className={`text-label-lg focus-visible:outline-accent shrink-0 scroll-mx-6 pr-3.75 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
               on
-                ? "border-accent text-text font-extrabold"
-                : "text-text-4 hover:text-text-2 border-transparent font-semibold"
+                ? "text-accent font-bold"
+                : "text-text-3 hover:text-text-strong font-medium"
             }`}
           >
             {label}

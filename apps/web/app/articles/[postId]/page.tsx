@@ -12,13 +12,17 @@ import type {
   InitialCommentPage,
 } from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { LiveStrip } from "@/_components/LiveStrip";
 import { PageContainer } from "@/_components/PageContainer";
+import { SideRail } from "@/_components/SideRail";
+import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import {
   MOBILE_ALTERNATE_MEDIA,
   MOBILE_SITE_URL,
   SITE_URL,
 } from "@/_constants/site";
+import { RELATED_ARTICLES_COUNT } from "@/_constants/app";
 import { getAccessToken } from "@/_services/session";
 
 /**
@@ -71,15 +75,14 @@ export async function generateMetadata({
   }
 }
 import { ArticleMain } from "./_components/ArticleMain";
-import { ArticleSidebar } from "./_components/ArticleSidebar";
 import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
 /**
- * 데스크톱 기사 세부 페이지 (퍼블리싱 KAN-233, API 연결 KAN-322, 댓글 KAN-329) —
- * GNB + 본문 컬럼(추천 기사 포함) + 우측 사이드바(관련·인기). 홈·기사 목록에서
- * 기사를 선택하면 진입한다. 피그마 W11(node 293-2).
+ * 데스크톱 기사 세부 페이지 (퍼블리싱 KAN-233, API 연결 KAN-322, 댓글 KAN-329,
+ * 시안 KAN-567 "기사 상세") — 상단 바, LIVE 띠, 본문 컬럼(관련 기사·댓글 포함),
+ * 우측 레일(급상승), 푸터. 홈·기사 목록에서 기사를 선택하면 진입한다.
  *
- * 데스크톱은 본문(1fr) + 사이드바(320px) 2열, `lg` 미만에선 사이드바를 숨기고
+ * 데스크톱은 홈과 같은 본문(1fr) + 레일(288px) 2열, `lg` 미만에선 레일을 숨기고
  * 본문 1열로 스택한다(홈과 동일한 반응형 규칙).
  *
  * 상세(`GET /api/v1/articles/{articleId}`)는 단발 읽기라 서버 컴포넌트 fetch로
@@ -92,14 +95,12 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 사이드바는 KAN-338에서 채웠다. 관련 기사는 기사의 팀태그가 필요해 상세를 받은
- * 뒤 이어 받는다 (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고
- * 5개). 실패해도 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다.
- * 실시간 급상승은 KAN-501에서 카드가 스스로 받게 바뀌어 이 페이지가 손대지
- * 않는다 — 그러면서 사이드바 하나를 위해 부르던 핫이슈 호출이 빠졌다.
- * 본문 밑 "함께 보면 좋은 기사" 행은 사이드바 관련 기사와 겹쳐 웹에선 채우지
- * 않고 준비 중 문구로 두다가 KAN-563에서 아예 뺐다. 모바일은 사이드바가 없어
- * 그 행이 관련 기사 자리라 그대로 둔다.
+ * 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
+ * (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고 4개, 시안의 관련
+ * 기사 칸 수). 실패해도 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다.
+ * KAN-563에서 웹 관련 기사를 뺐었는데 시안이 본문 밑 "관련 기사" 2열을 그려
+ * 모바일 `suggested`와 같은 데이터로 되살렸다. 실시간 급상승은 KAN-501에서
+ * 레일이 스스로 받게 바뀌어 이 페이지가 손대지 않는다.
  */
 export default async function ArticleDetailPage({
   params,
@@ -151,6 +152,7 @@ export default async function ArticleDetailPage({
     related = await getRelatedArticles(
       articleResult.value.id,
       articleResult.value.teams,
+      RELATED_ARTICLES_COUNT,
     );
   } catch (error) {
     console.error("[article] 관련 기사 로드 실패:", error);
@@ -171,17 +173,18 @@ export default async function ArticleDetailPage({
       {/* 진입을 조회로 기록한다 (KAN-332). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
       <SiteHeader />
+      <LiveStrip />
       <main>
-        <PageContainer className="pt-6 pb-16">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <ArticleMain
-              article={articleResult.value}
-              initialComments={initialComments}
-              debate={debate}
-            />
-            <ArticleSidebar related={related} className="hidden lg:flex" />
-          </div>
+        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_288px]">
+          <ArticleMain
+            article={articleResult.value}
+            related={related}
+            initialComments={initialComments}
+            debate={debate}
+          />
+          <SideRail />
         </PageContainer>
+        <SiteFooter />
       </main>
     </>
   );

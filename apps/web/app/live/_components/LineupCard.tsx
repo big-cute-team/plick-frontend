@@ -12,14 +12,19 @@ import {
 import { PlayerMatchStatsModal } from "./PlayerMatchStatsModal";
 
 /**
- * 라인업 탭의 카드(피그마 LW4 → KAN-462 확대) — 피치 렌더 + 양 팀 벤치. `grid`는
- * "줄:칸" 좌표(GK가 1줄), 어웨이 위·홈 아래 반전(명세 규약)이고 칸 좌우는
- * `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551). 선수를 누르면
- * 경기 스탯 모달이 열린다 — 그 상태 때문에 클라 컴포넌트다. 스탯 응답엔
- * 팀명이 없어 눌린 자리의 팀을 같이 들고 간다.
+ * 라인업 탭 (KAN-462 → KAN-567 시안 경기 상세 922-970행). 팀명 13.5/700 + 포메이션 12
+ * 줄 아래 짙은 초록 피치(`bg-pitch`, 각진, 위아래 20px 좌우 16px, 최소 280px)에 선수를
+ * 줄 단위로 깐다. 선수는 등번호 원 26(11/900) + 이름 10/700 흰색 + 평점 9.5/900이다.
+ * `grid`는 "줄:칸"(GK가 1줄), 원정 위, 홈 아래 반전(명세 규약)이고 칸 좌우는
+ * `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551). 선수를 누르면 경기 스탯
+ * 모달이 열린다. 그 상태 때문에 클라 컴포넌트다. 스탯 응답엔 팀명이 없어 눌린
+ * 자리의 팀을 같이 들고 간다.
  *
- * @param matchId - 경기 id (선수 스탯 조회용)
- * @param live - 라이브 중이면 모달을 열 때마다 스탯을 다시 받는다
+ * 시안의 "선수별 스탯" 표(출전, 슈팅, 패스, 평점)는 선수 전원의 경기 스탯을 한 번에
+ * 주는 API가 없어 벤치 표로 대신한다(번호, 선수, 팀, 포지션, 평점).
+ *
+ * @param matchId 경기 id (선수 스탯 조회용)
+ * @param live 라이브 중이면 모달을 열 때마다 스탯을 다시 받는다
  */
 export function LineupCard({
   matchId,
@@ -38,51 +43,109 @@ export function LineupCard({
   const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
 
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-4 p-6">
-      <h2 className="text-title text-text font-bold">라인업</h2>
-      <div className="border-accent-border/50 bg-accent/5 rounded-card flex flex-col gap-7 border px-4 py-6">
-        <FormationTag lineup={away} />
-        {lineupPitchLines(away.players, "down").map((line, i) => (
-          <PitchLine
-            key={`away-${i}`}
-            lineup={away}
-            players={line}
-            onPlayerTap={onPlayerTap}
-          />
-        ))}
-        <span
+    <div>
+      <div className="flex items-baseline gap-3 pt-4.5 pb-3">
+        <span className="text-body text-text-strong font-bold">
+          {home.team.name}
+        </span>
+        <span className="text-label text-text-3">{home.formation}</span>
+        <span className="flex-1" />
+        <span className="text-label text-text-3">{away.formation}</span>
+        <span className="text-body text-text-strong font-bold">
+          {away.team.name}
+        </span>
+      </div>
+
+      <div className="bg-pitch relative overflow-hidden px-4 py-5">
+        <div
           aria-hidden
-          className="border-border/70 mx-auto -my-2 size-16 rounded-full border"
+          className="border-media-chip-border absolute top-0 bottom-0 left-1/2 w-px border-l"
         />
-        {lineupPitchLines(home.players, "up")
-          .reverse()
-          .map((line, i) => (
+        <div
+          aria-hidden
+          className="border-media-chip-border absolute top-1/2 left-1/2 size-21.5 -translate-x-1/2 -translate-y-1/2 rounded-full border"
+        />
+        <div className="relative flex min-h-70 flex-col justify-between gap-5">
+          {lineupPitchLines(away.players, "down").map((line, i) => (
             <PitchLine
-              key={`home-${i}`}
-              lineup={home}
+              key={`away-${i}`}
+              lineup={away}
               players={line}
               onPlayerTap={onPlayerTap}
             />
           ))}
-        <FormationTag lineup={home} />
+          {lineupPitchLines(home.players, "up")
+            .reverse()
+            .map((line, i) => (
+              <PitchLine
+                key={`home-${i}`}
+                lineup={home}
+                players={line}
+                onPlayerTap={onPlayerTap}
+              />
+            ))}
+        </div>
       </div>
-      <Bench lineup={home} onPlayerTap={onPlayerTap} />
-      <Bench lineup={away} onPlayerTap={onPlayerTap} />
+
+      {(home.bench.length > 0 || away.bench.length > 0) && (
+        <>
+          <p className="text-body-md text-text-strong pt-5 pb-2.5 font-black">
+            벤치
+          </p>
+          <div className="border-border-table text-micro-lg text-text-4 grid h-7 grid-cols-[24px_minmax(0,1fr)_62px_42px_42px] items-center gap-2 border-b">
+            <span className="text-center">#</span>
+            <span>선수</span>
+            <span>팀</span>
+            <span className="text-center">포지션</span>
+            <span className="text-center">평점</span>
+          </div>
+          {[home, away].map((lineup) =>
+            lineup.bench.map((bench) => {
+              const tone = ratingTone(bench.rating);
+              return (
+                <button
+                  key={`${lineup.team.shortName}-${bench.id}`}
+                  type="button"
+                  onClick={() => onPlayerTap(bench.id, lineup.team)}
+                  className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[24px_minmax(0,1fr)_62px_42px_42px] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+                >
+                  <span className="text-caption-lg text-text-4 text-center">
+                    {bench.number ?? "-"}
+                  </span>
+                  <span className="text-body text-text-strong min-w-0 truncate font-bold">
+                    {bench.name}
+                  </span>
+                  <span className="text-caption-lg text-text-3 truncate">
+                    {lineup.team.shortName}
+                  </span>
+                  <span className="text-caption-lg text-text-3 text-center">
+                    {bench.position}
+                  </span>
+                  <span
+                    className={`text-label-lg text-center font-black ${
+                      tone === "accent"
+                        ? "text-accent"
+                        : tone === "warn"
+                          ? "text-warn"
+                          : "text-text-3"
+                    }`}
+                  >
+                    {bench.rating === null ? "-" : bench.rating.toFixed(1)}
+                  </span>
+                </button>
+              );
+            }),
+          )}
+        </>
+      )}
+
       <PlayerMatchStatsModal
         matchId={matchId}
         live={live}
         player={player}
         onClose={() => setPlayer(null)}
       />
-    </section>
-  );
-}
-
-function FormationTag({ lineup }: { lineup: TeamLineup }) {
-  return (
-    <span className="bg-elevate text-body text-text-3 rounded-badge self-start px-2.5 py-1 font-bold">
-      {lineup.team.shortName} · {lineup.formation}
-    </span>
+    </div>
   );
 }
 
@@ -107,81 +170,26 @@ function PitchLine({
             key={player.id}
             type="button"
             onClick={() => onPlayerTap(player.id, lineup.team)}
-            className="group flex w-28 flex-col items-center gap-1.5"
+            className="group focus-visible:outline-accent-bright flex w-20 flex-col items-center gap-0.75 focus-visible:outline-2"
           >
-            <span className="relative">
-              <span
-                className="text-media-on text-body-lg grid size-14 place-items-center rounded-full font-bold transition-transform group-hover:scale-110"
-                style={{ backgroundColor: `var(${colorVar})` }}
-              >
-                {player.number}
-              </span>
-              {player.rating !== null && (
-                <span
-                  className={`bg-nav rounded-badge text-label absolute -top-2 -right-5 border px-1.5 font-bold ${
-                    tone === "accent"
-                      ? "border-accent-border text-accent"
-                      : "border-warn-border text-warn"
-                  }`}
-                >
-                  {player.rating.toFixed(1)}
-                </span>
-              )}
-            </span>
-            <span className="text-body text-text-2 group-hover:text-text w-28 truncate text-center transition-colors">
-              {player.name}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function Bench({
-  lineup,
-  onPlayerTap,
-}: {
-  lineup: TeamLineup;
-  onPlayerTap: (playerId: number, team: LiveTeam) => void;
-}) {
-  if (lineup.bench.length === 0) return null;
-  return (
-    <div className="flex flex-col">
-      <h3 className="text-body-lg text-text-2 pt-2 pb-1 font-bold">
-        벤치 · {lineup.team.name}
-      </h3>
-      {lineup.bench.map((player, i) => {
-        const tone = ratingTone(player.rating);
-        return (
-          <button
-            key={player.id}
-            type="button"
-            onClick={() => onPlayerTap(player.id, lineup.team)}
-            className={`hover:bg-elevate-2 rounded-tile flex items-center gap-4 px-2 py-3 text-left transition-colors ${
-              i > 0 ? "border-border border-t" : ""
-            }`}
-          >
-            <span className="text-body text-text-4 w-7 shrink-0 text-center font-semibold">
-              {player.number}
-            </span>
-            <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
-              {player.name}
-            </span>
-            <span className="text-body text-text-4 font-medium">
-              {player.position}
-            </span>
             <span
-              className={`text-body-lg w-9 text-right font-bold ${
-                tone === "accent"
-                  ? "text-accent"
-                  : tone === "warn"
-                    ? "text-warn"
-                    : "text-text-4"
-              }`}
+              className="text-media-on text-caption grid size-6.5 place-items-center rounded-full font-black transition-transform group-hover:scale-110"
+              style={{ backgroundColor: `var(${colorVar})` }}
             >
-              {player.rating === null ? "-" : player.rating.toFixed(1)}
+              {player.number ?? "-"}
             </span>
+            <span className="text-micro text-media-on w-full truncate text-center font-bold">
+              {player.name}
+            </span>
+            {player.rating !== null && (
+              <span
+                className={`text-[9.5px] font-black ${
+                  tone === "accent" ? "text-accent-bright" : "text-warn"
+                }`}
+              >
+                {player.rating.toFixed(1)}
+              </span>
+            )}
           </button>
         );
       })}

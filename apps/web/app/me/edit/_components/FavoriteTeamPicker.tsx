@@ -2,16 +2,17 @@
 
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import type { TeamCode } from "@plick/domain/types";
-import { TeamCrestCard } from "@/_components/TeamCrestCard";
+import { TeamCrest } from "@plick/ui/TeamCrest";
 
 /**
- * 응원팀 선택 — 빅6 팀 크레스트 카드 3열 그리드 다중 토글 (KAN-319).
- * 카드는 공용 `TeamCrestCard`(온보딩 팀 선택과 동일 마크업)를 쓰고, 이 화면은
- * 3열 배치만 담당한다. 응원팀이 다중 선택 계약이라 단일 선택에서 토글로 바꿨고,
- * 선택 상태는 부모(ProfileEditForm)가 드는 제어형 — 저장 시 선택값이 필요해서다.
+ * 응원팀 선택 — 빅6 칩 다중 토글 (KAN-319 → KAN-567). 계정 행의 응원팀 칩과 같은
+ * 모양(표 테두리, 엠블럼 18, 12.5/700)이고 고른 칩은 강조색 테두리와 글자다. 전에는
+ * 온보딩과 같은 크레스트 카드 그리드였는데 계정 행 안에서 인라인으로 고치는 자리라
+ * 칩이 맞다. 선택 상태는 부모(ProfileEditForm)가 드는 제어형이다. 저장 시 선택값이
+ * 필요해서다.
  *
- * @param selected - 현재 선택된 팀 코드 목록
- * @param onToggle - 카드 클릭 핸들러 (선택⇄해제)
+ * @param selected 현재 선택된 팀 코드 목록
+ * @param onToggle 칩 클릭 핸들러 (선택⇄해제)
  */
 export function FavoriteTeamPicker({
   selected,
@@ -21,23 +22,30 @@ export function FavoriteTeamPicker({
   onToggle: (code: TeamCode) => void;
 }) {
   return (
-    <div className="gap-gap-lg flex flex-col">
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-tab text-text font-extrabold">응원팀</span>
-        <span className="text-caption text-text-4">응원할 팀을 선택하세요</span>
-      </div>
-
-      <div className="gap-gap grid grid-cols-3">
-        {TEAM_ORDER.map((code) => (
-          <TeamCrestCard
+    <div
+      className="flex flex-1 flex-wrap gap-2"
+      role="group"
+      aria-label="응원팀"
+    >
+      {TEAM_ORDER.map((code) => {
+        const on = selected.includes(code);
+        return (
+          <button
             key={code}
-            team={TEAMS[code]}
-            selected={selected.includes(code)}
-            onSelect={() => onToggle(code)}
-            className="min-h-29.5"
-          />
-        ))}
-      </div>
+            type="button"
+            aria-pressed={on}
+            onClick={() => onToggle(code)}
+            className={`hover:border-accent focus-visible:outline-accent flex items-center gap-1.75 border py-1.5 pr-3.25 pl-2.25 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+              on
+                ? "border-accent text-accent"
+                : "border-border-table text-text-strong"
+            }`}
+          >
+            <TeamCrest team={TEAMS[code]} size={18} />
+            <span className="text-label-lg font-bold">{TEAMS[code].name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

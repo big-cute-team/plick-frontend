@@ -35,6 +35,8 @@ export async function DebatesScreen() {
     <AppShell>
       <TopBar />
       <DebatesScrollArea>
+        {/* 페이지의 h1 — 시안에 제목이 없어 보이지 않게 둔다(크롤러·보조기술용) */}
+        <h1 className="sr-only">투표</h1>
         <DebatesFeed initial={initial} />
       </DebatesScrollArea>
       <TabBar />

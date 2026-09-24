@@ -7,7 +7,8 @@ import type { Team } from "@plick/domain/types";
  * 온보딩 팀 선택(W9)·프로필 수정 응원팀 픽커가 공용. 그리드 열 수·높이는 부모가 정한다.
  *
  * hover는 `border-border-strong`, 포커스는 outline-accent로 통일한다(감사 2026-07-16에서
- * 두 화면이 hover·focus 관용을 다르게 쓰던 것을 한쪽으로 맞춤).
+ * 두 화면이 hover·focus 관용을 다르게 쓰던 것을 한쪽으로 맞춤). 시안(KAN-567)의 라이트
+ * 톤으로 흰 바탕에 표 테두리, 선택은 강조색 테두리와 연한 강조 면이다(웹이라 각지다).
  *
  * @param team - 표시할 팀(TEAMS 레지스트리 항목)
  * @param selected - 선택 여부(accent 보더·체크 배지)
@@ -30,12 +31,18 @@ export function TeamCrestCard({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`bg-elevate-2 rounded-card focus-visible:outline-accent relative flex flex-col items-center justify-center gap-2.5 border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-80 ${
-        selected ? "border-accent" : "border-border hover:border-border-strong"
+      className={`focus-visible:outline-accent relative flex flex-col items-center justify-center gap-2.5 border focus-visible:outline-2 focus-visible:outline-offset-2 ${
+        selected
+          ? "border-accent bg-accent-tint"
+          : "border-border-table bg-bg hover:border-border-strong hover:bg-elevate-2"
       } ${className}`}
     >
       <TeamCrest team={team} size={40} />
-      <span className="text-body text-text">{team.name}</span>
+      <span
+        className={`text-body ${selected ? "text-accent font-bold" : "text-text-2 font-medium"}`}
+      >
+        {team.name}
+      </span>
       {selected && (
         <span className="bg-accent text-on-accent absolute top-2.5 right-3 grid size-5.5 place-items-center rounded-full">
           <CheckIcon size={12} />
