@@ -24,10 +24,10 @@ import { ReelViewer } from "./ReelViewer";
  * 릴스 작업 영역 (KAN-219, API 연결 KAN-323) — 세로 스냅 뷰어 + 오른쪽 세부
  * 패널을 가로로 배치하고, 피드 데이터와 패널 개폐 상태를 소유한다.
  *
- * 데스크톱에선 패널이 처음부터 열려 있다 (KAN-483) — 릴 옆에 댓글이 바로 보인다.
- * 닫으면 뷰어가 폭을 되찾고, 제목 영역이나 댓글 버튼을 누르면 오른쪽에서 다시
- * 미끄러져 들어온다. 모바일 뷰에선 패널이 전체 화면 오버레이라 릴을 덮으므로
- * 닫힌 채로 시작하고 눌러야 뜬다(`ReelDetailPanel`).
+ * 데스크톱에선 패널이 처음부터 열려 있다 (KAN-483, 시안 KAN-567도 "댓글 패널은 항상
+ * 열려 있다"). 릴 옆에 댓글이 바로 보인다. 닫으면 뷰어가 폭을 되찾고, 카드나 레일의
+ * 댓글 버튼을 누르면 오른쪽에서 다시 미끄러져 들어온다. 좁은 폭에선 패널이 전체 화면
+ * 오버레이라 릴을 덮으므로 닫힌 채로 시작하고 눌러야 뜬다(`ReelDetailPanel`).
  *
  * "기본 열림"을 서버가 그릴 수 없어서 개폐 상태는 세 값이다. `null`은 아직 사용자가
  * 열고 닫지 않은 상태로, 이때는 패널이 CSS(`lg:`)로 데스크톱 열림·좁은 폭 닫힘을
@@ -135,13 +135,13 @@ export function ReelsWorkspace({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 overflow-hidden">
+    <div className="bg-chip flex min-h-0 flex-1 overflow-hidden">
       {isPending ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelSkeleton />
         </main>
       ) : isError && reels.length === 0 ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelStatus
             message="릴스를 불러오지 못했어요."
             onRetry={() => refetch()}
@@ -149,12 +149,13 @@ export function ReelsWorkspace({
           />
         </main>
       ) : reels.length === 0 ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelStatus message="아직 올라온 릴스가 없어요." />
         </main>
       ) : (
         <ReelViewer
           reels={reels}
+          activeIndex={activeIndex}
           onOpenDetail={() => {
             setDetailOpen(true);
             /* 패널은 서버 요청 없이 열리는 화면이라 여기서 화면 전환으로 센다 (KAN-543) */

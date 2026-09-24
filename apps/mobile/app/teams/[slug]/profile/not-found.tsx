@@ -9,12 +9,12 @@ export default function TeamProfileNotFound() {
   return (
     <AppShell>
       <main className="px-edge flex h-full flex-col items-center justify-center gap-7">
-        <div className="flex flex-col items-center gap-2.5">
-          <p className="text-headline text-text font-extrabold">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-profile tracking-title text-text-strong font-black">
             팀을 찾을 수 없어요
           </p>
-          <p className="text-body text-text-3 font-semibold">
-            플릭이 다루는 팀이 아니거나 주소가 잘못됐어요
+          <p className="text-body text-text-3">
+            해축이모가 다루는 팀이 아니거나 주소가 잘못됐어요
           </p>
         </div>
         <div className="w-full max-w-60">

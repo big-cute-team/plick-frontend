@@ -2,7 +2,8 @@
 
 @../CLAUDE.md
 
-PLick 데스크톱 웹 (dev :3000). 모바일과 같은 토큰을 쓰고 컨테이너 패턴으로 폭을 제한한다.
+해축이모(구 PLick) 데스크톱 웹 (dev :3000). 모바일과 같은 토큰을 쓰고 컨테이너 패턴(1280, `px-gutter` 28)으로 폭을
+제한한다. 웹은 전부 각지다(라운드 토큰을 `globals.css`가 0으로 덮는다). 본문 카드에 테두리를 두르지 않고 우측 레일만 `border-border-strong`이다.
 
 - 화면·컴포넌트를 만들거나 고칠 땐 `web-publishing` 스킬을 따른다(`@plick/ui` 승격 절차 포함).
   배경은 [ADR 0005](../../docs/adr/0005-web-home-and-ui-promotion.md).

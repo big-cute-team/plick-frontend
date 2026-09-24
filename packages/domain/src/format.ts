@@ -14,8 +14,7 @@ import type { DebateListItem, Filter, TeamCode } from "./types";
 
 /**
  * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
- * 아래 문서 제목 헬퍼들이 "… | PLick"을 손으로 복제하다 템플릿("%s | 플릭
- * PLick")과 어긋나, 탭 전환 직후와 새로고침 후의 제목이 달랐다. 템플릿에서
+ * 아래 문서 제목 헬퍼들이 "… | PLick"을 손으로 복제하다 템플릿과 어긋나, 탭 전환 직후와 새로고침 후의 제목이 달랐다. 템플릿에서
  * 파생시키면 다시 벌어질 수 없다.
  */
 function brandTitle(page: string): string {

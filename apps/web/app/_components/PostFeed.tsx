@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +19,7 @@ import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { MoreArticlesLink } from "@/_components/MoreArticlesLink";
 import { PostListItem } from "@/_components/PostListItem";
 import { PostListItemSkeleton } from "@/_components/PostListItemSkeleton";
+import { PostTableHead } from "@/_components/PostTableHead";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useFeedRefresh } from "@/_hooks/useFeedRefresh";
@@ -39,19 +40,21 @@ const SKELETON_COUNT: Record<PostListVariant, number> = {
 };
 
 /**
- * 팀 필터 탭 + 팀별 기사 리스트를 묶는 클라이언트 컨테이너 (KAN-321).
- * 홈 "지금 올라온 소식"과 기사 페이지가 `variant`로 공용한다.
+ * 팀 필터 탭 + 표 머리 + 팀별 이슈 표를 묶는 클라이언트 컨테이너 (KAN-321, 시안
+ * KAN-567 홈 표). 홈 "새로 올라온 이슈"와 기사 페이지가 `variant`로 공용한다.
  *
  * 필터는 화면에서 거르지 않고 BE `teamId`로 넘겨 팀별 최신순 목록을 새로 받는다
  * (KAN-271). 전체 탭 첫 페이지는 서버 컴포넌트가 미리 받아 `initial`로
  * 내려주므로 첫 렌더에는 스켈레톤이 보이지 않는다.
  *
  * 무한스크롤은 기사(article)만이다 (KAN-386). 홈(news)은 첫 페이지(10건) 고정
- * + 기사 페이지로 가는 더보기 링크다 — 무한스크롤 시절에는 팀을 바꿀 때
+ * + 기사 페이지로 가는 더 보기 링크다 — 무한스크롤 시절에는 팀을 바꿀 때
  * 스크롤을 강제로 옮겨야 했는데(짧아진 리스트를 앵커링이 붙잡아 다음 페이지
  * 요청이 연쇄로 나간다), 스크롤이 위아래로 튀는 그 보정이 홈에서는 UX 문제였다.
  * 리스트를 첫 페이지로 고정하면 보정 자체가 필요 없어져 팀을 바꿔도 스크롤이
  * 그 자리 그대로다. 팀별 스크롤 기억도 같은 이유로 기사만 남았다.
+ * 시안의 숫자 페이지 버튼(1 2 3 4 다음)은 BE가 커서 페이지네이션이라 만들 수
+ * 없어(API 공백) 기사 페이지는 자동 로드 그대로다.
  *
  * 어느 팀을 보고 있는지는 URL이 정한다 (KAN-350). 홈(news)은 `/`가 전체,
  * 팀 허브 `/teams/[slug]`가 그 팀이고, 기사(article)는 `/articles`가 전체,
@@ -67,6 +70,10 @@ const SKELETON_COUNT: Record<PostListVariant, number> = {
  *
  * 스크롤 위치는 두 surface 모두 스토어가 든다({@link useScrollRestore}).
  *
+ * 팀 탭과 표 머리는 한 덩어리로 상단 바 아래 sticky다 (KAN-386) — 표를 한참
+ * 내려도 열 이름과 팀 탭이 남는다. 제목 블록을 함께 고정하던 `header` prop은
+ * 시안이 섹션 제목을 표 밖에 두면서 뺐다.
+ *
  * @param initial - 서버가 받아 둔 `initialTeam` 탭 첫 페이지와 그 시각. 서버
  *   fetch가 실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  * @param initialTeam - `initial`이 어느 탭의 씨앗인지. 목록 라우트는 전체,
@@ -77,17 +84,10 @@ export function PostFeed({
   initial,
   initialTeam = "ALL",
   variant,
-  header,
 }: {
   initial?: InitialArticleFeed;
   initialTeam?: Filter;
   variant: PostListVariant;
-  /**
-   * 팀 탭 위에 함께 고정할 화면 제목 블록 (KAN-386, 기사 페이지 전용). 탭과 한
-   * 덩어리로 GNB 아래 sticky라 리스트를 한참 내려도 제목·부제·탭이 전부 상단에
-   * 남는다.
-   */
-  header?: ReactNode;
 }) {
   const pathname = usePathname();
   const setFeedFilter = useViewState((state) => state.setFeedFilter);
@@ -215,41 +215,32 @@ export function PostFeed({
     fetchNextPage();
   }
 
-  const tabs = (
-    <TeamFilterTabs
-      value={filter}
-      onChange={handleChange}
-      hrefFor={variant === "news" ? teamHubPath : articlesTeamPath}
-    />
-  );
-
   return (
     <div className="min-w-0">
-      {header ? (
-        /* 제목 블록과 탭을 한 덩어리로 GNB(h-16) 아래 고정한다 (KAN-386). 탭
-           자체의 sticky는 이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 무해하다.
-           top-[63px](GNB - 1px)는 소수점 스크롤의 픽셀 반올림 실금을 GNB 밑에
-           1px 겹쳐 덮는 몫이다 */
-        <div className="bg-bg sticky top-[63px] z-10">
-          {header}
-          {tabs}
-        </div>
-      ) : (
-        tabs
-      )}
-      <div className={variant === "news" ? "pt-1.5 pb-6" : "pt-1.5"}>
+      {/* 팀 탭과 표 머리를 한 덩어리로 상단 바 아래 고정한다 (KAN-386). 바 높이는
+          globals.css의 --site-header-h다. 바 - 1px는 소수점 스크롤의 픽셀 반올림 실금을 바 밑에
+          1px 겹쳐 덮는 몫이다. 값은 SiteHeader 높이와 짝이다 */}
+      <div className="bg-bg sticky top-[calc(var(--site-header-h)-1px)] z-10">
+        <TeamFilterTabs
+          value={filter}
+          onChange={handleChange}
+          hrefFor={variant === "news" ? teamHubPath : articlesTeamPath}
+        />
+        <PostTableHead />
+      </div>
+      <div>
         {isPending ? (
           Array.from({ length: SKELETON_COUNT[variant] }, (_, i) => (
-            <PostListItemSkeleton key={i} variant={variant} />
+            <PostListItemSkeleton key={i} />
           ))
         ) : isError && articles.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+            <p className="text-body text-text-4">이슈를 불러오지 못했어요</p>
             <button
               type="button"
               onClick={() => refetch()}
               disabled={isFetching}
-              className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold transition-opacity hover:opacity-80 disabled:opacity-50"
+              className="border-border-strong text-label-lg text-text-2 hover:text-accent mt-3 h-8.5 border px-4 font-bold disabled:opacity-50"
             >
               다시 시도
             </button>
@@ -271,19 +262,17 @@ export function PostFeed({
               <MoreArticlesLink variant="footer" />
             ) : (
               <>
-                {isFetchingNextPage && (
-                  <PostListItemSkeleton variant={variant} />
-                )}
+                {isFetchingNextPage && <PostListItemSkeleton />}
 
                 {isFetchNextPageError && (
                   <div className="py-6 text-center">
                     <p className="text-caption text-text-4">
-                      다음 소식을 불러오지 못했어요.
+                      다음 이슈를 불러오지 못했어요
                     </p>
                     <button
                       type="button"
                       onClick={retryNextPage}
-                      className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold transition-opacity hover:opacity-80"
+                      className="border-border-strong text-label-lg text-text-2 hover:text-accent mt-2 h-8.5 border px-4 font-bold"
                     >
                       다시 시도
                     </button>
@@ -297,7 +286,7 @@ export function PostFeed({
           </>
         ) : (
           <p className="text-body text-text-4 py-12 text-center">
-            아직 이 팀 소식이 없어요.
+            아직 이 팀 이슈가 없어요
           </p>
         )}
       </div>

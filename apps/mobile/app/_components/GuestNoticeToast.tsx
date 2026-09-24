@@ -7,8 +7,9 @@ import { GUEST_NOTICE_DURATION_MS } from "@/_constants/feedback";
 import { readCookie } from "@/_utils/cookie";
 
 /**
- * 게스트 안내 토스트 (KAN-514) — 게스트를 방금 발급했거나, 연동했더니 기존 계정이었을 때
- * 하단에 한 번 띄운다. 루트 레이아웃에 한 번만 마운트한다.
+ * 게스트 안내 토스트 (KAN-514). 게스트를 방금 발급했거나, 연동했더니 기존 계정이었을 때
+ * 하단에 한 번 띄운다. 루트 레이아웃에 한 번만 마운트한다. 어두운 면에 흰 글자인 건
+ * 전역 에러 토스트와 같다(KAN-567).
  *
  * 왜 쿠키를 신호로 쓰나: 안내는 "발급이 일어난 그 순간"에만 떠야 하는데, 발급은 edge에서
  * 도는 프록시가 하고 토스트는 브라우저에 있다. 그 사이를 이을 수 있는 게 응답 쿠키뿐이다
@@ -54,7 +55,7 @@ export function GuestNoticeToast({
       aria-live="polite"
       className="px-edge pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center"
     >
-      <p className="bg-elevate border-border text-text rounded-card text-label border px-4 py-2.5 text-center font-semibold">
+      <p className="bg-text-strong text-bg rounded-control text-label-lg px-4 py-3 text-center font-medium">
         {message}
       </p>
     </div>

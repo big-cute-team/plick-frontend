@@ -4,7 +4,11 @@ import { getArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getStory } from "@plick/core/stories";
 import type { InitialArticleFeed } from "@plick/domain/types";
+import { LiveStrip } from "@/_components/LiveStrip";
+import { PageContainer } from "@/_components/PageContainer";
 import { ScopedArticlesFeed } from "@/_components/ScopedArticlesFeed";
+import { SideRail } from "@/_components/SideRail";
+import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { StoryHeader } from "./_components/StoryHeader";
 
@@ -38,8 +42,8 @@ export async function generateMetadata({
  * 데스크톱 이슈 상세 (KAN-523). 사이드바 급상승 랭킹의 이슈 줄이 여기로 들어온다.
  *
  * 인물 프로필(`/figures/[figureId]`)과 같은 구성이다. 이슈 머리를 두고 그 아래
- * 이슈에 묶인 기사를 무한 목록으로 잇는다. 폭은 기사 목록과 같은 `max-w-read`
- * 단일 컬럼이다.
+ * 이슈에 묶인 기사를 무한 목록으로 잇는다. 시안(KAN-567)대로 홈과 같은 2열(표 +
+ * 우측 레일)이고 목록은 홈의 표다.
  *
  * 이슈와 기사 첫 페이지를 병렬로 받는다. 이슈가 404·400이면 not-found고, 기사
  * 첫 페이지만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다 — 목록이
@@ -84,20 +88,25 @@ export default async function StoryPage({
   return (
     <>
       <SiteHeader />
+      <LiveStrip />
       <main>
-        <div className="max-w-read px-gutter mx-auto w-full pb-22">
-          <StoryHeader story={story} />
-          <section>
-            <h2 className="text-section text-text tracking-heading pb-2 font-extrabold">
-              이 이슈의 기사
-            </h2>
-            <ScopedArticlesFeed
-              scope={{ kind: "story", id: story.id }}
-              initial={initial}
-              emptyText="아직 이 이슈의 기사가 없어요."
-            />
-          </section>
-        </div>
+        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_288px]">
+          <div className="min-w-0">
+            <StoryHeader story={story} />
+            <section>
+              <h2 className="text-body-lg text-text-strong pb-1.5 font-black tracking-tight">
+                이 이슈의 기사
+              </h2>
+              <ScopedArticlesFeed
+                scope={{ kind: "story", id: story.id }}
+                initial={initial}
+                emptyText="아직 이 이슈의 기사가 없어요"
+              />
+            </section>
+          </div>
+          <SideRail />
+        </PageContainer>
+        <SiteFooter />
       </main>
     </>
   );

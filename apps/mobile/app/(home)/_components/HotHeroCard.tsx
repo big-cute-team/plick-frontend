@@ -1,40 +1,25 @@
+import Link from "next/link";
+import { TEAMS } from "@plick/domain/constants";
+import { formatCount, teamProfilePath } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
+import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
- * 핫이슈 히어로 카드 — 릴스와 같은 임베딩 전략으로 통일했다 (KAN-297).
+ * 핫이슈 사진 카드 (시안 KAN-567) — 168px 폭, 6:5 사진 위 왼쪽 위 순위 배지(21px,
+ * 강조색), 아래 팀(엠블럼 13 + 이름 10.5/700)과 제목 두 줄(13/700) + `[댓글]`(빨강).
+ * 가로 스크롤 트랙에 두 장이 보이고 스냅으로 넘긴다.
  *
- * 배경은 팀별 그라데이션을 걷어내고 릴 배경과 같은 단색(bg-reel-bg)으로 고정한다.
- * 사진(imageUrl)이 있으면 카드를 가득 덮고, 없으면 통일 배경색이 그대로 남는다.
+ * 사진은 `imageUrl`을 쓰고, 홈 서버 컴포넌트가 `withTweetPhotos`로 원문 게시물의
+ * 제일 큰 사진을 뽑아 채운다(KAN-484). 그것도 못 구하면 원문 트윗을 임베드해
+ * 칸을 메운다 (KAN-514) — 마지막 방어선이라 드물다.
  *
- * KAN-484 전에는 사진이 없을 때 원문 트윗을 통째로 임베드했다. 임베드는 프로필
- * 사진·아이디·본문·버튼까지 다 들고 와서, 사진이 주인공이어야 할 캐러셀 칸에서
- * 정작 사진이 작게 박혔다. 지금은 홈 서버 컴포넌트가 `withTweetPhotos`로 원문
- * 게시물의 제일 큰 사진만 뽑아 `imageUrl`을 채우므로 카드는 이미지 한 장만 알면
- * 된다.
+ * 카드 전체가 기사 세부로 가는 링크고 팀 이름만 팀 프로필로 간다.
  *
- * 그래도 `imageUrl`이 빌 수 있다. BE가 핫이슈를 나눈 기준은 원문 X 게시물의 사진
- * 유무(`raw_articles.media_url`)이고 카드가 그리는 건 기사 대표
- * 이미지(`article_summaries.image_url`)라 서로 다른 컬럼인데, 원문 사진마저
- * 신디케이션에서 못 받는 경우가 있다. 사진이 아예 없는 기사는 캐러셀에 오지
- * 않고 아래 {@link HotTextCard}가 받는다.
- *
- * 그 빈 칸을 배경색 위 제목만으로 두니 사진 있는 칸들 사이에서 유독 허전했다.
- * 그래서 방어를 한 단 더 둔다 (KAN-514): 대표 이미지가 있으면 그걸 쓰고, 없으면
- * 홈이 원문에서 뽑아 채운 사진을 쓰고, 그것도 못 구했으면 **원문 트윗을 통째로
- * 임베드해** 칸을 메운다. 임베드는 KAN-484에서 걷어냈던 방식인데, 그때 문제는
- * 임베드가 *기본* 경로여서 사진이 주인공이어야 할 칸에 프로필·아이디·버튼이
- * 같이 들어온 것이었다. 마지막 방어선으로 드물게만 쓰면 빈 칸보다 낫다.
- *
- * 사진 위에는 어두운 스크림(가독성용 고정 값, 테마 무관) + 흰 텍스트를 얹는다.
- *
- * KAN-515부터 한 화면에 두 장이 나란히 서면서 칸 폭이 절반으로 줄었다. 팀·단계·
- * 기자·시각·조회 줄까지 다 얹으면 사진이 글자에 묻혀 제목과 요약만 남겼다.
- * 제목은 두 줄, 요약은 한 줄을 넘으면 말줄임한다. 요약은 BE가 못 만든 기사도
- * 있어(null) 있을 때만 깐다.
- *
- * 카드 전체가 기사 세부로 가는 링크다 (KAN-283).
+ * @param article - 핫이슈 기사(사진 있는 그룹)
+ * @param rank - 핫이슈 안 순위(0부터). 배지에는 1부터 보여주고 조회 기록의 `feed_rank`가 된다 (KAN-543)
+ * @param fetchPriority - 첫 두 장만 high (KAN-421)
  */
 export function HotHeroCard({
   article,
@@ -42,50 +27,51 @@ export function HotHeroCard({
   fetchPriority = "auto",
 }: {
   article: HotArticle;
-  /** 핫이슈 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543) */
-  rank?: number;
-  /** 첫 카드(첫 화면에 실제로 보이는 1장)만 high, 나머지는 low로 대역폭 경합을 줄인다 (KAN-421) */
+  rank: number;
   fetchPriority?: "high" | "low" | "auto";
 }) {
+  const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
+
   return (
-    <div className="rounded-hero bg-reel-bg relative h-full overflow-hidden">
-      {article.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴·MediaThumb과 같은 이유)
-        <img
-          src={article.imageUrl}
-          alt=""
-          /* 캐러셀이 무한 루프용으로 카드를 복제해 두는데, lazy면 옆 칸 복제본이
-             화면에 들어오는 순간에야 받기 시작해 빈 카드가 잠깐 스친다.
-             홈 최상단이라 어차피 첫 화면 이미지다 (KAN-382) */
-          loading="eager"
-          fetchPriority={fetchPriority}
-          className="absolute inset-0 size-full object-cover"
-        />
-      ) : article.sourceUrl ? (
-        /* 사진을 끝내 못 구한 칸 — 원문 임베드로 메운다. 가로를 꽉 채우고
-           아래로 넘치는 만큼은 카드가 잘라 낸다 (KAN-525). 전에는 박스에 맞춰
-           축소해서 좁은 칸에서 양옆이 비었다. `reel-embed`로 릴과 같은 배경색·
-           작은 글자를 받고, `hot-embed`가 라이브러리 최소 폭(250px)을 풀어
-           칸에 맞춘다(globals.css). 원문이 지워졌으면 안내 문구가 선다 */
-        <div className="reel-embed hot-embed absolute inset-0 overflow-hidden">
-          <TweetEmbed url={article.sourceUrl} />
-        </div>
-      ) : null}
-      {/* 두 장이 나란히 서는 좁은 칸이라 제목·요약만 싣는다 (KAN-515) */}
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1 p-3 pt-6"
-        style={{
-          backgroundImage:
-            "linear-gradient(to top, var(--plk-scrim) 0%, color-mix(in srgb, var(--plk-scrim) 97%, transparent) 60%, color-mix(in srgb, var(--plk-scrim) 78%, transparent) 85%, transparent 100%)",
-        }}
-      >
-        <h3 className="text-body-lg text-media-on tracking-heading line-clamp-2 leading-snug font-extrabold">
+    <div className="relative w-42 shrink-0 snap-start">
+      <div className="rounded-tile bg-media relative mb-2 aspect-[6/5] overflow-hidden">
+        {article.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유)
+          <img
+            src={article.imageUrl}
+            alt=""
+            loading="eager"
+            fetchPriority={fetchPriority}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : article.sourceUrl ? (
+          <div className="reel-embed hot-embed absolute inset-0 overflow-hidden">
+            <TweetEmbed url={article.sourceUrl} />
+          </div>
+        ) : null}
+        <span className="bg-accent text-on-accent rounded-badge text-caption absolute top-1.75 left-1.75 grid size-5.25 place-items-center font-black">
+          {rank + 1}
+        </span>
+      </div>
+      {team && (
+        <Link
+          href={teamProfilePath(team.code)}
+          className="relative z-10 mb-1 flex w-fit items-center gap-1.25 active:opacity-60"
+        >
+          <TeamCrest team={team} size={13} />
+          <span className="text-micro-lg text-text-3 font-bold">
+            {team.name}
+          </span>
+        </Link>
+      )}
+      <div className="flex items-start gap-1">
+        <h3 className="text-body text-text-strong line-clamp-2 min-w-0 flex-1 leading-[1.38] font-bold tracking-tight">
           {article.title}
         </h3>
-        {article.summaryShort && (
-          <p className="text-caption text-media-on/75 line-clamp-1">
-            {article.summaryShort}
-          </p>
+        {article.commentCount > 0 && (
+          <span className="text-label-lg text-danger shrink-0 leading-[1.38] font-bold">
+            [{formatCount(article.commentCount)}]
+          </span>
         )}
       </div>
       <ArticleLink

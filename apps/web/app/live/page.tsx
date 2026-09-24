@@ -10,9 +10,11 @@ import { DateStrip } from "./_components/DateStrip";
 import { LiveLoadError } from "./_components/LiveLoadError";
 import { LiveMatchesFeed } from "./_components/LiveMatchesFeed";
 import { StandingsRail } from "./_components/StandingsRail";
+import { SiteFooter } from "@/_components/SiteFooter";
+import { LiveStrip } from "@/_components/LiveStrip";
 
 /**
- * 이 URL이 canonical이고 대응 모바일 LIVE 탭을 alternate로 선언한다 — 토론
+ * 이 URL이 canonical이고 대응 모바일 LIVE 탭을 alternate로 선언한다. 토론
  * 리스트와 같은 상호 참조 규약. 날짜 쿼리 URL도 canonical은 `/live`다.
  */
 export const metadata: Metadata = {
@@ -25,10 +27,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * LIVE 대시보드(피그마 LW1~LW3, KAN-452). 데스크톱은 순위를 별도 라우트로
- * 빼지 않고 2컬럼(경기 목록 + 순위표 레일)으로 항상 함께 보여준다. 목록은
- * 서버 씨앗 + 클라 폴링, 순위표는 서버 컴포넌트 fetch(단발 읽기)다. 둘은
- * 독립이라 한쪽이 실패해도 다른 쪽은 그대로 뜬다.
+ * LIVE 목록 (KAN-452 → KAN-567 리디자인, 시안 LIVE 741-817행). 데스크톱은 순위를 별도
+ * 라우트로 빼지 않고 `minmax(0,1fr) 340px` 2열(경기 목록 + 순위표 aside)로 항상 함께
+ * 보여준다. 목록은 서버 씨앗 + 클라 폴링, 순위표는 서버 컴포넌트 fetch(단발 읽기)다.
+ * 둘은 독립이라 한쪽이 실패해도 다른 쪽은 그대로 뜬다. 시안의 안내 부제는 지웠다.
  */
 export default async function LivePage({
   searchParams,
@@ -61,34 +63,33 @@ export default async function LivePage({
   return (
     <>
       <SiteHeader />
+      <LiveStrip />
       <main>
-        <PageContainer className="pb-22">
-          <header className="pt-7 pb-4.5">
-            <h1 className="text-hero text-text tracking-heading font-extrabold">
+        <PageContainer className="grid grid-cols-1 gap-10 pt-6.5 pb-12 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-11">
+          <div className="min-w-0">
+            <h1 className="text-section text-text-strong tracking-title pb-4.5 font-black">
               LIVE
             </h1>
-            <p className="text-body text-text-3 mt-1.5 font-semibold">
-              프리미어리그 경기와 순위를 한눈에 볼 수 있어요
-            </p>
-          </header>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="flex flex-col gap-1">
-              <DateStrip selected={selected} today={today} />
-              <LiveMatchesFeed date={selected} initial={initial} />
-            </div>
+            <DateStrip selected={selected} today={today} />
+            <LiveMatchesFeed date={selected} initial={initial} />
+          </div>
+          <aside>
             {rows ? (
               <StandingsRail rows={rows} />
             ) : (
-              <section className="bg-elevate rounded-card h-fit px-4 py-5">
-                <h2 className="text-title text-text px-1 pb-3 font-bold">
-                  순위표
-                </h2>
+              <>
+                <div className="flex items-baseline justify-between pb-2.5">
+                  <h2 className="text-body-md text-text-strong font-black">
+                    순위표
+                  </h2>
+                </div>
                 <LiveLoadError compact />
-              </section>
+              </>
             )}
-          </div>
+          </aside>
         </PageContainer>
       </main>
+      <SiteFooter />
     </>
   );
 }

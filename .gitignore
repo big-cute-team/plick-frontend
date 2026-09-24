@@ -49,3 +49,9 @@ _workspace/
 
 # E2E 실패 묶음·치유 결과 (scripts/e2e)
 .e2e/
+
+# scripts/fonts 작업 파일 (KAN-567) — 원본 TTF와 로컬 pip 설치
+scripts/fonts/NotoSansKR*.ttf
+scripts/fonts/NotoSansKR-Variable.woff2
+scripts/fonts/pylib/
+scripts/og-image/opengraph-image.png

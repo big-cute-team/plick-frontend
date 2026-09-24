@@ -12,14 +12,17 @@ import {
 } from "@plick/domain/constants";
 import { articlesTeamPath } from "@plick/domain/format";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
-import { ChevronMiniIcon } from "@plick/ui/icons";
+import { ChevronRightIcon } from "@plick/ui/icons";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { AppShell } from "@/_components/AppShell";
-import { ProfileTopBar } from "@/_components/ProfileTopBar";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
-import { TeamProfileTabs } from "./_components/TeamProfileTabs";
-import { TeamStandingCard } from "./_components/TeamStandingCard";
+import { ProfileFacts } from "@/_components/ProfileFacts";
+import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
+import { ProfileStats } from "@/_components/ProfileStats";
+import { SquadList } from "./_components/SquadList";
+import { TeamFiguresList } from "./_components/TeamFiguresList";
 
 /**
  * 팀 프로필 메타데이터 (KAN-500). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
@@ -42,32 +45,28 @@ export async function generateMetadata({
 }
 
 /**
- * 팀 프로필 (KAN-500, KAN-507에서 라이브 팀 화면을 합침) — 로고·표기, 이번 시즌
- * 선수단, 기사에 나온 소속 인물.
+ * 팀 프로필 (KAN-500, KAN-507에서 라이브 팀 화면을 합침, KAN-567 리디자인, 시안
+ * 팀 프로필). 머리(엠블럼 60, 이름, 영문명), 숫자 상자(순위·승점·전적·득실),
+ * 선수단, 기사 속 인물, 관련 이슈 링크, 기본 정보를 세로로 쌓는다.
  *
  * 한 팀을 보는 화면이 두 장으로 갈려 있었다. 라이브 순위표에서 팀을 누르면
  * `/live/teams/[teamId]`(API-Football 선수단)로, 기사 쪽 팀 칩·로고를 누르면
  * 여기로 왔다. 같은 팀인데 어디로 들어왔느냐에 따라 다른 화면이 뜨는 게
  * 이상해서 이 한 장으로 합쳤다. 라이브 쪽 URL은 여기로 리다이렉트한다.
  *
- * 두 명단은 출처가 다르고 겹치지도 않아 탭으로 갈라 둔다 (KAN-484, 그전에는
- * 섹션을 위아래로 쌓아 선수단 33명을 다 지나야 인물이 나왔다). "선수단"은
- * API-Football의 이번 시즌 등록 명단이고 타일을 누르면 시즌 스탯 시트가 열린다.
- * "기사 속 인물"은 PLick 인물 사전이라 감독·구단주까지 들어 있고 행을 누르면 그
- * 인물의 관련 기사로 간다.
- *
- * 팀 허브(`/teams/[slug]`)가 이미 홈 피드를 팀으로 걸러 그리는 자리라 프로필은
- * 그 아래 `/profile`에 뒀다. 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사
- * 목록의 팀 탭(`/articles/teams/[slug]`)으로 보낸다 — 같은 목록이 세 URL에
+ * 선수단(KAN-484에서 탭으로 갈랐던 둘)은 시안대로 섹션으로 되돌렸다. "선수단"은
+ * API-Football의 이번 시즌 등록 명단이고 행을 누르면 시즌 스탯 시트가 열린다.
+ * "기사 속 인물"은 해축이모 인물 사전이라 감독·구단주까지 들어 있고 행을 누르면
+ * 그 인물의 프로필로 간다. 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사
+ * 목록의 팀 탭(`/articles/teams/[slug]`)으로 보낸다. 같은 목록이 세 URL에
  * 있으면 어디가 원본인지 흐려진다.
  *
- * 헤더 아래에 리그 순위 요약을 얹는다 (KAN-514) — 팀 화면에서 "지금 몇 위인가"를
- * 보려고 순위표 탭으로 나갔다 오던 걸 없앤다. 최근 전적·직전 선발은 경기 프리뷰
- * 안에만 있어 팀 기준으로 못 가져온다(`TeamStandingCard` 주석).
+ * 순위 요약(KAN-514)은 `GET /standings` 20행에서 이 팀 행만 골라 숫자 상자에
+ * 넣는다. 시안의 최근 5경기 폼, 감독·홈구장·창단은 팀 단위 API가 없어 뺐다.
  *
  * slug는 레지스트리로 검증하고 BE는 `TEAM_IDS`의 id로 부른다. 인물 사전이
  * 404면(마스터 재시드로 id가 어긋난 경우) 보여 줄 게 없어 not-found다. 선수단만
- * 실패하면 페이지를 죽이지 않고 그 섹션 자리에만 실패를 보여준다 — 라이브 API는
+ * 실패하면 페이지를 죽이지 않고 그 섹션 자리에만 실패를 보여준다. 라이브 API는
  * 외부(API-Football) 의존이라 인물 사전보다 덜 미덥다.
  */
 export default async function TeamProfilePage({
@@ -100,7 +99,7 @@ export default async function TeamProfilePage({
   }
 
   /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격·강등으로
-     레지스트리와 어긋난 시즌) 카드 자리를 비운다 — 부가 정보라 없는 편이 낫다 */
+     레지스트리와 어긋난 시즌) 상자를 비운다. 부가 정보라 없는 편이 낫다 */
   const standing =
     standingsResult.status === "fulfilled"
       ? (standingsResult.value.find((row) => row.team.id === teamId) ?? null)
@@ -113,35 +112,84 @@ export default async function TeamProfilePage({
 
   return (
     <AppShell>
-      <ProfileTopBar title={team.name} fallbackHref="/" />
+      <SubTopBar title="팀" backHref="/" backBehavior="back" />
       <ScrollArea className="pb-section">
-        <header className="px-edge flex flex-col gap-3 pt-5 pb-3">
-          <div className="flex items-center gap-4">
-            <TeamCrest team={team} size={64} />
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <h1 className="text-headline text-text truncate font-extrabold">
+        <div className="px-edge">
+          <header className="flex items-center gap-3.5 pt-5 pb-4.5">
+            <TeamCrest team={team} size={60} />
+            <div className="min-w-0 flex-1">
+              <h1 className="text-profile tracking-title text-text-strong font-black">
                 {profile.name}
               </h1>
-              <p className="text-label text-text-3 truncate">
-                {profile.nameEn}
+              <p className="text-label-lg text-text-3 mt-1.5 truncate">
+                {profile.nameEn
+                  ? `${profile.nameEn}, 프리미어리그`
+                  : "프리미어리그"}
               </p>
             </div>
-          </div>
-          {standing && <TeamStandingCard row={standing} />}
+          </header>
 
+          {standing && (
+            <ProfileStats
+              items={[
+                { label: "순위", value: `${standing.rank}위` },
+                { label: "승점", value: String(standing.points) },
+                {
+                  label: "전적",
+                  value: `${standing.win}승 ${standing.draw}무 ${standing.lose}패`,
+                },
+                { label: "득실", value: formatGoalDiff(standing.goalDiff) },
+              ]}
+            />
+          )}
+
+          <ProfileSectionTitle>선수단</ProfileSectionTitle>
+          {squad ? (
+            <SquadList squad={squad} />
+          ) : (
+            <p className="text-body text-text-4 py-6">
+              선수단을 불러오지 못했어요
+            </p>
+          )}
+
+          {profile.figures.length > 0 && (
+            <>
+              <ProfileSectionTitle>기사 속 인물</ProfileSectionTitle>
+              <TeamFiguresList figures={profile.figures} />
+            </>
+          )}
+
+          <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
           {/* 팀 관련 기사는 기사 목록의 팀 탭이 원본이다 */}
           <Link
             href={articlesTeamPath(code)}
-            className="bg-elevate rounded-control text-body text-text flex items-center justify-between px-4 py-3 font-bold active:opacity-70"
+            className="border-border-soft text-body text-text-strong flex items-center justify-between border-b py-3 font-bold active:opacity-70"
           >
-            {team.name} 관련 기사 보기
-            <ChevronMiniIcon size={16} className="text-text-4" />
+            {team.name} 이슈 모아보기
+            <ChevronRightIcon size={16} className="text-text-4" />
           </Link>
-        </header>
 
-        <TeamProfileTabs slug={slug} squad={squad} figures={profile.figures} />
+          <ProfileSectionTitle>기본 정보</ProfileSectionTitle>
+          <ProfileFacts
+            items={[
+              { label: "리그", value: "프리미어리그" },
+              ...(profile.nameEn
+                ? [{ label: "영문명", value: profile.nameEn }]
+                : []),
+              ...(standing
+                ? [{ label: "경기 수", value: `${standing.played}경기` }]
+                : []),
+              { label: "시즌", value: LIVE_SEASON_LABEL },
+            ]}
+          />
+        </div>
       </ScrollArea>
       <TabBar />
     </AppShell>
   );
+}
+
+/** 득실차는 부호를 붙여야 읽힌다. 0은 부호 없이 그대로 둔다. */
+function formatGoalDiff(diff: number): string {
+  return diff > 0 ? `+${diff}` : String(diff);
 }

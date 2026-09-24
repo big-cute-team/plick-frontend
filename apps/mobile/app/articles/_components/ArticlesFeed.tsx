@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
@@ -45,18 +45,13 @@ const SKELETON_COUNT = 4;
  *   서버 fetch가 실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를
  *   보여준다.
  * @param initialTeam `initial`이 어느 탭의 씨앗인지.
- * @param header 팀 탭 위에 함께 고정할 화면 제목 블록. 탭과 한 덩어리로 sticky라
- *   리스트를 한참 내려도 제목·부제·탭이 전부 상단에 남는다 — 화면의 좌표계가
- *   흔들리지 않아 탭 전환 때 무엇이 바뀌었는지가 리스트만으로 읽힌다.
  */
 export function ArticlesFeed({
   initial,
   initialTeam = "ALL",
-  header,
 }: {
   initial?: InitialArticleFeed;
   initialTeam?: Filter;
-  header?: ReactNode;
 }) {
   const pathname = usePathname();
   const filter = articlesTeamFilterFromPathname(pathname);
@@ -166,17 +161,13 @@ export function ArticlesFeed({
 
   return (
     <>
-      {/* 제목 블록과 탭을 한 덩어리로 고정한다 (KAN-386). 탭 자체의 sticky는
-          이 래퍼가 붙잡고 있는 동안 움직일 일이 없어 그대로 둬도 무해하다.
-          -top-px는 소수점 스크롤 위치의 픽셀 반올림 실금을 덮는 몫이다 */}
-      <div className="bg-bg sticky -top-px z-10">
-        {header}
-        <TeamFilterTabs
-          value={filter}
-          onChange={handleChange}
-          hrefFor={articlesTeamPath}
-        />
-      </div>
+      {/* 팀 탭은 스스로 sticky라(KAN-386) 리스트를 한참 내려도 상단에 남는다.
+          시안(KAN-567)대로 제목 블록 없이 상단 바 밑에 바로 선다 */}
+      <TeamFilterTabs
+        value={filter}
+        onChange={handleChange}
+        hrefFor={articlesTeamPath}
+      />
       {/* 리스트를 좌우로 끌면 이웃 팀으로 넘어간다 (KAN-388). 커밋은 탭 클릭과
           같은 handleChange라 떠나는 팀의 스크롤 저장과 위 이펙트의 복원·맨 위
           이동이 그대로 돈다. targetScrollTop으로 팀별 저장 위치를 넘겨, 봤던
@@ -199,12 +190,12 @@ export function ArticlesFeed({
             ))
           ) : isError && articles.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+              <p className="text-body text-text-4">소식을 불러오지 못했어요</p>
               <button
                 type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+                className="border-border-strong text-label-lg text-text-2 rounded-control mt-3 border px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
               >
                 다시 시도
               </button>
@@ -225,12 +216,12 @@ export function ArticlesFeed({
               {isFetchNextPageError && (
                 <div className="py-6 text-center">
                   <p className="text-caption text-text-4">
-                    다음 소식을 불러오지 못했어요.
+                    다음 소식을 불러오지 못했어요
                   </p>
                   <button
                     type="button"
                     onClick={retryNextPage}
-                    className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
+                    className="border-border-strong text-label-lg text-text-2 rounded-control mt-2 border px-4 py-2 font-bold active:opacity-70"
                   >
                     다시 시도
                   </button>
@@ -248,14 +239,14 @@ export function ArticlesFeed({
                     {articlesOutroCopy(
                       filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined,
                     )}{" "}
-                    기사의 마지막 페이지예요.
+                    기사의 마지막 페이지예요
                   </p>
                 </section>
               )}
             </>
           ) : (
             <p className="text-body text-text-4 py-12 text-center">
-              아직 이 팀 소식이 없어요.
+              아직 이 팀 소식이 없어요
             </p>
           )}
         </div>

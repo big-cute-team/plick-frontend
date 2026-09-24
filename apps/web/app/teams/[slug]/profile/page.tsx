@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getTeamProfile } from "@plick/core/figures";
@@ -10,15 +9,16 @@ import {
   TEAM_FULL_NAMES,
   TEAM_IDS,
 } from "@plick/domain/constants";
-import { articlesTeamPath } from "@plick/domain/format";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
-import { ChevronMiniIcon } from "@plick/ui/icons";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { PageContainer } from "@/_components/PageContainer";
+import { ProfileBreadcrumb } from "@/_components/ProfileBreadcrumb";
+import { ProfileFacts } from "@/_components/ProfileFacts";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { TeamProfileTabs } from "./_components/TeamProfileTabs";
-import { TeamStandingCard } from "./_components/TeamStandingCard";
+import { TeamStatsRow } from "./_components/TeamStatsRow";
+import { SiteFooter } from "@/_components/SiteFooter";
 
 /**
  * 팀 프로필 메타데이터 (KAN-507). 팀 검색어("토트넘 이적 루머")의 랜딩은 팀
@@ -48,20 +48,19 @@ export async function generateMetadata({
 }
 
 /**
- * 데스크톱 팀 프로필 (KAN-507) — 로고·표기, 이번 시즌 선수단, 기사에 나온 소속
- * 인물. 모바일 `/teams/[slug]/profile`의 데스크톱 판이다.
+ * 데스크톱 팀 프로필 (KAN-507 → KAN-567 시안 프로필 1215-1420행). 빵부스러기, 머리
+ * (엠블럼 72, "팀" 라벨, 이름 30/900, 영문명), 숫자 4개(순위, 승점, 전적, 득실),
+ * 선수단 표와 기사 속 인물, 우측 기본 정보 카드를 `minmax(0,1fr) 300px` 그리드에 둔다.
+ * 모바일 `/teams/[slug]/profile`의 데스크톱 판이다.
  *
- * 웹에는 이 화면이 없었다. 라이브 순위표에서 팀을 누르면 선수단만 있는
- * `/live/teams/[teamId]`로 갔고, 인물 사전 명단은 볼 데가 아예 없었다. 모바일과
- * 같은 한 장으로 맞추면서 라이브 쪽 URL은 여기로 리다이렉트한다.
+ * 두 명단은 출처가 달라 탭으로 갈라 둔다 (KAN-484). "선수단"은 API-Football 이번
+ * 시즌 등록 명단이고 행을 누르면 시즌 스탯 다이얼로그가 열린다. "기사 속 인물"은
+ * 해축이모 인물 사전이라 감독, 구단주까지 있고 행을 누르면 관련 기사로 간다.
  *
- * 두 명단은 출처가 달라 탭으로 갈라 둔다 (KAN-484, 그전에는 섹션을 위아래로
- * 쌓았다). "선수단"은 API-Football 이번 시즌 등록 명단이고 타일을 누르면 시즌
- * 스탯 모달이 열린다. "기사 속 인물"은 PLick 인물 사전이라 감독·구단주까지 있고
- * 행을 누르면 관련 기사로 간다.
- *
- * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 탭
- * 자리에만 실패를 보여준다 — 라이브 API는 외부 의존이라 덜 미덥다.
+ * 시안의 최근 5경기 카드와 관련 이슈 표는 팀 단위 API가 없어 뺐다(팀 기사는 팀
+ * 허브가 맡는다). 기본 정보의 감독, 홈구장, 창단도 API에 없어 영문명과 시즌만 둔다.
+ * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 탭 자리에만
+ * 실패를 보여준다. 라이브 API는 외부 의존이라 덜 미덥다.
  */
 export default async function TeamProfilePage({
   params,
@@ -92,8 +91,8 @@ export default async function TeamProfilePage({
     console.error("[team] 선수단 로드 실패:", squadResult.reason);
   }
 
-  /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격·강등으로
-     레지스트리와 어긋난 시즌) 카드 자리를 비운다 — 부가 정보라 없는 편이 낫다 */
+  /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격, 강등으로
+     레지스트리와 어긋난 시즌) 숫자 줄을 비운다. 부가 정보라 없는 편이 낫다 */
   const standing =
     standingsResult.status === "fulfilled"
       ? (standingsResult.value.find((row) => row.team.id === teamId) ?? null)
@@ -108,38 +107,46 @@ export default async function TeamProfilePage({
     <>
       <SiteHeader />
       <main>
-        <PageContainer className="pb-22">
-          <header className="flex flex-col gap-5 pt-7 pb-8">
-            <div className="flex items-center gap-5">
-              <TeamCrest team={team} size={72} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <h1 className="text-hero text-text tracking-heading truncate font-extrabold">
+        <PageContainer className="grid grid-cols-1 gap-10 pt-5.5 pb-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-11">
+          <div className="min-w-0">
+            <ProfileBreadcrumb kind="팀" />
+            <header className="border-border flex items-center gap-5 border-b pb-5.5">
+              <TeamCrest team={team} size={72} className="shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-label text-accent pb-1.5 font-bold">팀</p>
+                <h1 className="text-read-title text-text-strong tracking-title truncate leading-[1.2] font-black">
                   {profile.name}
                 </h1>
-                <p className="text-body text-text-3 truncate font-semibold">
+                <p className="text-body text-text-3 truncate pt-2.25">
                   {profile.nameEn}
                 </p>
               </div>
-            </div>
-            {standing && <TeamStandingCard row={standing} />}
+            </header>
 
-            {/* 팀 관련 기사는 기사 목록의 팀 탭이 원본이다 */}
-            <Link
-              href={articlesTeamPath(code)}
-              className="bg-elevate rounded-control text-body-lg text-text hover:bg-elevate-2 focus-visible:outline-accent flex w-fit items-center gap-2 px-5 py-3 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              {team.name} 관련 기사 보기
-              <ChevronMiniIcon size={16} className="text-text-4" />
-            </Link>
-          </header>
+            {standing ? (
+              <TeamStatsRow row={standing} />
+            ) : (
+              <div className="h-6.5" />
+            )}
 
-          <TeamProfileTabs
-            slug={slug}
-            squad={squad}
-            figures={profile.figures}
-          />
+            <TeamProfileTabs
+              slug={slug}
+              squad={squad}
+              figures={profile.figures}
+            />
+          </div>
+          <aside className="flex flex-col gap-3.5">
+            <ProfileFacts
+              facts={[
+                { label: "영문명", value: profile.nameEn },
+                { label: "리그", value: "프리미어리그" },
+                { label: "시즌", value: LIVE_SEASON_LABEL },
+              ]}
+            />
+          </aside>
         </PageContainer>
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
- * 확인 팝업 (KAN-333, 모바일 이식) — 되돌리기 어려운 동작(댓글 삭제 등) 앞에 한 번
- * 묻는다. `ErrorDialog`와 같은 스크림 + 카드 관용에 두 버튼을 두고, 확인 쪽은
- * danger 톤이다. 데스크톱이라 hover·focus 스타일을 얹는다.
+ * 확인 팝업 (KAN-333, 모바일 이식, 시안 KAN-567 다이얼로그) — 되돌리기 어려운
+ * 동작(댓글 삭제, 차단 등) 앞에 한 번 묻는다. 시안: 가운데 304px 각진 상자
+ * (`border-strong` + `shadow-dialog`), 제목 15/900 가운데, 설명 12.5 보조색,
+ * 버튼 줄 38px에 테두리 "취소"와 빨간 채운 면 확정 버튼. 딤은 `dim-strong`이다.
  *
  * body로 포털을 뚫는 이유는 `LoginPromptDialog`와 같다 — 릴 세부 패널처럼
  * `transform`이 걸린 조상 안에서 띄우면 `fixed`의 기준 상자가 패널이 돼
@@ -50,36 +51,34 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
     >
-      {/* 스크림 — 클릭하면 취소하고 닫는다 */}
+      {/* 딤 — 클릭하면 취소하고 닫는다 */}
       <button
         type="button"
         aria-label="닫기"
         onClick={() => !pending && onClose()}
-        className="absolute inset-0"
-        style={{
-          backgroundColor:
-            "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
-        }}
+        className="bg-dim-strong absolute inset-0"
       />
 
-      <div className="bg-bg border-border rounded-card relative w-full max-w-72 border p-6">
+      <div className="bg-bg border-border-strong shadow-dialog relative w-full max-w-76 border px-5.5 pt-6 pb-5">
         <p
           id="confirm-dialog-title"
-          className="text-body-lg text-text text-center font-extrabold"
+          className="text-body-lg text-text-strong text-center font-black"
         >
           {title}
         </p>
-        <p className="text-label text-text-3 mt-2 text-center">{description}</p>
+        <p className="text-label-lg text-text-3 mt-2 text-center leading-[1.6]">
+          {description}
+        </p>
         {error && (
           <p className="text-caption text-danger mt-2 text-center">{error}</p>
         )}
 
-        <div className="mt-5 flex gap-2.5">
+        <div className="mt-4.5 flex gap-2.25">
           <button
             type="button"
             onClick={onClose}
             disabled={pending}
-            className="border-border text-text-2 rounded-control text-body hover:bg-elevate focus-visible:outline-accent flex-1 border py-3 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60 disabled:opacity-40"
+            className="border-border-strong text-text-2 text-body hover:bg-elevate focus-visible:outline-accent inline-flex h-9.5 flex-1 items-center justify-center border font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
           >
             취소
           </button>
@@ -87,7 +86,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="border-border-strong text-danger rounded-control text-body hover:bg-elevate focus-visible:outline-accent flex-1 border py-3 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60 disabled:opacity-40"
+            className="bg-danger text-on-accent text-body focus-visible:outline-accent inline-flex h-9.5 flex-1 items-center justify-center font-bold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
           >
             {confirmLabel}
           </button>

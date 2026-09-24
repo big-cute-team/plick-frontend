@@ -5,52 +5,64 @@ import { ArticleTopBar } from "./_components/ArticleTopBar";
 
 /**
  * 기사 세부 로딩 스켈레톤 — 상세 fetch(`GET /api/v1/articles/{id}`) 동안
- * 실제 본문(ArticleBody)과 같은 구성으로 끝까지 자리를 잡아둔다: 배지 줄
- * (로고+단계) / 제목 / 기자 라인 / 본문 문단 / 해시태그 / 함께 보면 좋은
- * 기사 / 액션 / 댓글 헤더·입력. 상단바는 정적이라 실물을 그대로 그린다.
+ * 실제 본문(ArticleBody)과 같은 구성으로 자리를 잡아둔다(KAN-567 시안 순서):
+ * 팀 줄 / 제목 / 기자와 시각 / 본문 문단 / 태그 칩 / 액션 / 관련 기사 제목과 행 /
+ * 댓글 헤더와 입력. 상단바는 팀 이름을 아직 몰라 "이슈"만 선다.
  *
- * 트윗 임베드·대표 이미지 자리는 없다 — 발행 기사 사진이 전부 null이라 실제
- * 화면도 텍스트만 흐른다(KAN-301). 바 높이는 실측 기준: 배지 30 / 헤드라인
- * 한 줄 32 / 기자 라인 20 / 본문 한 줄 26 / 해시태그 26 / 액션 36 / 입력 44.
+ * 대표 이미지 자리는 없다 — 발행 기사 사진이 전부 null이라 실제 화면도 텍스트만
+ * 흐른다(KAN-301).
  */
 export default function ArticleDetailLoading() {
   return (
     <AppShell>
       <ArticleTopBar />
       <ScrollArea>
-        <div className="px-edge flex animate-pulse flex-col gap-3.5 pt-1">
-          {/* 배지 줄 — 구단 로고 + 단계 글자 */}
-          <div className="flex items-center gap-2">
-            <div className="bg-elevate size-7.5 rounded-full" />
+        <div className="px-edge flex animate-pulse flex-col gap-3.5 pt-4.5">
+          {/* 팀 줄 — 엠블럼 + 팀명 */}
+          <div className="flex items-center gap-1.75">
+            <div className="bg-elevate size-4.5 rounded-full" />
             <div className="bg-elevate rounded-pill h-3 w-14" />
           </div>
-          {/* 제목 (헤드라인 1~2줄) */}
-          <div className="bg-elevate rounded-card h-8 w-full" />
-          {/* 기자 · 시각 · 조회 라인 */}
-          <div className="bg-elevate rounded-pill h-4 w-1/2" />
+          {/* 제목 (2줄) */}
+          <div className="flex flex-col gap-2">
+            <div className="bg-elevate rounded-tile h-7 w-full" />
+            <div className="bg-elevate rounded-tile h-7 w-3/4" />
+          </div>
+          {/* 기자와 시각, 조회 */}
+          <div className="bg-elevate rounded-pill h-3.5 w-1/2" />
           {/* 본문 문단 */}
           <div className="flex flex-col gap-2.5">
             <div className="bg-elevate rounded-pill h-4 w-full" />
             <div className="bg-elevate rounded-pill h-4 w-full" />
             <div className="bg-elevate rounded-pill h-4 w-2/3" />
           </div>
-          {/* 해시태그 */}
-          <div className="bg-elevate rounded-pill h-6.5 w-20" />
-          {/* 함께 보면 좋은 기사 — 제목 + 준비 중/카드 자리 */}
-          <div className="flex flex-col gap-2.5">
-            <div className="bg-elevate rounded-pill h-5 w-36" />
-            <div className="bg-elevate rounded-pill h-4 w-40 self-center" />
+          {/* 태그 칩 */}
+          <div className="flex gap-1.5">
+            <div className="bg-elevate rounded-pill h-7 w-16" />
+            <div className="bg-elevate rounded-pill h-7 w-20" />
           </div>
-          {/* 좋아요·공유 액션 */}
-          <div className="border-border flex items-center gap-1.5 border-b pb-4">
-            <div className="bg-elevate rounded-pill h-9 w-18" />
-            <div className="bg-elevate rounded-pill h-9 w-22" />
+          {/* 좋아요와 공유 */}
+          <div className="flex items-center gap-5">
+            <div className="bg-elevate rounded-pill h-4.5 w-12" />
+            <div className="bg-elevate rounded-pill h-4.5 w-12" />
           </div>
-          {/* 댓글 헤더 + 입력창 */}
-          <div className="bg-elevate rounded-pill h-5 w-16" />
-          <div className="flex items-center gap-2.5">
-            <div className="bg-elevate rounded-pill h-11 flex-1" />
-            <div className="bg-elevate size-11 shrink-0 rounded-full" />
+          {/* 관련 기사 — 제목 + 행 */}
+          <div className="flex flex-col gap-3 pt-3">
+            <div className="bg-elevate rounded-pill h-4.5 w-32" />
+            <div className="flex items-center gap-2.25">
+              <div className="bg-elevate size-6.5 rounded-full" />
+              <div className="bg-elevate rounded-pill h-3.5 flex-1" />
+            </div>
+            <div className="flex items-center gap-2.25">
+              <div className="bg-elevate size-6.5 rounded-full" />
+              <div className="bg-elevate rounded-pill h-3.5 flex-1" />
+            </div>
+          </div>
+          {/* 댓글 헤더 + 입력줄 */}
+          <div className="bg-elevate rounded-pill mt-3 h-4.5 w-16" />
+          <div className="flex items-center gap-2">
+            <div className="bg-elevate rounded-control h-10.5 flex-1" />
+            <div className="bg-elevate rounded-control h-10.5 w-16" />
           </div>
         </div>
       </ScrollArea>

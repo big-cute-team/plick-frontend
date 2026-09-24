@@ -9,7 +9,7 @@
  * 태그는 자동 배선 대신 양 앱 `generateMetadata`가 이 URL을 명시한다.
  *
  * 발행 기사의 `imageUrl`이 전건 null이라(전략 문서 Step 2-4) 기사 이미지 대신
- * 대표 팀 컬러·로고 + 제목 + 루머 단계 배지로 카드를 그린다. 데이터 공백을
+ * 대표 팀 컬러 띠·로고 워터마크 + 제목으로 카드를 그린다(단계 배지는 KAN-567에서 뺐다). 데이터 공백을
  * 디자인으로 메꾸는 접근이다.
  *
  * 기사를 못 받으면(삭제된 딥링크 등) 500 대신 브랜드 폴백 카드를 내려보낸다 —
@@ -18,7 +18,7 @@
  */
 import { ImageResponse } from "next/og";
 import { getArticle } from "@plick/core/articles";
-import { STAGE_META } from "@plick/domain/constants";
+import { BRAND_TAGLINE } from "@plick/domain/brand";
 import { truncateText } from "@plick/domain/format";
 import type { ArticleDetail } from "@plick/domain/types";
 import {
@@ -27,7 +27,7 @@ import {
   OgCard,
   TEAM_OG_COLORS,
 } from "@/_components/OgCard";
-import { loadOgFont, loadTeamLogo } from "@/_utils/og-assets";
+import { loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
 
 export async function GET(
   _request: Request,
@@ -44,8 +44,8 @@ export async function GET(
   }
 
   const team = article?.teams[0] ?? null;
-  const [font, logo] = await Promise.all([
-    loadOgFont(),
+  const [fonts, logo] = await Promise.all([
+    loadOgFonts(),
     team ? loadTeamLogo(team) : Promise.resolve(null),
   ]);
 
@@ -53,17 +53,16 @@ export async function GET(
     article ? (
       <OgCard
         title={truncateText(article.title, 80)}
-        badge={article.stage ? STAGE_META[article.stage].label : null}
         teamColor={team ? TEAM_OG_COLORS[team] : null}
         logoSrc={logo}
       />
     ) : (
-      <OgCard title="프리미어리그 소식을 릴스로" showTagline={false} />
+      <OgCard title={BRAND_TAGLINE} showTagline={false} />
     ),
     {
       width: OG_WIDTH,
       height: OG_HEIGHT,
-      fonts: [{ name: "Pretendard", data: font, weight: 600, style: "normal" }],
+      fonts,
       // ImageResponse 기본값(1년 immutable)은 폴백 카드까지 오래 박제한다 — 짧게 줄인다
       headers: {
         "Cache-Control": "public, max-age=3600, s-maxage=86400",

@@ -9,14 +9,14 @@ test.describe("홈", () => {
   test("첫 화면에 핫이슈와 탭바가 뜬다", async ({ page }) => {
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { level: 1, name: /플릭 PLick/ }),
+      page.getByRole("heading", { level: 1, name: /해축이모/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { level: 2, name: "핫이슈" }),
     ).toBeVisible();
 
     const nav = tabBar(page);
-    for (const label of ["홈", "LIVE", "릴스", "VS", "MY"]) {
+    for (const label of ["홈", "LIVE", "릴스", "투표", "MY"]) {
       await expect(
         nav.getByRole("link", { name: label, exact: true }),
       ).toBeVisible();

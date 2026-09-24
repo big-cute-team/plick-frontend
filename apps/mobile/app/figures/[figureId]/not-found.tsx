@@ -10,11 +10,11 @@ export default function FigureNotFound() {
   return (
     <AppShell>
       <main className="px-edge flex h-full flex-col items-center justify-center gap-7">
-        <div className="flex flex-col items-center gap-2.5">
-          <p className="text-headline text-text font-extrabold">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-profile tracking-title text-text-strong font-black">
             인물을 찾을 수 없어요
           </p>
-          <p className="text-body text-text-3 font-semibold">
+          <p className="text-body text-text-3">
             등록되지 않았거나 내려간 인물이에요
           </p>
         </div>

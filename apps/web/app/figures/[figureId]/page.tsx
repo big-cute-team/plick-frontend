@@ -5,10 +5,14 @@ import { ApiError } from "@plick/core/client";
 import { getFigureProfile } from "@plick/core/figures";
 import { FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import type { InitialArticleFeed } from "@plick/domain/types";
+import { PageContainer } from "@/_components/PageContainer";
+import { ProfileBreadcrumb } from "@/_components/ProfileBreadcrumb";
+import { ProfileFacts } from "@/_components/ProfileFacts";
 import { ScopedArticlesFeed } from "@/_components/ScopedArticlesFeed";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { FigureHeader } from "./_components/FigureHeader";
+import { SiteFooter } from "@/_components/SiteFooter";
 
 /**
  * 인물별 메타데이터 (KAN-501) — "손흥민 이적" 같은 인물 검색어의 랜딩이 될 수
@@ -45,22 +49,19 @@ export async function generateMetadata({
 }
 
 /**
- * 데스크톱 인물 프로필 + 관련 기사 (KAN-501). 사이드바 급상승 랭킹의 선수 줄이
- * 여기로 들어온다.
+ * 데스크톱 인물 프로필 + 관련 이슈 (KAN-501 → KAN-567 시안 프로필 1215-1420행).
+ * 빵부스러기, 머리(회색 원 72, 종류 라벨, 이름 30/900, 영문명 + 소속 팀 링크), 관련
+ * 이슈 표, 우측 기본 정보 카드를 `minmax(0,1fr) 300px` 그리드에 둔다. 급상승 랭킹의
+ * 선수 줄과 태그 줄이 여기로 들어온다.
  *
- * 모바일에는 KAN-500에서 같은 화면이 생겼는데 웹에는 없었다. 급상승 랭킹의
- * 선수를 누를 곳이 필요해 이번에 이식했다 — 팀은 팀 허브(`/teams/[slug]`)가
- * 이미 그 팀 기사를 모아 보여주지만 인물에는 대응 자리가 없었다.
+ * 시안의 등번호 상자, 숫자 4개(경기, 골, 도움, 평점), 최근 경기 표는 인물 사전에
+ * 그 값이 없어 뺐다(인물은 라이브 선수 id와 이어져 있지 않다). 숫자 자리는 시안의
+ * `noStats` 여백으로 대신한다.
  *
- * 화면 구성은 모바일과 같다. 프로필을 머리로 두고 그 아래 관련 기사를 무한
- * 목록으로 잇는다 — 기사 목록만 보면 누구의 기사인지 머리가 없고, 프로필만
- * 보면 세 줄로 화면이 끝난다. 폭은 기사 목록과 같은 `max-w-read` 단일 컬럼이다.
- *
- * 프로필과 기사 첫 페이지를 병렬로 받는다. 프로필이 404·400이면 not-found고,
- * 기사 첫 페이지만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다 — 목록이
- * 클라에서 다시 받으며 에러·재시도를 그린다.
- *
- * 비로그인도 전부 보인다. 두 호출 다 익명 공개 API라 토큰을 싣지 않는다.
+ * 프로필과 기사 첫 페이지를 병렬로 받는다. 프로필이 404, 400이면 not-found고,
+ * 기사 첫 페이지만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다. 목록이
+ * 클라에서 다시 받으며 에러, 재시도를 그린다. 두 호출 다 익명 공개 API라 토큰을
+ * 싣지 않는다.
  */
 export default async function FigurePage({
   params,
@@ -76,8 +77,8 @@ export default async function FigurePage({
 
   if (figureResult.status === "rejected") {
     const error = figureResult.reason;
-    // 없는 인물·운영자가 내린 인물(404)과 정수가 아닌 id(400)는 손으로 친
-    // 주소나 옛 링크의 정상 경로다 — 에러 화면이 아니라 not-found로 보낸다
+    // 없는 인물, 운영자가 내린 인물(404)과 정수가 아닌 id(400)는 손으로 친
+    // 주소나 옛 링크의 정상 경로다. 에러 화면이 아니라 not-found로 보낸다
     if (
       error instanceof ApiError &&
       (error.code === "FIGURE_NOT_FOUND" ||
@@ -96,24 +97,42 @@ export default async function FigurePage({
     console.error("[figure] 관련 기사 초기 로드 실패:", feedResult.reason);
   }
 
+  const facts = [
+    { label: "구분", value: FIGURE_TYPE_LABEL[figure.type] },
+    ...(figure.nameEn ? [{ label: "영문명", value: figure.nameEn }] : []),
+    ...(figure.team ? [{ label: "소속", value: figure.team.name }] : []),
+    ...(figure.description
+      ? [{ label: "소개", value: figure.description }]
+      : []),
+  ];
+
   return (
     <>
       <SiteHeader />
       <main>
-        <div className="max-w-read px-gutter mx-auto w-full pb-22">
-          <FigureHeader figure={figure} />
-          <section>
-            <h2 className="text-section text-text tracking-heading pb-2 font-extrabold">
-              관련 기사
-            </h2>
-            <ScopedArticlesFeed
-              scope={{ kind: "figure", id: figure.id }}
-              initial={initial}
-              emptyText="아직 이 인물의 소식이 없어요."
-            />
-          </section>
-        </div>
+        <PageContainer className="grid grid-cols-1 gap-10 pt-5.5 pb-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-11">
+          <div className="min-w-0">
+            <ProfileBreadcrumb kind={FIGURE_TYPE_LABEL[figure.type]} />
+            <FigureHeader figure={figure} />
+            {/* 시안의 숫자 4개 자리. 값이 없을 때의 여백(`noStats`)이다 */}
+            <div className="h-6.5" />
+            <section>
+              <p className="text-body-lg text-text-strong pb-1.5 font-black tracking-tight">
+                관련 이슈
+              </p>
+              <ScopedArticlesFeed
+                scope={{ kind: "figure", id: figure.id }}
+                initial={initial}
+                emptyText="아직 올라온 이슈가 없어요"
+              />
+            </section>
+          </div>
+          <aside className="flex flex-col gap-3.5">
+            <ProfileFacts facts={facts} />
+          </aside>
+        </PageContainer>
       </main>
+      <SiteFooter />
     </>
   );
 }

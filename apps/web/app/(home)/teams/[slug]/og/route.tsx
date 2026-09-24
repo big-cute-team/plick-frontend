@@ -12,6 +12,7 @@
  * 브랜드 폴백 카드를 내려보낸다.
  */
 import { ImageResponse } from "next/og";
+import { BRAND_TAGLINE } from "@plick/domain/brand";
 import { TEAM_BY_SLUG, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import {
   OG_HEIGHT,
@@ -19,7 +20,7 @@ import {
   OgCard,
   TEAM_OG_COLORS,
 } from "@/_components/OgCard";
-import { loadOgFont, loadTeamLogo } from "@/_utils/og-assets";
+import { loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
 
 export async function GET(
   _request: Request,
@@ -28,8 +29,8 @@ export async function GET(
   const { slug } = await params;
   const code = TEAM_BY_SLUG[slug];
 
-  const [font, logo] = await Promise.all([
-    loadOgFont(),
+  const [fonts, logo] = await Promise.all([
+    loadOgFonts(),
     code ? loadTeamLogo(code) : Promise.resolve(null),
   ]);
 
@@ -39,15 +40,15 @@ export async function GET(
         title={`${TEAM_FULL_NAMES[code]} 이적 루머`}
         teamColor={TEAM_OG_COLORS[code]}
         logoSrc={logo}
-        logoOpacity={0.5}
+        logoOpacity={0.2}
       />
     ) : (
-      <OgCard title="프리미어리그 소식을 릴스로" showTagline={false} />
+      <OgCard title={BRAND_TAGLINE} showTagline={false} />
     ),
     {
       width: OG_WIDTH,
       height: OG_HEIGHT,
-      fonts: [{ name: "Pretendard", data: font, weight: 600, style: "normal" }],
+      fonts,
       // 팀 카드는 내용이 사실상 고정이지만 로고·문구 교체를 하루 안에 반영하도록 상한을 둔다
       headers: {
         "Cache-Control": "public, max-age=3600, s-maxage=86400",

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { InitialMatchDetail } from "@plick/domain/live";
+import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
+import { SubTopBar } from "@/_components/SubTopBar";
 import { SwipePager } from "@/_components/SwipePager";
 import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
@@ -16,23 +17,25 @@ import { MatchChatPreview } from "./MatchChatPreview";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderBlock } from "./MatchHeaderBlock";
 import { MatchTabBar } from "./MatchTabBar";
-import { MatchTopBar } from "./MatchTopBar";
 import { PreviewBlocks } from "./PreviewBlocks";
 
 /**
- * 경기 상세 화면 본체 (KAN-452) — 경계를 세우고 본문은 {@link MatchDetailBody}가
+ * 경기 상세 화면 본체 (KAN-452). 경계를 세우고 본문은 {@link MatchDetailBody}가
  * 그린다. 상단바 제목이 상세 응답(대회명)에서 오므로 상단바까지 경계 안이다.
  * 씨앗이 없어 받는 동안은 상단바 자리 + 헤더 스켈레톤, 실패는 에러 지면.
  *
  * @param matchId API-Football fixture id
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
+ * @param standings 순위 탭에 깔 순위표. 서버가 못 받았으면 null
  */
 export function MatchDetailScreen({
   matchId,
   initial,
+  standings,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
+  standings: StandingRow[] | null;
 }) {
   return (
     <AppShell>
@@ -40,51 +43,60 @@ export function MatchDetailScreen({
         name="MatchDetail"
         fallback={
           <>
-            <MatchTopBar title="경기" />
+            <SubTopBar title="경기" backHref="/live" backBehavior="back" />
             <HeaderSkeleton />
           </>
         }
         errorFallback={(retry) => (
           <>
-            <MatchTopBar title="경기" />
+            <SubTopBar title="경기" backHref="/live" backBehavior="back" />
             <LiveLoadError onRetry={retry} />
           </>
         )}
       >
-        <MatchDetailBody matchId={matchId} initial={initial} />
+        <MatchDetailBody
+          matchId={matchId}
+          initial={initial}
+          standings={standings}
+        />
       </QueryBoundary>
     </AppShell>
   );
 }
 
 /**
- * 상태로 지면이 갈린다 — SCHEDULED는 프리뷰·채팅 탭, LIVE·FINISHED는
- * 요약·라인업·스탯·채팅 탭, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
- * CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`). 채팅이 닫혀 있는 동안은
- * `matchTabsFor`가 채팅 탭을 빼 주고(KAN-486), 탭이 하나만 남으면(예정 경기의
- * 프리뷰) 웹처럼 탭 줄 없이 본문만 그린다.
+ * 상태로 지면이 갈린다. SCHEDULED는 채팅·프리뷰·순위·뉴스, LIVE·FINISHED는
+ * 채팅·요약·라인업·스탯·순위·뉴스, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면
+ * 안내만, CANCELLED는 헤더와 안내만(`MATCH_TABS_BY_STATUS`). 채팅이 닫혀 있는
+ * 동안은 `matchTabsFor`가 채팅 탭을 빼 주고(KAN-486), 탭이 하나만 남으면 웹처럼
+ * 탭 줄 없이 본문만 그린다.
  *
- * 채팅 탭만 스크롤 영역 밖에 선다 (KAN-458). 입력바가 화면 하단에 붙어 있어야
- * 하는데 `AppShell`이 높이를 못박고 스크롤은 `ScrollArea`가 맡는 구조라, 스크롤
- * 안에 두면 입력바가 목록과 함께 흘러가 버린다. 그래서 채팅일 때는 헤더·탭 줄을
- * 고정하고 남는 높이를 채팅 패널이 다 가져간다(목록만 안에서 스크롤).
+ * 스코어 헤더와 탭 줄은 상단에 고정이다 (시안 KAN-567). 그 아래만 스크롤한다.
+ * 전에는 채팅 탭만 헤더를 고정하고 나머지 탭은 헤더째 흘러갔는데, 시안이
+ * "스코어를 보면서 채팅한다"는 규칙을 모든 탭에 같게 두므로 헤더·탭 줄을 스크롤
+ * 영역 밖으로 뺐다. 채팅 탭은 스크롤 영역 대신 남는 높이를 채팅 패널이 다 가져가
+ * 입력바가 화면 하단에 붙는다(KAN-458, 목록만 안에서 스크롤). `AppShell`이 높이를
+ * 못박고 스크롤은 `ScrollArea`가 맡는 구조라, 스크롤 안에 두면 입력바가 목록과
+ * 함께 흘러가 버린다.
  *
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이 사라지면
- * 첫 탭으로 돌아간다.
+ * 첫 탭으로 돌아간다. 채팅이 열려 있으면 첫 탭이 채팅이라 채팅이 기본이다.
  *
  * 본문을 좌우로 끌면 이웃 탭으로 넘어간다 (KAN-462, `SwipePager`). 커밋은 탭을
  * 누른 것과 같은 `setSelected`다. 페이저는 두 레이아웃(채팅 고정 / 스크롤)에
  * 각각 하나씩이라 채팅 경계를 넘는 커밋에서는 옛 페이저가 내려가고 새 페이저가
- * 제자리(transform 없음)로 올라온다 — 스냅이 끝난 자리에 미리보기가 있었으므로
+ * 제자리(transform 없음)로 올라온다. 스냅이 끝난 자리에 미리보기가 있었으므로
  * 그대로 진짜 페인으로 갈아 끼워지는 셈이다. 채팅 이웃의 미리보기는 소켓을
  * 열지 않는 자리 표시(`MatchChatPreview`)다.
  */
 function MatchDetailBody({
   matchId,
   initial,
+  standings,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
+  standings: StandingRow[] | null;
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
   const { header } = detail;
@@ -101,78 +113,83 @@ function MatchDetailBody({
     tab === "chat" ? (
       <MatchChatPreview />
     ) : (
-      <MatchDetailTabs detail={detail} tab={tab} />
+      <MatchDetailTabs detail={detail} tab={tab} standings={standings} />
     );
-
-  if (active === "chat") {
-    return (
-      <>
-        <MatchTopBar title={header.competition} />
-        <div className="flex min-h-0 flex-1 flex-col">
-          <MatchHeaderBlock header={header} />
-          <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-          <SwipePager
-            value={active}
-            neighborOf={neighborTab}
-            onCommit={setSelected}
-            renderPreview={renderPreview}
-            className="flex min-h-0 flex-1 flex-col"
-            trackClassName="flex min-h-0 flex-1 flex-col"
-          >
-            <MatchChatPanel header={header} />
-          </SwipePager>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
-      <MatchTopBar title={header.competition} />
-      <ScrollArea>
-        <MatchHeaderBlock header={header} />
-        {active === undefined ? (
-          header.status === "POSTPONED" && detail.preview ? (
+      <SubTopBar
+        title={header.competition}
+        backHref="/live"
+        backBehavior="back"
+      />
+      <MatchHeaderBlock header={header} />
+      {active === undefined ? (
+        <ScrollArea>
+          {header.status === "POSTPONED" && detail.preview ? (
             <PreviewBlocks preview={detail.preview} />
           ) : (
             <p className="text-body text-text-4 px-edge py-16 text-center">
               {header.status === "POSTPONED"
-                ? "경기가 연기됐어요. 새 일정은 추후 공지돼요."
-                : "취소된 경기예요."}
+                ? "경기가 연기됐어요. 새 일정은 추후 공지돼요"
+                : "취소된 경기예요"}
             </p>
-          )
-        ) : (
-          <>
-            {tabs.length > 1 && (
-              <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-            )}
+          )}
+        </ScrollArea>
+      ) : (
+        <>
+          {tabs.length > 1 && (
+            <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
+          )}
+          {active === "chat" ? (
             <SwipePager
               value={active}
               neighborOf={neighborTab}
               onCommit={setSelected}
               renderPreview={renderPreview}
+              className="flex min-h-0 flex-1 flex-col"
+              trackClassName="flex min-h-0 flex-1 flex-col"
             >
-              <MatchDetailTabs detail={detail} tab={active} />
+              <MatchChatPanel header={header} />
             </SwipePager>
-          </>
-        )}
-      </ScrollArea>
+          ) : (
+            <ScrollArea>
+              <SwipePager
+                value={active}
+                neighborOf={neighborTab}
+                onCommit={setSelected}
+                renderPreview={renderPreview}
+              >
+                <MatchDetailTabs
+                  detail={detail}
+                  tab={active}
+                  standings={standings}
+                />
+              </SwipePager>
+            </ScrollArea>
+          )}
+        </>
+      )}
     </>
   );
 }
 
-/** 헤더 자리 스켈레톤 — 크레스트 둘과 가운데 스코어의 실루엣. */
+/** 헤더 자리 스켈레톤. 엠블럼 둘과 가운데 스코어의 실루엣(시안 크기 56, 38). */
 function HeaderSkeleton() {
   return (
-    <div className="px-edge flex animate-pulse items-start justify-between gap-3 pt-5 pb-4">
-      <div className="flex w-24 flex-col items-center gap-2">
-        <div className="bg-elevate size-12 rounded-full" />
-        <div className="bg-elevate rounded-control h-3.5 w-16" />
+    <div className="px-edge flex animate-pulse items-center justify-between gap-2 pt-5.5 pb-4.5">
+      <div className="flex flex-1 flex-col items-center gap-2.25">
+        <div className="bg-avatar size-14 rounded-full" />
+        <div className="bg-elevate rounded-badge h-3.5 w-14" />
       </div>
-      <div className="bg-elevate rounded-control mt-2 h-8 w-20" />
-      <div className="flex w-24 flex-col items-center gap-2">
-        <div className="bg-elevate size-12 rounded-full" />
-        <div className="bg-elevate rounded-control h-3.5 w-16" />
+      <div className="flex w-33 flex-col items-center gap-1.75">
+        <div className="bg-elevate rounded-badge h-2.5 w-20" />
+        <div className="bg-elevate rounded-badge h-9 w-24" />
+        <div className="bg-elevate rounded-badge h-3 w-12" />
+      </div>
+      <div className="flex flex-1 flex-col items-center gap-2.25">
+        <div className="bg-avatar size-14 rounded-full" />
+        <div className="bg-elevate rounded-badge h-3.5 w-14" />
       </div>
     </div>
   );

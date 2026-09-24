@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "@plick/ui/icons";
 
 /**
- * 공용 뒤로가기 버튼 — 상단바 좌측에 놓는 아이콘 링크.
+ * 공용 뒤로가기 버튼 — 상단바 좌측에 놓는 아이콘 링크. 시안(KAN-567)의 22px 화살표.
  *
  * 기본은 명시적 목적지로 이동한다(온보딩처럼 동선이 정해진 화면).
  *
@@ -38,9 +38,9 @@ export function BackButton({
         else router.push(href);
       }}
       aria-label="뒤로"
-      className="text-icon -ml-1.5 grid size-9 place-items-center active:opacity-60"
+      className="text-icon -ml-1 grid size-8 shrink-0 place-items-center active:opacity-60"
     >
-      <ArrowLeftIcon size={20} />
+      <ArrowLeftIcon size={22} />
     </Link>
   );
 }

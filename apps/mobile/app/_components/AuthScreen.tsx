@@ -8,7 +8,8 @@ import { SocialLoginActions } from "./SocialLoginActions";
 import { TopBarShell } from "./TopBarShell";
 
 /**
- * 소셜 인증 화면 — 로고·태그라인 + 카카오/구글 버튼 + 하단 전환 링크.
+ * 소셜 인증 화면. 로고·태그라인 + 카카오/구글/애플 버튼 + 하단 전환 링크. 시안이 없는
+ * 화면이라 KAN-567에서는 라이트 톤과 버튼 모서리(rounded-control)만 맞췄다.
  * 로그인(A1)·회원가입(A2)이 카피만 주입해 공용한다 (웹 `AuthCard`의 모바일 대응).
  *
  * 하단에 있던 "로그인 없이 이용하기"(안내 팝업 → 홈)는 KAN-514에서 걷어냈다. 이제
@@ -60,15 +61,15 @@ export function AuthScreen({
         )}
 
         <section className="px-edge gap-gap-lg flex flex-1 flex-col items-center justify-center">
-          <Logo height={34} />
-          <p className="text-body text-text-3 font-semibold tracking-tight">
-            {tagline}
-          </p>
+          <Logo size={39} />
+          <p className="text-body text-text-3 tracking-snug">{tagline}</p>
         </section>
 
         <BottomActionBar base={64} className="gap-gap flex flex-col">
           {notice && (
-            <p className="text-label text-text-3 pb-1 text-center">{notice}</p>
+            <p className="text-label-lg text-text-3 pb-1 text-center">
+              {notice}
+            </p>
           )}
 
           <SocialLoginActions
@@ -83,7 +84,7 @@ export function AuthScreen({
               {switchPrompt}{" "}
               <Link
                 href={switchHref}
-                className="text-accent font-extrabold active:opacity-60"
+                className="text-accent font-bold active:opacity-60"
               >
                 {switchLabel}
               </Link>
@@ -93,7 +94,7 @@ export function AuthScreen({
           {skipHref && (
             <Link
               href={skipHref}
-              className="text-label text-text-4 mx-auto block font-semibold underline active:opacity-60"
+              className="text-label-lg text-text-3 mx-auto block active:opacity-60"
             >
               나중에 할게요
             </Link>

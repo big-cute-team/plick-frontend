@@ -14,33 +14,42 @@ description: >-
 
 ## 1. 디자인 토큰만 사용 (하드코딩 금지)
 
-색·간격·글자·라운드는 전부 토큰 유틸. 임의 hex/px 쓰지 않는다.
+색·간격·글자·라운드는 전부 토큰 유틸. 임의 hex/px 쓰지 않는다. 토큰 정의는 `packages/tokens/theme.css`이고
+값의 출처는 KAN-567 핸드오프 시안이다. 새 토큰이 필요하면 거기 추가하고 `@theme inline`(색) 매핑을 함께.
 
-- 색: `bg-bg` `bg-nav` `bg-elevate` `text-text` `text-text-2/3/4` `text-icon`
-  `bg-accent` `text-accent` `text-on-accent` `border-border` `text-danger`
-- 미디어(사진 자리): `bg-media` / `text-media-on`, 팀색: `bg-team-liv` 등
-- 글자: `text-headline`(24, 행간 1.35·자간 -0.4px 내장) `text-title`(17) `text-body-lg`(15)
-  `text-body` `text-label` `text-caption`(11) `text-micro`(10)
-- 자간: `tracking-tight`(-0.2px) `tracking-snug`(-0.1px) `tracking-label`(1px) — `tracking-[…]` 임의값 금지
-- 라운드: `rounded-card`(16) `rounded-hero`(22) `rounded-control`(14) `rounded-pill`
-- 간격: **`px-edge`**(화면 좌우 20) · `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16)처럼
-  시맨틱 간격은 토큰 유틸로 — 그 외 미세 조정만 숫자 유틸
+- 면: `bg-bg`(흰) `bg-canvas`(셸 밖) `bg-elevate`(배너·릴 상자) `bg-elevate-2`(핫이슈 상자) `bg-chip`(태그 칩) `bg-input`(입력창)
+  `bg-avatar`(회색 원) `bg-vote-card`/`bg-vote-track`(투표 카드) `bg-pitch`(라인업) `bg-muted` `bg-dim`/`bg-dim-strong`(딤)
+- 선: `border-border`(섹션) `border-border-soft`(목록 행) `border-border-table`(표 머리) `border-border-strong`(레일·테두리 버튼)
+- 글자: `text-text-strong`(제목) `text-text`(본문) `text-text-2` `text-text-3`(보조) `text-text-4`(메타, 회색 하한)
+- 강조: `text-accent`/`bg-accent`(딥 그린) `hover:text-accent-hover` `text-accent-bright`(어두운 면 위) `text-on-accent`
+  빨강 `text-danger`/`bg-danger`는 댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만. 경고 `text-warn`
+- 글자 크기(시안 px 그대로): `text-micro`(10) `text-micro-lg`(10.5) `text-caption`(11) `text-caption-lg`(11.5) `text-label`(12)
+  `text-label-lg`(12.5) `text-body`(13.5) `text-body-md`(14) `text-body-lg`(15) `text-title`(17) `text-reel`(19) `text-hero`(21)
+  `text-section`(22) `text-profile`(23) `text-headline`(24) `text-score`(38)
+- 굵기: 900 `font-black`(제목·로고·섹션), 700 `font-bold`, 500 `font-medium`
+- 자간: `tracking-logo`(-.06em) `tracking-title`(-.04em) `tracking-heading`(-.03em) `tracking-section`(-.025em) `tracking-tight`(-.02em)
+  `tracking-snug`(-.01em) `tracking-vs`(.06em) `tracking-live`(.08em) `tracking-label`(1px) — `tracking-[…]` 임의값 금지
+- 라운드: `rounded-badge`(6) `rounded-tile`(10) `rounded-control`(14) `rounded-card`(16) `rounded-hero`(22) `rounded-sheet`(26) `rounded-pill`.
+  선과 목록 행은 각지게, 채운 면과 상자는 둥글게
+- 간격: **`px-edge`**(화면 좌우 16) `w-reporter`(목록 오른쪽 기자 칼럼 88) `gap-gap`(12) `gap-gap-lg`(14) `pb-section`(16)
 - 사진 위 스크림: `var(--plk-scrim)` 앵커색을 `color-mix(in srgb, var(--plk-scrim) N%, transparent)`로 — rgba 하드코딩 금지
 
 ⚠️ **`px-screen` 쓰지 말 것.** `screen`은 Tailwind 예약어라 유틸이 생성되지 않는다 → **`px-edge`**.
 
-토큰 정의는 `packages/tokens/theme.css`. 새 토큰이 필요하면 여기 추가하고 `@theme inline`(색) 매핑을 함께.
+## 2. 라이트 고정
 
-## 2. 다크/라이트
+라이트가 기본(`:root`)이고 앱은 `<html data-theme="light">` 고정이다(KAN-567). 옛 다크 팔레트는
+`[data-theme="dark"]` 오버라이드에 잠들어 있다. 화면은 라이트 기준으로만 만들고 색은 계속 토큰으로 써서
+되살릴 여지를 남긴다. 폰트는 Noto Sans KR 셀프호스팅(`--font-noto`)이다.
 
-다크가 기본(`:root`), 라이트는 `[data-theme="light"]` 오버라이드다.
-→ **화면은 다크 기준으로만 만든다.** 라이트를 따로 만들지 않는다.
-앱은 `<html data-theme="dark">` 고정이고 테마 토글 UI는 없다. 라이트 토큰은 `theme.css`에만
-남아 있어 지금 화면에 안 보이지만, 색은 계속 토큰으로 써서 되살릴 여지를 남긴다.
+시안 규칙: 본문 카드에 테두리를 두르지 않는다. 기본 버튼은 테두리 없는 텍스트 버튼이고 등록·투표·보내기 같은
+확정 행동만 채운 면이다. 기능을 설명하는 안내 문구, 가운뎃점, 대시, 둥근 따옴표, 이모지를 쓰지 않는다.
+확인이 필요한 행동은 팝업이 아니라 `BottomSheet`(radius 26)다. 프로필 이미지·아바타를 그리지 않는다.
+루머 단계 라벨과 기자 등급을 노출하지 않고 기자는 대표 한 명만, 댓글 수는 `제목 [96]`, 투표 이슈는 빨간 `VsMark`다.
 
 ## 3. 반응형 (웹뷰 다기기)
 
-- 화면 뼈대는 `AppShell`(= `h-[100dvh]` + `max-w-[480px] mx-auto`) + `ScrollArea`(스크롤 영역) + 필요시 `TopBar`/`TabBar`.
+- 화면 뼈대는 `AppShell`(= `h-[100dvh]` + `max-w-[480px] mx-auto`) + `ScrollArea`(스크롤 영역) + 필요시 `TopBar`(로고+햄버거, 46px)/`SubTopBar`(뒤로+왼쪽 제목)/`TabBar`.
 - 안전영역은 `env(safe-area-inset-*)`를 직접 쓰지 않고 `var(--safe-top)`/`var(--safe-bottom)`을 쓴다.
   네이티브 앱셸이 웹뷰를 이미 시스템 바 안쪽에 배치한 경우 layout.tsx의 인라인 스크립트가
   `data-inset-viewport`로 변수를 0으로 눌러 이중 여백을 막는다(ADR 0075). 상단바 `pt = var(--safe-top)`,
@@ -60,7 +69,7 @@ description: >-
   커밋 핸들러는 탭 클릭 핸들러를 그대로 넘긴다(URL·상태 동기화가 같은 경로를 타게). 소켓처럼
   마운트 비용이 있는 페인의 미리보기는 자리 표시로 대신한다(`MatchChatPreview`). 당겨서 새로고침은
   `ScrollArea`의 `onRefresh`인데 서버 컴포넌트는 함수를 못 넘기니 `XxxScrollArea` 클라 껍데기를 둔다.
-- 사진 자리 = `MediaThumb`(팀컬러 그라데이션 placeholder) — `colorVar`에 `TEAMS[code].colorVar`를 넘긴다.
+- 사진 자리는 `bg-media` 면이다. 팀컬러 그라데이션은 쓰지 않는다(KAN-567).
 - 팀 로고 = `TeamCrest`(`team`에 `TEAMS[code]` 객체) — `public/teams/<코드소문자>.webp`의 **실제 구단
   로고**를 그린다(피그마의 구단 로고 자리 전부 이걸로). 새 팀은 같은 규칙으로 webp만 추가(웹·모바일
   양쪽 public에). 로고 비율이 제각각이라 정사각 + `object-contain`.
@@ -80,7 +89,7 @@ BE 전이므로 `app/_mocks/posts.ts`에 데이터를 먼저 만들고 화면이
 ## 6. 검증
 
 - **클린 빌드**로 확인: `pnpm --filter mobile build` (dev 증분 캐시에 속지 말 것 — 정렬/패딩 깨짐은 클린 빌드로 재현).
-- 로컬 dev(:3001)를 모바일 뷰포트로 띄워 스크린샷 + 다크/라이트 토글 확인.
+- 로컬 dev(:3001)를 402x874 뷰포트로 띄워 스크린샷으로 시안과 대조.
 - CI는 레이아웃 깨짐을 못 잡으니 **시각 확인 필수**.
 
 ## 7. ADR 남기기

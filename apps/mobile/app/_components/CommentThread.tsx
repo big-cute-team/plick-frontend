@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { createPortal } from "react-dom";
 import { ApiError, needsSocialAccount } from "@plick/core/client";
-import { avatarInitials, formatCount } from "@plick/domain/format";
-import { ChevronMiniIcon, HeartMiniIcon, MoreIcon } from "@plick/ui/icons";
+import { formatCount, formatRelativeTime } from "@plick/domain/format";
+import { HeartMiniIcon } from "@plick/ui/icons";
 import type { ArticleComment } from "@plick/domain/types";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useBlockUser } from "@/_hooks/useBlockUser";
 import { useCommentLike } from "@/_hooks/useCommentLike";
 import { useDeleteComment } from "@/_hooks/useDeleteComment";
-import { formatRelativeTime } from "@plick/domain/format";
 import { useAuth } from "./AuthProvider";
 import { CommentComposer } from "./CommentComposer";
 import { CommentEditForm } from "./CommentEditForm";
 
 /**
- * 삭제 확인·신고·로그인 유도 다이얼로그는 더보기 메뉴를 탭해야 뜨는 UI라
- * 초기 번들에서 뺀다 (KAN-428). 조건부 마운트라 서버 HTML에 없다.
+ * 삭제 확인·신고·차단·로그인 유도 시트는 탭해야 뜨는 UI라 초기 번들에서 뺀다
+ * (KAN-428). 조건부 마운트라 서버 HTML에 없다.
  */
 const ConfirmDialog = dynamic(
   () => import("./ConfirmDialog").then((m) => m.ConfirmDialog),
@@ -35,13 +33,16 @@ const ReportCommentDialog = dynamic(
 
 /**
  * 댓글 한 스레드 — 원 댓글 + (있으면) 접힌 답글들. 기사 세부·릴 세부 시트 공용.
+ * 시안(KAN-567)의 댓글 항목이다. 스레드 밑에 목록 행 구분선을 긋고, 답글은 왼쪽
+ * 2px 선으로 들여쓴다.
  *
- * 답글은 유튜브 숏츠처럼 기본으로 접혀 있고 "답글 N개"를 눌러야 펼쳐진다
- * (KAN-307). 내가 답글을 새로 달면 바로 보이도록 자동으로 펼친다.
+ * 답글은 기본으로 접혀 있고 "답글 N"을 눌러야 펼쳐진다(KAN-307). 시안은 답글
+ * 토글 하나("답글" / "답글 N" / "답글 접기")라 답글 쓰기도 그 버튼에 묶었다. 답글이
+ * 없으면 "답글"이 인라인 입력줄을 열고, 있으면 "답글 N"이 답글들과 그 밑 입력줄을
+ * 함께 펼친다. 내가 답글을 새로 달면 바로 보이도록 펼친 상태로 둔다.
  *
- * "답글"을 누르면 유튜브처럼 그 원 댓글 바로 밑에 답글 입력바가 인라인으로
- * 생긴다(기존 답글들 위). 열림 상태는 스레드마다 각자 든다 — 스레드 여러 개가
- * 동시에 열려도 서로 간섭하지 않는다. 등록 성공·취소가 입력바를 접는다.
+ * 열림 상태는 스레드마다 각자 든다. 스레드 여러 개가 동시에 열려도 서로 간섭하지
+ * 않는다.
  *
  * @param articleId 이 댓글이 달린 기사(릴) id — 인라인 답글 작성에 쓴다
  * @param onPosted 답글 등록 성공 시 호출 — 호출부가 헤더 카운트를 올리는 데 쓴다
@@ -58,63 +59,64 @@ export function CommentThread({
   onPosted?: () => void;
   onDeleted?: () => void;
 }) {
-  const [replying, setReplying] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  /* 등록 성공도 입력줄의 onCancel을 부른다 — 방금 단 답글이 보이게 그때는 접지 않는다 */
+  const justPosted = useRef(false);
 
-  const hasReplies = comment.replies.length > 0;
+  const replyCount = comment.replies.length;
+  const replyLabel =
+    replyCount === 0 ? "답글" : open ? "답글 접기" : `답글 ${replyCount}`;
 
   return (
-    <div className="flex flex-col gap-3.75">
+    <div className="border-border-soft border-b py-3.5">
       <CommentItem
         comment={comment}
         articleId={articleId}
-        onReply={() => setReplying(true)}
+        replyLabel={replyLabel}
+        onReply={() => setOpen((prev) => !prev)}
         onDeleted={onDeleted}
       />
 
-      {replying && (
-        <CommentComposer
-          articleId={articleId}
-          parentCommentId={comment.id}
-          onCancel={() => setReplying(false)}
-          onPosted={() => {
-            setExpanded(true);
-            onPosted?.();
-          }}
-          className="pl-10"
-        />
-      )}
-
-      {hasReplies && (
-        <button
-          type="button"
-          onClick={() => setExpanded((prev) => !prev)}
-          className="text-caption text-accent flex items-center gap-1 pl-10 font-semibold active:opacity-60"
-        >
-          답글 {comment.replies.length}개
-          <ChevronMiniIcon
-            size={11}
-            className={expanded ? "-rotate-90" : "rotate-90"}
-          />
-        </button>
-      )}
-
-      {expanded &&
-        comment.replies.map((reply) => (
-          <CommentItem
-            key={reply.id}
-            comment={reply}
+      {open && (
+        <div className="border-border-soft mt-2.75 flex flex-col gap-2.5 border-l-2 pl-3">
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              articleId={articleId}
+              reply
+              onDeleted={onDeleted}
+            />
+          ))}
+          <CommentComposer
             articleId={articleId}
-            reply
-            onDeleted={onDeleted}
+            parentCommentId={comment.id}
+            onCancel={
+              replyCount === 0
+                ? () => {
+                    if (justPosted.current) {
+                      justPosted.current = false;
+                      return;
+                    }
+                    setOpen(false);
+                  }
+                : undefined
+            }
+            onPosted={() => {
+              justPosted.current = true;
+              onPosted?.();
+            }}
           />
-        ))}
+        </div>
+      )}
     </div>
   );
 }
 
 /**
- * 댓글 한 줄 (아바타 + 작성자/시간 + 본문 + 좋아요·답글).
+ * 댓글 한 줄 (작성자와 시각 + 본문 + 좋아요·답글·신고·차단). 시안(KAN-567)대로
+ * 아바타는 그리지 않는다. 닉네임 12.5/700 강조색, 시각 11 회색, 본문 14/1.6이고
+ * 답글은 닉네임 12, 본문 13.5로 한 단 작다. 시안의 BEST 표시는 API가 없어 없다.
  *
  * 삭제된 댓글은 목록에서 빠지지 않고 tombstone으로 온다(`content` null) —
  * 답글이 딸린 원 댓글이 지워져도 답글은 계속 보여야 해서다. 본문 자리에
@@ -124,30 +126,33 @@ export function CommentThread({
  * 최상위 아래로 평탄화되므로 화면은 1단까지만 연다(KAN-303, be-verify 확인).
  * 좋아요는 원 댓글과 대댓글이 같은 엔드포인트를 쓰므로 양쪽에 그대로 둔다.
  *
- * 내 댓글이면 수정·삭제 버튼을(KAN-333), 남의 댓글이면 신고·차단 ⋯ 메뉴를
- * (KAN-411) 얹는다. 내 댓글 판별은 작성자 `userId` 대조다 — KAN-411에서 BE가
- * 댓글에 작성자 id를 실어 주면서 닉네임 대조를 교체했다(닉네임은 변경 가능한
- * 값이라 대조 근거로 약했다). 오판해도 BE가 403 `COMMENT_FORBIDDEN`으로 막는다.
+ * 내 댓글이면 수정·삭제 버튼을(KAN-333), 남의 댓글이면 신고·차단 텍스트 버튼을
+ * (KAN-411) 액션 줄 오른쪽 끝에 얹는다. 내 댓글 판별은 작성자 `userId` 대조다 —
+ * KAN-411에서 BE가 댓글에 작성자 id를 실어 주면서 닉네임 대조를 교체했다(닉네임은
+ * 변경 가능한 값이라 대조 근거로 약했다). 오판해도 BE가 403 `COMMENT_FORBIDDEN`으로 막는다.
  *
  * 차단한 사용자의 댓글(`isBlocked`)과 운영자 블라인드 댓글(`isBlinded`)은
  * tombstone처럼 본문 자리에 안내 문구만 남기고 액션 줄을 감춘다 — 서버가
  * 목록에서 빼지 않고 플래그로 내려주므로(be-verify 확인) 표시는 화면 몫이다.
  *
  * @param articleId - 이 댓글이 달린 기사(릴) id — 좋아요 캐시 갱신에 쓴다
- * @param reply - 답글이면 들여쓰기 + 작은 아바타로 렌더
- * @param onReply - "답글" 탭 콜백. 없거나 답글 행이면 버튼을 그리지 않는다
+ * @param reply - 답글이면 한 단 작은 글자로 렌더
+ * @param replyLabel - 답글 토글 문구("답글" / "답글 N" / "답글 접기")
+ * @param onReply - 답글 토글 콜백. 없거나 답글 행이면 버튼을 그리지 않는다
  * @param onDeleted - 삭제 성공 콜백. 호출부가 헤더 카운트를 내리는 데 쓴다
  */
 function CommentItem({
   comment,
   articleId,
   reply,
+  replyLabel,
   onReply,
   onDeleted,
 }: {
   comment: ArticleComment;
   articleId: string;
   reply?: boolean;
+  replyLabel?: string;
   onReply?: () => void;
   onDeleted?: () => void;
 }) {
@@ -157,86 +162,85 @@ function CommentItem({
   const mine = myUserId !== null && comment.userId === myUserId;
 
   return (
-    <div className={`flex gap-2.5 ${reply ? "pl-10" : ""}`}>
-      <span
-        className={`bg-avatar text-icon rounded-pill text-micro flex shrink-0 items-center justify-center font-extrabold ${
-          reply ? "size-6.5" : "size-8"
-        }`}
-      >
-        {avatarInitials(comment.nickname)}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.25">
-        <div className="flex items-baseline gap-2">
-          <span className="text-label text-text font-bold">
-            {comment.nickname}
-          </span>
-          {/* 상대 시각은 SSR과 하이드레이션 사이에 분 경계를 넘으면 정당하게
-              달라진다("11분 전"→"12분 전") — 불일치 경고를 눌러 둔다 */}
-          <span className="text-caption text-text-4" suppressHydrationWarning>
-            {formatRelativeTime(comment.createdAt)}
-            {comment.isEdited && " · 수정됨"}
-          </span>
-        </div>
-        {comment.isDeleted ? (
-          <p className="text-body text-text-4 leading-body">
-            삭제된 댓글이에요.
-          </p>
-        ) : comment.isBlocked ? (
-          <p className="text-body text-text-4 leading-body">
-            차단한 사용자의 댓글이에요.
-          </p>
-        ) : comment.isBlinded ? (
-          <p className="text-body text-text-4 leading-body">
-            블라인드된 댓글이에요.
-          </p>
-        ) : editing ? (
-          <CommentEditForm
-            comment={comment}
-            articleId={articleId}
-            onClose={() => setEditing(false)}
-          />
-        ) : (
-          <>
-            <p className="text-body text-text-2 leading-body">
-              {comment.content}
-            </p>
-            <div className="flex items-center gap-4 pt-0.5">
-              <CommentLikeButton comment={comment} articleId={articleId} />
-              {!reply && onReply && (
-                <button
-                  type="button"
-                  onClick={onReply}
-                  className="text-caption text-text-4 font-semibold active:opacity-60"
-                >
-                  답글
-                </button>
-              )}
-              {mine ? (
-                <CommentOwnerActions
-                  comment={comment}
-                  articleId={articleId}
-                  onEdit={() => setEditing(true)}
-                  onDeleted={onDeleted}
-                />
-              ) : (
-                <CommentMoreActions comment={comment} />
-              )}
-            </div>
-          </>
-        )}
+    <div className="flex min-w-0 flex-col">
+      <div className="flex items-baseline gap-1.75 pb-1.25">
+        <span
+          className={`text-accent font-bold ${reply ? "text-label" : "text-label-lg"}`}
+        >
+          {comment.nickname}
+        </span>
+        {/* 상대 시각은 SSR과 하이드레이션 사이에 분 경계를 넘으면 정당하게
+            달라진다("11분 전"→"12분 전") — 불일치 경고를 눌러 둔다 */}
+        <span className="text-caption text-text-4" suppressHydrationWarning>
+          {formatRelativeTime(comment.createdAt)}
+          {comment.isEdited && ", 수정됨"}
+        </span>
       </div>
+      {comment.isDeleted ? (
+        <p className="text-body-md text-text-4 leading-body">
+          삭제된 댓글이에요
+        </p>
+      ) : comment.isBlocked ? (
+        <p className="text-body-md text-text-4 leading-body">
+          차단한 사용자의 댓글이에요
+        </p>
+      ) : comment.isBlinded ? (
+        <p className="text-body-md text-text-4 leading-body">
+          블라인드된 댓글이에요
+        </p>
+      ) : editing ? (
+        <CommentEditForm
+          comment={comment}
+          articleId={articleId}
+          onClose={() => setEditing(false)}
+        />
+      ) : (
+        <>
+          <p
+            className={`text-text leading-body pb-2 ${reply ? "text-body" : "text-body-md"}`}
+          >
+            {comment.content}
+          </p>
+          <div className="flex items-center gap-3.5">
+            <CommentLikeButton comment={comment} articleId={articleId} />
+            {!reply && onReply && (
+              <button
+                type="button"
+                onClick={onReply}
+                className="text-caption-lg text-text-3 font-bold active:opacity-60"
+              >
+                {replyLabel}
+              </button>
+            )}
+            <div className="flex-1" />
+            {mine ? (
+              <CommentOwnerActions
+                comment={comment}
+                articleId={articleId}
+                onEdit={() => setEditing(true)}
+                onDeleted={onDeleted}
+              />
+            ) : (
+              <CommentReportBlockActions comment={comment} />
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
+/** 액션 줄 오른쪽의 회색 텍스트 버튼(신고·차단·수정·삭제) 공통 모양 (11.5, text-4) */
+const ACTION_TEXT = "text-caption-lg text-text-4 active:opacity-60";
+
 /**
- * 내 댓글의 수정·삭제 버튼 묶음 (KAN-333) — 액션 줄의 답글 버튼 옆에 붙는다.
+ * 내 댓글의 수정·삭제 버튼 묶음 (KAN-333) — 액션 줄 오른쪽 끝에 붙는다.
  * 원 댓글과 대댓글이 같이 쓴다(수정·삭제 모두 같은 엔드포인트).
  *
  * 수정은 상위(`CommentItem`)의 편집 모드만 켠다 — 폼과 저장 뮤테이션은
- * `CommentEditForm` 몫이다. 삭제는 오탭 방지로 확인 팝업을 먼저 띄우고
- * (로그아웃과 같은 관용), 실패 문구는 팝업 안에 남겨 바로 다시 시도할 수 있게
- * 한다. 토큰 만료(401 `AUTH_REQUIRED`)만 팝업을 닫고 로그인 유도로 돌린다.
+ * `CommentEditForm` 몫이다. 삭제는 오탭 방지로 확인 시트를 먼저 띄우고
+ * (로그아웃과 같은 관용), 실패 문구는 시트 안에 남겨 바로 다시 시도할 수 있게
+ * 한다. 토큰 만료(401 `AUTH_REQUIRED`)만 시트를 닫고 로그인 유도로 돌린다.
  *
  * @param articleId 이 댓글이 달린 기사(릴) id — 목록 캐시 갱신에 쓴다
  * @param onEdit "수정" 탭 콜백 — 상위가 본문을 인라인 폼으로 바꾼다
@@ -275,7 +279,7 @@ function CommentOwnerActions({
         setError(
           err instanceof ApiError
             ? err.message
-            : "댓글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+            : "댓글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요",
         );
       },
     });
@@ -283,11 +287,7 @@ function CommentOwnerActions({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="text-caption text-text-4 font-semibold active:opacity-60"
-      >
+      <button type="button" onClick={onEdit} className={ACTION_TEXT}>
         수정
       </button>
       <button
@@ -296,7 +296,7 @@ function CommentOwnerActions({
           setError(null);
           setConfirming(true);
         }}
-        className="text-caption text-text-4 font-semibold active:opacity-60"
+        className={ACTION_TEXT}
       >
         삭제
       </button>
@@ -304,7 +304,7 @@ function CommentOwnerActions({
       {confirming && (
         <ConfirmDialog
           title="댓글을 삭제할까요?"
-          description="삭제한 댓글은 되돌릴 수 없어요."
+          description="삭제한 댓글은 되돌릴 수 없어요"
           confirmLabel="삭제"
           pending={isPending}
           error={error}
@@ -316,7 +316,7 @@ function CommentOwnerActions({
       {needsLogin && (
         <LoginPromptDialog
           onClose={() => setNeedsLogin(false)}
-          description="댓글 삭제는 로그인한 사용자만 할 수 있어요."
+          description="댓글 삭제는 로그인한 사용자만 할 수 있어요"
         />
       )}
     </>
@@ -324,31 +324,27 @@ function CommentOwnerActions({
 }
 
 /**
- * 남의 댓글의 ⋯ 메뉴 (KAN-411) — 신고·차단 진입점. 원 댓글과 대댓글이 같이 쓴다.
+ * 남의 댓글의 신고·차단 텍스트 버튼 (KAN-411) — 원 댓글과 대댓글이 같이 쓴다.
+ * 시안(KAN-567)대로 더보기(⋯) 메뉴를 거치지 않고 각각 바로 시트를 연다. 전에 있던
+ * 중앙 카드 액션 팝업(CommentActionsDialog)은 지웠다.
  *
- * ⋯을 누르면 신고하기·차단하기를 담은 액션 팝업이 뜬다. 드롭다운이 아니라
- * 중앙 카드인 이유: 댓글은 스크롤 컨테이너(`ScrollArea`·릴 세부 시트) 안이라
- * 행 옆에 `absolute`로 펼치면 컨테이너 가장자리에서 잘리고, 잘리지 않게
- * 포털로 빼면 앵커 좌표 추적이 필요해진다. 기존 팝업 관용(스크림 + 중앙 카드,
- * body 포털)이 어디서 열어도 안전하다.
- *
- * 비로그인이면 팝업 대신 로그인 유도를 띄운다(좋아요 버튼과 같은 관용 —
- * 버튼은 보여주되 요청 없이 막는다). 내 댓글에는 이 메뉴가 아예 안 그려지므로
+ * 비로그인이면 시트 대신 로그인 유도를 띄운다(좋아요 버튼과 같은 관용 —
+ * 버튼은 보여주되 요청 없이 막는다). 내 댓글에는 이 버튼이 아예 안 그려지므로
  * (mine 분기) 셀프 신고·차단은 화면에서 성립하지 않고, 오판은 BE가
  * 400(`COMMENT_SELF_REPORT`·`USER_BLOCK_SELF`)으로 막는다.
  *
- * 차단 확인은 `ConfirmDialog` 재사용 — 실패 문구를 팝업 안에 남겨 재시도할 수
- * 있게 하고, 토큰 만료(401)만 팝업을 닫고 로그인 유도로 돌린다(삭제와 같은
+ * 차단 확인은 `ConfirmDialog` 재사용 — 실패 문구를 시트 안에 남겨 재시도할 수
+ * 있게 하고, 토큰 만료(401)만 시트를 닫고 로그인 유도로 돌린다(삭제와 같은
  * 관용). 차단 성공 시 캐시 반영은 `useBlockUser`가 한다.
  */
-function CommentMoreActions({ comment }: { comment: ArticleComment }) {
+function CommentReportBlockActions({ comment }: { comment: ArticleComment }) {
   const { isLoggedIn, isGuest } = useAuth();
-  const [dialog, setDialog] = useState<"none" | "menu" | "report" | "block">(
-    "none",
-  );
+  const [dialog, setDialog] = useState<"none" | "report" | "block">("none");
   const [needsLogin, setNeedsLogin] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
   const block = useBlockUser();
+
+  const canAct = isLoggedIn && !isGuest;
 
   function handleBlock() {
     setBlockError(null);
@@ -364,7 +360,7 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
         setBlockError(
           err instanceof ApiError
             ? err.message
-            : "차단하지 못했어요. 잠시 후 다시 시도해 주세요.",
+            : "차단하지 못했어요. 잠시 후 다시 시도해 주세요",
         );
       },
     });
@@ -374,26 +370,25 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
     <>
       <button
         type="button"
-        onClick={() =>
-          isLoggedIn && !isGuest ? setDialog("menu") : setNeedsLogin(true)
-        }
-        aria-label="댓글 신고·차단"
-        aria-haspopup="dialog"
-        className="text-text-4 active:opacity-60"
+        onClick={() => (canAct ? setDialog("report") : setNeedsLogin(true))}
+        className={ACTION_TEXT}
       >
-        <MoreIcon size={14} />
+        신고
       </button>
-
-      {dialog === "menu" && (
-        <CommentActionsDialog
-          onReport={() => setDialog("report")}
-          onBlock={() => {
-            setBlockError(null);
-            setDialog("block");
-          }}
-          onClose={() => setDialog("none")}
-        />
-      )}
+      <button
+        type="button"
+        onClick={() => {
+          if (!canAct) {
+            setNeedsLogin(true);
+            return;
+          }
+          setBlockError(null);
+          setDialog("block");
+        }}
+        className={ACTION_TEXT}
+      >
+        차단
+      </button>
 
       {dialog === "report" && (
         <ReportCommentDialog
@@ -409,7 +404,7 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
       {dialog === "block" && (
         <ConfirmDialog
           title="이 사용자를 차단할까요?"
-          description={`${comment.nickname}님의 댓글이 모든 화면에서 가려져요. MY의 차단 목록에서 해제할 수 있어요.`}
+          description={`${comment.nickname}님의 댓글이 모든 화면에서 가려져요. MY의 차단 목록에서 해제할 수 있어요`}
           confirmLabel="차단"
           pending={block.isPending}
           error={blockError}
@@ -421,7 +416,7 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
       {needsLogin && (
         <LoginPromptDialog
           onClose={() => setNeedsLogin(false)}
-          description="신고·차단은 로그인한 사용자만 할 수 있어요."
+          description="신고와 차단은 로그인한 사용자만 할 수 있어요"
         />
       )}
     </>
@@ -429,78 +424,14 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
 }
 
 /**
- * ⋯이 여는 액션 선택 팝업 — 신고하기·차단하기·취소 세 줄. 스크림 + 중앙 카드
- * + body 포털 관용은 `ConfirmDialog`와 같다(이유는 {@link CommentMoreActions}).
- */
-function CommentActionsDialog({
-  onReport,
-  onBlock,
-  onClose,
-}: {
-  onReport: () => void;
-  onBlock: () => void;
-  onClose: () => void;
-}) {
-  /* 포털 대상(document)은 서버 렌더에 없다. 마운트 뒤에만 그려 hydration을 맞춘다 */
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-8"
-      role="dialog"
-      aria-modal="true"
-      aria-label="댓글 신고·차단"
-    >
-      {/* 스크림 — 탭하면 닫는다 */}
-      <button
-        type="button"
-        aria-label="닫기"
-        onClick={onClose}
-        className="absolute inset-0"
-        style={{
-          backgroundColor:
-            "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
-        }}
-      />
-
-      <div className="bg-bg border-border rounded-card divide-border relative w-full max-w-72 divide-y overflow-hidden border">
-        <button
-          type="button"
-          onClick={onReport}
-          className="text-body text-text w-full py-3.5 font-bold active:opacity-60"
-        >
-          신고하기
-        </button>
-        <button
-          type="button"
-          onClick={onBlock}
-          className="text-body text-danger w-full py-3.5 font-bold active:opacity-60"
-        >
-          차단하기
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-body text-text-3 w-full py-3.5 font-bold active:opacity-60"
-        >
-          취소
-        </button>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-/**
- * 댓글 좋아요 버튼 (KAN-309) — 하트 + 카운트. 원 댓글과 대댓글이 같이 쓴다.
+ * 댓글 좋아요 버튼 (KAN-309) — 하트(13px) + 카운트(11.5/700). 원 댓글과 대댓글이
+ * 같이 쓴다. 시안(KAN-567)대로 누른 상태만 빨강이고 기본은 text-3다.
  *
  * 삭제된 댓글에는 이 버튼이 아예 안 그려진다({@link CommentItem}의 tombstone
  * 분기). BE는 삭제된 댓글의 좋아요도 200으로 받아 주므로 막는 건 화면 몫이다.
  *
  * 비로그인 사용자에게도 카운트는 그대로 보여준다 — BE가 익명 조회에도 실제 값을
- * 준다. 누르면 요청 없이 로그인 유도 팝업만 뜬다.
+ * 준다. 누르면 요청 없이 로그인 유도 시트만 뜬다.
  *
  * 하트는 13px 기본 크기로 둔다. 선 아이콘이라 더 줄이면 선이 1px 아래로 내려가
  * 줄마다 픽셀 격자에 다르게 걸려 뭉갠다(ADR 0044).
@@ -522,13 +453,11 @@ function CommentLikeButton({
         aria-pressed={comment.liked}
         aria-label={comment.liked ? "좋아요 취소" : "좋아요"}
         className={`${
-          comment.liked ? "text-accent" : "text-text-4"
-        } flex items-center gap-1.25 active:opacity-60`}
+          comment.liked ? "text-danger" : "text-text-3"
+        } text-caption-lg flex items-center gap-1 font-bold active:opacity-60`}
       >
         <HeartMiniIcon size={13} filled={comment.liked} />
-        <span className="text-caption font-semibold">
-          {formatCount(comment.likeCount)}
-        </span>
+        {formatCount(comment.likeCount)}
       </button>
 
       {like.needsLogin && (

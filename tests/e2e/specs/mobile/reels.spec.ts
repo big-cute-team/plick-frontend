@@ -33,11 +33,11 @@ test.describe("릴스", () => {
     await expect(page).toHaveURL(/\/reels\/\d+$/);
   });
 
-  test("제목을 누르면 기사 세부 시트가 열리고 닫힌다", async ({ page }) => {
+  test("제목을 누르면 릴 세부 시트가 열리고 닫힌다", async ({ page }) => {
     await page.goto("/reels");
     await expect(page).toHaveURL(/\/reels\/\d+$/);
     await reelTitle(page).click();
-    const sheet = page.getByRole("dialog", { name: "기사 세부" });
+    const sheet = page.getByRole("dialog", { name: "릴 세부" });
     await expect(sheet).toBeVisible();
     await sheet.getByRole("button", { name: "닫기" }).click();
     await expect(sheet).toBeHidden();

@@ -7,13 +7,15 @@ import { TrendDeltaBadge } from "@/_components/TrendDeltaBadge";
 import { TREND_CREST_SIZE, TREND_HIGHLIGHT_RANK } from "@/_constants/trends";
 
 /**
- * 급상승 랭킹 한 줄 (KAN-501, 이슈 전환 KAN-523) — 순위, 이름, 순위 변동.
+ * 급상승 상자 한 줄 (KAN-501, 이슈 전환 KAN-523, 시안 KAN-567) — 순위, 이름, 순위
+ * 변동. 시안: 높이 33, 순위 13/900(1~3위 강조색), 이름 12.5 한 줄 말줄임, 변동은
+ * 오른쪽 끝 26px 칸에 11/700. 줄 사이는 연한 선이다.
  *
  * 이슈 줄은 이슈 제목을 한 줄로 자른다. 누르면 이슈 상세(`/stories/[storyId]`)로
  * 간다. KAN-523 때 제목 옆에 달았던 기사 수는 KAN-525에서 뺐다 — 순위 카드에
  * 순위 변동 말고 다른 숫자가 서면 읽는 사람이 헷갈리고, 제목이 그만큼 더 잘렸다.
  * `articleCount`는 이슈 상세가 계속 쓴다. 원형 사진 자리는 없다 — BE `imageUrl`이
- * 이슈의 최신 기사 이미지라 26px 원에 넣으면 무엇인지 알아볼 수 없다.
+ * 이슈의 최신 기사 이미지라 작은 원에 넣으면 무엇인지 알아볼 수 없다.
  *
  * 구단 줄은 이슈 랭킹이 없을 때의 대체다. 레지스트리 크레스트를 달고 팀
  * 허브(`/teams/[slug]`)로 간다. 팀 id가 레지스트리에 없으면(6팀 마스터라
@@ -38,7 +40,7 @@ export function TrendingRow({
   const body = (
     <>
       <span
-        className={`text-tab w-6 shrink-0 font-bold ${
+        className={`text-body w-3.5 shrink-0 font-black ${
           item.rank <= TREND_HIGHLIGHT_RANK ? "text-accent" : "text-text-4"
         }`}
       >
@@ -51,17 +53,17 @@ export function TrendingRow({
           className="shrink-0"
         />
       )}
-      <span className="text-body text-text group-hover:text-accent min-w-0 flex-1 truncate font-semibold transition-colors">
+      <span className="text-label-lg text-text group-hover:text-accent min-w-0 flex-1 truncate">
         {item.name}
       </span>
       <TrendDeltaBadge item={item} />
     </>
   );
 
-  const row = "flex items-center gap-2.5 py-2";
+  const row = "flex h-8.25 items-center gap-2.5";
 
   return (
-    <li className="border-border border-b last:border-b-0">
+    <li className="border-border-soft border-b">
       {href ? (
         <Link
           href={href}

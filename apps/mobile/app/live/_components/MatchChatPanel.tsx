@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { SendMiniIcon } from "@plick/ui/icons";
 import { CHAT_MAX_MESSAGE_LENGTH, chatRoomPhase } from "@plick/core/chat";
 import type { ChatMessage, ChatRoomPhase } from "@plick/domain/chat";
 import { formatChatTime } from "@plick/domain/format";
@@ -13,9 +12,9 @@ import { CHAT_REJECT_MESSAGE } from "@/_constants/live";
 import { useMatchChat } from "@/_hooks/useMatchChat";
 
 /**
- * 경기 채팅 탭 (KAN-458). 접속 전에 화면이 먼저 거르는 세 가지 — 비로그인,
- * 닉네임 없음(온보딩 미완료, 서버 403), 방 닫힘(킥오프 3시간 뒤, 서버 404) —
- * 는 안내 지면으로 끝내고, 그 밖에는 붙어서 목록과 입력바를 그린다.
+ * 경기 채팅 탭 (KAN-458, 시안 KAN-567). 접속 전에 화면이 먼저 거르는 세 가지,
+ * 비로그인, 닉네임 없음(온보딩 미완료, 서버 403), 방 닫힘(킥오프 3시간 뒤, 서버
+ * 404)은 안내 지면으로 끝내고, 그 밖에는 붙어서 목록과 입력바를 그린다.
  *
  * 킥오프 30분 전(`before`)은 거르지 않고 붙어 본다. 서버는 404로 거절하지만
  * dev는 방 여는 구간을 넓혀 둘 수 있어서(`CHAT_OPEN_BEFORE=720h`) 화면이 먼저
@@ -34,18 +33,18 @@ export function MatchChatPanel({ header }: { header: MatchSummary }) {
     return (
       <Gate
         title="로그인이 필요해요"
-        body="같은 경기를 보는 사람들과 채팅하려면 로그인하세요."
+        body="같은 경기를 보는 사람들과 채팅하려면 로그인하세요"
         href="/login"
         cta="로그인 하러 가기"
       />
     );
   }
-  /* 게스트는 세션이 있어도 채팅 접속이 403이다 — 연동으로 안내한다 (KAN-514) */
+  /* 게스트는 세션이 있어도 채팅 접속이 403이다. 연동으로 안내한다 (KAN-514) */
   if (isGuest) {
     return (
       <Gate
         title="계정 연동이 필요해요"
-        body="채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요."
+        body="채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요"
         href="/login"
         cta="계정 연동하러 가기"
       />
@@ -55,7 +54,7 @@ export function MatchChatPanel({ header }: { header: MatchSummary }) {
     return (
       <Gate
         title="닉네임을 정해 주세요"
-        body="닉네임을 정하면 채팅에 참여할 수 있어요."
+        body="닉네임을 정하면 채팅에 참여할 수 있어요"
         href={ONBOARDING_ENTRY}
         cta="닉네임 정하러 가기"
       />
@@ -74,7 +73,8 @@ export function MatchChatPanel({ header }: { header: MatchSummary }) {
 }
 
 /**
- * 붙어 있는 방. 목록은 안에서만 스크롤하고 입력바는 아래 고정이다.
+ * 붙어 있는 방. 목록은 안에서만 스크롤하고 입력바는 아래 고정이다. 시안대로
+ * 헤더 아래가 곧 채팅 목록이라 스코어를 보면서 채팅한다.
  *
  * 자동 스크롤: 새 메시지가 오면 사용자가 바닥 근처를 보고 있을 때만 따라 내려간다.
  * 위로 올려 지난 대화를 읽는 중이면 끌어내리지 않고 "새 메시지" 버튼만 띄운다.
@@ -128,14 +128,14 @@ function ChatRoom({
     <div className="relative flex min-h-0 flex-1 flex-col">
       {status === "reconnecting" && (
         <p className="bg-elevate text-caption text-text-3 shrink-0 py-1.5 text-center">
-          다시 연결하는 중…
+          다시 연결하는 중
         </p>
       )}
 
       <div
         ref={listRef}
         onScroll={handleScroll}
-        className="px-edge flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain py-3"
+        className="px-edge flex min-h-0 flex-1 flex-col gap-3.25 overflow-y-auto overscroll-contain py-3"
         aria-live="polite"
       >
         {status === "failed" ? (
@@ -144,7 +144,7 @@ function ChatRoom({
           <p className="text-body text-text-4 my-auto text-center">
             {status === "open"
               ? "아직 메시지가 없어요. 첫 마디를 남겨 보세요"
-              : "연결 중…"}
+              : "연결 중"}
           </p>
         ) : (
           messages.map((message) => (
@@ -161,9 +161,9 @@ function ChatRoom({
         <button
           type="button"
           onClick={jumpToBottom}
-          className="bg-accent text-on-accent rounded-pill text-label absolute bottom-16 left-1/2 -translate-x-1/2 px-3.5 py-1.5 font-bold shadow-md active:opacity-80"
+          className="bg-accent text-on-accent rounded-pill text-label absolute bottom-16 left-1/2 -translate-x-1/2 px-3.5 py-1.5 font-bold active:opacity-80"
         >
-          새 메시지 {unread}개 ↓
+          새 메시지 {unread}개
         </button>
       )}
 
@@ -176,6 +176,11 @@ function ChatRoom({
   );
 }
 
+/**
+ * 채팅 한 줄 (시안). 시각 10px 고정폭 34, 닉네임 11.5/700 강조색, 본문 14/1.5.
+ * 내 메시지는 닉네임을 진한 글자로 갈라 본다. 새로 붙는 줄은 `animate-rise`로
+ * 아래에서 살짝 떠오른다(시안이 허용한 세 전환 중 하나).
+ */
 function MessageRow({
   message,
   mine,
@@ -184,31 +189,35 @@ function MessageRow({
   mine: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex items-baseline gap-1.5">
+    <div className="animate-rise flex items-baseline gap-2.5">
+      <span
+        className="text-micro text-text-4 w-8.5 shrink-0 font-mono"
+        suppressHydrationWarning
+      >
+        {formatChatTime(message.sentAt)}
+      </span>
+      <div className="min-w-0">
         <span
-          className={`text-label font-bold ${mine ? "text-accent" : "text-text"}`}
+          className={`text-caption-lg font-bold ${mine ? "text-text-strong" : "text-accent"}`}
         >
           {message.nickname}
         </span>
-        <span className="text-micro text-text-4" suppressHydrationWarning>
-          {formatChatTime(message.sentAt)}
-        </span>
+        <p className="text-body-md text-text mt-0.5 leading-normal break-words whitespace-pre-wrap">
+          {message.content}
+        </p>
       </div>
-      <p className="text-body text-text-2 leading-body break-words whitespace-pre-wrap">
-        {message.content}
-      </p>
     </div>
   );
 }
 
 /**
- * 입력바. 댓글 입력바(`CommentComposer`)와 같은 pill 인풋 + accent 원형 전송 버튼이다.
- * 글자수는 서버 검증(1~200자)을 미리 건다 — `maxLength`로 초과 입력을 막고 공백만
- * 입력은 보내지 않는다. 그래도 서버가 거절하면(`ERROR` 프레임) 입력바 밑에 사유를
- * 보여준다. 사유별 문구는 `CHAT_REJECT_MESSAGE`에 있고, 안내는
- * 훅이 정한 시간 뒤에 스스로 사라진다(KAN-465). 전송 한도(`RATE_LIMITED`)도 같은
- * 자리에 뜨며 입력창은 잠그지 않는다 — 접속이 살아 있어 잠시 뒤 다시 보낼 수 있다.
+ * 입력바 (시안). 위 구분선, 입력창 42px 채운 면(radius 14) "채팅 입력", 오른쪽에
+ * 채운 강조색 "보내기" 버튼이다. 글자수는 서버 검증(1~200자)을 미리 건다.
+ * `maxLength`로 초과 입력을 막고 공백만 입력은 보내지 않는다. 그래도 서버가
+ * 거절하면(`ERROR` 프레임) 입력바 밑에 사유를 보여준다. 사유별 문구는
+ * `CHAT_REJECT_MESSAGE`에 있고, 안내는 훅이 정한 시간 뒤에 스스로 사라진다
+ * (KAN-465). 전송 한도(`RATE_LIMITED`)도 같은 자리에 뜨며 입력창은 잠그지 않는다.
+ * 접속이 살아 있어 잠시 뒤 다시 보낼 수 있다.
  *
  * 하단 여백은 홈 인디케이터를 피해 `--safe-bottom`을 더한다.
  */
@@ -241,10 +250,10 @@ function Composer({
 
   return (
     <div
-      className="border-border px-edge flex shrink-0 flex-col gap-1.5 border-t pt-2"
-      style={{ paddingBottom: "calc(var(--safe-bottom) + 8px)" }}
+      className="border-border px-edge flex shrink-0 flex-col gap-1.5 border-t pt-2.5"
+      style={{ paddingBottom: "calc(var(--safe-bottom) + 12px)" }}
     >
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           type="text"
           value={value}
@@ -255,17 +264,16 @@ function Composer({
             setValue(e.target.value);
             setDropped(false);
           }}
-          placeholder={disabled ? "연결 중…" : "메시지 보내기"}
+          placeholder={disabled ? "연결 중" : "채팅 입력"}
           aria-label="채팅 메시지"
-          className="bg-elevate-2 border-border text-body text-text placeholder:text-text-4 rounded-pill h-11 min-w-0 flex-1 border px-4 focus-visible:outline-none disabled:opacity-60"
+          className="bg-input text-label-lg text-text placeholder:text-text-4 rounded-control h-10.5 min-w-0 flex-1 px-3.25 focus-visible:outline-none disabled:opacity-60"
         />
         <button
           type="submit"
-          aria-label="보내기"
           disabled={disabled || value.trim().length === 0}
-          className="bg-accent text-on-accent grid size-11 shrink-0 place-items-center rounded-full active:opacity-60 disabled:opacity-40"
+          className="bg-accent text-on-accent rounded-control text-body flex h-10.5 shrink-0 items-center px-4.5 font-bold active:opacity-60 disabled:opacity-40"
         >
-          <SendMiniIcon size={17} />
+          보내기
         </button>
       </form>
       {error && <p className="text-caption text-danger px-1">{error}</p>}
@@ -275,7 +283,7 @@ function Composer({
 
 /**
  * 핸드셰이크가 연속으로 거절돼 멈춘 상태. 브라우저는 거절 코드를 안 알려주므로
- * 킥오프 시각으로 사유를 고른다 — 아직 30분 전이면 "안 열렸다", 열려 있어야 할
+ * 킥오프 시각으로 사유를 고른다. 아직 30분 전이면 "안 열렸다", 열려 있어야 할
  * 시각이면 연결 실패로 본다.
  */
 function Failed({
@@ -299,7 +307,7 @@ function Failed({
       {failure === "auth" ? (
         <Link
           href="/login"
-          className="bg-accent text-on-accent rounded-control text-label px-4 py-2 font-bold active:opacity-60"
+          className="bg-accent text-on-accent rounded-control text-label-lg px-4 py-2 font-bold active:opacity-60"
         >
           로그인 하러 가기
         </Link>
@@ -307,7 +315,7 @@ function Failed({
         <button
           type="button"
           onClick={onRetry}
-          className="bg-elevate text-text-2 rounded-control text-label px-4 py-2 font-bold active:opacity-60"
+          className="border-border-strong text-label-lg text-text-2 rounded-control border px-4 py-2 font-bold active:opacity-60"
         >
           다시 시도
         </button>
@@ -329,11 +337,11 @@ function Gate({
 }) {
   return (
     <div className="px-edge flex flex-1 flex-col items-center justify-center gap-2 py-12">
-      <p className="text-body-lg text-text font-extrabold">{title}</p>
-      <p className="text-label text-text-3 text-center">{body}</p>
+      <p className="text-body-lg text-text-strong font-black">{title}</p>
+      <p className="text-label-lg text-text-3 text-center">{body}</p>
       <Link
         href={href}
-        className="bg-accent text-on-accent rounded-control text-body mt-3 px-5 py-2.5 font-extrabold active:opacity-60"
+        className="bg-accent text-on-accent rounded-control text-body mt-3 px-5 py-2.5 font-bold active:opacity-60"
       >
         {cta}
       </Link>

@@ -1,30 +1,25 @@
 import Link from "next/link";
-import { ChevronMiniIcon, UserRoundIcon } from "@plick/ui/icons";
 
 /**
- * 로그아웃 상태의 MY 상단 (KAN-319, 모바일 KAN-255 이식) — 프로필 대신 로그인을
- * 유도하는 카드. `ProfileCard`와 같은 섀시·간격을 써서 로그인하면 자연스레 프로필로
- * 바뀌어 보이게 한다. 탭하면 로그인 화면으로 이동한다. 데스크톱 포인터를 위해
- * hover·focus-visible을 둔다.
+ * 로그아웃 상태의 MY 본문 (KAN-319, 모바일 KAN-255 이식) — 프로필 대신 로그인을
+ * 유도한다. 시안(KAN-567)의 웹 규칙대로 본문 카드에 테두리를 두르지 않고 제목, 안내
+ * 한 줄, 채운 강조색 버튼만 둔다.
  */
 export function LoginPromptCard() {
   return (
-    <Link
-      href="/login"
-      className="bg-elevate-2 border-border rounded-card gap-gap-lg hover:border-border-strong focus-visible:outline-accent flex w-full items-center border p-4.25 text-left focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60"
-    >
-      <span className="bg-avatar text-icon rounded-pill grid size-13 shrink-0 place-items-center">
-        <UserRoundIcon size={26} />
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-body-lg text-text font-extrabold tracking-tight">
-          로그인이 필요해요
-        </span>
-        <span className="text-label text-text-3">
-          로그인하고 응원팀 소식을 받아보세요
-        </span>
-      </span>
-      <ChevronMiniIcon className="text-text-4 shrink-0" />
-    </Link>
+    <div className="max-w-narrow flex flex-col items-start gap-2">
+      <p className="text-section text-text-strong tracking-title font-black">
+        로그인이 필요해요
+      </p>
+      <p className="text-body text-text-3">
+        로그인하고 응원팀 소식을 받아보세요
+      </p>
+      <Link
+        href="/login"
+        className="bg-accent text-on-accent text-body hover:bg-accent-hover focus-visible:outline-accent mt-4 flex h-12 w-full max-w-60 items-center justify-center font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        로그인
+      </Link>
+    </div>
   );
 }

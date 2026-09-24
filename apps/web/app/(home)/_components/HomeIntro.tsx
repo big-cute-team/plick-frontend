@@ -6,7 +6,9 @@ import { TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamFilterFromPathname } from "@plick/domain/format";
 
 /**
- * 홈 하단 크롤러블 소개 문구 (KAN-384) — 지금 보는 팀 탭을 따라간다.
+ * 홈 푸터의 크롤러블 소개 문구 (KAN-384) — 지금 보는 팀 탭을 따라간다. 시안
+ * (KAN-567)에서 자리가 본문 밑 별도 섹션에서 푸터 첫 단락으로 옮겨 가,
+ * `SiteFooter`의 `intro`로 들어가는 글자만 돌려준다.
  *
  * 탭 선택은 `history.replaceState`라 서버 컴포넌트가 다시 렌더되지 않는다.
  * 서버에서 문구를 굳히면 처음 연 탭의 팀 이름이 새로고침 전까지 남으므로,
@@ -16,11 +18,5 @@ import { teamFilterFromPathname } from "@plick/domain/format";
  */
 export function HomeIntro() {
   const filter = teamFilterFromPathname(usePathname());
-  return (
-    <section className="pt-10">
-      <p className="text-caption text-text-4">
-        {homeIntroCopy(filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined)}
-      </p>
-    </section>
-  );
+  return homeIntroCopy(filter !== "ALL" ? TEAM_FULL_NAMES[filter] : undefined);
 }

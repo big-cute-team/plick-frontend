@@ -5,7 +5,7 @@ test.describe("기사", () => {
   test("목록 첫 기사를 열면 같은 제목의 상세가 뜬다", async ({ page }) => {
     await page.goto("/articles");
     await expect(
-      page.getByRole("heading", { level: 1, name: "지금 올라온 소식" }),
+      page.getByRole("heading", { level: 1, name: "이슈" }),
     ).toBeVisible();
 
     const firstTitle = page
@@ -19,7 +19,7 @@ test.describe("기사", () => {
 
     await expect(page).toHaveURL(/\/articles\/\d+$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title!);
-    await expect(page.getByRole("link", { name: "원문" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "원문 보기" })).toBeVisible();
     /* 기사 좋아요와 댓글 좋아요가 같은 이름이라 첫 번째(기사)만 본다 */
     await expect(
       page.getByRole("main").getByRole("button", { name: "좋아요" }).first(),
@@ -54,7 +54,7 @@ test.describe("기사", () => {
         page.getByRole("main").getByRole("heading", { level: 1 }),
       ).toHaveText(teamName);
       await expect(
-        page.getByRole("tablist", { name: "팀 프로필 보기" }),
+        page.getByRole("heading", { level: 2, name: "선수단" }),
       ).toBeVisible();
     });
   });

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * 법률·정책 문서의 절 제목 + 본문 묶음 — 앵커 목차(id)를 받는다.
+ * 법률·정책 문서의 절 제목 + 본문 묶음. 앵커 목차(id)를 받는다. 제목은 시안 섹션 제목
+ * 15/900이다(KAN-567).
  *
  * `PrivacyPolicyBody`의 사적 헬퍼였는데 `TermsBody`가 생기며 공용으로 뺐다.
  * `scroll-mt-14`는 모바일 상단바에 절 제목이 가리지 않게 하는 오프셋이다.
@@ -20,7 +21,9 @@ export function LegalSection({
 }) {
   return (
     <section id={id} className="flex scroll-mt-14 flex-col gap-2">
-      <h2 className="text-body-lg text-text font-extrabold">{title}</h2>
+      <h2 className="text-body-lg tracking-section text-text-strong font-black">
+        {title}
+      </h2>
       {children}
     </section>
   );
