@@ -17,6 +17,10 @@ E2E_TARGET=local pnpm test:e2e                              # launch.json 프로
 
 대상은 `E2E_TARGET`(dev 기본, prod, local)이고 `E2E_MOBILE_URL`, `E2E_WEB_URL`로 개별 override한다.
 
+dev는 WAF `plick-dev-lock`이 팀 IP 밖을 403으로 막는다. 팀 IP 로컬은 그냥 통과하고, CI 러너는 GitHub Secret
+`E2E_BYPASS_TOKEN`을 쿠키 `plick_e2e`로 실어 통과한다(WAF 규칙 `allow-e2e-cookie`, KAN-573).
+CI에서 `Wait for targets`가 403으로 멈추면 WAF 규칙의 문자열과 시크릿 값이 어긋난 것이다.
+
 ## 구조
 
 ```

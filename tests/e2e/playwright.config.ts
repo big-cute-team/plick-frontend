@@ -32,6 +32,31 @@ if (!(target in TARGETS)) {
 const mobileURL = process.env.E2E_MOBILE_URL ?? TARGETS[target].mobile;
 const webURL = process.env.E2E_WEB_URL ?? TARGETS[target].web;
 
+/**
+ * dev는 WAF plick-dev-lock이 팀 IP 밖을 403으로 막는다. CI 러너는 쿠키 plick_e2e에
+ * E2E_BYPASS_TOKEN을 실어 통과한다(KAN-573). 헤더가 아니라 쿠키인 건 도메인을 .plick.co.kr로
+ * 좁혀 외부 호스트(twimg 등)에 값이 새지 않게 하려는 것이다. 토큰이 없으면(팀 IP 로컬) 싣지 않는다.
+ */
+const bypassToken = process.env.E2E_BYPASS_TOKEN;
+const storageState =
+  target === "dev" && bypassToken
+    ? {
+        cookies: [
+          {
+            name: "plick_e2e",
+            value: bypassToken,
+            domain: ".plick.co.kr",
+            path: "/",
+            expires: -1,
+            httpOnly: true,
+            secure: true,
+            sameSite: "Lax" as const,
+          },
+        ],
+        origins: [],
+      }
+    : undefined;
+
 /** 스토어 캡처(scripts/store-shots)와 같은 Galaxy 프리셋. 모바일 웹뷰에서 보는 폭이다 */
 const galaxy = {
   viewport: { width: 360, height: 780 },
@@ -66,6 +91,7 @@ export default defineConfig({
     contextOptions: { reducedMotion: "reduce" },
     locale: "ko-KR",
     timezoneId: "Asia/Seoul",
+    storageState,
   },
   projects: [
     {

@@ -18,7 +18,10 @@ test.describe("기사", () => {
     await firstTitle.click();
 
     await expect(page).toHaveURL(/\/articles\/\d+$/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title!);
+    /* 헤더에도 "맨유 이슈" 같은 h1이 있어 main 안의 기사 제목을 본다 */
+    await expect(
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    ).toHaveText(title!);
     await expect(page.getByRole("link", { name: "원문 보기" })).toBeVisible();
     /* 기사 좋아요와 댓글 좋아요가 같은 이름이라 첫 번째(기사)만 본다 */
     await expect(
@@ -38,8 +41,12 @@ test.describe("기사", () => {
       await expect(page).toHaveURL(/\/articles\/\d+$/);
     });
 
-    /* 팀 해시태그는 "#팀 이름" 링크다. 인물 태그는 #이 없다 */
-    const hashtag = page.getByRole("main").getByRole("link", { name: /^#/ });
+    /* 해시태그는 팀과 인물 모두 "#이름" 링크다. 팀 프로필로 가는 것만 고른다 */
+    const hashtag = page
+      .getByRole("main")
+      .getByRole("link", { name: /^#/ })
+      .and(page.locator('[href^="/teams/"]'))
+      .first();
     let teamName = "";
     await test.step("팀 해시태그를 누른다", async () => {
       await expect(hashtag).toBeVisible();
