@@ -164,3 +164,12 @@ prod BE를 읽기로 붙인 로컬(`mobile-prodbe`, `web-prodbe`)에서 봤다. 
 - 날짜 줄: 위 2절의 수치. 월말(30일)을 누르면 이미 다 보여 줄이 움직이지 않는다.
 - 웹 홈: 핫이슈 3장 한 줄, 다음 버튼으로 3~5번, 끝에서 다음 버튼 꺼짐.
 - `pnpm format:check`, `test:hooks`, `lint`, `check-types`, `build` 통과.
+
+## 헤드리스 리뷰에서 나온 것
+
+push 전 `scripts/review/pr-review.sh`가 CRITICAL 없이 WARN 둘을 냈다. 하나는 진짜 놓친 곳이었다. 기사 세부의 모바일
+상단바 딥링크 폴백(`backHref`)과 웹 빵부스러기 "목록"이 여전히 `/articles`를 가리켰다. 리다이렉트가 걸려 있어 동작은
+하지만 기사에서 목록으로 가는 핵심 동선이 매번 308을 한 번 더 탄다. `/articles` 문자열을 `grep`할 때 `href=` 줄만
+보고 `backHref`를 빠뜨렸다. 둘 다 `/`로 바꿨다. 다른 하나는 `useDateStripScroll`이 두 앱에 똑같이 복제됐다는 것인데,
+날짜 줄 컴포넌트 자체가 앱마다 따로라 ADR 0011 기준으로 앱에 두는 게 맞다고 봤다. 대신 두 파일에 짝이 있다는 주석을
+달아 한쪽만 고치는 일을 막았다.
