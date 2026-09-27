@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
-import { CHAT_ENABLED } from "@plick/core/chat";
 import { getMatches, getStandings } from "@plick/core/live";
 import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
-import type {
-  InitialMatchList,
-  MatchSummary,
-  StandingRow,
-} from "@plick/domain/live";
+import type { InitialMatchList, StandingRow } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
@@ -43,9 +38,8 @@ export const metadata: Metadata = {
  * 순위표는 폴링 없는 단발 읽기라 서버에서 받고, 실패하면 표 자리에 문구만 둔다.
  * 목록과 순위표는 서로 독립이라 병렬로 받는다.
  *
- * 채팅방 배너는 오늘 진행 중인 경기가 있을 때만 선다. 다른 날짜를 보고 있으면
- * 오늘 목록을 따로 받아 판정하는데, 채팅이 닫혀 있는 동안(`CHAT_ENABLED`)은
- * 그 왕복을 아예 하지 않는다.
+ * 채팅방 배너는 경기와 무관하게 늘 선다(KAN-572). 방이 언제나 열린 통합 방
+ * 하나라 전처럼 오늘 진행 중인 경기를 찾으려고 오늘 목록을 따로 받지 않는다.
  *
  * 목록을 좌우로 끌면 전날·다음날로 넘어가고(`LiveDatePager`), 맨 위에서 당기면
  * 그 날짜 목록을 다시 받는다(`LiveScrollArea`, KAN-462).
@@ -63,12 +57,9 @@ export default async function LivePage({
   const today = todayDateKeyKst();
   const selected = isDateKey(date) ? date : today;
 
-  const [matchResult, standingsResult, todayResult] = await Promise.allSettled([
+  const [matchResult, standingsResult] = await Promise.allSettled([
     getMatches(selected),
     getStandings(),
-    CHAT_ENABLED && selected !== today
-      ? getMatches(today)
-      : Promise.resolve<MatchSummary[] | null>(null),
   ]);
 
   let initial: InitialMatchList | undefined;
@@ -82,15 +73,6 @@ export default async function LivePage({
   if (standingsResult.status === "fulfilled") standings = standingsResult.value;
   else console.error("[live] 순위표 로드 실패:", standingsResult.reason);
 
-  /* 오늘을 보고 있으면 목록 씨앗이 곧 오늘 목록이다. 따로 받은 날은 그 결과를,
-     못 받은 날은 빈 배열로 접어 배너만 조용히 빠진다 */
-  const todayMatches =
-    selected === today
-      ? (initial?.items ?? [])
-      : todayResult.status === "fulfilled"
-        ? (todayResult.value ?? [])
-        : [];
-
   return (
     <AppShell>
       <TopBar />
@@ -98,7 +80,7 @@ export default async function LivePage({
         date={selected}
         contentClassName="flex min-h-full flex-col pb-5.5"
       >
-        <ChatRoomBanner matches={todayMatches} />
+        <ChatRoomBanner />
         <DateStrip selected={selected} today={today} />
         <LiveDatePager date={selected} today={today} className="flex-1">
           <LiveMatchesFeed date={selected} initial={initial} />

@@ -100,17 +100,6 @@ export function matchStatusText(match: MatchSummary): string {
   }
 }
 
-/**
- * 채팅방 배너가 가리킬 경기 (KAN-567). 시안의 통합 채팅방은 API에 없어서,
- * 지금 진행 중인 경기가 있으면 그 경기의 채팅 탭으로 보낸다. 라이브가 둘 이상이면
- * 목록(킥오프 오름차순)의 첫 경기다. 없으면 null이고 배너를 그리지 않는다.
- *
- * @param matches 오늘 경기 목록
- */
-export function liveChatMatch(matches: MatchSummary[]): MatchSummary | null {
-  return matches.find((match) => match.status === "LIVE") ?? null;
-}
-
 /** 선수별 스탯 표의 한 행. 선발 선수에 소속 팀을 붙인 것이다. */
 export interface StarterRow {
   player: LineupPlayer;

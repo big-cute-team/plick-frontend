@@ -21,3 +21,12 @@ export type MatchTabKey =
   | "table"
   | "news"
   | "chat";
+
+/**
+ * 채팅방이 붐벼(`ROOM_BUSY`) 방에 나가지 못하고 되돌아온 글 (KAN-572). 입력창이
+ * 이 글을 다시 채운다. `at`은 같은 글이 또 튕겼을 때를 가르는 값이다.
+ */
+export interface BouncedMessage {
+  content: string;
+  at: number;
+}

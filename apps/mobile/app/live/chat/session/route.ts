@@ -1,10 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { chatSocketUrl } from "@plick/core/chat";
 import { getAccessToken } from "@/_services/session";
 
 /**
- * 채팅 접속 주소 발급 (KAN-458). 브라우저가 `GET /live/chat/session?matchId=`로
- * 부르면 완성된 `wss://…/ws/chat?matchId=&token=`을 돌려준다.
+ * 채팅 접속 주소 발급 (KAN-458). 브라우저가 `GET /live/chat/session`으로
+ * 부르면 완성된 `wss://…/ws/chat?token=`을 돌려준다.
  *
  * 왜 서버가 조립하나: BE 채팅은 토큰을 쿼리 파라미터로 받는데(브라우저 웹소켓
  * API가 헤더를 못 붙인다), 우리 access 토큰은 HttpOnly 쿠키라 브라우저 JS가 못
@@ -15,19 +15,18 @@ import { getAccessToken } from "@/_services/session";
  * 프록시를 지나야 한다 — access 쿠키가 만료됐지만 refresh가 남은 상태로 채팅에
  * 다시 붙을 때, 프록시가 재발급한 새 access를 여기서 읽게 하기 위해서다.
  *
+ * 통합 방이라 경기 id를 받지 않는다(KAN-572). 배포 전 화면이 `?matchId=`를 붙여
+ * 불러도 무시하고 같은 주소를 준다.
+ *
  * 토큰은 응답 본문으로만 나간다. 로그에 남지 않게 URL에 실지 않고 `no-store`다.
  */
-export async function GET(request: NextRequest) {
-  const raw = request.nextUrl.searchParams.get("matchId") ?? "";
-  if (!/^\d+$/.test(raw)) {
-    return NextResponse.json({ code: "BAD_MATCH_ID" }, { status: 400 });
-  }
+export async function GET() {
   const token = await getAccessToken();
   if (!token) {
     return NextResponse.json({ code: "AUTH_REQUIRED" }, { status: 401 });
   }
   return NextResponse.json(
-    { url: chatSocketUrl(Number(raw), token) },
+    { url: chatSocketUrl(token) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

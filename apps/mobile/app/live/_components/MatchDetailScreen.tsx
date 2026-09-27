@@ -11,9 +11,9 @@ import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
+import { LiveChatPanel } from "./LiveChatPanel";
+import { LiveChatPreview } from "./LiveChatPreview";
 import { LiveLoadError } from "./LiveLoadError";
-import { MatchChatPanel } from "./MatchChatPanel";
-import { MatchChatPreview } from "./MatchChatPreview";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderBlock } from "./MatchHeaderBlock";
 import { MatchTabBar } from "./MatchTabBar";
@@ -87,7 +87,7 @@ export function MatchDetailScreen({
  * 각각 하나씩이라 채팅 경계를 넘는 커밋에서는 옛 페이저가 내려가고 새 페이저가
  * 제자리(transform 없음)로 올라온다. 스냅이 끝난 자리에 미리보기가 있었으므로
  * 그대로 진짜 페인으로 갈아 끼워지는 셈이다. 채팅 이웃의 미리보기는 소켓을
- * 열지 않는 자리 표시(`MatchChatPreview`)다.
+ * 열지 않는 자리 표시(`LiveChatPreview`)다.
  */
 function MatchDetailBody({
   matchId,
@@ -111,7 +111,7 @@ function MatchDetailBody({
     tabs[tabs.indexOf(tab) + dir] ?? null;
   const renderPreview = (tab: MatchTabKey) =>
     tab === "chat" ? (
-      <MatchChatPreview />
+      <LiveChatPreview />
     ) : (
       <MatchDetailTabs detail={detail} tab={tab} standings={standings} />
     );
@@ -150,7 +150,7 @@ function MatchDetailBody({
               className="flex min-h-0 flex-1 flex-col"
               trackClassName="flex min-h-0 flex-1 flex-col"
             >
-              <MatchChatPanel header={header} />
+              <LiveChatPanel />
             </SwipePager>
           ) : (
             <ScrollArea>

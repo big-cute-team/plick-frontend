@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { CHAT_ENABLED } from "@plick/core/chat";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
+import { LiveChatPanel } from "@/_components/LiveChatPanel";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
@@ -11,7 +12,6 @@ import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
-import { MatchChatPanel } from "./MatchChatPanel";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderCard } from "./MatchHeaderCard";
 import { MatchTabBar } from "./MatchTabBar";
@@ -81,7 +81,8 @@ export function MatchDetailScreen({
  * 상태로 좌측 본문이 갈린다. SCHEDULED는 프리뷰, 순위, 뉴스, LIVE·FINISHED는
  * 요약, 라인업, 스탯, 순위, 뉴스, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
  * CANCELLED는 안내만(`MATCH_TABS_BY_STATUS`). 우측 채팅 aside는 상태와 무관하게
- * 늘 같은 자리에 있어 탭을 바꿔도 리마운트되지 않는다.
+ * 늘 같은 자리에 있어 탭을 바꿔도 리마운트되지 않는다. 방은 경기별이 아니라 홈
+ * 레일과 같은 통합 방이다(KAN-572).
  *
  * 채팅이 닫혀 있는 동안(`CHAT_ENABLED`, KAN-486)은 우측 컬럼을 아예 만들지
  * 않고 본문이 한 컬럼을 다 쓴다. 빈 300px 컬럼이 남지 않게 한다.
@@ -136,7 +137,7 @@ function MatchDetailBody({
         </div>
         {CHAT_ENABLED && (
           <aside>
-            <MatchChatPanel header={header} />
+            <LiveChatPanel />
           </aside>
         )}
       </div>

@@ -98,12 +98,14 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
 /**
  * 서버 거절 사유 → 입력바 밑 안내 문구. 목록에 없는 사유는 일반 실패 문구로 떨어진다.
  * `RATE_LIMITED`(KAN-465)는 한 접속이 5초에 5건을 넘긴 것으로, 접속과 입력창은
- * 그대로라 "잠시 후"만 안내한다.
+ * 그대로라 "잠시 후"만 안내한다. `ROOM_BUSY`(KAN-572)는 방 전체가 붐빈 것이라 내 탓이
+ * 아님을 밝히고, 입력창은 튕긴 글을 다시 채운다.
  */
 export const CHAT_REJECT_MESSAGE: Record<string, string> = {
   EMPTY_MESSAGE: "내용을 입력해 주세요",
   MESSAGE_TOO_LONG: "200자까지 보낼 수 있어요",
   RATE_LIMITED: "너무 빠르게 보내고 있어요. 잠시 후 다시 보내 주세요",
+  ROOM_BUSY: "채팅이 몰리고 있어요. 잠시 뒤 다시 보내 주세요",
 };
 
 /**

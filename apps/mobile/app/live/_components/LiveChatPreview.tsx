@@ -3,7 +3,7 @@ const ROW_COUNT = 5;
 
 /**
  * 채팅 탭의 스와이프 미리보기 (KAN-462). 상세 탭을 좌우로 끌 때 이웃이
- * 채팅이면 진짜 패널 대신 이 자리 표시를 그린다. 진짜 `MatchChatPanel`은
+ * 채팅이면 진짜 패널 대신 이 자리 표시를 그린다. 진짜 `LiveChatPanel`은
  * 마운트되는 순간 세션 URL을 받고 웹소켓을 여는데, 드래그 도중 잠깐 스치는
  * 미리보기마다 접속을 열었다 닫으면 서버가 킥오프 부하 분산으로 흩어 둔
  * 재접속 간격이 헛돈다. 손을 떼고 확정된 뒤에만 실제 패널이 붙는다.
@@ -11,7 +11,7 @@ const ROW_COUNT = 5;
  * 메시지 줄(시각 칸 + 닉네임 + 본문)과 입력바 실루엣만 두어 커밋 순간 진짜
  * 패널의 골격(시안 KAN-567)과 이어진다.
  */
-export function MatchChatPreview() {
+export function LiveChatPreview() {
   return (
     <div
       aria-hidden

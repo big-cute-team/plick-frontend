@@ -1,6 +1,7 @@
 /**
- * @file 라이브 경기 채팅 도메인 타입 (KAN-458). web·mobile 공용이라 여기 둔다
- * (ADR 0011 게이트 C, 라이브 스코어 `live.ts`와 같은 판단).
+ * @file 라이브 채팅 도메인 타입 (KAN-458). web·mobile 공용이라 여기 둔다
+ * (ADR 0011 게이트 C, 라이브 스코어 `live.ts`와 같은 판단). KAN-572부터 경기별 방이
+ * 아니라 언제나 열린 통합 방 하나다.
  *
  * 계약 정본은 Confluence [API 명세] 라이브 경기 채팅(59146245)이다. REST가 아니라
  * 웹소켓이라 `{ code, message, data }` 래퍼를 타지 않고 프레임이 곧 배열이다.
@@ -11,13 +12,17 @@
  * 창 안의 건수를 넘긴 것으로, 넘은 메시지는 방에 나가지 않고 접속도 끊기지 않는다.
  * 계속 던지는 동안 이 통보는 한 번만 온다 — 다음 메시지가 통과할 때까지 다시 오지
  * 않으므로, 화면이 이 안내를 서둘러 지우면 그 사이 버려진 메시지를 알 길이 없다.
+ *
+ * `ROOM_BUSY`(KAN-571)는 방 전체 전송량 상한에 걸린 것이다. 역시 방에 나가지 않고
+ * 접속은 유지되며, 접속당 한도가 먼저 걸리므로 매번 온다.
  */
 export type ChatRejectReason =
   | "EMPTY_MESSAGE"
   | "MESSAGE_TOO_LONG"
-  | "RATE_LIMITED";
+  | "RATE_LIMITED"
+  | "ROOM_BUSY";
 
-/** 방에 오간 메시지 한 건. 입장 지급분(최근 20개)과 실시간 메시지가 같은 모양이다. */
+/** 방에 오간 메시지 한 건. 입장 지급분(최근 50개)과 실시간 메시지가 같은 모양이다. */
 export interface ChatMessage {
   type: "MESSAGE";
   /** 보낸 사람. 차단 기능이 붙으면 이 값으로 거른다 */
@@ -54,15 +59,9 @@ export type ChatConnectionStatus =
   | "closed";
 
 /**
- * `failed`의 원인. 브라우저 웹소켓은 핸드셰이크 HTTP 코드(401·403·404)를
+ * `failed`의 원인. 브라우저 웹소켓은 핸드셰이크 HTTP 코드(401·403)를
  * 알려주지 않고 1006으로만 끊기므로 `handshake`는 "무엇 때문인지 모른다"에 가깝다.
- * 로그인·닉네임은 접속 전에 화면이 먼저 거르고, 세션 발급이 401이면 `auth`다.
+ * 통합 방은 닫히지 않아 404가 없으니 남는 건 서버 장애다. 로그인·닉네임은 접속 전에
+ * 화면이 먼저 거르고, 세션 발급이 401이면 `auth`다.
  */
 export type ChatFailure = "auth" | "session" | "handshake";
-
-/**
- * 킥오프 기준 방 수명 구간. 서버는 킥오프 30분 전에 열고 3시간 뒤에 닫는다.
- * 화면은 `after`만 접속 없이 거르고 `before`는 붙어 본다 — dev가 방 여는 구간을
- * 넓혀 두는 경우(`CHAT_OPEN_BEFORE=720h`)를 화면이 막지 않게 하려는 것이다.
- */
-export type ChatRoomPhase = "before" | "open" | "after";

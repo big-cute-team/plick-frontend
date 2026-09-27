@@ -67,7 +67,7 @@ description: >-
 - 콘텐츠를 좌우로 끌어 이웃 값(팀·날짜·탭)으로 넘기는 화면은 `SwipePager`(`_components`)를 쓴다.
   `value`·`neighborOf`·`onCommit`·`renderPreview`만 넘기면 축 판정·플릭·스냅·미리보기 페인이 붙는다.
   커밋 핸들러는 탭 클릭 핸들러를 그대로 넘긴다(URL·상태 동기화가 같은 경로를 타게). 소켓처럼
-  마운트 비용이 있는 페인의 미리보기는 자리 표시로 대신한다(`MatchChatPreview`). 당겨서 새로고침은
+  마운트 비용이 있는 페인의 미리보기는 자리 표시로 대신한다(`LiveChatPreview`). 당겨서 새로고침은
   `ScrollArea`의 `onRefresh`인데 서버 컴포넌트는 함수를 못 넘기니 `XxxScrollArea` 클라 껍데기를 둔다.
 - 사진 자리는 `bg-media` 면이다. 팀컬러 그라데이션은 쓰지 않는다(KAN-567).
 - 팀 로고 = `TeamCrest`(`team`에 `TEAMS[code]` 객체) — `public/teams/<코드소문자>.webp`의 **실제 구단
