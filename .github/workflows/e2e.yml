@@ -38,6 +38,8 @@ jobs:
     timeout-minutes: 20
     env:
       E2E_TARGET: ${{ github.event.inputs.target || 'dev' }}
+      # dev WAF(plick-dev-lock)는 팀 IP 밖을 403으로 막는다. 이 값을 쿠키 plick_e2e로 실어 통과한다(KAN-573)
+      E2E_BYPASS_TOKEN: ${{ secrets.E2E_BYPASS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,19 +63,28 @@ jobs:
 
       # Blue/Green 전환 직후 잠깐 이전 인스턴스가 응답할 수 있다. 헬스가 200을 주는지만 확인하고
       # 짧게 기다린다. 배포 SHA를 응답에 싣지 않아 버전 대조는 못 한다(ADR 0169 TODO).
+      # 끝내 200이 아니면 여기서 멈춘다. 그대로 넘기면 차단 페이지를 상대로 전 시나리오가 깨져
+      # 원인이 테스트 실패로 가려진다(KAN-573 전까지 WAF 403이 그렇게 숨어 있었다).
       - name: Wait for targets
         run: |
           if [ "$E2E_TARGET" = "prod" ]; then
             urls="https://m.plick.co.kr https://plick.co.kr"
           else
             urls="https://dev-m.plick.co.kr https://dev.plick.co.kr"
+            if [ -z "$E2E_BYPASS_TOKEN" ]; then
+              echo "::error::E2E_BYPASS_TOKEN 시크릿이 없다. dev WAF가 러너를 403으로 막는다"; exit 1
+            fi
           fi
           for u in $urls; do
+            ok=""
             for i in $(seq 1 12); do
-              code="$(curl -s -o /dev/null -w '%{http_code}' "$u/api/health" || true)"
-              [ "$code" = "200" ] && break
+              code="$(curl -s -o /dev/null -w '%{http_code}' -H "cookie: plick_e2e=$E2E_BYPASS_TOKEN" "$u/api/health" || true)"
+              [ "$code" = "200" ] && { ok=1; break; }
               echo "$u/api/health -> $code, retry $i"; sleep 10
             done
+            if [ -z "$ok" ]; then
+              echo "::error::$u/api/health가 200을 주지 않는다(마지막 $code). 403이면 WAF 쿠키 규칙과 시크릿 값을 확인한다"; exit 1
+            fi
           done
           [ "${{ github.event_name }}" = "workflow_run" ] && sleep 30 || true
 
