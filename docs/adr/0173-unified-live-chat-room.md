@@ -184,3 +184,11 @@ develop에 병합되어 dev에 배포된 뒤에 dev 도메인에서 할 일로 �
 - main 병합 전에 prod BE에 KAN-571이 올라갔는지, prod SSM(`/plick/frontend/{mobile,web}/prod/env`)에
   `CHAT_WS_URL`이 있는지. 없으면 prod가 채팅을 연 채 붙지 못한다([ADR 0142](0142-live-chat-temporary-close.md) "되살릴 때").
 - "새 메시지 N개"를 메시지 수로 세는 것. 통합 방은 흐름이 빨라 차이가 커진다.
+
+## 헤드리스 리뷰
+
+push 전에 `./scripts/review/pr-review.sh`를 돌렸다. 첫 실행은 기본 예산 1달러에서 멈췄다. 파일 이름을 여럿
+바꿔서 diff가 2,170줄로 불었고, 모델이 파일을 읽다가 예산이 바닥나 구조화된 결과를 못 내고 끝났다(스크립트는
+실행 오류 exit 3). `REVIEW_BUDGET_USD=2.5 REVIEW_MAX_TURNS=24`로 다시 돌리니 15턴, 0.86달러에 CRITICAL 0으로 끝났다.
+WARN 하나는 `screen-publishing` 스킬 문서가 옛 이름 `MatchChatPreview`를 가리킨다는 것이라 고쳤다. INFO 하나는
+`ROOM_BUSY` 되돌리기가 "마지막 글"로 짐작한다는 한계인데, 위에 적은 그대로라 두었다.
