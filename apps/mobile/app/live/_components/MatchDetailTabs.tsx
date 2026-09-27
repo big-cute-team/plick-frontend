@@ -17,7 +17,7 @@ import { TimelineBlock } from "./TimelineBlock";
 
 /**
  * 경기 상세 탭의 본문(피그마 L5~L9, 시안 KAN-567). 프리뷰·요약·라인업·스탯·순위·
- * 뉴스를 그린다. 채팅 탭은 스크롤 영역 밖에 따로 서야 해서(`MatchChatPanel`)
+ * 뉴스를 그린다. 채팅 탭은 스크롤 영역 밖에 따로 서야 해서(`LiveChatPanel`)
  * 여기 없다. 탭 선택은 `MatchDetailScreen`이 갖고 여기는 받은 탭만 그린다(KAN-458
  * 에서 제어형으로). 각 블록은 서버가 조각 실패 시 null로 내릴 수 있어 블록별
  * 빈 안내가 기본이다.

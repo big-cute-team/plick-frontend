@@ -38,7 +38,7 @@ async function loadRanking(): Promise<TrendRanking | null> {
 /**
  * 우측 레일의 "실시간 급상승" 상자 (KAN-501, 이슈 전환 KAN-523, 시안 KAN-567
  * "우측 레일"). 전 이름은 `TrendingSection`이었다 — 시안이 레일 조각을 상자 둘
- * (급상승, 채팅방)로 그려 `ChatRail`과 짝이 되게 바꿨다. 홈, 기사 세부, 기사 목록,
+ * (급상승, 채팅방)로 그려 `LiveChatPanel`과 짝이 되게 바꿨다. 홈, 기사 세부, 기사 목록,
  * 이슈, 투표, 프로필이 `SideRail`을 통해 같이 쓴다.
  *
  * 시안: 레일 테두리(`border-strong`) 안에 헤더 "실시간 급상승" 13/900과 집계 시각,

@@ -166,7 +166,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
               </section>
             </div>
 
-            <SideRail />
+            <SideRail chat />
           </PageContainer>
         </FeedPullRefresh>
 
