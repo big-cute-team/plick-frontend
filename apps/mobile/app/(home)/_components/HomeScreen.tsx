@@ -1,11 +1,7 @@
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import {
-  HOT_NO_IMAGE_COUNT,
-  getArticles,
-  getHotArticles,
-} from "@plick/core/articles";
+import { getArticles, getHotArticles } from "@plick/core/articles";
 import { getDebates } from "@plick/core/debates";
 import { withTweetPhotos } from "@plick/core/tweet-media";
 import { getMatches } from "@plick/core/live";
@@ -19,9 +15,6 @@ import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
-import { HotTextCard } from "./HotTextCard";
-import { HotTextPager } from "./HotTextPager";
-import { MoreArticlesLink } from "./MoreArticlesLink";
 import { NewsFeed } from "./NewsFeed";
 import { OpenDebateBanner } from "./OpenDebateBanner";
 import { TodayMatchBanner } from "./TodayMatchBanner";
@@ -39,9 +32,9 @@ import { TodayMatchBanner } from "./TodayMatchBanner";
  * 바꾸는 순간부터는 클라가 이어받는다 (KAN-271).
  *
  * 핫이슈는 `GET /api/v1/articles/hot`을 단발로 받는다 (KAN-282). 응답이 원문 사진
- * 유무로 갈린 두 목록이라(KAN-480) 시안대로 사진 카드는 168px 가로 스크롤 트랙에,
- * 사진 없는 기사는 그 아래 텍스트 카드 한 장씩 점으로 넘긴다. 핫이슈 전체가 채운
- * 면(radius 16) 상자 하나다.
+ * 유무로 갈린 두 목록인데(KAN-480) 사진 있는 기사만 168px 카드 한 줄 가로 스크롤
+ * 트랙에 깐다. 사진 없는 기사의 텍스트 카드 페이저는 KAN-569에서 뺐다. 핫이슈 전체가
+ * 채운 면(radius 16) 상자 하나다.
  *
  * 네 API는 서로 독립이라 병렬로 받고, 한쪽이 실패해도 페이지 전체를 에러로
  * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다. 배너 둘은 실패해도 자리를
@@ -74,10 +67,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
     console.error("[home] 토론 리스트 로드 실패:", debateResult.reason);
   }
   /* 사진 카드는 사진이 주인공이라, 대표 이미지가 빈 카드는 원문 게시물의
-     제일 큰 사진으로 메운다 (KAN-484) */
-  const heroes = hot ? await withTweetPhotos(hot.withImage) : [];
-  // BE는 그룹마다 5건까지 주는데 텍스트 카드는 세 장으로 정해져 있다
-  const noImage = hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? [];
+     제일 큰 사진으로 메운다 (KAN-484). 그래도 사진이 없는 카드는 뺀다 (KAN-569) */
+  const heroes = hot
+    ? (await withTweetPhotos(hot.withImage)).filter((a) => a.imageUrl)
+    : [];
 
   let initial: InitialArticleFeed | undefined;
   if (feedResult.status === "fulfilled") {
@@ -119,7 +112,9 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           <OpenDebateBanner debates={debates} />
         </div>
 
-        {/* 핫이슈 상자 — 채운 면 하나에 제목·사진 카드 트랙·텍스트 카드 페이저 */}
+        {/* 핫이슈 상자. 채운 면 하나에 제목과 사진 카드 한 줄 트랙.
+            트랙은 스냅이 첫 카드를 스크롤 상자 왼끝에 붙이지 않게 패딩만큼
+            scroll-padding을 준다 (KAN-569) */}
         <section className="px-edge pt-3">
           <div className="bg-elevate-2 rounded-card py-3.25">
             <h2 className="text-body-lg text-text-strong tracking-section px-3 pb-2.5 font-black">
@@ -129,49 +124,29 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
               <p className="text-body text-text-4 px-3 py-8 text-center">
                 핫이슈를 불러오지 못했어요
               </p>
-            ) : heroes.length === 0 && noImage.length === 0 ? (
+            ) : heroes.length === 0 ? (
               <p className="text-body text-text-4 px-3 py-8 text-center">
                 아직 핫이슈가 없어요
               </p>
             ) : (
-              <>
-                {heroes.length > 0 && (
-                  <div className="snap-x-carousel no-scrollbar flex gap-2.5 overflow-x-auto px-3 pb-3">
-                    {heroes.map((article, i) => (
-                      <HotHeroCard
-                        key={article.id}
-                        article={article}
-                        rank={i}
-                        fetchPriority={i < 2 ? "high" : "low"}
-                      />
-                    ))}
-                  </div>
-                )}
-                {noImage.length > 0 && (
-                  <HotTextPager>
-                    {/* 순위는 사진 카드 뒤에 이어 붙는다 — 핫이슈 응답 순서 그대로 (KAN-543) */}
-                    {noImage.map((article, i) => (
-                      <HotTextCard
-                        key={article.id}
-                        article={article}
-                        rank={heroes.length + i}
-                      />
-                    ))}
-                  </HotTextPager>
-                )}
-              </>
+              <div className="snap-x-carousel no-scrollbar flex scroll-px-3 gap-2.5 overflow-x-auto px-3">
+                {heroes.map((article, i) => (
+                  <HotHeroCard
+                    key={article.id}
+                    article={article}
+                    rank={i}
+                    fetchPriority={i < 2 ? "high" : "low"}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </section>
 
         <section className="pt-5">
-          <div className="px-edge flex items-baseline justify-between pb-2">
-            <h2 className="text-body-lg text-text-strong tracking-section font-black">
-              지금 올라온 소식
-            </h2>
-            {/* 첫 페이지 밖 기사는 기사 페이지가 맡는다 (KAN-386) */}
-            <MoreArticlesLink variant="header" />
-          </div>
+          <h2 className="text-body-lg text-text-strong tracking-section px-edge pb-2 font-black">
+            지금 올라온 소식
+          </h2>
           <NewsFeed initial={initial} initialTeam={team} />
         </section>
 

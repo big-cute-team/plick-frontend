@@ -19,7 +19,7 @@ export function ReelStatus({
   retryDisabled?: boolean;
 }) {
   return (
-    <div className="bg-bg flex h-full w-full shrink-0 basis-full flex-col items-center justify-center">
+    <div className="bg-reel-bg flex h-full w-full shrink-0 basis-full flex-col items-center justify-center">
       <p className="text-body text-text-4">{message}</p>
       {onRetry && (
         <button

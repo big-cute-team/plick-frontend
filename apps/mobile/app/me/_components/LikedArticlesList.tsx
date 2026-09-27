@@ -26,7 +26,7 @@ const SKELETON_COUNT = 4;
  * 바로 빠진 것처럼 보인다. 서버는 다음 조회부터 빼 준다. 캐시에서 항목을 지우지
  * 않는 이유는 다시 켜면 되살아나야 해서다.
  *
- * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`ArticlesFeed`)와 같다.
+ * 로딩·에러·빈 상태와 커서 400 복구는 릴스 피드(`ReelsFeed`)와 같다.
  * 토큰이 만료돼 401이 오면 목록 자리에 로그인 안내를 그린다.
  *
  * @param initial 서버가 미리 받아 둔 첫 페이지와 그 시각
@@ -50,7 +50,7 @@ export function LikedArticlesList({
     refetch,
   } = useLikedArticles(initial);
 
-  /* `isFetching`으로 막는 이유는 ArticlesFeed와 같다 (KAN-404 커서 400 루프) */
+  /* `isFetching`으로 막는 이유는 ReelsFeed와 같다 (KAN-404 커서 400 루프) */
   const sentinelRef = useInfiniteScroll(
     fetchNextPage,
     hasNextPage && !isFetching && !isFetchNextPageError,

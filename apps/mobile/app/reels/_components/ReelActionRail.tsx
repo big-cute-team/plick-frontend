@@ -4,14 +4,13 @@ import { ChatIcon, LikeIcon, SendIcon } from "@plick/ui/icons";
 import type { ReelCard } from "@plick/domain/types";
 
 /**
- * 릴 오른쪽 세로 액션 레일, 좋아요·댓글·공유 (시안 KAN-567). 저장은 계약에 없어
- * 뺐다 (KAN-299). 미디어 상자 밑 정보 블록 오른쪽에 세로로 선다(사진 위 오버레이가
- * 아니라 흰 바탕이라 그림자가 없다).
+ * 릴 오른쪽 세로 액션 레일, 좋아요·댓글·공유. 저장은 계약에 없어 뺐다 (KAN-299).
+ * 미디어 위 오른쪽 아래에 흰 아이콘으로 겹쳐 선다(KAN-569에서 전 배치로 되돌렸다).
  *
- * 좋아요는 하트 26 + 수 11/700이고 눌리면 하트와 수가 빨강으로 찬다 (KAN-308).
- * 댓글은 말풍선 25 + 빨간 수, 공유는 종이비행기 25 + "공유"다. 토글 로직과 상태
- * 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다.
- * 비로그인 시트도 부모 층이 그린다.
+ * 좋아요는 눌리면 하트와 수가 빨강으로 찬다 (KAN-308, 색은 KAN-567 톤). 토글 로직과
+ * 상태 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다.
+ * 비로그인 시트를 이 안에서 그리면 레일에 걸린 `drop-shadow` 필터가 화면 전체
+ * 오버레이의 기준 상자가 돼 시트가 레일만 덮는다. 그래서 부모 층이 그린다.
  *
  * @param onLike - 하트 탭 시 호출
  * @param onComment - 댓글 아이콘 탭 시 호출 (세부 시트 열기)
@@ -29,24 +28,23 @@ export function ReelActionRail({
   onShare: () => void;
 }) {
   return (
-    <div className="flex shrink-0 flex-col items-center gap-3.5">
+    <div className="drop-shadow-media absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
       <RailAction
-        icon={<LikeIcon size={26} filled={reel.liked} />}
+        icon={<LikeIcon size={34} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}
         onClick={onLike}
-        tone={reel.liked ? "danger" : "default"}
+        active={reel.liked}
         ariaLabel={reel.liked ? "좋아요 취소" : "좋아요"}
         ariaPressed={reel.liked}
       />
       <RailAction
-        icon={<ChatIcon size={25} />}
+        icon={<ChatIcon size={33} />}
         label={formatCount(reel.commentCount)}
         onClick={onComment}
-        tone="count"
         ariaLabel="댓글"
       />
       <RailAction
-        icon={<SendIcon size={25} />}
+        icon={<SendIcon size={33} />}
         label="공유"
         onClick={onShare}
       />
@@ -55,9 +53,9 @@ export function ReelActionRail({
 }
 
 /**
- * 액션 레일 버튼 하나 (아이콘 + 라벨). 아이콘은 text-2, 라벨은 text-3가 기본이다.
+ * 액션 레일 버튼 하나 (아이콘 + 라벨). 미디어 위라 기본은 흰색이다.
  *
- * @param tone - `danger`는 눌린 좋아요(아이콘·수 전부 빨강), `count`는 댓글 수만 빨강
+ * @param active - 켜진 토글(눌린 좋아요)이면 아이콘과 수를 빨강으로
  * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다
  * @param ariaPressed - 토글 버튼이면 눌린 상태
  */
@@ -65,14 +63,14 @@ function RailAction({
   icon,
   label,
   onClick,
-  tone = "default",
+  active,
   ariaLabel,
   ariaPressed,
 }: {
   icon: ReactNode;
   label: string;
   onClick?: () => void;
-  tone?: "default" | "danger" | "count";
+  active?: boolean;
   ariaLabel?: string;
   ariaPressed?: boolean;
 }) {
@@ -83,21 +81,11 @@ function RailAction({
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       className={`${
-        tone === "danger" ? "text-danger" : "text-text-2"
-      } flex flex-col items-center gap-0.75 active:opacity-60`}
+        active ? "text-danger" : "text-media-on"
+      } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}
-      <span
-        className={`text-caption font-bold ${
-          tone === "danger"
-            ? "text-danger"
-            : tone === "count"
-              ? "text-danger"
-              : "text-text-3"
-        }`}
-      >
-        {label}
-      </span>
+      <span className="text-label font-bold">{label}</span>
     </button>
   );
 }

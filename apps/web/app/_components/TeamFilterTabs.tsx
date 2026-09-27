@@ -25,17 +25,13 @@ import type { Filter } from "@plick/domain/types";
  *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
- * @param hrefFor - 필터 → 이 surface의 URL. 홈은 teamHubPath(기본값),
- *   기사 페이지는 articlesTeamPath.
  */
 export function TeamFilterTabs({
   value,
   onChange,
-  hrefFor = teamHubPath,
 }: {
   value: Filter;
   onChange: (f: Filter) => void;
-  hrefFor?: (f: Filter) => string;
 }) {
   const items: { key: Filter; label: string }[] = [
     { key: "ALL", label: "전체" },
@@ -76,7 +72,7 @@ export function TeamFilterTabs({
         return (
           <a
             key={key}
-            href={hrefFor(key)}
+            href={teamHubPath(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
             className={`text-label-lg focus-visible:outline-accent shrink-0 scroll-mx-6 pr-3.75 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${

@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { BRAND_NAME_KO } from "@plick/domain/brand";
 import { TEAM_FULL_NAMES, TEAM_ORDER } from "@plick/domain/constants";
-import { articlesTeamPath } from "@plick/domain/format";
+import { teamHubPath } from "@plick/domain/format";
 
 const SERVICE_LINKS = [
-  { href: "/articles", label: "기사" },
   { href: "/reels", label: "릴스" },
   { href: "/debates", label: "투표" },
   { href: "/faq", label: "자주 묻는 질문" },
@@ -24,7 +23,7 @@ export function HomeFooter() {
           {TEAM_ORDER.map((code) => (
             <li key={code}>
               <Link
-                href={articlesTeamPath(code)}
+                href={teamHubPath(code)}
                 className="text-caption text-text-3 active:opacity-60"
               >
                 {TEAM_FULL_NAMES[code]} 이적 루머

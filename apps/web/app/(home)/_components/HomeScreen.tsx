@@ -1,8 +1,4 @@
-import {
-  HOT_NO_IMAGE_COUNT,
-  getArticles,
-  getHotArticles,
-} from "@plick/core/articles";
+import { getArticles, getHotArticles } from "@plick/core/articles";
 import { getMatches } from "@plick/core/live";
 import { withTweetPhotos } from "@plick/core/tweet-media";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
@@ -18,13 +14,13 @@ import { PostFeed } from "@/_components/PostFeed";
 import { SideRail } from "@/_components/SideRail";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { HOT_CARD_COUNT } from "@/_constants/app";
 import { SITE_URL } from "@/_constants/site";
 import { HomeIntro } from "./HomeIntro";
 import { HotCard } from "./HotCard";
+import { HotCarousel } from "./HotCarousel";
 
 /**
- * 데스크톱 홈 화면 본체 (KAN-200, 시안 KAN-567 "홈") — 상단 바, LIVE 띠, 핫이슈 3열,
+ * 데스크톱 홈 화면 본체 (KAN-200, 시안 KAN-567 "홈") — 상단 바, LIVE 띠, 핫이슈 한 줄,
  * "새로 올라온 이슈" 표, 우측 레일, 푸터.
  *
  * 홈(`/`)과 팀 허브(`/teams/[slug]`)가 같은 화면을 그린다 (KAN-350). 팀 허브는
@@ -38,10 +34,9 @@ import { HotCard } from "./HotCard";
  *
  * 핫이슈는 `GET /api/v1/articles/hot`을 단발로 받는다 (KAN-324, KAN-338). 팀 탭을
  * 골라도 핫이슈는 전체 기준 그대로이므로 팀 허브에서도 같은 데이터를 그린다.
- * 응답이 원문 사진 유무로 갈린 두 목록인데(KAN-480, BE는 KAN-487) 시안은 카드
- * 한 종류의 3열 grid라 사진 있는 기사부터 이어 붙여 한 목록으로 깐다. 사진 없는
- * 카드는 사진 자리에 원문 임베드를 세운다(`HotCard`). 캐러셀(KAN-338)과 텍스트
- * 카드(KAN-480)는 시안에 없어 뺐다.
+ * 응답이 원문 사진 유무로 갈린 두 목록인데(KAN-480, BE는 KAN-487) 사진 있는
+ * 기사만 세 장씩 보이는 한 줄 캐러셀에 깐다({@link HotCarousel}, KAN-569). 사진 없는
+ * 기사를 임베드 카드로 이어 붙이던 3열 grid는 두 줄로 접혀 뺐다.
  *
  * 오늘 경기(LIVE 띠)도 여기서 같이 받는다 — 띠가 스스로 받게 두면 Suspense로
  * 늦게 끼어들며 본문이 밀린다. 세 API는 서로 독립이라 병렬로 받고(`allSettled`
@@ -70,13 +65,10 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
     console.error("[home] 핫이슈 로드 실패:", hotResult.reason);
   }
   /* 사진 카드는 사진이 주인공이라, 대표 이미지가 빈 카드는 원문 게시물의
-     제일 큰 사진으로 메운다 (KAN-484) */
-  const heroes = hot ? await withTweetPhotos(hot.withImage) : [];
-  // 사진 없는 기사는 세 장까지(HOT_NO_IMAGE_COUNT), 전체는 3열 두 줄까지 깐다
-  const cards = [
-    ...heroes,
-    ...(hot?.withoutImage.slice(0, HOT_NO_IMAGE_COUNT) ?? []),
-  ].slice(0, HOT_CARD_COUNT);
+     제일 큰 사진으로 메운다 (KAN-484). 그래도 사진이 없는 카드는 뺀다 (KAN-569) */
+  const cards = hot
+    ? (await withTweetPhotos(hot.withImage)).filter((a) => a.imageUrl)
+    : [];
 
   const matches = matchResult.status === "fulfilled" ? matchResult.value : [];
   if (matchResult.status === "rejected") {
@@ -125,30 +117,34 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
               )}
 
               <section>
-                <h2 className="text-body-lg text-text-strong pb-2.75 font-black tracking-tight">
-                  핫이슈
-                </h2>
-                {hot === null ? (
-                  <p className="text-body text-text-4 py-8 text-center">
-                    핫이슈를 불러오지 못했어요
-                  </p>
-                ) : cards.length === 0 ? (
-                  <p className="text-body text-text-4 py-8 text-center">
-                    아직 핫이슈가 없어요
-                  </p>
+                {hot === null || cards.length === 0 ? (
+                  <>
+                    <h2 className="text-body-lg text-text-strong pb-2.75 font-black tracking-tight">
+                      핫이슈
+                    </h2>
+                    <p className="text-body text-text-4 py-8 text-center">
+                      {hot === null
+                        ? "핫이슈를 불러오지 못했어요"
+                        : "아직 핫이슈가 없어요"}
+                    </p>
+                  </>
                 ) : (
-                  /* 좁은 화면에서는 한 열로 쌓이고 sm부터 3열이다 */
-                  <ul className="grid grid-cols-1 gap-5 pb-7.5 sm:grid-cols-3">
+                  <HotCarousel
+                    title={
+                      <h2 className="text-body-lg text-text-strong font-black tracking-tight">
+                        핫이슈
+                      </h2>
+                    }
+                  >
                     {cards.map((article, i) => (
-                      <li key={article.id}>
-                        <HotCard
-                          article={article}
-                          rank={i}
-                          fetchPriority={i < 3 ? "high" : "low"}
-                        />
-                      </li>
+                      <HotCard
+                        key={article.id}
+                        article={article}
+                        rank={i}
+                        fetchPriority={i < 3 ? "high" : "low"}
+                      />
                     ))}
-                  </ul>
+                  </HotCarousel>
                 )}
               </section>
 
@@ -166,7 +162,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                     최신순
                   </span>
                 </div>
-                <PostFeed initial={initial} initialTeam={team} variant="news" />
+                <PostFeed initial={initial} initialTeam={team} />
               </section>
             </div>
 

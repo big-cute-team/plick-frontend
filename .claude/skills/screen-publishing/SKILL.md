@@ -17,7 +17,7 @@ description: >-
 색·간격·글자·라운드는 전부 토큰 유틸. 임의 hex/px 쓰지 않는다. 토큰 정의는 `packages/tokens/theme.css`이고
 값의 출처는 KAN-567 핸드오프 시안이다. 새 토큰이 필요하면 거기 추가하고 `@theme inline`(색) 매핑을 함께.
 
-- 면: `bg-bg`(흰) `bg-canvas`(셸 밖) `bg-elevate`(배너·릴 상자) `bg-elevate-2`(핫이슈 상자) `bg-chip`(태그 칩) `bg-input`(입력창)
+- 면: `bg-bg`(흰) `bg-canvas`(셸 밖) `bg-elevate`(배너) `bg-elevate-2`(핫이슈 상자) `bg-chip`(태그 칩) `bg-input`(입력창)
   `bg-avatar`(회색 원) `bg-vote-card`/`bg-vote-track`(투표 카드) `bg-pitch`(라인업) `bg-muted` `bg-dim`/`bg-dim-strong`(딤)
 - 선: `border-border`(섹션) `border-border-soft`(목록 행) `border-border-table`(표 머리) `border-border-strong`(레일·테두리 버튼)
 - 글자: `text-text-strong`(제목) `text-text`(본문) `text-text-2` `text-text-3`(보조) `text-text-4`(메타, 회색 하한)

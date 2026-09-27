@@ -7,7 +7,6 @@ import type { InitialReelFeed } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
 import { ReelsFeed } from "@/reels/_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
-import { TopBar } from "@/_components/TopBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
 import { getReelSeedTweet } from "@/_services/tweet";
@@ -112,10 +111,8 @@ export default async function ReelDeepLinkPage({
           fetchPriority="high"
         />
       )}
-      {/* 탭 피드와 같은 라이트 셸 (KAN-567) — 상단 바는 구분선 없이 */}
-      <TopBar divider={false} />
       <ReelsFeed initial={initial} anchorId={postId} seedTweet={seedTweet} />
-      <TabBar />
+      <TabBar variant="overlay" />
     </AppShell>
   );
 }

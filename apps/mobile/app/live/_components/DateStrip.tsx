@@ -2,25 +2,29 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { dateKeyParts, dateKeyYearMonth } from "@plick/domain/live";
+import { useEffect, useRef, useState } from "react";
+import {
+  dateKeyParts,
+  dateKeyYearMonth,
+  monthDateKeys,
+} from "@plick/domain/live";
 import { ChevronDownIcon, ChevronRightIcon } from "@plick/ui/icons";
-import { dateStripKeys, dateStripLabel } from "@/_utils/live";
+import { useDateStripScroll } from "@/_hooks/useDateStripScroll";
+import { dateStripLabel } from "@/_utils/live";
 
 /**
- * 경기 목록의 날짜 줄 (KAN-567 시안). 위에 지금 보는 날짜 라벨(12px 회색), 아래에
- * 선택일을 가운데 둔 7칸 날짜 줄이다. 칸은 요일 11/700 위에 일 15이고, 선택 칸은
- * 아래 2px 강조색 밑줄(시안의 inset box-shadow를 border-b로 옮겼다)에 일 900이다.
- * 일요일 요일은 빨강이고, 오늘 칸은 요일 대신 "오늘"을 적어 어디쯤인지 알린다.
- * 날짜는 `/live?date=` 쿼리 승격 규약이고 오늘은 쿼리 없는 `/live`다.
+ * 경기 목록의 날짜 줄 (KAN-567 시안, KAN-569). 위에 지금 보는 날짜 라벨(12px 회색),
+ * 아래에 그 달 1일~말일을 담은 가로 스크롤 줄이다. 한 화면에 7칸이 들어가고, 칸은
+ * 요일 11/700 위에 일 15이며 선택 칸은 아래 2px 강조색 밑줄에 일 900이다. 일요일
+ * 요일은 빨강이고, 오늘 칸은 요일 대신 "오늘"을 적는다. 날짜는 `/live?date=` 쿼리
+ * 승격 규약이고 오늘은 쿼리 없는 `/live`다.
  *
- * 전에는 한 달 전체를 가로 스크롤 스트립에 담고 선택 칸을 가운데로 당기는 계산
- * (KAN-459)이 있었다. 칸이 늘 7개고 선택일이 늘 가운데라 그 계산은 지웠다. 좌우
- * 스와이프로 하루씩 옮기면 줄 전체가 한 칸씩 따라 흐른다.
+ * KAN-567에서 선택일을 늘 가운데 둔 7칸으로 바꿨더니 칸을 누를 때마다 줄 전체가
+ * 흘렀다. KAN-569에서 한 달 줄로 되돌려, 처음 들어올 때와 달이 바뀔 때만 가운데로
+ * 당기고 그 뒤로는 선택 칸이 가려질 때만 보이는 데까지 민다({@link useDateStripScroll}).
  *
- * 달을 건너뛰는 길은 남겼다. 라벨을 누르면 연·월 목록이 열리고 고른 달의 1일
- * (오늘이 속한 달이면 오늘)로 간다. 시안에는 없는 동작이지만 하루씩만 넘기면
- * 지난 라운드를 찾기 어렵다. 그 드롭다운 상태 때문에 클라 컴포넌트다.
+ * 라벨을 누르면 연·월 목록이 열리고 고른 달의 1일(오늘이 속한 달이면 오늘)로 간다.
+ * 스크롤 자리 잡기와 드롭다운 상태 때문에 클라 컴포넌트다.
  *
  * 오늘은 페이지가 KST로 계산해 넘긴다. 여기서 다시 계산하면 서버·기기 시각이
  * 자정을 사이에 두고 갈릴 때 하이드레이션이 어긋난다.
@@ -39,6 +43,8 @@ export function DateStrip({
   const { year, month } = dateKeyYearMonth(selected);
   const [open, setOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
+  const stripRef = useRef<HTMLDivElement>(null);
+  useDateStripScroll(stripRef, selected, `${year}-${month}`);
 
   useEffect(() => {
     if (open) setPickerYear(year);
@@ -128,8 +134,13 @@ export function DateStrip({
           </div>
         </>
       )}
-      <div className="border-border grid grid-cols-7 border-b">
-        {dateStripKeys(selected).map((dateKey) => {
+      {/* 바닥 선은 border가 아니라 inset 그림자다. 가로 스크롤 상자는 세로도 잘라
+          칸 밑줄을 -1px로 선에 겹칠 수 없는데, 그림자는 자식 밑줄이 덮어 그린다 */}
+      <div
+        ref={stripRef}
+        className="no-scrollbar flex overflow-x-auto shadow-[inset_0_-1px_0_var(--color-border)]"
+      >
+        {monthDateKeys(year, month).map((dateKey) => {
           const on = dateKey === selected;
           const { weekday, day } = dateKeyParts(dateKey);
           const sunday = weekday === "일";
@@ -138,7 +149,7 @@ export function DateStrip({
               key={dateKey}
               href={hrefFor(dateKey)}
               aria-current={on ? "date" : undefined}
-              className={`-mb-px flex flex-col items-center gap-0.75 border-b-2 pt-2 pb-2.25 active:opacity-70 ${
+              className={`flex w-[calc(100%/7)] shrink-0 flex-col items-center gap-0.75 border-b-2 pt-2 pb-2.25 active:opacity-70 ${
                 on ? "border-accent" : "border-transparent"
               }`}
             >

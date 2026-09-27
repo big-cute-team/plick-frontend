@@ -52,9 +52,6 @@ const SPLIT_REVIEW_THRESHOLD = 5000;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
-    // 기사 목록 (KAN-386) — 웹 사이트맵과 같은 우선순위. 팀별
-    // (/articles/teams/[slug])은 canonical이 팀 허브라 싣지 않는다
-    { url: `${SITE_URL}/articles`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
     // 라이브 스코어 (KAN-452) — 경기 상세는 시즌 단위로 바뀌는 임시 URL이라 목록만 싣는다
     { url: `${SITE_URL}/live`, changeFrequency: "hourly", priority: 0.7 },

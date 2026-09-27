@@ -4,7 +4,6 @@ import { formatCount, teamProfilePath } from "@plick/domain/format";
 import type { HotArticle } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
-import { TweetEmbed } from "@/_components/TweetEmbed";
 
 /**
  * 핫이슈 사진 카드 (시안 KAN-567) — 168px 폭, 6:5 사진 위 왼쪽 위 순위 배지(21px,
@@ -12,8 +11,8 @@ import { TweetEmbed } from "@/_components/TweetEmbed";
  * 가로 스크롤 트랙에 두 장이 보이고 스냅으로 넘긴다.
  *
  * 사진은 `imageUrl`을 쓰고, 홈 서버 컴포넌트가 `withTweetPhotos`로 원문 게시물의
- * 제일 큰 사진을 뽑아 채운다(KAN-484). 그것도 못 구하면 원문 트윗을 임베드해
- * 칸을 메운다 (KAN-514) — 마지막 방어선이라 드물다.
+ * 제일 큰 사진을 뽑아 채운다(KAN-484). 그것도 못 구한 카드는 홈이 아예 빼므로
+ * (KAN-569) 여기 오는 카드는 늘 사진이 있다. 원문 임베드 폴백(KAN-514)은 걷었다.
  *
  * 카드 전체가 기사 세부로 가는 링크고 팀 이름만 팀 프로필로 간다.
  *
@@ -35,7 +34,7 @@ export function HotHeroCard({
   return (
     <div className="relative w-42 shrink-0 snap-start">
       <div className="rounded-tile bg-media relative mb-2 aspect-[6/5] overflow-hidden">
-        {article.imageUrl ? (
+        {article.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유)
           <img
             src={article.imageUrl}
@@ -44,11 +43,7 @@ export function HotHeroCard({
             fetchPriority={fetchPriority}
             className="absolute inset-0 size-full object-cover"
           />
-        ) : article.sourceUrl ? (
-          <div className="reel-embed hot-embed absolute inset-0 overflow-hidden">
-            <TweetEmbed url={article.sourceUrl} />
-          </div>
-        ) : null}
+        )}
         <span className="bg-accent text-on-accent rounded-badge text-caption absolute top-1.75 left-1.75 grid size-5.25 place-items-center font-black">
           {rank + 1}
         </span>
