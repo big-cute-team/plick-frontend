@@ -1,12 +1,12 @@
 import { test, expect } from "../../fixtures/failure";
 
-/** 기사 목록에서 상세로. 목록의 첫 기사 제목이 상세 h1과 같아야 한다 */
+/**
+ * 홈 소식 리스트에서 상세로. 목록의 첫 기사 제목이 상세 h1과 같아야 한다.
+ * 기사 목록 라우트(`/articles`)는 KAN-569에서 없어져 홈 리스트가 목록이다
+ */
 test.describe("기사", () => {
   test("목록 첫 기사를 열면 같은 제목의 상세가 뜬다", async ({ page }) => {
-    await page.goto("/articles");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "이슈" }),
-    ).toBeVisible();
+    await page.goto("/");
 
     const firstTitle = page
       .getByRole("article")
@@ -28,7 +28,7 @@ test.describe("기사", () => {
 
   test("상세의 팀 해시태그를 누르면 그 팀 프로필이 뜬다", async ({ page }) => {
     await test.step("목록 첫 기사 상세로 간다", async () => {
-      await page.goto("/articles");
+      await page.goto("/");
       await page
         .getByRole("article")
         .first()
@@ -59,10 +59,25 @@ test.describe("기사", () => {
     });
   });
 
-  test("팀 필터로 팀별 목록에 간다", async ({ page }) => {
-    await page.goto("/articles");
+  test("팀 필터를 눌러도 홈(팀 허브)에 머문다", async ({ page }) => {
+    await page.goto("/");
     await page.getByRole("link", { name: "맨유", exact: true }).click();
-    await expect(page).toHaveURL(/\/articles\/teams\/manchester-united$/);
+    await expect(page).toHaveURL(/\/teams\/manchester-united$/);
     await expect(page.getByRole("article").first()).toBeVisible();
+  });
+
+  test("기사 더 보기를 누르면 홈 리스트에 이어 붙는다", async ({ page }) => {
+    await page.goto("/");
+    const articles = page.getByRole("article");
+    await expect(articles.first()).toBeVisible();
+    const before = await articles.count();
+    await page.getByRole("button", { name: "기사 더 보기" }).click();
+    await expect.poll(() => articles.count()).toBeGreaterThan(before);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("옛 기사 목록 주소는 홈으로 옮겨진다", async ({ page }) => {
+    await page.goto("/articles/teams/manchester-united");
+    await expect(page).toHaveURL(/\/teams\/manchester-united$/);
   });
 });

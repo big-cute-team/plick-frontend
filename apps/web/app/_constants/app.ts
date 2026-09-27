@@ -25,13 +25,12 @@ export const SWITCH_BANNER_DISMISS_KEY = "plick-switch-banner-dismissed";
  */
 export const FEED_SURFACE_BY_PATH: Record<string, PostListVariant> = {
   "/": "news",
-  "/articles": "article",
 };
 
 /**
  * GNB 링크 — 시안(KAN-567) 상단 바 2줄째 순서다: 홈, 릴스, LIVE, 투표, MY.
- * KAN-435 때 기사 뒤에 끼웠던 LIVE가 릴스 뒤로 왔고 기사 링크는 뺐다 — 홈 안의
- * 표 목록이 기사 목록을 겸하고 `/articles` 라우트는 푸터와 더 보기가 잇는다.
+ * KAN-435 때 기사 뒤에 끼웠던 LIVE가 릴스 뒤로 왔고 기사 링크는 뺐다. 홈 안의
+ * 표 목록이 기사 목록을 겸한다(`/articles` 라우트는 KAN-569에서 없앴다).
  * LIVE는 빨간 점과 빨간 글자로 그린다(`NavItem`이 href로 판정한다).
  */
 export const NAV_LINKS: { href: string; label: string }[] = [
@@ -50,12 +49,6 @@ export const NAV_LINKS: { href: string; label: string }[] = [
  */
 export const POST_TABLE_GRID =
   "grid grid-cols-[40px_minmax(0,1fr)_54px] lg:grid-cols-[40px_minmax(0,1fr)_128px_54px_48px_46px] items-center";
-
-/**
- * 홈 핫이슈 카드 최대 장수 (KAN-567). 시안은 3열 한 줄이지만 BE가 사진 유무별로
- * 다섯 건씩 주므로 3열 두 줄까지만 깐다 — 세 장을 넘는 나머지는 표가 보여준다.
- */
-export const HOT_CARD_COUNT = 6;
 
 /** 표에서 `lg` 아래에 접는 열(기자·조회·좋아요)의 셀 클래스. */
 export const POST_TABLE_CELL_LG = "hidden lg:block";

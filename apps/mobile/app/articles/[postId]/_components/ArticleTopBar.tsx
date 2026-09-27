@@ -8,8 +8,9 @@ import { ArticleShareButton } from "./ArticleShareButton";
  * 시안에는 공유 옆에 더보기(⋯)가 하나 더 있는데 프로토타입에도 동작이 없고 기사
  * 신고 API가 없어 뺐다. 눌러서 열 것이 없는 아이콘을 두지 않는다.
  *
- * 뒤로가기는 히스토리 back이다 (KAN-386) — 세부는 홈 리스트와 기사 목록
- * 양쪽에서 들어오므로 목적지를 고정할 수 없다. 딥링크 진입 폴백은 기사 목록.
+ * 뒤로가기는 히스토리 back이다 (KAN-386). 세부는 홈 리스트, 릴스, 프로필 등 여러
+ * 곳에서 들어오므로 목적지를 고정할 수 없다. 딥링크 진입 폴백은 홈이다(기사 목록
+ * 라우트는 KAN-569에서 없앴다).
  *
  * @param teamName - 대표 팀 이름. 없으면 제목이 "이슈"다
  * @param articleId - 공유할 기사 id. 로딩 스켈레톤처럼 아직 모르면 공유 아이콘을 뺀다
@@ -24,7 +25,7 @@ export function ArticleTopBar({
   return (
     <SubTopBar
       title={teamName ? `${teamName} 이슈` : "이슈"}
-      backHref="/articles"
+      backHref="/"
       backBehavior="back"
       trailing={
         articleId ? (

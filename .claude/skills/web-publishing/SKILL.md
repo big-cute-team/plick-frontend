@@ -54,8 +54,8 @@ description: >-
   모바일 뷰로 스택.
   - 모바일 뷰 기본 패턴(홈 기준): 다열 그리드 → **1열**(`grid-cols-1 lg:grid-cols-[…]`),
     사이드바 등 보조 영역은 **숨김**(`hidden lg:flex`, 컴포넌트에 `className` prop을 받아 제어).
-    핫이슈는 모바일과 같은 캐러셀(`@plick/ui` `HotCarousel`)을 그대로 쓰고 카드 비율만
-    `lg:aspect-video`로 낮춘다(KAN-338).
+    핫이슈는 한 줄 가로 캐러셀(`(home)/_components/HotCarousel`)이라 `sm`부터 세 장, 그 아래는
+    한 장 반이 보이고 손으로 민다(KAN-569).
   - GNB: 가로 내비·검색은 `hidden lg:flex`, 대신 **햄버거 `MobileNav`**(`lg:hidden`)로 접는다
     (`@plick/ui/icons`의 `MenuIcon`). 아이콘 클러스터는 스페이서(`flex-1 lg:hidden`)로 우측 정렬.
   - `h-full`로 형제 높이에 맞추던 요소는 1열이 되면 높이 기준이 사라지므로

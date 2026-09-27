@@ -10,7 +10,7 @@ import {
   TEAM_FULL_NAMES,
   TEAM_IDS,
 } from "@plick/domain/constants";
-import { articlesTeamPath } from "@plick/domain/format";
+import { teamHubPath } from "@plick/domain/format";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { TeamCrest } from "@plick/ui/TeamCrest";
@@ -160,9 +160,9 @@ export default async function TeamProfilePage({
           )}
 
           <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
-          {/* 팀 관련 기사는 기사 목록의 팀 탭이 원본이다 */}
+          {/* 팀 관련 기사는 홈 소식 리스트의 팀 탭(팀 허브)이 원본이다 (KAN-569) */}
           <Link
-            href={articlesTeamPath(code)}
+            href={teamHubPath(code)}
             className="border-border-soft text-body text-text-strong flex items-center justify-between border-b py-3 font-bold active:opacity-70"
           >
             {team.name} 이슈 모아보기

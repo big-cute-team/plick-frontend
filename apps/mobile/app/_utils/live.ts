@@ -8,14 +8,12 @@ import {
   kickoffDateLabel,
   kickoffTimeLabel,
   matchStatusLabel,
-  shiftDateKey,
   type LineupPlayer,
   type LiveTeam,
   type MatchSummary,
   type TeamLineup,
 } from "@plick/domain/live";
 import type { TeamCode } from "@plick/domain/types";
-import { DATE_STRIP_SPAN } from "@/_constants/live";
 
 /**
  * 한 경기에서 기사를 모을 수 있는 팀 코드 목록 (KAN-484).
@@ -32,21 +30,6 @@ import { DATE_STRIP_SPAN } from "@/_constants/live";
 export function matchTeamCodes(header: MatchSummary): TeamCode[] {
   return [header.home.code, header.away.code].filter(
     (code): code is TeamCode => code !== null,
-  );
-}
-
-/**
- * 날짜 줄에 그릴 7일의 날짜 키 (KAN-567). 선택한 날을 가운데 두고 앞뒤
- * `DATE_STRIP_SPAN`일씩 편다. 시안의 날짜 줄이 7칸 한 줄이라 그렇게 잡았고,
- * 좌우 스와이프로 하루씩 옮길 때 줄 전체가 한 칸씩 따라 흐른다.
- *
- * @param selected 가운데 둘 날짜 키
- * @example
- * dateStripKeys("2026-09-21"); // ["2026-09-18", …, "2026-09-24"]
- */
-export function dateStripKeys(selected: string): string[] {
-  return Array.from({ length: DATE_STRIP_SPAN * 2 + 1 }, (_, i) =>
-    shiftDateKey(selected, i - DATE_STRIP_SPAN),
   );
 }
 

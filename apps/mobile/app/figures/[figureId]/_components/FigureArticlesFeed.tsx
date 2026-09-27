@@ -20,7 +20,7 @@ const SKELETON_COUNT = 4;
  * 전용 카드를 만들면 같은 카드가 둘로 갈린다(좋아요 목록 KAN-495와 같은
  * 판단). 팀 탭이 없으므로 대표 팀은 기사의 첫 팀이다.
  *
- * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`ArticlesFeed`)와 같다.
+ * 로딩·에러·빈 상태와 커서 400 복구는 릴스 피드(`ReelsFeed`)와 같다.
  * 인물 태그는 앞으로 수집되는 기사부터 붙어서 배포 직후엔 빈 상태가 흔하다.
  *
  * @param figureId 인물 id
@@ -47,7 +47,7 @@ export function FigureArticlesFeed({
     refetch,
   } = useFigureArticles(figureId, initial);
 
-  /* `isFetching`으로 막는 이유는 ArticlesFeed와 같다 (KAN-404 커서 400 루프) */
+  /* `isFetching`으로 막는 이유는 ReelsFeed와 같다 (KAN-404 커서 400 루프) */
   const sentinelRef = useInfiniteScroll(
     fetchNextPage,
     hasNextPage && !isFetching && !isFetchNextPageError,

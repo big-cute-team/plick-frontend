@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { articlesTeamPath, teamHubPath } from "@plick/domain/format";
+import { teamHubPath } from "@plick/domain/format";
 import { FEED_SURFACE_BY_PATH } from "@/_constants/app";
 import { useFeedRefresh } from "@/_hooks/useFeedRefresh";
 import { useViewState } from "@/_stores/view-state";
@@ -13,9 +13,9 @@ import { useViewState } from "@/_stores/view-state";
  * 5px과 빨간 글자이고 활성 밑줄도 빨강이다(시안이 LIVE만 그렇게 그린다). 전에는
  * accent 필(pill)이었다.
  *
- * 홈·기사 링크의 목적지는 고정 경로가 아니라 마지막으로 보던 팀 필터의 URL이다
+ * 홈 링크의 목적지는 고정 경로가 아니라 마지막으로 보던 팀 필터의 URL이다
  * (KAN-350, 모바일 하단 탭과 같은 판단). 필터가 URL로 승격되면서
- * (`/teams/[slug]`·`/articles/teams/[slug]`) href를 `/`·`/articles`로 고정하면
+ * (`/teams/[slug]`) href를 `/`로 고정하면
  * MY 등에 다녀올 때마다 전체 탭으로 돌아가 버린다. 스토어에 동기화해 둔 마지막
  * 필터로 href를 만들어, 링크가 항상 두고 온 그 화면(같은 URL)으로 되돌린다.
  *
@@ -45,12 +45,7 @@ export function NavItem({
   const feedFilters = useViewState((state) => state.feedFilters);
 
   /** 실제 목적지 — 피드 surface 링크는 마지막으로 보던 팀 필터의 URL */
-  const target =
-    href === "/"
-      ? teamHubPath(feedFilters.news)
-      : href === "/articles"
-        ? articlesTeamPath(feedFilters.article)
-        : href;
+  const target = href === "/" ? teamHubPath(feedFilters.news) : href;
 
   const active =
     href === "/"

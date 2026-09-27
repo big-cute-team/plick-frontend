@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
-import { articlesTeamPath } from "@plick/domain/format";
+import { teamHubPath } from "@plick/domain/format";
 import type { MatchSummary } from "@plick/domain/live";
 import { PostListItem } from "@/_components/PostListItem";
 import { PostListItemSkeleton } from "@/_components/PostListItemSkeleton";
@@ -67,12 +67,12 @@ export function MatchNewsCard({ header }: { header: MatchSummary }) {
           </li>
         ))}
       </ul>
-      {/* 더 보는 건 기사 목록의 팀 탭이 원본이다. 피드와 같은 규약 */}
+      {/* 더 보는 건 홈 표의 팀 탭(팀 허브)이 원본이다 (KAN-569) */}
       <div className="flex flex-wrap gap-4 pt-4">
         {teams.map((code) => (
           <Link
             key={code}
-            href={articlesTeamPath(code)}
+            href={teamHubPath(code)}
             className="text-label text-accent hover:text-accent-hover font-bold"
           >
             {TEAMS[code].name} 기사 더 보기

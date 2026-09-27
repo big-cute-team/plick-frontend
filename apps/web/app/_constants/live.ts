@@ -105,3 +105,9 @@ export const CHAT_REJECT_MESSAGE: Record<string, string> = {
   MESSAGE_TOO_LONG: "200자까지 보낼 수 있어요",
   RATE_LIMITED: "너무 빠르게 보내고 있어요. 잠시 후 다시 보내 주세요",
 };
+
+/**
+ * 날짜 줄이 선택 칸을 화면 안으로 되돌릴 때 남기는 좌우 여백(px) (KAN-569, 모바일과 같은 값).
+ * 0이면 칸이 줄 가장자리에 붙어 다음 칸이 있는지 안 보인다.
+ */
+export const DATE_STRIP_KEEP_PAD = 12;
