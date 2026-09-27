@@ -14,6 +14,9 @@ import { DATE_STRIP_KEEP_PAD } from "@/_constants/live";
  *
  * scrollIntoView는 조상 스크롤까지 건드려 페이지가 튈 수 있어 직접 계산한다.
  *
+ * 웹 앱에 같은 훅이 있다. 날짜 줄 컴포넌트가 앱마다 따로라 훅도 앱에 두었다(ADR 0011).
+ * 한쪽을 고치면 다른 쪽도 같이 고친다.
+ *
  * @param stripRef 가로 스크롤 줄
  * @param selected 선택한 날짜 키
  * @param monthKey 줄이 담은 달(`YYYY-M`). 바뀌면 가운데 정렬을 다시 한다

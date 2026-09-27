@@ -75,10 +75,10 @@ export function ArticleMain({
 
   return (
     <article className="min-w-0">
-      {/* 빵부스러기 — 목록으로, 그리고 팀 프로필로 */}
+      {/* 빵부스러기. 목록(홈 이슈 표, KAN-569)으로, 그리고 팀 프로필로 */}
       <nav aria-label="현재 위치" className="flex items-center gap-1.75 pb-4.5">
         <Link
-          href="/articles"
+          href="/"
           className="text-label text-accent hover:text-accent-hover font-bold"
         >
           목록
