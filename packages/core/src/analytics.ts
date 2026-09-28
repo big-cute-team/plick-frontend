@@ -117,6 +117,26 @@ export function readPathParam(searchParams: URLSearchParams): string | null {
   return null;
 }
 
+/** 공유 버튼이 만든 링크의 유입 경로 값 (KAN-578). */
+export const SHARE_PATH = "share";
+
+/**
+ * 공유할 주소에 유입 경로 `?path=share`를 붙인다 (KAN-578). 링크를 타고 들어온 사람의
+ * 프록시가 이 값을 `plick_path`에 심는다. Referer는 인앱 브라우저에서 대체로 비어서, 우리가
+ * 만드는 링크에 직접 박는 것만 확실하다.
+ *
+ * 기존 쿼리는 두고 합친다. `path`가 이미 있으면 그 값을 존중해 그대로 돌려준다. 덮으면
+ * 캠페인 링크를 공유했을 때 원래 유입이 지워지고, 새로 붙이면 `path`가 둘이 된다.
+ *
+ * @param url 공유할 절대 주소
+ */
+export function withSharePath(url: string): string {
+  const parsed = new URL(url);
+  if (parsed.searchParams.has("path")) return url;
+  parsed.searchParams.set("path", SHARE_PATH);
+  return parsed.toString();
+}
+
 /**
  * 화면 경로에서 진입 화면(`X-Plick-Entry`)을 고른다. 릴스 피드는 `reels`, 릴 하나를 바로 여는
  * 딥링크(`/reels/{id}`)는 `reels_deeplink`, 홈은 `home_feed`. `hot`과 `share_link`는 화면
