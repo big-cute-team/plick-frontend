@@ -32,7 +32,7 @@ export interface TokenResponse {
  * refresh 토큰으로 새 토큰 쌍을 재발급받는다. 회전 방식이라 응답의 refreshToken도 새 값이다.
  *
  * @param refreshToken 현재 refresh 쿠키 값
- * @param headers 같이 실을 헤더. 프록시가 분석 헤더 넷을 넘긴다(KAN-542, `guest.ts` 참고)
+ * @param headers 같이 실을 헤더. 프록시가 분석 헤더를 넘긴다(KAN-542·577, `guest.ts` 참고)
  * @returns 회전된 access·refresh 쌍
  * @throws {ApiError} refresh 토큰이 만료/무효거나 BE가 2xx가 아닐 때 — 호출부(proxy)가
  *   401만 세션 종료로 처리하고 나머지는 통과시킨다
