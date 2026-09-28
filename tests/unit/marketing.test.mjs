@@ -1,9 +1,11 @@
 /**
  * @file `@plick/core/marketing` 회귀 테스트 (KAN-577). 광고 집계가 조용히 틀어지는 경계만 잡는다.
  */
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  AUTH_HOSTS,
   marketingHeaders,
   parseMarketingCookie,
   readReferrerHost,
@@ -140,4 +142,33 @@ test("프록시 조립: /be는 쿠키만, 빈 덩어리는 지우기, 크롤러�
     resolveRequestMarketing({ ...base, searchParams: q("") }).cookie,
     null,
   );
+});
+
+test("길이 상한 경계와 클릭 식별자 쌍 규칙", () => {
+  const at = (params) => resolveMarketing({}, q(params), null).marketing;
+  assert.equal(at(`utm_campaign=${"a".repeat(64)}`).utmCampaign?.length, 64);
+  assert.equal(at(`utm_campaign=${"a".repeat(65)}`).utmCampaign, undefined);
+  assert.equal(at(`fbclid=${"A".repeat(128)}`).clickId?.length, 128);
+  assert.equal(at(`fbclid=${"A".repeat(129)}`).clickId, undefined);
+  assert.deepEqual(parseMarketingCookie("i=abc"), {});
+  assert.deepEqual(parseMarketingCookie("i=abc&s=META"), {});
+});
+
+test("소셜 로그인 authorize 호스트가 전부 유입 제외 목록에 있다", () => {
+  for (const app of ["mobile", "web"]) {
+    const source = readFileSync(
+      new URL(`../../apps/${app}/app/_constants/api.ts`, import.meta.url),
+      "utf8",
+    );
+    const hosts = [...source.matchAll(/endpoint: "https:\/\/([^/"]+)/g)].map(
+      (m) => m[1],
+    );
+    assert.ok(hosts.length >= 3, `${app} OAuth endpoint를 못 찾았다`);
+    for (const host of hosts) {
+      assert.ok(
+        AUTH_HOSTS.includes(host),
+        `${app}: ${host}가 AUTH_HOSTS에 없다`,
+      );
+    }
+  }
 });

@@ -77,7 +77,7 @@ const HOST_PATTERN = /^[a-z0-9.-]{1,253}$/;
  * authorize 호스트(각 앱 `_constants/api.ts`의 `OAUTH_PROVIDERS`)와 카카오 로그인 화면 호스트다.
  * 제공자가 늘면 여기도 더한다.
  */
-const AUTH_HOSTS = [
+export const AUTH_HOSTS = [
   "accounts.google.com",
   "kauth.kakao.com",
   "accounts.kakao.com",

@@ -103,7 +103,7 @@ function refererPathname(request: NextRequest): string | null {
  * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
  *
  * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
- * 새 유입이면 `plick_mkt` 쿠키를 통째로 간다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
+ * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
  * `@plick/core/marketing`의 `resolveRequestMarketing`이다.
  *
  * @param request 이번 요청
