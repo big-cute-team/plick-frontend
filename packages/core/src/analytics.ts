@@ -141,8 +141,9 @@ export function withSharePath(url: string): string {
 /**
  * 화면 경로에서 진입 화면(`X-Plick-Entry`)을 고른다. 릴스 피드는 `reels`, 릴 하나를 바로 여는
  * 딥링크(`/reels/{id}`)는 `reels_deeplink`, 홈은 `home_feed`. `hot`과 `share_link`는 화면
- * 경로만으로는 알 수 없어(핫이슈는 홈 안의 구획이고 공유 링크는 표식이 없다) 여기서 내지
- * 않는다 - 그 값은 클라이언트 이벤트 작업(KAN-543)이 요청마다 실어 주는 몫이다.
+ * 경로만으로는 알 수 없어(핫이슈는 홈 안의 구획이고, 공유 링크의 표식 `?path=share`(KAN-578)는
+ * 경로가 아니라 쿼리에 있다) 여기서 내지 않는다 - 그 값은 클라이언트 이벤트 작업(KAN-543)이
+ * 요청마다 실어 주는 몫이다.
  *
  * @param pathname 페이지 요청이면 그 경로, `/be` fetch면 Referer의 경로
  * @returns 진입 화면 값. 모르면 null(헤더를 안 싣고 BE가 `unknown`으로 접는다)
