@@ -125,14 +125,15 @@ export const SHARE_PATH = "share";
  * 프록시가 이 값을 `plick_path`에 심는다. Referer는 인앱 브라우저에서 대체로 비어서, 우리가
  * 만드는 링크에 직접 박는 것만 확실하다.
  *
- * 기존 쿼리는 두고 합친다. `path`가 이미 있으면 그 값을 존중해 그대로 돌려준다. 덮으면
- * 캠페인 링크를 공유했을 때 원래 유입이 지워지고, 새로 붙이면 `path`가 둘이 된다.
+ * 기존 쿼리는 두고 합친다. 프록시가 읽을 유입 경로(`path`, 없으면 `utm_source`)가 이미 있으면
+ * 그대로 돌려준다. 덮으면 캠페인 링크를 공유했을 때 원래 유입이 지워진다. 빈 값이나 형식 밖이라
+ * 프록시가 버릴 `path`는 없는 것과 같아 `share`로 갈아 끼운다(`set`이라 `path`가 둘이 되지 않는다).
  *
- * @param url 공유할 절대 주소
+ * @param url 공유할 절대 주소. `location.origin`으로 조립하므로 파싱에 실패하지 않는다
  */
 export function withSharePath(url: string): string {
   const parsed = new URL(url);
-  if (parsed.searchParams.has("path")) return url;
+  if (readPathParam(parsed.searchParams) !== null) return url;
   parsed.searchParams.set("path", SHARE_PATH);
   return parsed.toString();
 }

@@ -46,3 +46,15 @@ test("path가 이미 있으면 덮거나 겹치지 않는다", () => {
   const tagged = withSharePath("https://plick.co.kr/reels/1");
   assert.equal(withSharePath(tagged), tagged);
 });
+
+test("utm_source만 있는 광고 링크도 원래 유입을 지키고 share로 덮지 않는다", () => {
+  const src = "https://plick.co.kr/articles/3?utm_source=naver";
+  assert.equal(withSharePath(src), src);
+});
+
+test("프록시가 버릴 빈 path나 형식 밖 path는 share 하나로 갈아 끼운다", () => {
+  for (const bad of ["path=", "path=%20", "path=a%20b"]) {
+    const url = withSharePath(`https://plick.co.kr/reels/1?${bad}`);
+    assert.deepEqual(params(url).getAll("path"), ["share"], bad);
+  }
+});
