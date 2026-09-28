@@ -5,12 +5,13 @@ import type { ReelCard } from "@plick/domain/types";
 
 /**
  * 릴 오른쪽 세로 액션 레일, 좋아요·댓글·공유. 저장은 계약에 없어 뺐다 (KAN-299).
- * 미디어 위 오른쪽 아래에 흰 아이콘으로 겹쳐 선다(KAN-569에서 전 배치로 되돌렸다).
+ * 릴 오른쪽 아래에 본문색 아이콘으로 겹쳐 선다(KAN-569에서 전 배치로 되돌렸고,
+ * KAN-574에서 흰 아이콘과 그림자를 걷었다).
  *
  * 좋아요는 눌리면 하트와 수가 빨강으로 찬다 (KAN-308, 색은 KAN-567 톤). 토글 로직과
  * 상태 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다.
- * 비로그인 시트를 이 안에서 그리면 레일에 걸린 `drop-shadow` 필터가 화면 전체
- * 오버레이의 기준 상자가 돼 시트가 레일만 덮는다. 그래서 부모 층이 그린다.
+ * 비로그인 시트는 부모 층이 그린다. 레일에 필터나 transform이 걸리면 화면 전체
+ * 오버레이의 기준 상자가 레일이 돼 시트가 레일만 덮는다.
  *
  * @param onLike - 하트 탭 시 호출
  * @param onComment - 댓글 아이콘 탭 시 호출 (세부 시트 열기)
@@ -28,7 +29,7 @@ export function ReelActionRail({
   onShare: () => void;
 }) {
   return (
-    <div className="drop-shadow-media absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
+    <div className="absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
       <RailAction
         icon={<LikeIcon size={34} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}
@@ -53,7 +54,7 @@ export function ReelActionRail({
 }
 
 /**
- * 액션 레일 버튼 하나 (아이콘 + 라벨). 미디어 위라 기본은 흰색이다.
+ * 액션 레일 버튼 하나 (아이콘 + 라벨). 밝은 바탕 위라 본문색이다 (KAN-574).
  *
  * @param active - 켜진 토글(눌린 좋아요)이면 아이콘과 수를 빨강으로
  * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다
@@ -81,7 +82,7 @@ function RailAction({
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       className={`${
-        active ? "text-danger" : "text-media-on"
+        active ? "text-danger" : "text-text-strong"
       } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}

@@ -101,8 +101,8 @@ body {
 .reel-embed
   .react-tweet-theme
   [class*="tweet-header-module"][class$="__avatar"] {
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
 }
 
 /* 릴 시트 드래그 오프셋 변수 등록 (KAN-430) — inherits: false가 핵심이다.

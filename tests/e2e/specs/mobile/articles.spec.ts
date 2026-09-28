@@ -60,8 +60,9 @@ test.describe("기사", () => {
       await expect(
         page.getByRole("main").getByRole("heading", { level: 1 }),
       ).toHaveText(teamName);
+      /* 선수단은 본문 탭의 첫 탭이다 (KAN-574) */
       await expect(
-        page.getByRole("heading", { level: 2, name: "선수단" }),
+        page.getByRole("tab", { name: "선수단", selected: true }),
       ).toBeVisible();
     });
   });

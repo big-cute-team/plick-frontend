@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import type { LiveTeam } from "@plick/domain/live";
 import { TeamCrest } from "@plick/ui/TeamCrest";
+import { rem } from "@plick/domain/format";
 
 /**
  * 라이브 데이터의 팀 표식 — 빅6는 로컬 크레스트, 빅6 밖은 API-Football CDN 로고,
@@ -45,7 +46,7 @@ export function LiveCrest({
         height={size}
         loading="lazy"
         onError={() => setFailed(true)}
-        style={{ width: size, height: size }}
+        style={{ width: rem(size), height: rem(size) }}
         className={`shrink-0 object-contain ${className}`}
       />
     );
@@ -54,7 +55,11 @@ export function LiveCrest({
     <span
       aria-label={team.name}
       className={`bg-avatar text-text-4 grid shrink-0 place-items-center rounded-full font-bold ${className}`}
-      style={{ width: size, height: size, fontSize: Math.max(7, size * 0.3) }}
+      style={{
+        width: rem(size),
+        height: rem(size),
+        fontSize: rem(Math.max(7, size * 0.3)),
+      }}
     >
       {team.shortName.slice(0, 3)}
     </span>

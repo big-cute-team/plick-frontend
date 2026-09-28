@@ -37,8 +37,8 @@ export function StandingsTable({
   highlight?: string[];
 }) {
   const cols = showDraw
-    ? "grid-cols-[20px_20px_minmax(0,1fr)_26px_26px_26px_26px_32px_32px]"
-    : "grid-cols-[20px_20px_minmax(0,1fr)_26px_26px_26px_32px_32px]";
+    ? "grid-cols-[1.25rem_1.25rem_minmax(0,1fr)_1.625rem_1.625rem_1.625rem_1.625rem_2rem_2rem]"
+    : "grid-cols-[1.25rem_1.25rem_minmax(0,1fr)_1.625rem_1.625rem_1.625rem_2rem_2rem]";
 
   return (
     <div>

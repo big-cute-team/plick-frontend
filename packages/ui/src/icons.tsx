@@ -4,13 +4,15 @@
  * 토큰 색을 그대로 물려받도록 stroke/fill = `currentColor`.
  */
 import type { SVGProps } from "react";
+import { rem } from "@plick/domain/format";
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
 function base({ size = 20, ...props }: IconProps) {
   return {
-    width: size,
-    height: size,
+    /* rem이라 전체 배율(html font-size)을 따라간다 (KAN-574) */
+    width: rem(size),
+    height: rem(size),
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",

@@ -1,4 +1,5 @@
 import { LOGO_PARTS } from "@plick/domain/brand";
+import { rem } from "@plick/domain/format";
 
 /**
  * 해축이모 워드마크 (KAN-567) — 글자 로고다. "해축"은 강조색, "이모"는 제목색으로
@@ -22,7 +23,7 @@ export function Logo({
     <span
       aria-label={`${head}${tail}`}
       className={`tracking-logo inline-flex items-baseline gap-px leading-none font-black ${className}`}
-      style={{ fontSize: size }}
+      style={{ fontSize: rem(size) }}
     >
       <span aria-hidden className="text-accent">
         {head}

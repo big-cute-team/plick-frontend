@@ -21,8 +21,7 @@ import { TabBar } from "@/_components/TabBar";
 import { ProfileFacts } from "@/_components/ProfileFacts";
 import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
 import { ProfileStats } from "@/_components/ProfileStats";
-import { SquadList } from "./_components/SquadList";
-import { TeamFiguresList } from "./_components/TeamFiguresList";
+import { TeamProfileTabs } from "./_components/TeamProfileTabs";
 
 /**
  * 팀 프로필 메타데이터 (KAN-500). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
@@ -54,8 +53,10 @@ export async function generateMetadata({
  * 여기로 왔다. 같은 팀인데 어디로 들어왔느냐에 따라 다른 화면이 뜨는 게
  * 이상해서 이 한 장으로 합쳤다. 라이브 쪽 URL은 여기로 리다이렉트한다.
  *
- * 선수단(KAN-484에서 탭으로 갈랐던 둘)은 시안대로 섹션으로 되돌렸다. "선수단"은
- * API-Football의 이번 시즌 등록 명단이고 행을 누르면 시즌 스탯 시트가 열린다.
+ * 숫자 상자 밑은 탭이다 (KAN-574). 선수단, 기사 속 인물, 팀 정보(관련 이슈 +
+ * 기본 정보)를 가른다. KAN-567에서 시안대로 섹션을 세로로 이었더니 선수단만으로
+ * 화면 몇 장이라 되돌렸다. "선수단"은 API-Football의 이번 시즌 등록 명단이고
+ * 포지션별 한 줄씩 칩을 누르면 시즌 스탯 시트가 열린다.
  * "기사 속 인물"은 해축이모 인물 사전이라 감독·구단주까지 들어 있고 행을 누르면
  * 그 인물의 프로필로 간다. 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사
  * 목록의 팀 탭(`/articles/teams/[slug]`)으로 보낸다. 같은 목록이 세 URL에
@@ -143,44 +144,37 @@ export default async function TeamProfilePage({
             />
           )}
 
-          <ProfileSectionTitle>선수단</ProfileSectionTitle>
-          {squad ? (
-            <SquadList squad={squad} />
-          ) : (
-            <p className="text-body text-text-4 py-6">
-              선수단을 불러오지 못했어요
-            </p>
-          )}
+          <TeamProfileTabs
+            slug={slug}
+            squad={squad}
+            figures={profile.figures}
+            info={
+              <>
+                <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
+                {/* 팀 관련 기사는 홈 소식 리스트의 팀 탭(팀 허브)이 원본이다 (KAN-569) */}
+                <Link
+                  href={teamHubPath(code)}
+                  className="border-border-soft text-body text-text-strong flex items-center justify-between border-b py-3 font-bold active:opacity-70"
+                >
+                  {team.name} 이슈 모아보기
+                  <ChevronRightIcon size={16} className="text-text-4" />
+                </Link>
 
-          {profile.figures.length > 0 && (
-            <>
-              <ProfileSectionTitle>기사 속 인물</ProfileSectionTitle>
-              <TeamFiguresList figures={profile.figures} />
-            </>
-          )}
-
-          <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
-          {/* 팀 관련 기사는 홈 소식 리스트의 팀 탭(팀 허브)이 원본이다 (KAN-569) */}
-          <Link
-            href={teamHubPath(code)}
-            className="border-border-soft text-body text-text-strong flex items-center justify-between border-b py-3 font-bold active:opacity-70"
-          >
-            {team.name} 이슈 모아보기
-            <ChevronRightIcon size={16} className="text-text-4" />
-          </Link>
-
-          <ProfileSectionTitle>기본 정보</ProfileSectionTitle>
-          <ProfileFacts
-            items={[
-              { label: "리그", value: "프리미어리그" },
-              ...(profile.nameEn
-                ? [{ label: "영문명", value: profile.nameEn }]
-                : []),
-              ...(standing
-                ? [{ label: "경기 수", value: `${standing.played}경기` }]
-                : []),
-              { label: "시즌", value: LIVE_SEASON_LABEL },
-            ]}
+                <ProfileSectionTitle>기본 정보</ProfileSectionTitle>
+                <ProfileFacts
+                  items={[
+                    { label: "리그", value: "프리미어리그" },
+                    ...(profile.nameEn
+                      ? [{ label: "영문명", value: profile.nameEn }]
+                      : []),
+                    ...(standing
+                      ? [{ label: "경기 수", value: `${standing.played}경기` }]
+                      : []),
+                    { label: "시즌", value: LIVE_SEASON_LABEL },
+                  ]}
+                />
+              </>
+            }
           />
         </div>
       </ScrollArea>

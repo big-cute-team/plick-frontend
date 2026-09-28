@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { rem } from "@plick/domain/format";
 
 /**
  * 인물 사진 원형 — 사진 URL을 그리고, 없거나 로드에 실패하면 아바타 배경
@@ -28,7 +29,7 @@ export function PlayerPhoto({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  const box = { width: size, height: size };
+  const box = { width: rem(size), height: rem(size) };
 
   if (!src || failed) {
     return (

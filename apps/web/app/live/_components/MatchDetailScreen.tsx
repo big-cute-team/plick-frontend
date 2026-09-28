@@ -110,7 +110,7 @@ function MatchDetailBody({
       <MatchHeaderCard header={header} />
       <div
         className={`grid grid-cols-1 gap-8 pt-5.5 ${
-          CHAT_ENABLED ? "lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10" : ""
+          CHAT_ENABLED ? "lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-10" : ""
         }`}
       >
         <div className="min-w-0">

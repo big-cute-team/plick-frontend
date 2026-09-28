@@ -6,7 +6,7 @@ import type { FigureTag } from "@plick/domain/types";
 import { TEAM_PROFILE_TAB_LABEL } from "@/_constants/team-profile";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { TeamProfileTabKey } from "@/_types/team-profile";
-import { SquadTable } from "./SquadTable";
+import { SquadRows } from "./SquadRows";
 import { TeamFiguresList } from "./TeamFiguresList";
 
 /**
@@ -69,7 +69,7 @@ export function TeamProfileTabs({
 
       {active === "squad" ? (
         squad ? (
-          <SquadTable squad={squad} />
+          <SquadRows squad={squad} />
         ) : (
           <p className="text-body-md text-text-4 py-10">
             선수단을 불러오지 못했어요

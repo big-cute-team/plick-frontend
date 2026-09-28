@@ -4,7 +4,7 @@ import { TeamProfileLink } from "./TeamProfileLink";
 
 /** 순위 탭 열 그리드 (시안 경기 상세 987행). 본문 폭이라 무 열까지 아홉 열이다. */
 const COLS =
-  "grid-cols-[24px_24px_minmax(0,1fr)_34px_34px_34px_34px_40px_40px]";
+  "grid-cols-[1.5rem_1.5rem_minmax(0,1fr)_2.125rem_2.125rem_2.125rem_2.125rem_2.5rem_2.5rem]";
 
 /**
  * 경기 상세 순위 탭의 리그 표 (KAN-567 시안 경기 상세 985-1010행). LIVE 목록의

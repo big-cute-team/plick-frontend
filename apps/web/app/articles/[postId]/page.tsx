@@ -175,7 +175,7 @@ export default async function ArticleDetailPage({
       <SiteHeader />
       <LiveStrip />
       <main>
-        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_288px]">
+        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <ArticleMain
             article={articleResult.value}
             related={related}

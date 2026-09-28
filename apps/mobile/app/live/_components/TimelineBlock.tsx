@@ -69,7 +69,7 @@ export function TimelineBlock({
             return (
               <div
                 key={`${event.minute}-${i}`}
-                className="relative grid grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-center py-2.25"
+                className="relative grid grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center py-2.25"
               >
                 <div className="flex justify-end pr-2.5">
                   {event.side === "HOME" && (

@@ -34,7 +34,7 @@ export function SideRail({
 }) {
   return (
     <aside
-      className={`sticky top-[calc(var(--site-header-h)+22px)] hidden flex-col gap-3.5 self-start lg:flex ${className}`}
+      className={`sticky top-[calc(var(--site-header-h)+1.375rem)] hidden flex-col gap-3.5 self-start lg:flex ${className}`}
     >
       <Suspense fallback={<TrendingRailSkeleton />}>
         <TrendingRail />

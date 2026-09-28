@@ -9,6 +9,11 @@
 색과 간격, 글자, 라운드는 디자인 토큰 유틸만 쓴다. 하드코딩한 색이나 px는 금지다.
 (`bg-bg`, `text-text`, `bg-accent`, `border-border`, `rounded-card`, `px-edge`)
 
+토큰과 Tailwind 간격은 rem이고 `theme.css`의 `html { font-size: 110% }`가 전체 배율이다(KAN-574). 임의값이
+꼭 필요하면 px 대신 rem으로 쓴다(`grid-cols-[2.5rem_minmax(0,1fr)]`). 크기를 숫자 prop으로 받아 인라인
+스타일로 박는 컴포넌트는 `@plick/domain/format`의 `rem()`을 거친다. px로 박으면 배율을 따라오지 못한다.
+선 두께(1px, 2px)와 앱 셸 최대폭(`max-w-[480px]`)만 px로 둔다.
+
 화면 좌우 패딩은 `px-edge`다. Tailwind 예약어라 `px-screen`은 안 된다([ADR 0002](../docs/adr/0002-mobile-home-layout.md) §6).
 
 앱은 라이트 고정이다(`<html data-theme="light">`, KAN-567 리디자인). 테마 토글 UI는 없고 옛 다크

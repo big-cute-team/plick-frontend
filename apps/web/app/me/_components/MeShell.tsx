@@ -26,7 +26,7 @@ export function MeShell({
         <PageContainer
           className={`pt-6.5 pb-12 ${
             nav
-              ? "grid grid-cols-1 gap-8 lg:grid-cols-[172px_minmax(0,1fr)] lg:gap-12"
+              ? "grid grid-cols-1 gap-8 lg:grid-cols-[10.75rem_minmax(0,1fr)] lg:gap-12"
               : ""
           }`}
         >

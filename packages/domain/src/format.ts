@@ -412,3 +412,16 @@ export function formatChatTime(iso: string): string {
     hour12: false,
   }).format(new Date(iso));
 }
+
+/**
+ * 시안 px 값을 rem 문자열로 바꾼다 (KAN-574). 아이콘·크레스트처럼 크기를 숫자
+ * prop으로 받는 컴포넌트가 인라인 크기를 px로 박으면 전체 배율(html font-size
+ * 110%)을 따라오지 못한다. 토큰과 같은 16px = 1rem 기준이다.
+ *
+ * @param px 시안 픽셀 값
+ * @example
+ * rem(20); // "1.25rem"
+ */
+export function rem(px: number): string {
+  return `${px / 16}rem`;
+}

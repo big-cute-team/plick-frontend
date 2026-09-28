@@ -35,9 +35,9 @@ const ShareDialog = dynamic(
 );
 
 /**
- * 릴 한 장 (KAN-296, KAN-569). 통일된 배경(bg-reel-bg) 위에 사진이나 원문 트윗
- * 임베드가 릴 전체를 채우고, 그 위 아래쪽에 스크림과 흰 글자 정보 블록, 오른쪽
- * 액션 레일이 겹쳐 선다.
+ * 릴 한 장 (KAN-296, KAN-569, KAN-574). 밝은 배경(bg-reel-bg) 위에 사진이나 원문
+ * 트윗 임베드가 제목 윗선까지를 채우고, 아래쪽에 본문색 글자 정보 블록, 오른쪽
+ * 액션 레일이 선다.
  *
  * KAN-567 시안은 흰 바탕에 radius 22 미디어 상자와 그 밑 정보 블록으로 바꿨는데,
  * 임베드가 상자 안 카드로 작아지고 상하단 바까지 붙어 릴이 좁아 보였다. KAN-569에서
@@ -53,8 +53,10 @@ const ShareDialog = dynamic(
  * 임베드는 맨 뒤 고정 레이어라 세부 시트가 열려도 제자리에 있고, 슬라이드업하는
  * 시트와 위로 도킹되는 팀·제목이 그 위를 덮는다.
  *
- * 팀·제목 뒤에는 고정 다크 스크림을 깐다. 배경이 밝아도 흰 글자가 읽히게 하는
- * 가독성 음영이고 팀 줄까지만 어둡다 (KAN-299).
+ * 팀·제목은 본문색 글자다 (KAN-574). 전에는 흰 글자에 고정 다크 스크림을 깔았는데
+ * (KAN-299) 배경과 임베드가 흰 면이라 그라데이션이 오히려 화면을 탁하게 했다. 글자를
+ * 검게 바꾸면 음영이 필요 없다. 사진도 전처럼 릴 전체가 아니라 임베드와 같은
+ * 영역(제목 윗선까지)만 덮어 글자와 겹치지 않는다.
  *
  * Embla 캐러셀의 슬라이드 하나다(`shrink-0 basis-full`).
  *
@@ -183,7 +185,7 @@ export const ReelItem = memo(function ReelItem({
   };
 
   /**
-   * 팀·제목(과 스크림)의 transform. 드래그 오프셋은 {@link SHEET_DRAG_Y_VAR}
+   * 팀·제목의 transform. 드래그 오프셋은 {@link SHEET_DRAG_Y_VAR}
    * CSS 변수로 흐르므로(KAN-430) 손가락을 따라가는 동안 이 컴포넌트는 렌더되지
    * 않는다. 클램프(도킹 지점 위~원래 자리 0 사이)도 CSS `min()`이 대신한다.
    */
@@ -210,20 +212,25 @@ export const ReelItem = memo(function ReelItem({
       onClick={handleSurfaceClick}
       className="bg-reel-bg relative h-full w-full shrink-0 basis-full overflow-hidden"
     >
-      {/* 사진이 있으면 릴을 가득 덮는다. 없으면 원문 트윗 임베드가 자리를 대신하고,
+      {/* 사진이 있으면 임베드 영역(제목 윗선까지)을 덮는다. 없으면 원문 트윗 임베드가 자리를 대신하고,
           로드 전에는 배경색이 그대로 남고 실패가 확정되면 가운데 안내 문구가
           선다 (KAN-296). 맨 뒤 고정 레이어라 시트가 열려도 제자리에 있다 */}
       {reel.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 릴 이미지 호스트가 유동이라 next/image 대신 일반 img (핫이슈와 같은 이유)
-        <img
-          src={reel.imageUrl}
-          alt=""
-          /* 보고 있는 릴(첫 진입 시 index 0)은 LCP 후보라 lazy 큐잉 대신 최우선으로
-             내려받는다 (KAN-421) */
-          loading={active ? "eager" : "lazy"}
-          fetchPriority={active ? "high" : "auto"}
-          className="absolute inset-0 size-full object-cover"
-        />
+        <div
+          className="absolute inset-x-0"
+          style={{ top: "var(--safe-top)", bottom: regionBottom }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- 릴 이미지 호스트가 유동이라 next/image 대신 일반 img (핫이슈와 같은 이유) */}
+          <img
+            src={reel.imageUrl}
+            alt=""
+            /* 보고 있는 릴(첫 진입 시 index 0)은 LCP 후보라 lazy 큐잉 대신 최우선으로
+               내려받는다 (KAN-421) */
+            loading={active ? "eager" : "lazy"}
+            fetchPriority={active ? "high" : "auto"}
+            className="size-full object-cover"
+          />
+        </div>
       ) : (
         reel.sourceUrl && (
           <div
@@ -239,30 +246,12 @@ export const ReelItem = memo(function ReelItem({
         )
       )}
 
-      {/* 팀·제목 뒤 음영. 배경이 밝아도 흰 글자가 읽히게 고정 다크 스크림을 깐다.
-          어두운 범위는 팀 줄까지만 닿고 그 위로는 빠르게 사라진다 (KAN-299). 시트가
-          열리면 제목과 같은 translateY로 함께 올라가 도킹된 제목 뒤를 받친다 */}
-      <div
-        aria-hidden
-        /* 시트가 떠 있을 때만 드래그 변수 수신자로 등록한다 (KAN-430) */
-        ref={titleMotion?.dragTargetRef}
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to top, color-mix(in srgb, var(--plk-scrim) 98%, transparent) 0%, color-mix(in srgb, var(--plk-scrim) 88%, transparent) 55%, color-mix(in srgb, var(--plk-scrim) 55%, transparent) 80%, transparent 100%)",
-          transform: titleTransform,
-          transition: titleMotion?.dragging ? "none" : SHEET_TRANSITION,
-          /* 큰 그라데이션 레이어라 제스처 동안만 컴포지터 승격 (KAN-430, 상시 부착 금지) */
-          willChange: titleMotion?.dragging ? "transform" : undefined,
-        }}
-      />
-
-      {/* 하단 정보 블록(스크림 위 글자). 블록 자체는 `pointer-events-none`이라
+      {/* 하단 정보 블록. 블록 자체는 `pointer-events-none`이라
           탭이 섹션까지 내려가 시트를 열고(KAN-525), 팀 링크와 제목·기자 줄 버튼만
           탭 타깃으로 남긴다. pb는 레일(bottom-27)보다 낮아 왼쪽만 살짝 아래다 (KAN-299) */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2.75 pr-21 pb-22 pl-4.5 text-left">
         {/* 팀+제목. 시트가 열리면 이 요소가 시트 라인 위까지 올라간다.
-            z-30: 시트 오버레이(z-20)보다 위에 그려져 스크림을 덮는다 */}
+            z-30: 시트 오버레이(z-20)보다 위에 그려진다 */}
         <div
           /* 측정용 titleRef에 더해, 시트가 떠 있으면 드래그 변수 수신자로도 등록 (KAN-430) */
           ref={(node) => {
@@ -284,7 +273,7 @@ export const ReelItem = memo(function ReelItem({
                   className="pointer-events-auto flex items-center gap-2 active:opacity-60"
                 >
                   <TeamCrest team={team} size={28} />
-                  <span className="text-body-lg text-media-on font-bold">
+                  <span className="text-body-lg text-text-strong font-bold">
                     {team.name}
                   </span>
                 </Link>
@@ -300,7 +289,7 @@ export const ReelItem = memo(function ReelItem({
             style={{ pointerEvents: titleMotion ? "none" : "auto" }}
           >
             {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
-            <span className="text-hero tracking-heading text-media-on line-clamp-3 font-black text-pretty">
+            <span className="text-hero tracking-heading text-text-strong line-clamp-3 font-black text-pretty">
               {reel.title}
             </span>
           </button>
@@ -312,14 +301,11 @@ export const ReelItem = memo(function ReelItem({
           className="pointer-events-auto flex items-baseline gap-1.75 text-left"
         >
           {reel.reporter && (
-            <span className="text-body-lg text-media-on font-bold">
+            <span className="text-body-lg text-text-strong font-bold">
               {reel.reporter.name}
             </span>
           )}
-          <span
-            className="text-body text-media-on-dim"
-            suppressHydrationWarning
-          >
+          <span className="text-body text-text-3" suppressHydrationWarning>
             {formatRelativeTime(reel.publishedAt)}
           </span>
         </button>

@@ -92,7 +92,7 @@ export function LineupCard({
           <p className="text-body-md text-text-strong pt-5 pb-2.5 font-black">
             벤치
           </p>
-          <div className="border-border-table text-micro-lg text-text-4 grid h-7 grid-cols-[24px_minmax(0,1fr)_62px_42px_42px] items-center gap-2 border-b">
+          <div className="border-border-table text-micro-lg text-text-4 grid h-7 grid-cols-[1.5rem_minmax(0,1fr)_3.875rem_2.625rem_2.625rem] items-center gap-2 border-b">
             <span className="text-center">#</span>
             <span>선수</span>
             <span>팀</span>
@@ -107,7 +107,7 @@ export function LineupCard({
                   key={`${lineup.team.shortName}-${bench.id}`}
                   type="button"
                   onClick={() => onPlayerTap(bench.id, lineup.team)}
-                  className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[24px_minmax(0,1fr)_62px_42px_42px] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+                  className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[1.5rem_minmax(0,1fr)_3.875rem_2.625rem_2.625rem] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
                 >
                   <span className="text-caption-lg text-text-4 text-center">
                     {bench.number ?? "-"}
@@ -183,7 +183,7 @@ function PitchLine({
             </span>
             {player.rating !== null && (
               <span
-                className={`text-[9.5px] font-black ${
+                className={`text-[0.59375rem] font-black ${
                   tone === "accent" ? "text-accent-bright" : "text-warn"
                 }`}
               >

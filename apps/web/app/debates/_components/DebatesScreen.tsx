@@ -48,7 +48,7 @@ export async function DebatesScreen({ tab }: { tab: DebateTab }) {
       <SiteHeader />
       <LiveStrip />
       <main>
-        <PageContainer className="grid grid-cols-1 gap-10 pt-6.5 pb-12 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-11">
+        <PageContainer className="grid grid-cols-1 gap-10 pt-6.5 pb-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-11">
           <div className="min-w-0">
             <h1 className="text-section text-text-strong tracking-title pb-5 font-black">
               투표
