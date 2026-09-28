@@ -117,11 +117,33 @@ export function readPathParam(searchParams: URLSearchParams): string | null {
   return null;
 }
 
+/** 공유 버튼이 만든 링크의 유입 경로 값 (KAN-578). */
+export const SHARE_PATH = "share";
+
+/**
+ * 공유할 주소에 유입 경로 `?path=share`를 붙인다 (KAN-578). 링크를 타고 들어온 사람의
+ * 프록시가 이 값을 `plick_path`에 심는다. Referer는 인앱 브라우저에서 대체로 비어서, 우리가
+ * 만드는 링크에 직접 박는 것만 확실하다.
+ *
+ * 기존 쿼리는 두고 합친다. 프록시가 읽을 유입 경로(`path`, 없으면 `utm_source`)가 이미 있으면
+ * 그대로 돌려준다. 덮으면 캠페인 링크를 공유했을 때 원래 유입이 지워진다. 빈 값이나 형식 밖이라
+ * 프록시가 버릴 `path`는 없는 것과 같아 `share`로 갈아 끼운다(`set`이라 `path`가 둘이 되지 않는다).
+ *
+ * @param url 공유할 절대 주소. `location.origin`으로 조립하므로 파싱에 실패하지 않는다
+ */
+export function withSharePath(url: string): string {
+  const parsed = new URL(url);
+  if (readPathParam(parsed.searchParams) !== null) return url;
+  parsed.searchParams.set("path", SHARE_PATH);
+  return parsed.toString();
+}
+
 /**
  * 화면 경로에서 진입 화면(`X-Plick-Entry`)을 고른다. 릴스 피드는 `reels`, 릴 하나를 바로 여는
  * 딥링크(`/reels/{id}`)는 `reels_deeplink`, 홈은 `home_feed`. `hot`과 `share_link`는 화면
- * 경로만으로는 알 수 없어(핫이슈는 홈 안의 구획이고 공유 링크는 표식이 없다) 여기서 내지
- * 않는다 - 그 값은 클라이언트 이벤트 작업(KAN-543)이 요청마다 실어 주는 몫이다.
+ * 경로만으로는 알 수 없어(핫이슈는 홈 안의 구획이고, 공유 링크의 표식 `?path=share`(KAN-578)는
+ * 경로가 아니라 쿼리에 있다) 여기서 내지 않는다 - 그 값은 클라이언트 이벤트 작업(KAN-543)이
+ * 요청마다 실어 주는 몫이다.
  *
  * @param pathname 페이지 요청이면 그 경로, `/be` fetch면 Referer의 경로
  * @returns 진입 화면 값. 모르면 null(헤더를 안 싣고 BE가 `unknown`으로 접는다)

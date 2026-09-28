@@ -3,6 +3,8 @@
  * 모바일 `_utils/share.ts`와 동일 구현이다.
  */
 
+import { withSharePath } from "@plick/core/analytics";
+
 /**
  * 공유할 기사 세부 페이지 경로 (KAN-485). 절대 주소는 {@link shareUrl}이 만든다.
  * 모바일 `articleSharePath`와 같다.
@@ -26,12 +28,15 @@ export function reelSharePath(reelId: string): string {
  * origin이 곧 공유 대상 origin이다. env로 박으면 로컬·프리뷰에서 배포 도메인이
  * 복사돼 딴 데로 샌다.
  *
+ * 유입 경로 `?path=share`를 붙인다(KAN-578). 받은 사람의 방문이 검색 유입과 섞이지
+ * 않고 확산 유입으로 잡힌다.
+ *
  * ⚠️ `location`을 읽으므로 브라우저에서만 부른다(마운트 뒤 이벤트 핸들러나 effect).
  *
  * @param path 앱 내 경로 (`/articles/1`, `/reels/1`)
  */
 export function shareUrl(path: string): string {
-  return `${window.location.origin}${path}`;
+  return withSharePath(`${window.location.origin}${path}`);
 }
 
 /**
