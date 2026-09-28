@@ -4,9 +4,10 @@
  * 실패하면 게스트는 새 게스트로 다시 시작하고, 소셜 세션은 끊어 로그인 화면으로 보낸다.
  * BE 프록시(`/be/*`)로 나가는 브라우저 fetch에 Bearer 토큰을 실어 주는 일도 여기서 한다.
  *
- * 분석 헤더 넷(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`)
- * 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·`X-Plick-Path`·`X-Plick-Client`·
- * `X-Plick-Entry`를 찍는다. 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
+ * 분석 헤더(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`),
+ * 마케팅 유입(`plick_mkt`, KAN-577) 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·
+ * `X-Plick-Path`·`X-Plick-Client`·`X-Plick-Entry`와 utm·리퍼러·클릭 식별자 헤더 여섯 개를 찍는다.
+ * 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
  * 페이지 요청은 서버 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는다
  * (`_services/analytics-headers.ts`). 값을 정하는 자리가 하나라 두 경로가 어긋나지 않는다.
  *
@@ -36,6 +37,11 @@ import {
   readPathParam,
   resolveEntryPoint,
 } from "@plick/core/analytics";
+import {
+  MARKETING_COOKIE,
+  marketingHeaders,
+  resolveRequestMarketing,
+} from "@plick/core/marketing";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
 import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { issueGuest } from "@plick/core/guest";
@@ -62,7 +68,7 @@ import { PLICK_CLIENT } from "@/_constants/analytics";
 interface Analytics {
   /** 메인 API로 가는 요청에 실을 헤더. 모르는 값은 키를 빼서 BE가 `unknown`으로 접게 둔다 */
   headers: Record<string, string>;
-  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다 */
+  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다. 값이 빈 문자열이면 지운다 */
   cookies: { name: string; value: string; httpOnly: boolean }[];
 }
 
@@ -81,7 +87,7 @@ function refererPathname(request: NextRequest): string | null {
 }
 
 /**
- * 쿠키와 URL에서 분석 값 넷을 정한다 (KAN-542).
+ * 쿠키와 URL에서 분석 값을 정한다 (KAN-542, KAN-577).
  *
  * 기기 식별자: 쿠키가 있으면 그것. 없으면 전환 배너가 쿼리(`?did=`)로 넘긴 값을 받고,
  * 그것도 없으면 새 UUID를 만든다. 쿼리 채택은 "쿠키가 없을 때만"이다 - 있는 사람의
@@ -95,6 +101,10 @@ function refererPathname(request: NextRequest): string | null {
  *
  * 진입 화면: 페이지 요청은 그 경로, `/be` fetch는 Referer 경로에서 고른다. 경로로 못 정하는
  * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
+ *
+ * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
+ * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
+ * `@plick/core/marketing`의 `resolveRequestMarketing`이다.
  *
  * @param request 이번 요청
  * @param isProxy `/be` fetch인가
@@ -137,12 +147,31 @@ function resolveAnalytics(
     request.cookies.set(PATH_COOKIE, path);
   }
 
+  const { marketing, cookie: marketingCookie } = resolveRequestMarketing({
+    cookie: request.cookies.get(MARKETING_COOKIE)?.value,
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer"),
+    ownHost: request.nextUrl.hostname,
+    isProxy,
+    isCrawler,
+  });
+  if (marketingCookie !== null) {
+    cookies.push({
+      name: MARKETING_COOKIE,
+      value: marketingCookie,
+      httpOnly: true,
+    });
+    if (marketingCookie) request.cookies.set(MARKETING_COOKIE, marketingCookie);
+    else request.cookies.delete(MARKETING_COOKIE);
+  }
+
   const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
   const entry = screen ? resolveEntryPoint(screen) : null;
 
   const headers: Record<string, string> = {
     [ANALYTICS_HEADERS.path]: path,
     [ANALYTICS_HEADERS.client]: PLICK_CLIENT,
+    ...marketingHeaders(marketing),
   };
   if (deviceId) headers[ANALYTICS_HEADERS.device] = deviceId;
   if (entry) headers[ANALYTICS_HEADERS.entry] = entry;
@@ -150,7 +179,7 @@ function resolveAnalytics(
 }
 
 /**
- * 요청 헤더에 분석 헤더 넷을 찍고(KAN-542), BE 프록시(`/be/*`)면 access 토큰까지
+ * 요청 헤더에 분석 헤더를 찍고(KAN-542), BE 프록시(`/be/*`)면 access 토큰까지
  * Bearer로 실어 통과시킨다. 프록시가 돌려주는 모든 `next()`가 이 함수를 거친다.
  *
  * 왜 여기서 싣나: 브라우저 fetch(릴스 다음 페이지 등)는 HttpOnly 쿠키를 읽을 수
@@ -280,6 +309,10 @@ export async function proxy(request: NextRequest) {
    * 심어도 브라우저가 저장하므로 재시도 갈래에서도 새 기기가 생기지 않는다.
    */
   for (const cookie of analytics.cookies) {
+    if (!cookie.value) {
+      response.cookies.delete(cookie.name);
+      continue;
+    }
     response.cookies.set(cookie.name, cookie.value, {
       ...AUTH_COOKIE_BASE,
       httpOnly: cookie.httpOnly,

@@ -1,5 +1,5 @@
 /**
- * @file 분석 헤더 계약 (KAN-542, BE KAN-538). 메인 API로 가는 모든 요청에 싣는 헤더 넷과,
+ * @file 분석 헤더 계약 (KAN-542, BE KAN-538). 메인 API로 가는 모든 요청에 싣는 헤더와,
  * 그 값을 보관하는 쿠키 이름·수명·형식 규칙을 한곳에 둔다.
  *
  * 두 앱(mobile·web)의 `proxy.ts`가 같은 쿠키를 읽고 같은 헤더를 만들며, 도메인을 넘길 때
@@ -22,6 +22,18 @@ export const ANALYTICS_HEADERS = {
   client: "X-Plick-Client",
   /** 서비스 안 어느 화면에서 눌렀는지 (`home_feed`, `reels`, `reels_deeplink`, `hot`, `share_link`) */
   entry: "X-Plick-Entry",
+  /** 광고 캠페인 (`?utm_campaign=`, KAN-577). 이하 여섯 개는 `marketing.ts`가 값을 정한다 */
+  utmCampaign: "X-Plick-Utm-Campaign",
+  /** 광고 매체 유형 (`?utm_medium=`) */
+  utmMedium: "X-Plick-Utm-Medium",
+  /** 광고 소재 (`?utm_content=`) */
+  utmContent: "X-Plick-Utm-Content",
+  /** 외부 유입 도메인. 전체 URL이 아니라 호스트만 싣는다 */
+  referrer: "X-Plick-Referrer",
+  /** 광고 클릭 식별자 원값 (`fbclid`·`gclid`·`ttclid`). 대소문자를 보존한다 */
+  clickId: "X-Plick-Click-Id",
+  /** 클릭 식별자가 어느 플랫폼 것인지 (`meta`, `google`, `tiktok`) */
+  clickSource: "X-Plick-Click-Source",
 } as const;
 
 /** 서버 측 fetch가 요청 헤더에서 그대로 옮겨 실을 헤더 이름 목록. */

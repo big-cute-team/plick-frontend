@@ -29,6 +29,7 @@ scripts/
   review/             PR 전 헤드리스 리뷰 게이트
   e2e/                E2E 실패 묶음 변환(bundle.mjs)과 치유 에이전트(heal.sh)
 tests/hooks/          훅 회귀 테스트 (pnpm test:hooks, CI 포함)
+tests/unit/           packages TS 순수 함수 단위 테스트 (pnpm test:unit, node --test, CI 포함)
 tests/e2e/            배포된 dev를 타는 Playwright QA 자동화 (@plick/e2e, PR 게이트 아님)
 ```
 
@@ -42,6 +43,7 @@ pnpm lint               # ESLint
 pnpm check-types        # 타입 검사
 pnpm format             # Prettier 적용 (확인만: format:check)
 pnpm test:hooks         # Claude Code 훅 회귀 테스트
+pnpm test:unit          # packages 순수 함수 단위 테스트
 pnpm test:e2e           # 배포된 dev 상대 E2E (화면 보며: pnpm --filter @plick/e2e test:ui)
 ```
 
@@ -102,7 +104,7 @@ PR base는 `develop`이다.
 PR은 클로드가 올리지 않는다. 커밋과 push까지 하고, PR 제목과 본문을 채팅에 그대로 써 준다.
 사용자가 그걸 복사해 직접 PR을 만든다. 제목은 커밋 첫 줄, 본문은 `pr-writing` 스킬의 5절 틀이다.
 push 전에 `./scripts/review/pr-review.sh`로 헤드리스 리뷰를 한 번 돌리고 CRITICAL이 있으면 먼저 고친다.
-CI(format:check, test:hooks, lint, check-types, build)는 로컬에서 같은 명령을 돌려 미리 확인한다.
+CI(format:check, test:hooks, test:unit, lint, check-types, build)는 로컬에서 같은 명령을 돌려 미리 확인한다.
 
 `main`은 릴리스용이다. `develop`에서 `main`으로 병합하는 건 사용자가 직접 한다. 병합은 클로드가 하지 않는다.
 
