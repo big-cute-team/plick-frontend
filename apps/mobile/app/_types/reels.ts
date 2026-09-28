@@ -72,6 +72,6 @@ export interface TitleMotion {
   shown: boolean;
   /** 드래그 중이면 transition 없이 손가락을 따라간다 */
   dragging: boolean;
-  /** 제목·스크림을 드래그 변수 수신자로 등록하는 ref ({@link ReelDetailMotion.dragTargetRef}) */
+  /** 제목 블록을 드래그 변수 수신자로 등록하는 ref ({@link ReelDetailMotion.dragTargetRef}) */
   dragTargetRef: ReelDetailMotion["dragTargetRef"];
 }

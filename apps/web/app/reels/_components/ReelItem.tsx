@@ -10,6 +10,7 @@ import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { ShareDialog } from "@/_components/ShareDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
+import { REEL_BACKDROP_FADE } from "@/_constants/reels";
 import { useReelLike } from "@/_hooks/useReelLike";
 import { reelSharePath } from "@/_utils/share";
 import { ReelActionRail } from "./ReelActionRail";
@@ -18,10 +19,10 @@ import { ReelActionRail } from "./ReelActionRail";
  * 릴 한 장 — 9:16 카드(미디어 + 팀, 제목, 기자) + 액션 레일.
  *
  * 카드는 흰 상자(`bg-bg`, `shadow-card`, 각진)이고 뷰어 높이를 늘 꽉 채운다. 헤더
- * 바로 밑부터 창 바닥까지이고 폭은 9:16 비율이 정한다 (KAN-574). 전에는 시안의
+ * 밑에서 창 바닥까지 위아래 약간의 여백만 두고, 폭은 9:16 비율이 정한다 (KAN-574). 전에는 시안의
  * 396x704 어두운 상자에 위아래 여백을 둬서 큰 창에서 카드가 가운데 작게 떴고, 흰
  * 트윗 카드가 어두운 상자 안에 따로 떠 있었다. 이제 상자 자체가 흰 면이라 임베드가
- * 배경을 채운 것처럼 보이고, 글자는 그라데이션 스크림 없이 본문색으로 쓴다.
+ * 배경을 채운 것처럼 보이고, 글자는 어두운 스크림 대신 흰 받침 위 본문색으로 쓴다.
  *
  * 레일 배치는 뷰포트에 따라 다르다.
  * - 데스크톱(lg↑): 카드 밖 오른쪽에 flex 형제로 나란히. 이전, 다음 화살표가 붙는다.
@@ -142,9 +143,17 @@ export function ReelItem({
           )
         )}
 
-        {/* 하단 정보 블록 — 팀, 제목, 기자. 흰 면 위 본문색이라 스크림이 없다 (KAN-574).
-            좁은 폭에선 우측에 레일이 겹치므로 pr-16으로 자리를 비운다. */}
-        <div className="absolute inset-x-0 bottom-0 flex flex-col pt-4 pr-16 pb-6.5 pl-5.5 lg:pr-5.5">
+        {/* 하단 정보 블록 — 팀, 제목, 기자. 본문색 글자 뒤에 카드와 같은 흰 받침을 깐다.
+            팀 줄 위로 REEL_BACKDROP_FADE만큼 투명에서 흰색으로 번져, 사진이나 긴 트윗이
+            제목 뒤로 겹쳐도 글자가 읽힌다 (KAN-574). 좁은 폭에선 우측에 레일이 겹치므로
+            pr-16으로 자리를 비운다. */}
+        <div
+          className="absolute inset-x-0 bottom-0 flex flex-col pr-16 pb-6.5 pl-5.5 lg:pr-5.5"
+          style={{
+            paddingTop: REEL_BACKDROP_FADE,
+            backgroundImage: `linear-gradient(to bottom, transparent, var(--plk-bg) ${REEL_BACKDROP_FADE})`,
+          }}
+        >
           {(team || hasVote) && (
             <div className="flex items-center gap-2 pb-2.75">
               {team && (

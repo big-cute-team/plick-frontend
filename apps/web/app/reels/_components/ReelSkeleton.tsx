@@ -7,7 +7,7 @@
  */
 export function ReelSkeleton() {
   return (
-    <div className="lg:pl-gutter flex h-full items-end justify-center gap-4 px-4 lg:gap-6">
+    <div className="lg:pl-gutter flex h-full items-end justify-center gap-4 px-4 py-4 lg:gap-6">
       <div className="bg-bg shadow-card flex aspect-[9/16] h-full w-auto max-w-full min-w-0 flex-col justify-end gap-2.75 pr-16 pb-6.5 pl-5.5 lg:pr-5.5">
         <div className="bg-elevate h-4.5 w-20" />
         <div className="bg-elevate h-7 w-full" />

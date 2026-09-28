@@ -126,3 +126,9 @@ export const SHEET_TRANSITION =
  * 따라간다. 값은 px 단위 길이고, 참조하는 쪽은 `var(..., 0px)` 폴백을 쓴다.
  */
 export const SHEET_DRAG_Y_VAR = "--reel-sheet-drag-y";
+
+/**
+ * 릴 글자 받침이 팀 줄 위로 번지는 길이 (KAN-574). 이 길이 동안 투명에서 배경색으로
+ * 바뀌고 그 아래는 단색이다. 전체 배율을 따르도록 rem이다.
+ */
+export const REEL_BACKDROP_FADE = "2.5rem";

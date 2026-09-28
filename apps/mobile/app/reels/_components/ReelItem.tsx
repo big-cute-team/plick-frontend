@@ -11,7 +11,12 @@ import { VsMark } from "@plick/ui/VsMark";
 import type { Tweet } from "react-tweet/api";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
-import { SHEET_DRAG_Y_VAR, SHEET_TRANSITION } from "@/_constants/reels";
+import {
+  REEL_BACKDROP_FADE,
+  SHEET_DRAG_Y_VAR,
+  SHEET_TITLE_GAP,
+  SHEET_TRANSITION,
+} from "@/_constants/reels";
 import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelLike } from "@/_hooks/useReelLike";
 import type { TitleMotion } from "@/_types/reels";
@@ -55,8 +60,9 @@ const ShareDialog = dynamic(
  *
  * 팀·제목은 본문색 글자다 (KAN-574). 전에는 흰 글자에 고정 다크 스크림을 깔았는데
  * (KAN-299) 배경과 임베드가 흰 면이라 그라데이션이 오히려 화면을 탁하게 했다. 글자를
- * 검게 바꾸면 음영이 필요 없다. 사진도 전처럼 릴 전체가 아니라 임베드와 같은
- * 영역(제목 윗선까지)만 덮어 글자와 겹치지 않는다.
+ * 검게 바꾸고, 사진이나 긴 트윗이 글자 뒤로 겹치는 자리에는 배경색 받침을 깐다.
+ * 받침은 팀 줄 위에서 투명에서 배경색으로 번진다. 사진도 전처럼 릴 전체가 아니라
+ * 임베드와 같은 영역(제목 윗선까지)만 덮는다.
  *
  * Embla 캐러셀의 슬라이드 하나다(`shrink-0 basis-full`).
  *
@@ -127,6 +133,8 @@ export const ReelItem = memo(function ReelItem({
 
   /** 임베드 영역의 아래선(제목 윗선)까지의 거리(px, 릴 바닥 기준) */
   const [regionBottom, setRegionBottom] = useState(0);
+  /** 글자 받침의 윗선(팀 줄 윗선)까지의 거리(px, 릴 바닥 기준) */
+  const [backdropBottom, setBackdropBottom] = useState(0);
 
   /* 제목 윗선을 재서 임베드 영역이 거기서 끝나게 한다. 시트가 떠 제목이
      translateY로 올라가 있는 동안은 재지 않는다(임베드는 고정 뒤 레이어라 영향을
@@ -135,17 +143,18 @@ export const ReelItem = memo(function ReelItem({
     /* 창 밖에선 제목 자체가 없어 잴 수 없다. 창에 들어올 때 다시 돈다 (KAN-431) */
     if (titleMotion || !inWindow) return;
     const section = sectionRef.current;
+    const title = titleRef.current;
     const titleText = titleTextRef.current;
-    if (!section || !titleText) return;
-    const measure = () =>
-      setRegionBottom(
-        section.getBoundingClientRect().bottom -
-          titleText.getBoundingClientRect().top,
-      );
+    if (!section || !title || !titleText) return;
+    const measure = () => {
+      const bottom = section.getBoundingClientRect().bottom;
+      setRegionBottom(bottom - titleText.getBoundingClientRect().top);
+      setBackdropBottom(bottom - title.getBoundingClientRect().top);
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(section);
-    observer.observe(titleText);
+    observer.observe(title);
     return () => observer.disconnect();
   }, [titleMotion, inWindow]);
 
@@ -246,6 +255,19 @@ export const ReelItem = memo(function ReelItem({
         )
       )}
 
+      {/* 글자 받침 (KAN-574). 사진이나 긴 트윗이 제목 뒤로 겹쳐도 글자가 읽히게 배경색
+          면을 깐다. 팀 줄 위로 FADE만큼 투명에서 배경색으로 번지고 그 아래는 단색이다.
+          고정 층이라 레일(뒤에 그려짐)을 덮지 않는다. 시트가 뜨면 제목은 아래 블록 안의
+          받침을 달고 올라가고, 이 층은 시트 밑에 남는다 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0"
+        style={{
+          height: `calc(${backdropBottom}px + ${REEL_BACKDROP_FADE})`,
+          backgroundImage: `linear-gradient(to bottom, transparent, var(--plk-reel-bg) ${REEL_BACKDROP_FADE})`,
+        }}
+      />
+
       {/* 하단 정보 블록. 블록 자체는 `pointer-events-none`이라
           탭이 섹션까지 내려가 시트를 열고(KAN-525), 팀 링크와 제목·기자 줄 버튼만
           탭 타깃으로 남긴다. pb는 레일(bottom-27)보다 낮아 왼쪽만 살짝 아래다 (KAN-299) */}
@@ -265,6 +287,22 @@ export const ReelItem = memo(function ReelItem({
             willChange: titleMotion?.dragging ? "transform" : undefined,
           }}
         >
+          {/* 시트가 붙어 있는 동안(열림, 닫힘 애니메이션 포함) 제목을 따라 올라가는
+              받침. 도킹된 제목이 사진 위에서도 읽힌다. z-30 층 안이라 쉬는 상태에
+              달면 레일을 덮어 시트가 있을 때만 단다 (KAN-574) */}
+          {titleMotion && (
+            <div
+              aria-hidden
+              className="absolute -right-21 -left-4.5 -z-10"
+              style={{
+                top: `calc(-1 * ${REEL_BACKDROP_FADE})`,
+                /* 도킹 간격(SHEET_TITLE_GAP)을 지나 시트 둥근 모서리 밑까지 내려야 제목과
+                   시트 사이로 사진이 비치지 않는다. 넘친 부분은 시트가 덮는다 */
+                bottom: `calc(-1 * (${SHEET_TITLE_GAP}px + 2rem))`,
+                backgroundImage: `linear-gradient(to bottom, transparent, var(--plk-reel-bg) ${REEL_BACKDROP_FADE})`,
+              }}
+            />
+          )}
           {(team || reel.debate) && (
             <div className="flex items-center gap-2">
               {team && (

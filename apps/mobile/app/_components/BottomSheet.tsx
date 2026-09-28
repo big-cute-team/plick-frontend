@@ -61,7 +61,7 @@ export function BottomSheet({
       />
       <div
         className={`bg-bg rounded-t-sheet relative mx-auto w-full max-w-[480px] ${className}`}
-        style={{ paddingBottom: "max(30px, var(--safe-bottom))" }}
+        style={{ paddingBottom: "max(1.875rem, var(--safe-bottom))" }}
       >
         <div
           aria-hidden
