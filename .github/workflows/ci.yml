@@ -37,6 +37,9 @@ jobs:
       - name: Test Claude Code hooks
         run: pnpm test:hooks
 
+      - name: Unit tests
+        run: pnpm test:unit
+
       - name: Lint
         run: pnpm lint
 

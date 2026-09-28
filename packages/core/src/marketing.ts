@@ -11,7 +11,7 @@
  * 접게 둔다. utm의 대소문자는 BE가 접으므로 원값을 넘기고, 클릭 식별자는 절대 접지 않는다.
  */
 
-import { ANALYTICS_HEADERS } from "./analytics";
+import { ANALYTICS_HEADERS, readPathParam } from "./analytics";
 
 /**
  * 마케팅 값 여섯 개를 한 덩어리로 들고 있는 쿠키 (KAN-577). 값은 `URLSearchParams` 문자열이다.
@@ -49,12 +49,11 @@ const UTM_PARAMS = [
 ] as const;
 
 /**
- * 새 유입으로 보는 쿼리 파라미터. `plick_path`가 읽는 `path`·`utm_source`도 포함한다 - 공유 링크
- * (`?path=share`)로 새로 들어온 사람에게 지난 캠페인 값이 남으면 안 된다.
+ * 있기만 하면 새 유입으로 보는 쿼리 파라미터. 값이 형식 밖이어도(`?utm_campaign=추석`) 새 캠페인으로
+ * 들어온 건 맞으니 지난 값을 지운다. `path`·`utm_source`는 여기 없고 `plick_path`와 같은 기준
+ * (`readPathParam`)으로 따로 본다.
  */
 const TOUCH_PARAMS = [
-  "path",
-  "utm_source",
   ...UTM_PARAMS.map(([, param]) => param),
   ...CLICK_ID_PARAMS.map(([param]) => param),
 ];
@@ -75,16 +74,25 @@ const HOST_PATTERN = /^[a-z0-9.-]{1,253}$/;
  * 외부 유입으로 치지 않는 호스트. 소셜 로그인 제공자에서 콜백으로 돌아오는 요청은 Referer가
  * 제공자 도메인이라, 걸러내지 않으면 로그인할 때마다 유입이 `kakao.com`으로 덮인다. 콜백이
  * 302로 홈에 보낸 뒤의 요청도 같은 Referer를 들고 온다(리다이렉트는 Referer를 유지한다).
+ * authorize 호스트(각 앱 `_constants/api.ts`의 `OAUTH_PROVIDERS`)와 카카오 로그인 화면 호스트다.
+ * 제공자가 늘면 여기도 더한다.
  */
 const AUTH_HOSTS = [
   "accounts.google.com",
   "kauth.kakao.com",
+  "accounts.kakao.com",
   "appleid.apple.com",
 ];
 
 /** 자기 서비스 도메인. PC·모바일 전환 배너로 건너온 요청은 외부 유입이 아니다. */
 const OWN_DOMAIN = "plick.co.kr";
 
+/**
+ * utm 값으로 헤더에 실어도 되는지. BE 상한을 넘으면 BE가 어차피 `unknown`으로 접는다.
+ *
+ * @param value 앞뒤 공백을 걷은 값
+ * @param max 이 칸의 BE 길이 상한
+ */
 function isUtmValue(value: string, max: number): boolean {
   return value.length <= max && UTM_PATTERN.test(value);
 }
@@ -198,7 +206,9 @@ export function resolveMarketing(
   referrerHost: string | null,
 ): { marketing: Marketing; touched: boolean } {
   const touched =
-    !!referrerHost || TOUCH_PARAMS.some((param) => searchParams.has(param));
+    !!referrerHost ||
+    readPathParam(searchParams) !== null ||
+    TOUCH_PARAMS.some((param) => searchParams.has(param));
   if (!touched) return { marketing: stored, touched: false };
 
   const raw: Marketing = {};
@@ -240,4 +250,40 @@ export function marketingHeaders(marketing: Marketing): Record<string, string> {
     if (v) out[HEADER_NAMES[key]] = v;
   }
   return out;
+}
+
+/**
+ * 프록시 한 요청분의 마케팅 처리를 묶는다. 두 앱 `proxy.ts`가 같은 조립을 복제하지 않게 여기 둔다.
+ *
+ * `/be` fetch는 쿼리와 Referer가 자기 페이지라 쿠키 값만 쓴다. 페이지 요청은 `resolveMarketing`으로
+ * 새 유입을 가리고, 새 유입인데 값이 달라졌을 때만 쿠키를 다시 심는다. 모든 칸이 형식 밖이라 비면
+ * 빈 쿠키를 남기지 않고 지운다. 크롤러는 쿠키를 안 들고 다녀 심지 않는다.
+ *
+ * @param input.cookie `plick_mkt` 쿠키 원값
+ * @param input.searchParams 요청 URL의 쿼리
+ * @param input.referer `Referer` 헤더
+ * @param input.ownHost 요청 호스트
+ * @param input.isProxy `/be` fetch인가
+ * @param input.isCrawler 검색 크롤러인가
+ * @returns 이번 요청의 값과 쿠키 지시. `cookie`가 null이면 그대로, 빈 문자열이면 지우기
+ */
+export function resolveRequestMarketing(input: {
+  cookie: string | undefined;
+  searchParams: URLSearchParams;
+  referer: string | null;
+  ownHost: string;
+  isProxy: boolean;
+  isCrawler: boolean;
+}): { marketing: Marketing; cookie: string | null } {
+  const stored = parseMarketingCookie(input.cookie);
+  if (input.isProxy) return { marketing: stored, cookie: null };
+
+  const { marketing, touched } = resolveMarketing(
+    stored,
+    input.searchParams,
+    readReferrerHost(input.referer, input.ownHost),
+  );
+  const value = serializeMarketingCookie(marketing);
+  const changed = touched && value !== (input.cookie ?? "");
+  return { marketing, cookie: changed && !input.isCrawler ? value : null };
 }

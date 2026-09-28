@@ -105,7 +105,7 @@ Referrer-Policy(`strict-origin-when-cross-origin`)에서는 다른 도메인으�
   카카오 로그인을 마치고 콜백으로 돌아오는 요청의 Referer는 `kauth.kakao.com`이다. 그리고 콜백 라우트가
   302로 홈에 보낸 다음 요청도 같은 Referer를 들고 온다. Fetch 표준에서 리다이렉트는 원 요청의
   referrer를 바꾸지 않기 때문이다. 거르지 않으면 로그인할 때마다 유입이 카카오로 덮이고 광고 캠페인
-  값이 날아간다. 제공자 목록은 `apps/*/app/_services/oauth.ts`의 authorize URL에서 뽑았다.
+  값이 날아간다. 제공자 목록은 각 앱 `_constants/api.ts`의 authorize URL에서 뽑았다.
 - `/be` fetch 전부. 이 요청의 Referer는 늘 자기 페이지이고 쿼리도 BE API 파라미터다. 그래서 `/be`에서는
   `resolveMarketing`을 아예 부르지 않고 쿠키 값만 헤더로 편다.
 
@@ -141,6 +141,38 @@ Node 중계기(8095)를 세웠다. 모바일 앱은 `API_BASE_URL=http://localho
 
 웹 프록시는 모바일과 같은 코드라(파일 머리 주석 한 줄만 다르다) diff로 동일함을 확인하고 타입 검사와
 빌드로 갈음했다. `pnpm format:check`, `test:hooks`, `lint`, `check-types`, `build`는 모두 통과했다.
+
+## 리뷰 게이트가 짚은 것
+
+첫 커밋 뒤 `scripts/review/pr-review.sh`를 돌렸다. CRITICAL은 없었고 WARN 셋이 나왔는데 셋 다 맞는 말이라
+고쳤다.
+
+첫째, `path` 파라미터가 형식 검사 없이 새 유입을 일으켰다. 처음엔 `TOUCH_PARAMS`에 `"path"`와
+`"utm_source"`를 넣고 `searchParams.has`로만 봤다. 그러면 `?path=../x`처럼 `plick_path`는 무시하는 값이
+붙은 링크 하나로 마케팅 덩어리가 통째로 비워진다. 누가 퍼뜨린 이상한 링크 때문에 어제 캠페인 귀속이
+사라지는 셈이다. 이제 `path`·`utm_source`는 `plick_path`와 같은 함수(`readPathParam`)가 값을 인정할 때만
+새 유입으로 친다. utm 셋과 클릭 식별자는 반대로 값이 형식 밖이어도 새 유입으로 둔다.
+`?utm_campaign=추석`은 헤더에 못 실을 뿐 새 캠페인으로 들어온 건 사실이라, 지난 캠페인 값을 남기면
+오히려 틀린 귀속이 된다.
+
+둘째, 로그인 제공자 목록에 `accounts.kakao.com`이 없었다. 카카오는 authorize 요청을 `kauth.kakao.com`에
+보내지만 실제 아이디 입력 화면은 `accounts.kakao.com`에서 열린다. 거기서 제출한 폼이 리다이렉트를 타고
+콜백에 닿으면 Referer는 로그인 화면 쪽 호스트다. 넣었다.
+
+셋째, 테스트가 없었다. `packages/core`에는 테스트 러너가 없고 새로 들이자니 의존성과 lockfile이
+따라온다. Node 22에 있는 것만으로 풀었다. `node --test`가 러너이고, `--experimental-strip-types`가
+`.ts`의 타입 표기를 걷어 바로 실행한다. 막힌 곳은 import 해석이었다. `marketing.ts`는 번들러 관례대로
+`./analytics`를 확장자 없이 부르는데 Node 해석기는 확장자를 추측하지 않아 `ERR_MODULE_NOT_FOUND`로
+죽는다. 그래서 `tests/unit/register.mjs`가 `module.register`로 해석 훅 하나를 건다. 상대 경로 해석이
+실패하면 `.ts`를 붙여 한 번 더 찾는 열 줄짜리다. `pnpm test:unit`으로 돌고 CI에도 붙였다. 케이스는
+광고 진입, 클릭 식별자 대소문자, 헤더에 못 싣는 값, 덩어리 교체와 유지, 형식 밖 `path`, 제외할 Referer,
+쿠키 왕복, 프록시 조립 여덟 개다.
+
+INFO 가운데 둘도 받았다. 두 프록시에 글자까지 같은 스무 줄이 복제돼 있던 것을
+`resolveRequestMarketing` 하나로 core에 옮겼고, 두 프록시는 호출 한 번이 됐다. 그리고 모든 칸이 형식
+밖이라 덩어리가 비면 빈 쿠키를 400일짜리로 심던 것을 지우기로 바꿨다(`Set-Cookie: plick_mkt=;
+Expires=1970...`). 고친 뒤 중계기로 다시 돌려 `accounts.kakao.com` 무시, `?path=../x` 무시,
+`?path=share`에서 쿠키 삭제를 확인했다.
 
 ## 남은 것
 

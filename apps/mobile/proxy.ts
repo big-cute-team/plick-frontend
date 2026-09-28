@@ -6,7 +6,8 @@
  *
  * 분석 헤더(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`),
  * 마케팅 유입(`plick_mkt`, KAN-577) 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·
- * `X-Plick-Path`·`X-Plick-Client`·`X-Plick-Entry`와 utm·리퍼러·클릭 식별자 헤더 여섯 개를 찍는다. 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
+ * `X-Plick-Path`·`X-Plick-Client`·`X-Plick-Entry`와 utm·리퍼러·클릭 식별자 헤더 여섯 개를 찍는다.
+ * 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
  * 페이지 요청은 서버 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는다
  * (`_services/analytics-headers.ts`). 값을 정하는 자리가 하나라 두 경로가 어긋나지 않는다.
  *
@@ -39,10 +40,7 @@ import {
 import {
   MARKETING_COOKIE,
   marketingHeaders,
-  parseMarketingCookie,
-  readReferrerHost,
-  resolveMarketing,
-  serializeMarketingCookie,
+  resolveRequestMarketing,
 } from "@plick/core/marketing";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
 import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
@@ -70,7 +68,7 @@ import { PLICK_CLIENT } from "@/_constants/analytics";
 interface Analytics {
   /** 메인 API로 가는 요청에 실을 헤더. 모르는 값은 키를 빼서 BE가 `unknown`으로 접게 둔다 */
   headers: Record<string, string>;
-  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다 */
+  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다. 값이 빈 문자열이면 지운다 */
   cookies: { name: string; value: string; httpOnly: boolean }[];
 }
 
@@ -105,8 +103,8 @@ function refererPathname(request: NextRequest): string | null {
  * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
  *
  * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
- * 새 유입이면 `plick_mkt` 쿠키를 통째로 간다. 아니면 쿠키 값을 쓴다. 규칙은 `@plick/core/marketing`.
- * `/be` fetch는 쿼리와 Referer가 자기 페이지라 쿠키만 본다.
+ * 새 유입이면 `plick_mkt` 쿠키를 통째로 간다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
+ * `@plick/core/marketing`의 `resolveRequestMarketing`이다.
  *
  * @param request 이번 요청
  * @param isProxy `/be` fetch인가
@@ -149,24 +147,22 @@ function resolveAnalytics(
     request.cookies.set(PATH_COOKIE, path);
   }
 
-  const storedMarketing = request.cookies.get(MARKETING_COOKIE)?.value;
-  let marketing = parseMarketingCookie(storedMarketing);
-  if (!isProxy) {
-    const referrer = readReferrerHost(
-      request.headers.get("referer"),
-      request.nextUrl.hostname,
-    );
-    const resolved = resolveMarketing(
-      marketing,
-      request.nextUrl.searchParams,
-      referrer,
-    );
-    marketing = resolved.marketing;
-    const value = serializeMarketingCookie(marketing);
-    if (resolved.touched && value !== (storedMarketing ?? "") && !isCrawler) {
-      cookies.push({ name: MARKETING_COOKIE, value, httpOnly: true });
-      request.cookies.set(MARKETING_COOKIE, value);
-    }
+  const { marketing, cookie: marketingCookie } = resolveRequestMarketing({
+    cookie: request.cookies.get(MARKETING_COOKIE)?.value,
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer"),
+    ownHost: request.nextUrl.hostname,
+    isProxy,
+    isCrawler,
+  });
+  if (marketingCookie !== null) {
+    cookies.push({
+      name: MARKETING_COOKIE,
+      value: marketingCookie,
+      httpOnly: true,
+    });
+    if (marketingCookie) request.cookies.set(MARKETING_COOKIE, marketingCookie);
+    else request.cookies.delete(MARKETING_COOKIE);
   }
 
   const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
@@ -313,6 +309,10 @@ export async function proxy(request: NextRequest) {
    * 심어도 브라우저가 저장하므로 재시도 갈래에서도 새 기기가 생기지 않는다.
    */
   for (const cookie of analytics.cookies) {
+    if (!cookie.value) {
+      response.cookies.delete(cookie.name);
+      continue;
+    }
     response.cookies.set(cookie.name, cookie.value, {
       ...AUTH_COOKIE_BASE,
       httpOnly: cookie.httpOnly,
