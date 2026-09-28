@@ -1,5 +1,5 @@
 /**
- * @file 팀 프로필 화면 상수 (KAN-574). 웹은 KAN-576에서 탭이 없어져 모바일에만 있다.
+ * @file 팀 프로필 화면 상수 (KAN-574).
  */
 
 import type { TeamProfileTabKey } from "@/_types/team-profile";

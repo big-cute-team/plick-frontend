@@ -36,7 +36,7 @@
 탭 컴포넌트가 없어지면서 딸려 가던 것도 정리했다.
 
 - 웹 `_constants/team-profile.ts`(탭 라벨)와 `_types/team-profile.ts`(탭 키)는 쓰는 곳이 없어 지웠다.
-- 웹 `TeamFiguresList`도 지웠다.
+- 웹 `TeamFiguresList`도 지웠다. 그게 유일한 소비처였던 `@plick/domain`의 `FIGURE_SECTIONS`(인물을 감독·코칭스태프, 선수, 구단주·관계자로 가르는 순서)도 참조가 없어져 지웠다.
 - 탭 전환을 화면 전환으로 세던 `useScreenTabView("team_profile", ...)` 호출도 웹에서는 사라졌다.
   바꿀 탭이 없으니 셀 전환도 없다. 모바일은 탭이 남아 그대로다.
 
