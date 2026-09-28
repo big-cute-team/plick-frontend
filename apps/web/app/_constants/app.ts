@@ -48,7 +48,7 @@ export const NAV_LINKS: { href: string; label: string }[] = [
  * 330px에서 여섯 열은 제목이 남지 않는다.
  */
 export const POST_TABLE_GRID =
-  "grid grid-cols-[40px_minmax(0,1fr)_54px] lg:grid-cols-[40px_minmax(0,1fr)_128px_54px_48px_46px] items-center";
+  "grid grid-cols-[2.5rem_minmax(0,1fr)_3.375rem] lg:grid-cols-[2.5rem_minmax(0,1fr)_8rem_3.375rem_3rem_2.875rem] items-center";
 
 /** 표에서 `lg` 아래에 접는 열(기자·조회·좋아요)의 셀 클래스. */
 export const POST_TABLE_CELL_LG = "hidden lg:block";

@@ -34,7 +34,7 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
   });
 
   return (
-    <div className="border-border-soft hover:bg-elevate-2 grid min-h-9.5 grid-cols-[40px_minmax(0,1fr)_54px_46px] items-center border-b py-1.75 transition-colors lg:grid-cols-[40px_minmax(0,1fr)_128px_54px_46px]">
+    <div className="border-border-soft hover:bg-elevate-2 grid min-h-9.5 grid-cols-[2.5rem_minmax(0,1fr)_3.375rem_2.875rem] items-center border-b py-1.75 transition-colors lg:grid-cols-[2.5rem_minmax(0,1fr)_8rem_3.375rem_2.875rem]">
       <span className="flex justify-center">
         {team && <TeamCrest team={team} size={20} />}
       </span>

@@ -6,6 +6,8 @@ import { ReelItem } from "./ReelItem";
 
 /**
  * 릴 세로 스냅 뷰어 — 릴 한 장 = 뷰포트(헤더 제외) 높이, 위아래로 스냅 스크롤.
+ * 카드는 섹션 높이를 꽉 채우고 위아래로 16px(시안 px)만 띄운다 (KAN-574). 전에는 30px
+ * 여백에 최대 704px라 큰 창에서 카드가 가운데 작게 떴다.
  *
  * 바탕은 시안의 회색 면(`bg-chip`, KAN-567 웹 릴스 430행)이고, 오른쪽 세부 패널은
  * 흰 바탕에 왼쪽 테두리로 갈린다. 세부 패널이 열리면 옆에서 폭을 나눠 갖는다
@@ -57,7 +59,7 @@ export function ReelViewer({
           key={reel.id}
           ref={registerReel}
           data-reel-index={i}
-          className="lg:pl-gutter flex h-full snap-start items-center justify-center px-4 py-7.5"
+          className="lg:pl-gutter flex h-full snap-start items-center justify-center px-4 py-4"
         >
           <ReelItem
             reel={reel}

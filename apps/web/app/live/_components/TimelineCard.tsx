@@ -66,7 +66,7 @@ export function TimelineCard({
             return (
               <div
                 key={`${event.minute}-${i}`}
-                className="relative grid grid-cols-[1fr_46px_1fr] items-center py-2.25"
+                className="relative grid grid-cols-[1fr_2.875rem_1fr] items-center py-2.25"
               >
                 <div className="min-w-0 pr-4 text-right">{home && body}</div>
                 <div className="flex justify-center">

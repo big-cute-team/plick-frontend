@@ -242,7 +242,7 @@ function Composer({
   return (
     <div
       className="border-border px-edge flex shrink-0 flex-col gap-1.5 border-t pt-2.5"
-      style={{ paddingBottom: "calc(var(--safe-bottom) + 12px)" }}
+      style={{ paddingBottom: "calc(var(--safe-bottom) + 0.75rem)" }}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input

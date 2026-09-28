@@ -17,7 +17,7 @@ export default function ArticleDetailLoading() {
     <>
       <SiteHeader />
       <main>
-        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_288px]">
+        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0 animate-pulse">
             {/* 빵부스러기 */}
             <div className="flex items-center gap-1.75 pb-4.5">

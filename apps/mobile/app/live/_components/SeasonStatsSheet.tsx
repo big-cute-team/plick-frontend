@@ -12,7 +12,7 @@ import { usePlayerSeasonStats } from "@/_hooks/usePlayerSeasonStats";
 import { LiveSheet } from "./LiveSheet";
 
 /** 대회별 표의 열. 대회명, 출전 32, 골 24, 도움 32, 평점 36 */
-const COLS = "grid-cols-[minmax(0,1fr)_32px_24px_32px_36px]";
+const COLS = "grid-cols-[minmax(0,1fr)_2rem_1.5rem_2rem_2.25rem]";
 
 /**
  * 선수 시즌 스탯 바텀시트(피그마 L12·L13, KAN-567 톤). 팀 프로필 선수단에서

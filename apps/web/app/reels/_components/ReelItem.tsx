@@ -10,23 +10,26 @@ import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { ShareDialog } from "@/_components/ShareDialog";
 import { TweetEmbed } from "@/_components/TweetEmbed";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
+import { REEL_BACKDROP_FADE } from "@/_constants/reels";
 import { useReelLike } from "@/_hooks/useReelLike";
 import { reelSharePath } from "@/_utils/share";
 import { ReelActionRail } from "./ReelActionRail";
 
 /**
- * 릴 한 장 — 9:16 카드(미디어 + 팀, 제목, 기자 오버레이) + 액션 레일.
+ * 릴 한 장 — 9:16 카드(미디어 + 팀, 제목, 기자) + 액션 레일.
  *
- * 카드는 시안(KAN-567, 웹 릴스 428-467행)의 396x704 어두운 상자(`bg-reel-dark`,
- * `shadow-card`, 각진)다. 세로가 모자란 창에서는 가용 높이를 따라 줄어들고
- * (`h-full max-h-176`), 폭은 9:16 비율이 정한다. 레일 배치는 뷰포트에 따라 다르다.
+ * 카드는 흰 상자(`bg-bg`, `shadow-card`, 각진)이고 뷰어 높이를 늘 꽉 채운다. 헤더
+ * 밑에서 창 바닥까지 위아래 약간의 여백만 두고, 폭은 9:16 비율이 정한다 (KAN-574). 전에는 시안의
+ * 396x704 어두운 상자에 위아래 여백을 둬서 큰 창에서 카드가 가운데 작게 떴고, 흰
+ * 트윗 카드가 어두운 상자 안에 따로 떠 있었다. 이제 상자 자체가 흰 면이라 임베드가
+ * 배경을 채운 것처럼 보이고, 글자는 어두운 스크림 대신 흰 받침 위 본문색으로 쓴다.
+ *
+ * 레일 배치는 뷰포트에 따라 다르다.
  * - 데스크톱(lg↑): 카드 밖 오른쪽에 flex 형제로 나란히. 이전, 다음 화살표가 붙는다.
- * - 좁은 폭: 사진이 좁아지지 않도록 카드 안 우측에 오버레이하고(우측 스크림으로
- *   가독성 확보), 카드는 `max-w-full`로 가용 폭을 꽉 채운다.
+ * - 좁은 폭: 카드 안 우측 하단에 오버레이하고, 카드는 `max-w-full`로 가용 폭을 꽉 채운다.
  *
- * 사진(`imageUrl`)이 있으면 카드를 가득 덮고, 없으면(현재 발행 릴 전건이 그렇다)
- * 원문 트윗 임베드가 미디어 자리를 대신한다. 시안은 어두운 면 위에 X 원문 상자를
- * 얹는데 react-tweet은 흰 카드라 `bg-bg` 흰 상자에 여백을 둬 감싼다.
+ * 사진(`imageUrl`)이 있으면 임베드 영역을 덮고, 없으면(현재 발행 릴 전건이 그렇다)
+ * 원문 트윗 임베드가 그 자리를 대신한다. 사진도 제목 윗선에서 끝나 글자와 겹치지 않는다.
  *
  * 임베드 영역은 카드 맨 위부터 제목(헤드라인) 윗선까지다. 카드가 그 영역보다
  * 작으면 세로 가운데에 서고(`justify-content: safe center`), 크면 위에 붙고 자기
@@ -115,10 +118,10 @@ export function ReelItem({
       <div
         ref={cardRef}
         onClick={handleCardClick}
-        className="bg-reel-dark shadow-card relative aspect-[9/16] h-full max-h-176 w-auto max-w-full min-w-0 cursor-pointer overflow-hidden"
+        className="bg-bg shadow-card relative aspect-[9/16] h-full w-auto max-w-full min-w-0 cursor-pointer overflow-hidden"
       >
-        {/* 사진이 있으면 카드를 가득 덮는다. 없으면 원문 트윗 임베드가 자리를
-            대신하고, 로드 전에는 릴 배경색이 그대로 남는다 */}
+        {/* 사진이 있으면 임베드 영역을 덮는다. 없으면 원문 트윗 임베드가 자리를
+            대신하고, 로드 전에는 흰 면이 그대로 남는다 */}
         {reel.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- 릴 배경 이미지 호스트가 유동이라 next/image 대신 일반 img (MediaThumb과 같은 이유)
           <img
@@ -126,38 +129,29 @@ export function ReelItem({
             alt=""
             loading={eager ? "eager" : "lazy"}
             fetchPriority={eager ? "high" : "auto"}
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-x-0 top-0 w-full object-cover"
+            style={{ height: `calc(100% - ${embedBottom}px)` }}
           />
         ) : (
           reel.sourceUrl && (
             <div
-              className="reel-embed absolute inset-x-0 top-0 flex flex-col [justify-content:safe_center] px-5.5"
+              className="reel-embed absolute inset-x-0 top-0 flex flex-col [justify-content:safe_center] px-4"
               style={{ bottom: embedBottom }}
             >
-              <div className="bg-bg p-4">
-                <TweetEmbed url={reel.sourceUrl} />
-              </div>
+              <TweetEmbed url={reel.sourceUrl} />
             </div>
           )
         )}
 
-        {/* 좁은 폭 전용 우측 스크림 — 카드 안 오버레이 레일 가독성용(테마 무관 고정) */}
+        {/* 하단 정보 블록 — 팀, 제목, 기자. 본문색 글자 뒤에 카드와 같은 흰 받침을 깐다.
+            팀 줄 위로 REEL_BACKDROP_FADE만큼 투명에서 흰색으로 번져, 사진이나 긴 트윗이
+            제목 뒤로 겹쳐도 글자가 읽힌다 (KAN-574). 좁은 폭에선 우측에 레일이 겹치므로
+            pr-16으로 자리를 비운다. */}
         <div
-          aria-hidden
-          className="absolute inset-y-0 right-0 w-24 lg:hidden"
+          className="absolute inset-x-0 bottom-0 flex flex-col pr-16 pb-6.5 pl-5.5 lg:pr-5.5"
           style={{
-            backgroundImage:
-              "linear-gradient(to left, color-mix(in srgb, var(--plk-scrim) 45%, transparent), transparent)",
-          }}
-        />
-
-        {/* 하단 정보 블록 — 스크림 위 팀, 제목, 기자. 시안은 110px 위에서부터 어두워진다.
-            좁은 폭에선 우측에 레일이 겹치므로 pr-16으로 자리를 비운다. */}
-        <div
-          className="absolute inset-x-0 bottom-0 flex flex-col pt-27.5 pr-16 pb-6.5 pl-5.5 lg:pr-5.5"
-          style={{
-            backgroundImage:
-              "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 58%, transparent) 35%, color-mix(in srgb, var(--plk-scrim) 94%, transparent) 100%)",
+            paddingTop: REEL_BACKDROP_FADE,
+            backgroundImage: `linear-gradient(to bottom, transparent, var(--plk-bg) ${REEL_BACKDROP_FADE})`,
           }}
         >
           {(team || hasVote) && (
@@ -165,7 +159,7 @@ export function ReelItem({
               {team && (
                 <>
                   <TeamCrest team={team} size={18} />
-                  <span className="text-caption-lg text-media-on font-bold">
+                  <span className="text-caption-lg text-text-strong font-bold">
                     {team.name}
                   </span>
                 </>
@@ -180,14 +174,14 @@ export function ReelItem({
             className="focus-visible:outline-accent w-fit pb-2.75 text-left hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {/* 파싱이 어긋나 원문 트윗이 통째로 제목에 들어온 기사가 있어 줄수를 묶는다 */}
-            <span className="text-section text-media-on tracking-title line-clamp-3 leading-[1.36] font-black">
+            <span className="text-section text-text-strong tracking-title line-clamp-3 leading-[1.36] font-black">
               {reel.title}
             </span>
           </button>
-          <p className="text-label-lg text-media-on-dim">
+          <p className="text-label-lg text-text-3">
             {reel.reporter && (
               <>
-                <span className="text-media-on font-bold">
+                <span className="text-text-strong font-bold">
                   {reel.reporter.name}
                 </span>
                 {", "}
@@ -209,10 +203,9 @@ export function ReelItem({
         />
       </div>
 
-      {/* 데스크톱 전용: 카드 밖 오른쪽 레일. 페이지 바탕(bg-chip) 위라 surface 톤 */}
+      {/* 데스크톱 전용: 카드 밖 오른쪽 레일 */}
       <ReelActionRail
         reel={reel}
-        tone="surface"
         navigable
         onLike={like.toggle}
         onOpenComments={onOpenDetail}

@@ -72,7 +72,7 @@ export function LiveSheet({
         ref={panelRef}
         className="bg-bg rounded-t-sheet relative mx-auto max-h-[80dvh] w-full max-w-[480px] overflow-y-auto px-5 pt-5.5"
         style={{
-          paddingBottom: "max(30px, var(--safe-bottom))",
+          paddingBottom: "max(1.875rem, var(--safe-bottom))",
           /* 끄는 동안은 전환을 끄고 손가락을 그대로 따라가고, 떼는 순간부터
              애니메이션으로 제자리에 돌아가거나 아래로 빠진다 */
           transform: offset > 0 ? `translateY(${offset}px)` : undefined,

@@ -3,7 +3,8 @@ import { LiveCrest } from "@plick/ui/LiveCrest";
 import { TeamProfileLink } from "./TeamProfileLink";
 
 /** 순위표 열 그리드 (시안 LIVE 789행). 우측 aside 340px 안에 여덟 열을 맞춘 값이다. */
-const COLS = "grid-cols-[20px_22px_minmax(0,1fr)_24px_24px_24px_30px_30px]";
+const COLS =
+  "grid-cols-[1.25rem_1.375rem_minmax(0,1fr)_1.5rem_1.5rem_1.5rem_1.875rem_1.875rem]";
 
 /**
  * LIVE 우측의 순위표 (KAN-452 → KAN-567 시안 LIVE 784-815행). 머리 "순위표" 14/900 +

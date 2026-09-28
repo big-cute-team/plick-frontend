@@ -110,7 +110,7 @@ export default async function FigurePage({
     <>
       <SiteHeader />
       <main>
-        <PageContainer className="grid grid-cols-1 gap-10 pt-5.5 pb-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-11">
+        <PageContainer className="grid grid-cols-1 gap-10 pt-5.5 pb-12 lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-11">
           <div className="min-w-0">
             <ProfileBreadcrumb kind={FIGURE_TYPE_LABEL[figure.type]} />
             <FigureHeader figure={figure} />

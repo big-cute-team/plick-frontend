@@ -25,7 +25,7 @@ export function PlayerStatsTable({
   lineups: { home: TeamLineup; away: TeamLineup };
   onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
-  const cols = "grid-cols-[22px_minmax(0,1fr)_44px_34px]";
+  const cols = "grid-cols-[1.375rem_minmax(0,1fr)_2.75rem_2.125rem]";
 
   return (
     <section>

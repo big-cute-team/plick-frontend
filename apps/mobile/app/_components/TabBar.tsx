@@ -26,8 +26,9 @@ import type { ScreenKey } from "@/_types/app";
  * 동작을 막고 직접 처리한다.
  *
  * @param variant - `"solid"`(기본): 흰 바탕 + 위 선.
- *   `"overlay"`: 릴스처럼 미디어 위에 얹는 그라데이션 스크림 탭 (KAN-569). 어두운 스크림
- *   위라 활성은 밝은 강조색, 비활성은 흰색 dim이다.
+ *   `"overlay"`: 릴스처럼 화면 위에 얹는 탭 (KAN-569). 생김새는 solid와 같고 흐름 밖
+ *   (`absolute`)에 떠서 릴이 탭 뒤까지 찬다. KAN-574에서 릴 글자가 검어지며 스크림과
+ *   흰 글자를 걷었다.
  */
 export function TabBar({
   variant = "solid",
@@ -72,19 +73,10 @@ export function TabBar({
 
   return (
     <nav
-      className={
-        overlay
-          ? "absolute inset-x-0 bottom-0 z-10"
-          : "border-border bg-nav shrink-0 border-t"
-      }
-      style={{
-        paddingBottom: "var(--safe-bottom)",
-        // 스크림은 미디어 가독성용 고정 값(테마 무관)
-        ...(overlay && {
-          backgroundImage:
-            "linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--plk-scrim) 90%, transparent) 45%)",
-        }),
-      }}
+      className={`border-border bg-nav border-t ${
+        overlay ? "absolute inset-x-0 bottom-0 z-10" : "shrink-0"
+      }`}
+      style={{ paddingBottom: "var(--safe-bottom)" }}
     >
       <ul className="flex h-13.5 items-stretch">
         {TABS.map(({ href, label, Icon, match, screen }) => {
@@ -99,13 +91,7 @@ export function TabBar({
                   retap(screen);
                 }}
                 className={`flex h-full flex-col items-center justify-center gap-1 ${
-                  overlay
-                    ? active
-                      ? "text-accent-bright"
-                      : "text-media-on-dim"
-                    : active
-                      ? "text-accent"
-                      : "text-text-4"
+                  active ? "text-accent" : "text-text-4"
                 } active:opacity-60`}
               >
                 <Icon size={22} />
