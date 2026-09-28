@@ -39,28 +39,27 @@ export async function generateMetadata({
   const fullName = TEAM_FULL_NAMES[code];
   return {
     title: `${fullName} 선수단`,
-    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단과 소속 인물, 인물별 이적 루머 모아보기`,
+    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단 모아보기`,
   };
 }
 
 /**
  * 팀 프로필 (KAN-500, KAN-507에서 라이브 팀 화면을 합침, KAN-567 리디자인, 시안
  * 팀 프로필). 머리(엠블럼 60, 이름, 영문명), 숫자 상자(순위·승점·전적·득실),
- * 선수단, 기사 속 인물, 관련 이슈 링크, 기본 정보를 세로로 쌓는다.
+ * 선수단, 관련 이슈 링크, 기본 정보를 세로로 쌓는다.
  *
  * 한 팀을 보는 화면이 두 장으로 갈려 있었다. 라이브 순위표에서 팀을 누르면
  * `/live/teams/[teamId]`(API-Football 선수단)로, 기사 쪽 팀 칩·로고를 누르면
  * 여기로 왔다. 같은 팀인데 어디로 들어왔느냐에 따라 다른 화면이 뜨는 게
  * 이상해서 이 한 장으로 합쳤다. 라이브 쪽 URL은 여기로 리다이렉트한다.
  *
- * 숫자 상자 밑은 탭이다 (KAN-574). 선수단, 기사 속 인물, 팀 정보(관련 이슈 +
- * 기본 정보)를 가른다. KAN-567에서 시안대로 섹션을 세로로 이었더니 선수단만으로
- * 화면 몇 장이라 되돌렸다. "선수단"은 API-Football의 이번 시즌 등록 명단이고
- * 포지션별 한 줄씩 칩을 누르면 시즌 스탯 시트가 열린다.
- * "기사 속 인물"은 해축이모 인물 사전이라 감독·구단주까지 들어 있고 행을 누르면
- * 그 인물의 프로필로 간다. 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사
- * 목록의 팀 탭(`/articles/teams/[slug]`)으로 보낸다. 같은 목록이 세 URL에
- * 있으면 어디가 원본인지 흐려진다.
+ * 숫자 상자 밑은 탭이다 (KAN-574). 선수단과 팀 정보(관련 이슈 + 기본 정보)를
+ * 가른다. "기사 속 인물" 탭은 KAN-576에서 뺐다. KAN-567에서 시안대로 섹션을
+ * 세로로 이었더니 선수단만으로 화면 몇 장이라 되돌렸다. "선수단"은 API-Football의
+ * 이번 시즌 등록 명단이고 포지션별 한 줄씩 칩을 누르면 시즌 스탯 시트가 열린다.
+ * 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사 목록의 팀 탭
+ * (`/articles/teams/[slug]`)으로 보낸다. 같은 목록이 세 URL에 있으면 어디가
+ * 원본인지 흐려진다.
  *
  * 순위 요약(KAN-514)은 `GET /standings` 20행에서 이 팀 행만 골라 숫자 상자에
  * 넣는다. 시안의 최근 5경기 폼, 감독·홈구장·창단은 팀 단위 API가 없어 뺐다.
@@ -147,7 +146,6 @@ export default async function TeamProfilePage({
           <TeamProfileTabs
             slug={slug}
             squad={squad}
-            figures={profile.figures}
             info={
               <>
                 <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>

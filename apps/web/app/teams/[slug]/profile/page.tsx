@@ -16,7 +16,7 @@ import { ProfileBreadcrumb } from "@/_components/ProfileBreadcrumb";
 import { ProfileFacts } from "@/_components/ProfileFacts";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { TeamProfileTabs } from "./_components/TeamProfileTabs";
+import { SquadRows } from "./_components/SquadRows";
 import { TeamStatsRow } from "./_components/TeamStatsRow";
 import { SiteFooter } from "@/_components/SiteFooter";
 
@@ -37,7 +37,7 @@ export async function generateMetadata({
   const fullName = TEAM_FULL_NAMES[code];
   return {
     title: `${fullName} 선수단`,
-    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단과 소속 인물, 인물별 이적 루머 모아보기`,
+    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단 모아보기`,
     alternates: {
       canonical: `/teams/${slug}/profile`,
       media: {
@@ -50,16 +50,16 @@ export async function generateMetadata({
 /**
  * 데스크톱 팀 프로필 (KAN-507 → KAN-567 시안 프로필 1215-1420행). 빵부스러기, 머리
  * (엠블럼 72, "팀" 라벨, 이름 30/900, 영문명), 숫자 4개(순위, 승점, 전적, 득실),
- * 선수단 표와 기사 속 인물, 우측 기본 정보 카드를 `minmax(0,1fr) 300px` 그리드에 둔다.
+ * 선수단, 우측 기본 정보 카드를 `minmax(0,1fr) 300px` 그리드에 둔다.
  * 모바일 `/teams/[slug]/profile`의 데스크톱 판이다.
  *
- * 두 명단은 출처가 달라 탭으로 갈라 둔다 (KAN-484). "선수단"은 API-Football 이번
- * 시즌 등록 명단이고 행을 누르면 시즌 스탯 다이얼로그가 열린다. "기사 속 인물"은
- * 해축이모 인물 사전이라 감독, 구단주까지 있고 행을 누르면 관련 기사로 간다.
+ * 선수단은 API-Football 이번 시즌 등록 명단이고 칩을 누르면 시즌 스탯 다이얼로그가
+ * 열린다. 옆에 있던 "기사 속 인물" 탭과 "2026-27 프리미어리그" 줄은 KAN-576에서
+ * 뺐다. 탭이 하나만 남아 탭 줄 대신 섹션 제목을 둔다.
  *
  * 시안의 최근 5경기 카드와 관련 이슈 표는 팀 단위 API가 없어 뺐다(팀 기사는 팀
  * 허브가 맡는다). 기본 정보의 감독, 홈구장, 창단도 API에 없어 영문명과 시즌만 둔다.
- * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 탭 자리에만
+ * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 섹션 자리에만
  * 실패를 보여준다. 라이브 API는 외부 의존이라 덜 미덥다.
  */
 export default async function TeamProfilePage({
@@ -129,11 +129,16 @@ export default async function TeamProfilePage({
               <div className="h-6.5" />
             )}
 
-            <TeamProfileTabs
-              slug={slug}
-              squad={squad}
-              figures={profile.figures}
-            />
+            <h2 className="text-body-lg text-text-strong pb-2 font-black tracking-tight">
+              선수단
+            </h2>
+            {squad ? (
+              <SquadRows squad={squad} />
+            ) : (
+              <p className="text-body-md text-text-4 py-10">
+                선수단을 불러오지 못했어요
+              </p>
+            )}
           </div>
           <aside className="flex flex-col gap-3.5">
             <ProfileFacts
