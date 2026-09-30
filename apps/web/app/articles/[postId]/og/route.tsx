@@ -27,7 +27,7 @@ import {
   OgCard,
   TEAM_OG_COLORS,
 } from "@/_components/OgCard";
-import { loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
+import { loadBrandLogo, loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
 
 export async function GET(
   _request: Request,
@@ -44,8 +44,9 @@ export async function GET(
   }
 
   const team = article?.teams[0] ?? null;
-  const [fonts, logo] = await Promise.all([
+  const [fonts, brandLogo, logo] = await Promise.all([
     loadOgFonts(),
+    loadBrandLogo(),
     team ? loadTeamLogo(team) : Promise.resolve(null),
   ]);
 
@@ -53,11 +54,16 @@ export async function GET(
     article ? (
       <OgCard
         title={truncateText(article.title, 80)}
+        brandLogoSrc={brandLogo}
         teamColor={team ? TEAM_OG_COLORS[team] : null}
         logoSrc={logo}
       />
     ) : (
-      <OgCard title={BRAND_TAGLINE} showTagline={false} />
+      <OgCard
+        title={BRAND_TAGLINE}
+        brandLogoSrc={brandLogo}
+        showTagline={false}
+      />
     ),
     {
       width: OG_WIDTH,

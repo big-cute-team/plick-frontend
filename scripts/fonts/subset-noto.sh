@@ -11,7 +11,7 @@ python3 -m fontTools.subset "$SRC" \
   --unicodes-file=unicodes.txt --flavor=woff2 --layout-features='*' --name-IDs='*' \
   --no-hinting --desubroutinize --output-file=NotoSansKR-Variable.woff2
 
-for W in 700 900; do
+for W in 700; do
   python3 - "$SRC" "$W" <<'EOF'
 import sys
 from fontTools.ttLib import TTFont
@@ -27,6 +27,5 @@ done
 cp NotoSansKR-Variable.woff2 ../../apps/mobile/app/fonts/NotoSansKR-Variable.woff2
 cp NotoSansKR-Variable.woff2 ../../apps/web/app/fonts/NotoSansKR-Variable.woff2
 cp NotoSansKR-700-subset.ttf ../../apps/web/assets/og/NotoSansKR-Bold.ttf
-cp NotoSansKR-900-subset.ttf ../../apps/web/assets/og/NotoSansKR-Black.ttf
-rm -f NotoSansKR-700.ttf NotoSansKR-900.ttf NotoSansKR-700-subset.ttf NotoSansKR-900-subset.ttf NotoSansKR-Variable.woff2
+rm -f NotoSansKR-700.ttf NotoSansKR-700-subset.ttf NotoSansKR-Variable.woff2
 ls -la ../../apps/mobile/app/fonts ../../apps/web/assets/og

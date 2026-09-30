@@ -7,6 +7,7 @@
  *
  * KAN-567 리디자인에서 브랜드가 "플릭 PLick"에서 "해축이모"로 바뀌었다. 도메인은
  * 그대로다. 문구는 핸드오프 README의 서비스 정의("해외축구 루머, 이적 소식")를 따른다.
+ * 로고는 글자가 아니라 이미지다(KAN-583, `@plick/ui` Logo와 `public/brand/`).
  *
  * 구글은 description이 너무 짧거나 페이지 본문과 동떨어지면 무시하고 화면
  * 텍스트를 긁는다(KAN-384의 발단). 그래서 여기 문구는 핵심 검색어(프리미어리그,
@@ -19,14 +20,8 @@
  */
 export const BRAND_NAME_KO = "해축이모";
 
-/** 영문 브랜드명 — 사이트명의 alternateName. 로고는 한글 워드마크라 화면에는 안 나온다. */
+/** 영문 브랜드명 — 사이트명의 alternateName. 로고는 한글 글자라 화면에는 안 나온다. */
 export const BRAND_NAME_EN = "Haechukimo";
-
-/**
- * 로고 두 토막 — 앞 토막은 강조색, 뒤 토막은 제목색으로 그린다(`@plick/ui` Logo).
- * 로고를 글자로 그리는 곳(OG 이미지 등)이 같은 분절을 쓴다.
- */
-export const LOGO_PARTS = ["해축", "이모"] as const;
 
 /** 로고 옆 태그라인 — 웹 상단 바. */
 export const BRAND_TAGLINE = "해외축구 이슈 모음";

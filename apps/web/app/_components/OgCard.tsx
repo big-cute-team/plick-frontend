@@ -8,10 +8,12 @@
  * 바뀌면 여기도 맞춘다(정적 OG 스크립트 `scripts/og-image/render.mjs`와 같은 규약).
  *
  * 디자인은 리디자인 라이트 팔레트다 — 흰 바탕, 왼쪽에 팀 컬러(없으면 강조색)
- * 세로 띠, 우측에 팀 로고 워터마크, 하단에 해축이모 글자 워드마크와 태그라인.
+ * 세로 띠, 우측에 팀 로고 워터마크, 하단에 해축이모 가로형 로고와 태그라인.
  * 루머 단계 배지는 시안 규칙("루머 단계 라벨은 노출하지 않는다")대로 뺐다.
+ * 하단 로고는 KAN-567까지 글자 워드마크였고, KAN-583에서 가로형 로고 PNG
+ * (`loadBrandLogo`)로 바뀌었다 — 팀 로고처럼 호출부가 data URI로 넘긴다.
  */
-import { BRAND_TAGLINE, LOGO_PARTS } from "@plick/domain/brand";
+import { BRAND_TAGLINE } from "@plick/domain/brand";
 import type { TeamCode } from "@plick/domain/types";
 
 export const OG_WIDTH = 1200;
@@ -22,7 +24,10 @@ const BG = "#ffffff";
 const TEXT_STRONG = "#16181b";
 const TEXT_3 = "#5f6368";
 const ACCENT = "#0a6b42";
-const LOGO_TAIL = "#1f1f1f";
+
+/** 하단 가로형 로고 높이 — 원본 581x200 비율로 너비를 잡는다 */
+const BRAND_LOGO_HEIGHT = 64;
+const BRAND_LOGO_WIDTH = Math.round((BRAND_LOGO_HEIGHT * 581) / 200);
 
 /** theme.css `--plk-team-*` 사본 — 세로 띠 색 */
 export const TEAM_OG_COLORS: Record<TeamCode, string> = {
@@ -34,29 +39,11 @@ export const TEAM_OG_COLORS: Record<TeamCode, string> = {
   MCI: "#6cabdd",
 };
 
-/** 해축이모 글자 워드마크 — `@plick/ui` Logo와 같은 분절·굵기·자간 */
-function OgWordmark({ size }: { size: number }) {
-  const [head, tail] = LOGO_PARTS;
-  return (
-    <div
-      style={{
-        display: "flex",
-        fontSize: size,
-        fontWeight: 900,
-        letterSpacing: "-0.06em",
-        lineHeight: 1,
-      }}
-    >
-      <span style={{ color: ACCENT }}>{head}</span>
-      <span style={{ color: LOGO_TAIL, marginLeft: 1 }}>{tail}</span>
-    </div>
-  );
-}
-
 /**
  * OG 카드 본체.
  *
  * @param title 카드 제목 — 호출부가 길이를 미리 자른다(satori lineClamp는 보조)
+ * @param brandLogoSrc 해축이모 가로형 로고 PNG data URI (`loadBrandLogo`)
  * @param teamColor 대표 팀 컬러 hex. null이면 강조색 띠를 두른다
  * @param logoSrc 팀 로고 PNG data URI. null이면 워터마크 없음
  * @param logoOpacity 워터마크 투명도 — 기사(0.12)는 제목이 주인공, 팀 허브(0.2)는
@@ -66,12 +53,14 @@ function OgWordmark({ size }: { size: number }) {
  */
 export function OgCard({
   title,
+  brandLogoSrc,
   teamColor = null,
   logoSrc = null,
   logoOpacity = 0.12,
   showTagline = true,
 }: {
   title: string;
+  brandLogoSrc: string;
   teamColor?: string | null;
   logoSrc?: string | null;
   logoOpacity?: number;
@@ -154,7 +143,13 @@ export function OgCard({
             width: "100%",
           }}
         >
-          <OgWordmark size={46} />
+          {/* eslint-disable-next-line @next/next/no-img-element -- satori 렌더에는 next/image가 없다 */}
+          <img
+            src={brandLogoSrc}
+            width={BRAND_LOGO_WIDTH}
+            height={BRAND_LOGO_HEIGHT}
+            alt=""
+          />
           {showTagline && (
             <div style={{ display: "flex", fontSize: 26, color: TEXT_3 }}>
               {BRAND_TAGLINE}

@@ -27,7 +27,7 @@ description: >-
   `text-label-lg`(12.5) `text-body`(13.5) `text-body-md`(14) `text-body-lg`(15) `text-title`(17) `text-reel`(19) `text-hero`(21)
   `text-section`(22) `text-profile`(23) `text-headline`(24) `text-score`(38)
 - 굵기: 900 `font-black`(제목·로고·섹션), 700 `font-bold`, 500 `font-medium`
-- 자간: `tracking-logo`(-.06em) `tracking-title`(-.04em) `tracking-heading`(-.03em) `tracking-section`(-.025em) `tracking-tight`(-.02em)
+- 자간: `tracking-title`(-.04em) `tracking-heading`(-.03em) `tracking-section`(-.025em) `tracking-tight`(-.02em)
   `tracking-snug`(-.01em) `tracking-vs`(.06em) `tracking-live`(.08em) `tracking-label`(1px) — `tracking-[…]` 임의값 금지
 - 라운드: `rounded-badge`(6) `rounded-tile`(10) `rounded-control`(14) `rounded-card`(16) `rounded-hero`(22) `rounded-sheet`(26) `rounded-pill`.
   선과 목록 행은 각지게, 채운 면과 상자는 둥글게

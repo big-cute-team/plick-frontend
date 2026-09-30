@@ -3,7 +3,7 @@
 OG 기본 이미지(1200x630) 생성 도구다. 산출물은 `apps/{mobile,web}/app/opengraph-image.png`로
 커밋되어 있어 평소에는 돌릴 일이 없다. 문구나 브랜드 색이 바뀔 때만 다시 돌린다.
 
-렌더는 `@resvg/resvg-js`로 하고, 글자는 `apps/web/assets/og`의 Noto Sans KR Black·Bold(동적 OG와
+렌더는 `@resvg/resvg-js`로 하고, 태그라인은 `apps/web/assets/og`의 Noto Sans KR Bold(동적 OG와
 같은 파일, `scripts/fonts`로 생성)로 그린다. 스크립트가 두 앱 `app/opengraph-image.png`까지 직접 쓴다.
 
 ```bash
@@ -13,7 +13,8 @@ node render.mjs
 ```
 
 색 값은 `packages/tokens/theme.css`의 라이트 토큰(bg, accent, text-3)을 그대로 옮긴 상수다.
-토큰이 바뀌면 `render.mjs` 상단 상수도 맞춘다. 워드마크는 `@plick/ui` `Logo.tsx`와 같은 글자 로고다(KAN-567).
+토큰이 바뀌면 `render.mjs` 상단 상수도 맞춘다. 로고는 `apps/web/assets/og/logo-horizontal.png`
+(`scripts/brand-assets` 산출물의 사본)을 앉힌다(KAN-583). KAN-567까지는 글자 워드마크였다.
 
 ## team-logos.mjs
 

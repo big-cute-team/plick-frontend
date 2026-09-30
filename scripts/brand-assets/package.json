@@ -1,0 +1,8 @@
+{
+  "name": "brand-assets",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "sharp": "^0.35.5"
+  }
+}
