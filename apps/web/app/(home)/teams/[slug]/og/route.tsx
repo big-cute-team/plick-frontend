@@ -20,7 +20,7 @@ import {
   OgCard,
   TEAM_OG_COLORS,
 } from "@/_components/OgCard";
-import { loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
+import { loadBrandLogo, loadOgFonts, loadTeamLogo } from "@/_utils/og-assets";
 
 export async function GET(
   _request: Request,
@@ -29,8 +29,9 @@ export async function GET(
   const { slug } = await params;
   const code = TEAM_BY_SLUG[slug];
 
-  const [fonts, logo] = await Promise.all([
+  const [fonts, brandLogo, logo] = await Promise.all([
     loadOgFonts(),
+    loadBrandLogo(),
     code ? loadTeamLogo(code) : Promise.resolve(null),
   ]);
 
@@ -38,12 +39,17 @@ export async function GET(
     code ? (
       <OgCard
         title={`${TEAM_FULL_NAMES[code]} 이적 루머`}
+        brandLogoSrc={brandLogo}
         teamColor={TEAM_OG_COLORS[code]}
         logoSrc={logo}
         logoOpacity={0.2}
       />
     ) : (
-      <OgCard title={BRAND_TAGLINE} showTagline={false} />
+      <OgCard
+        title={BRAND_TAGLINE}
+        brandLogoSrc={brandLogo}
+        showTagline={false}
+      />
     ),
     {
       width: OG_WIDTH,

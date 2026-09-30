@@ -319,7 +319,6 @@
   --leading-body: 1.6; /* 댓글 본문 */
 
   /* letter spacing — 시안은 em 단위다. 임의 bracket 값 대신 토큰으로 */
-  --tracking-logo: -0.06em; /* 로고 */
   --tracking-title: -0.04em; /* 기사·릴·프로필 제목, 스코어 */
   --tracking-heading: -0.03em; /* 투표 질문, 시트 제목 */
   --tracking-section: -0.025em; /* 섹션 제목 */

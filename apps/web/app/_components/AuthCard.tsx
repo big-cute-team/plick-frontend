@@ -7,7 +7,7 @@ import { SocialLoginActions } from "./SocialLoginActions";
  * 약관 + 하단 전환 링크. 로그인(W6), 회원가입(W7)이 카피만 다르고 형태가 같아 공용으로
  * 뺐다. KAN-567 리디자인으로 라이트 톤이고 각진 상자에 레일 테두리
  * (`border-border-strong`)다. 버튼은 `SocialLoginActions`가 OAuth 시작 서버 액션과
- * 연결한다(KAN-318).
+ * 연결한다(KAN-318). 로고는 KAN-583 실제 화면 캡처의 가로형 높이 51이다.
  *
  * 하단에 있던 "로그인 없이 이용하기"(안내 팝업 → 홈)는 KAN-514에서 걷어냈다. 첫 진입에
  * 게스트가 발급돼 로그인 없이 쓰는 게 기본 동작이 되면서, 별도 버튼과 "일부 기능을 쓸 수
@@ -54,7 +54,7 @@ export function AuthCard({
     <main className="bg-elevate flex min-h-dvh items-center justify-center px-4 py-16">
       <section className="bg-bg border-border-strong max-w-auth flex w-full flex-col gap-2.5 border px-9 pt-11 pb-9">
         <div className="flex flex-col items-center gap-3 pb-5">
-          <Logo size={30} />
+          <Logo height={51} />
           <p className="text-body text-text-3 tracking-snug">{tagline}</p>
         </div>
 

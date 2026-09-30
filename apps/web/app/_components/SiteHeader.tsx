@@ -14,20 +14,23 @@ import { ProfileMenu } from "./ProfileMenu";
  *
  * 시안의 "접속 N명"과 "오늘 발행 N건 댓글 N개"는 BE에 집계가 없어 뺐다(API 공백).
  *
+ * 첫 줄은 가로형 로고 높이 40에 위아래 10씩 둔 60px이다(KAN-583 "웹 GNB (높이 64,
+ * 로고 높이 40)"의 실제 화면 캡처 값).
+ *
  * sticky다. 아래 sticky 요소(팀 탭·표 머리, 우측 레일)의 `top`은 이 바의 높이
- * (58 + 38 + 선 2 = 98px)와 짝이다 — 줄 높이를 바꾸면 globals.css의 `--site-header-h`를
+ * (60 + 38 + 선 2 = 100px)와 짝이다 — 줄 높이를 바꾸면 globals.css의 `--site-header-h`를
  * 같이 고친다.
  */
 export function SiteHeader() {
   return (
     <header className="bg-nav border-border sticky top-0 z-40 border-b">
-      <div className="max-w-page px-gutter mx-auto flex h-14.5 w-full items-center gap-4">
+      <div className="max-w-page px-gutter mx-auto flex h-15 w-full items-center gap-4">
         <Link
           href="/"
           aria-label="해축이모 홈"
           className="focus-visible:outline-accent shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          <Logo size={23} />
+          <Logo height={40} />
         </Link>
         <span className="text-caption-lg text-text-3 hidden tracking-tight sm:inline">
           {BRAND_TAGLINE}

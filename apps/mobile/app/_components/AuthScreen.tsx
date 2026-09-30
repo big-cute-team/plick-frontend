@@ -10,6 +10,7 @@ import { TopBarShell } from "./TopBarShell";
 /**
  * 소셜 인증 화면. 로고·태그라인 + 카카오/구글/애플 버튼 + 하단 전환 링크. 시안이 없는
  * 화면이라 KAN-567에서는 라이트 톤과 버튼 모서리(rounded-control)만 맞췄다.
+ * 로고는 KAN-583 실제 화면 캡처(로그인·회원가입)의 가로형 높이 67이다.
  * 로그인(A1)·회원가입(A2)이 카피만 주입해 공용한다 (웹 `AuthCard`의 모바일 대응).
  *
  * 하단에 있던 "로그인 없이 이용하기"(안내 팝업 → 홈)는 KAN-514에서 걷어냈다. 이제
@@ -61,7 +62,7 @@ export function AuthScreen({
         )}
 
         <section className="px-edge gap-gap-lg flex flex-1 flex-col items-center justify-center">
-          <Logo size={39} />
+          <Logo height={67} />
           <p className="text-body text-text-3 tracking-snug">{tagline}</p>
         </section>
 

@@ -5,13 +5,14 @@ import { PrimaryButton } from "@/_components/PrimaryButton";
 /**
  * 전역 404 화면. 라우트에 매칭되지 않는 모든 주소가 온다.
  * Next 기본 404 대신 브랜드(로고·토큰) 있는 화면을 보여 준다. 라이트 톤은 KAN-567.
+ * 시안에 없는 화면이라 로고는 웹 GNB와 같은 높이 40이다(KAN-583).
  * 기사 딥링크 404는 `articles/[postId]/not-found.tsx`가 따로 맡는다.
  */
 export default function NotFound() {
   return (
     <AppShell>
       <main className="px-edge flex h-full flex-col items-center justify-center gap-7">
-        <Logo size={27} />
+        <Logo height={40} />
         <div className="flex flex-col items-center gap-2">
           <p className="text-micro tracking-label text-accent font-black">
             404
