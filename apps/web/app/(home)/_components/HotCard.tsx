@@ -89,6 +89,7 @@ export function HotCard({
       <ArticleLink
         articleId={article.id}
         rank={rank}
+        entry="hot"
         aria-label={article.title}
         className="focus-visible:outline-accent absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
       />

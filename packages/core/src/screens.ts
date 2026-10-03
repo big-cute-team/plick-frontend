@@ -46,6 +46,7 @@ const STATIC_SCREENS: Record<string, ScreenName> = {
   "/debates": "debates",
   "/live": "live",
   "/live/standings": "live_standings",
+  "/live/chat": "live",
   "/me": "me",
   "/me/activity": "me_activity",
   "/me/edit": "me_edit",
@@ -78,6 +79,8 @@ const DYNAMIC_SCREENS: { pattern: RegExp; screen: ScreenName; ref: boolean }[] =
       screen: "match_detail",
       ref: true,
     },
+    /* 팀별 경기 목록은 라이브 화면의 팀 필터다 (KAN-584). 표에 없어 안 나가던 전환 */
+    { pattern: /^\/live\/teams\/([^/]+)$/, screen: "live", ref: true },
     { pattern: /^\/figures\/([^/]+)$/, screen: "figure", ref: true },
     { pattern: /^\/stories\/([^/]+)$/, screen: "story", ref: true },
   ];

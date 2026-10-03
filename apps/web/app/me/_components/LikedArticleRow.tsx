@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { useQueryClient } from "@tanstack/react-query";
 import { syncLikeIntoFeeds } from "@plick/core/like-sync";
 import { TEAMS } from "@plick/domain/constants";
@@ -38,8 +38,8 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
       <span className="flex justify-center">
         {team && <TeamCrest team={team} size={20} />}
       </span>
-      <Link
-        href={`/articles/${article.id}`}
+      <ArticleLink
+        articleId={article.id}
         className="focus-visible:outline-accent flex min-w-0 items-center gap-1.75 focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {article.contentType === "DEBATE" && <VsMark size="md" />}
@@ -51,7 +51,7 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
             [{article.commentCount}]
           </span>
         )}
-      </Link>
+      </ArticleLink>
       <span className="text-label text-text-3 hidden truncate lg:block">
         {article.reporter?.name}
       </span>

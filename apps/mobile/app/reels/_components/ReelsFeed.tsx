@@ -1,5 +1,6 @@
 "use client";
 
+import type { EntryPoint } from "@plick/core/analytics";
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
@@ -126,6 +127,9 @@ export function ReelsFeed({
   } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
+  /* 조회 기록의 진입 화면 (KAN-584). 주소로 정하면 릴을 넘기며 `/reels/{id}`로 바뀐 뒤부터
+     탭 피드도 딥링크로 보이므로, 들어온 길을 아는 여기서 고정한다 */
+  const entry: EntryPoint = anchorId ? "reels_deeplink" : "reels";
   /** 릴 뒤에 붙는 자리(스피너 또는 재시도)도 슬라이드 한 장이다 */
   const trailingSlide = isFetchNextPageError || hasNextPage;
   const { viewportRef, activeIndex } = useReelsCarousel(
@@ -227,6 +231,7 @@ export function ReelsFeed({
               key={reel.id}
               reel={reel}
               rank={i}
+              entry={entry}
               active={i === activeIndex}
               nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
               /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —

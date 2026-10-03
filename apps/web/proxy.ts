@@ -32,8 +32,10 @@ import {
   ANALYTICS_HEADERS,
   DEVICE_ID_COOKIE,
   DIRECT_PATH,
+  ENTRY_COOKIE,
   PATH_COOKIE,
   isDeviceId,
+  isEntryPoint,
   isPathValue,
   readPathParam,
   resolveEntryPoint,
@@ -74,17 +76,56 @@ interface Analytics {
 }
 
 /**
- * 브라우저 `/be` fetch가 어느 화면에서 나갔는지는 Referer로만 안다. same-origin fetch라
- * 기본 Referrer-Policy에서도 경로까지 실려 온다.
+ * 브라우저 fetch가 어느 화면에서 나갔는지는 Referer로만 안다. same-origin fetch라
+ * 기본 Referrer-Policy에서도 경로와 쿼리까지 실려 온다.
  */
-function refererPathname(request: NextRequest): string | null {
+function refererUrl(request: NextRequest): URL | null {
   const referer = request.headers.get("referer");
   if (!referer) return null;
   try {
-    return new URL(referer).pathname;
+    return new URL(referer);
   } catch {
     return null;
   }
+}
+
+/**
+ * 진입 화면(`X-Plick-Entry`)을 고른다 (KAN-542, KAN-584). 앞선 것이 이긴다.
+ *
+ * 1. 기사 링크를 누른 쪽이 심은 일회용 쿠키(`plick_entry`, `rememberArticleOrigin`). 핫이슈처럼
+ *    주소로는 모르는 값이 이 길로 오고, 페이지 요청이 읽으면 지운다 - 30초 수명이지만 그 사이
+ *    다른 페이지 요청에 묻으면 안 된다. `/be` fetch는 안 읽는다. 조회 기록은 브라우저가 헤더로
+ *    직접 싣고(`forward`가 살린다) 나머지 fetch는 Referer면 충분하다.
+ * 2. 요청 주소. 페이지 요청은 그 경로와 쿼리(`?path=share`면 `share_link`), `/be` fetch는 Referer.
+ * 3. 소프트 내비게이션(RSC 요청)이면 떠나온 화면(Referer). 홈에서 기사를 열면 기사 경로로는
+ *    값이 없지만 Referer `/`가 `home_feed`다. 전체 로드로 바로 연 기사는 값이 없다.
+ *
+ * @param request 이번 요청
+ * @param isProxy `/be` fetch인가
+ * @param cookies 이번 응답에서 지울 쿠키를 적는 자리
+ */
+function resolveEntry(
+  request: NextRequest,
+  isProxy: boolean,
+  cookies: Analytics["cookies"],
+): string | null {
+  const referer = refererUrl(request);
+  const fromReferer = referer
+    ? resolveEntryPoint(referer.pathname, referer.searchParams)
+    : null;
+  if (isProxy) return fromReferer;
+
+  const handed = request.cookies.get(ENTRY_COOKIE)?.value;
+  if (isEntryPoint(handed)) {
+    cookies.push({ name: ENTRY_COOKIE, value: "", httpOnly: false });
+    return handed;
+  }
+  const own = resolveEntryPoint(
+    request.nextUrl.pathname,
+    request.nextUrl.searchParams,
+  );
+  if (own) return own;
+  return request.headers.has("rsc") ? fromReferer : null;
 }
 
 /**
@@ -100,8 +141,8 @@ function refererPathname(request: NextRequest): string | null {
  * 유입 경로: 페이지 요청의 `?path=`, 없으면 `utm_source`. 새 값이 오면 갱신하고, 없으면
  * 쿠키 값을 유지하고, 쿠키도 없으면 `direct`다. 형식이 안 맞는 쿠키 값은 없는 것으로 본다.
  *
- * 진입 화면: 페이지 요청은 그 경로, `/be` fetch는 Referer 경로에서 고른다. 경로로 못 정하는
- * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
+ * 진입 화면: `resolveEntry`. 일회용 쿠키, 요청 주소(공유 표식 포함), 소프트 내비게이션의 Referer
+ * 순이다. 조회 기록처럼 클라이언트가 직접 실은 헤더는 그대로 살린다(`forward`).
  *
  * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
  * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
@@ -166,8 +207,7 @@ function resolveAnalytics(
     else request.cookies.delete(MARKETING_COOKIE);
   }
 
-  const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
-  const entry = screen ? resolveEntryPoint(screen) : null;
+  const entry = resolveEntry(request, isProxy, cookies);
 
   const headers: Record<string, string> = {
     [ANALYTICS_HEADERS.path]: path,
@@ -303,6 +343,16 @@ export async function proxy(request: NextRequest) {
   const isCrawler = CRAWLER_UA_PATTERN.test(
     request.headers.get("user-agent") ?? "",
   );
+  /**
+   * 크롤러의 `/be` 쓰기 요청은 BE까지 보내지 않는다 (KAN-584). 구글봇·애플봇처럼 JS를 돌리는
+   * 크롤러는 기사 화면의 조회 기록(`POST …/view`)과 행동 이벤트까지 보내는데, 토큰이 없어
+   * 이벤트는 401로 떨어지지만 조회 기록은 비로그인 허용이라 `article_opened`가 기기 없이 남아
+   * 열람을 부풀린다(prod ALB 로그 하루치에서 구글봇 조회 기록이 사람 모바일 브라우저 전체와
+   * 맞먹었다). 크롤러가 정당하게 쓰는 요청은 없고, 읽기(GET)는 전처럼 익명으로 통과시킨다.
+   */
+  if (isProxy && isCrawler && request.method !== "GET") {
+    return new NextResponse(null, { status: 204 });
+  }
   const analytics = resolveAnalytics(request, isProxy, isCrawler);
   const response = await route(request, isProxy, isCrawler, analytics);
   /**

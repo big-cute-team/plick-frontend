@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { recordArticleView, takeFeedRank } from "@plick/core/article-views";
+import type { EntryPoint } from "@plick/core/analytics";
+import { currentEntryPoint } from "@plick/core/analytics";
+import {
+  recordArticleView,
+  takeArticleOrigin,
+} from "@plick/core/article-views";
 
 /**
  * 기사·릴을 봤다고 서버에 기록한다 (KAN-310). 렌더에 관여하지 않는 부수효과 전용 훅이다.
@@ -26,12 +31,16 @@ import { recordArticleView, takeFeedRank } from "@plick/core/article-views";
  * @param active 지금 보고 있는가. 릴스는 활성 슬라이드가 될 때만 true로 넘긴다.
  *   기사 세부처럼 화면 자체가 곧 조회인 곳은 기본값(true)을 쓴다
  * @param rank 피드 안 순위(0부터). 릴스는 슬라이드 인덱스를 넘기고, 기사 세부는 생략하면
- *   목록 링크가 기억해 둔 순위(`rememberFeedRank`)를 꺼내 쓴다
+ *   목록 링크가 기억해 둔 출처(`rememberArticleOrigin`)에서 꺼내 쓴다
+ * @param entry 진입 화면(`X-Plick-Entry`, KAN-584). 릴스는 피드인지 딥링크인지 넘기고, 기사
+ *   세부는 생략하면 목록 링크가 기억해 둔 값, 그것도 없으면 지금 주소(공유 링크 `?path=share`)로
+ *   정한다
  */
 export function useArticleView(
   articleId: string,
   active = true,
   rank?: number,
+  entry?: EntryPoint,
 ) {
   const sentFor = useRef<string | null>(null);
 
@@ -42,9 +51,12 @@ export function useArticleView(
     }
     if (sentFor.current === articleId) return;
     sentFor.current = articleId;
-    const feedRank = rank ?? takeFeedRank(articleId);
-    recordArticleView(articleId, feedRank).catch((e) => {
+    const origin = takeArticleOrigin(articleId);
+    recordArticleView(articleId, {
+      rank: rank ?? origin.rank,
+      entry: entry ?? origin.entry ?? currentEntryPoint() ?? undefined,
+    }).catch((e) => {
       console.error("[views] 조회 기록 실패:", e);
     });
-  }, [articleId, active, rank]);
+  }, [articleId, active, rank, entry]);
 }

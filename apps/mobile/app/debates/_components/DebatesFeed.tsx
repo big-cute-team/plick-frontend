@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { useSearchParams } from "next/navigation";
 import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
@@ -106,20 +106,20 @@ function DebateList({
           {tab === "open" ? (
             <DebateVoteCard debate={debate} size="md" />
           ) : (
-            <Link
-              href={`/articles/${debate.articleId}`}
+            <ArticleLink
+              articleId={debate.articleId}
               className="block active:opacity-70"
             >
               <VoteCard debate={debate} closed size="sm" />
-            </Link>
+            </ArticleLink>
           )}
-          <Link
-            href={`/articles/${debate.articleId}`}
+          <ArticleLink
+            articleId={debate.articleId}
             className="text-caption-lg text-text-3 flex items-center justify-end gap-0.5 pt-2.5 active:opacity-60"
           >
             댓글
             <ChevronRightIcon size={12} />
-          </Link>
+          </ArticleLink>
         </li>
       ))}
     </ul>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import type { MyComment } from "@/_types/activity";
@@ -19,8 +19,8 @@ import type { MyComment } from "@/_types/activity";
  */
 export function MyCommentItem({ comment }: { comment: MyComment }) {
   return (
-    <Link
-      href={`/articles/${comment.article.id}`}
+    <ArticleLink
+      articleId={comment.article.id}
       className="border-border-soft block border-b py-3.5 active:opacity-70"
     >
       <p className="text-hero-sm text-text-strong leading-body">
@@ -49,6 +49,6 @@ export function MyCommentItem({ comment }: { comment: MyComment }) {
       <p className="text-label-lg text-text-3 truncate">
         {comment.article.title}
       </p>
-    </Link>
+    </ArticleLink>
   );
 }

@@ -20,7 +20,7 @@ export const ANALYTICS_HEADERS = {
   path: "X-Plick-Path",
   /** 앱 구분 (`mobile_web`, `desktop_web`). 앱마다 고정값 */
   client: "X-Plick-Client",
-  /** 서비스 안 어느 화면에서 눌렀는지 (`home_feed`, `reels`, `reels_deeplink`, `hot`, `share_link`) */
+  /** 기사를 연 쪽 화면 (`EntryPoint`). 프록시가 주소·Referer·일회용 쿠키로 정하고 조회 기록은 브라우저가 직접 싣는다 */
   entry: "X-Plick-Entry",
   /** 광고 캠페인 (`?utm_campaign=`, KAN-577). 이하 여섯 개는 `marketing.ts`가 값을 정한다 */
   utmCampaign: "X-Plick-Utm-Campaign",
@@ -138,19 +138,86 @@ export function withSharePath(url: string): string {
   return parsed.toString();
 }
 
+/** `X-Plick-Entry` 값 (KAN-542, KAN-584). 기사를 여는 쪽 화면 다섯 개다. */
+export const ENTRY_POINTS = [
+  "home_feed",
+  "reels",
+  "reels_deeplink",
+  "hot",
+  "share_link",
+] as const;
+
+/** `X-Plick-Entry`에 실을 수 있는 값. */
+export type EntryPoint = (typeof ENTRY_POINTS)[number];
+
 /**
- * 화면 경로에서 진입 화면(`X-Plick-Entry`)을 고른다. 릴스 피드는 `reels`, 릴 하나를 바로 여는
- * 딥링크(`/reels/{id}`)는 `reels_deeplink`, 홈은 `home_feed`. `hot`과 `share_link`는 화면
- * 경로만으로는 알 수 없어(핫이슈는 홈 안의 구획이고, 공유 링크의 표식 `?path=share`(KAN-578)는
- * 경로가 아니라 쿼리에 있다) 여기서 내지 않는다 - 그 값은 클라이언트 이벤트 작업(KAN-543)이
- * 요청마다 실어 주는 몫이다.
+ * 진입 화면 값인지. 브라우저가 심은 쿠키와 헤더는 고칠 수 있어 읽을 때 거른다.
+ *
+ * @param value 쿠키나 헤더에서 읽은 값
+ */
+export function isEntryPoint(
+  value: string | null | undefined,
+): value is EntryPoint {
+  return (ENTRY_POINTS as readonly string[]).includes(value ?? "");
+}
+
+/**
+ * 기사 링크를 누른 화면을 다음 페이지 요청까지 들고 가는 일회용 쿠키 (KAN-584).
+ *
+ * 핫이슈(`hot`)는 홈 안의 구획이라 경로로도 Referer로도 알 수 없다. 링크를 누르는 순간
+ * 브라우저가 이 쿠키를 심고(`rememberArticleOrigin`), 뒤따르는 페이지 요청의 프록시가 읽어
+ * `X-Plick-Entry`로 옮긴 뒤 지운다. 서버 렌더의 상세 호출까지 이 값이 닿는 길은 쿠키뿐이다 -
+ * 라우터의 RSC 요청에는 헤더를 못 싣는다. 브라우저 JS가 쓰므로 HttpOnly가 아니다.
+ */
+export const ENTRY_COOKIE = "plick_entry";
+
+/** 일회용 진입 쿠키 수명(초). 클릭에서 페이지 요청까지의 여유다. 못 읽혀도 스스로 사라진다. */
+export const ENTRY_COOKIE_MAX_AGE = 30;
+
+/**
+ * 주소에서 진입 화면(`X-Plick-Entry`)을 고른다. 공유 링크 표식(`?path=share`, KAN-578)이 있으면
+ * `share_link`, 홈은 `home_feed`, 릴스 피드는 `reels`, 릴 하나를 바로 여는 딥링크(`/reels/{id}`)는
+ * `reels_deeplink`. `hot`은 주소로는 알 수 없어 링크를 누른 쪽이 쿠키로 넘긴다(`ENTRY_COOKIE`).
+ *
+ * 공유 표식이 경로보다 앞선다. 공유 받은 릴 링크는 릴스 딥링크이기도 하지만, 그 사람을 데려온 건
+ * 공유다.
  *
  * @param pathname 페이지 요청이면 그 경로, `/be` fetch면 Referer의 경로
+ * @param searchParams 같은 주소의 쿼리. 없으면 공유 표식을 안 본다
  * @returns 진입 화면 값. 모르면 null(헤더를 안 싣고 BE가 `unknown`으로 접는다)
  */
-export function resolveEntryPoint(pathname: string): string | null {
+export function resolveEntryPoint(
+  pathname: string,
+  searchParams?: URLSearchParams,
+): EntryPoint | null {
+  if (searchParams && readPathParam(searchParams) === SHARE_PATH) {
+    return "share_link";
+  }
   if (pathname === "/") return "home_feed";
   if (pathname === "/reels") return "reels";
   if (/^\/reels\/[^/]+$/.test(pathname)) return "reels_deeplink";
   return null;
+}
+
+/**
+ * 브라우저가 지금 보고 있는 주소의 진입 화면. 기사 화면이 조회 기록을 보낼 때 목록이 넘긴 값이
+ * 없으면(공유 링크로 바로 열었을 때) 이걸 쓴다. 서버에서는 null.
+ */
+export function currentEntryPoint(): EntryPoint | null {
+  if (typeof window === "undefined") return null;
+  return resolveEntryPoint(
+    window.location.pathname,
+    new URLSearchParams(window.location.search),
+  );
+}
+
+/**
+ * 일회용 진입 쿠키를 심는다 (KAN-584). 브라우저에서만 의미가 있고 서버에서는 아무것도 안 한다.
+ *
+ * @param entry 기사 링크를 누른 화면
+ */
+export function handEntryPoint(entry: EntryPoint): void {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${ENTRY_COOKIE}=${entry}; Max-Age=${ENTRY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax${secure}`;
 }

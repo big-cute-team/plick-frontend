@@ -1,3 +1,4 @@
+import type { EntryPoint } from "@plick/core/analytics";
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import {
@@ -38,15 +39,18 @@ import { ArticleLink } from "@/_components/ArticleLink";
  * @param article - 표시할 기사 카드
  * @param filter - 지금 보고 있는 팀 탭. 팀이면 그 팀을 대표로 강제한다.
  * @param rank - 목록 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543)
+ * @param entry - 이 행이 놓인 화면. 홈 피드는 `home_feed` (KAN-584). 없는 자리는 생략
  */
 export function NewsItem({
   article,
   filter = "ALL",
   rank,
+  entry,
 }: {
   article: ArticleCard;
   filter?: Filter;
   rank?: number;
+  entry?: EntryPoint;
 }) {
   const team =
     filter !== "ALL"
@@ -77,6 +81,7 @@ export function NewsItem({
             <ArticleLink
               articleId={article.id}
               rank={rank}
+              entry={entry}
               className="after:absolute after:inset-0 after:content-['']"
             >
               {article.title}

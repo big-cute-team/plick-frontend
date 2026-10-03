@@ -1,5 +1,6 @@
 "use client";
 
+import type { EntryPoint } from "@plick/core/analytics";
 import { memo, useEffect, useRef, useState, type MouseEvent } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -79,6 +80,7 @@ const ShareDialog = dynamic(
  * 릴은 건너뛴다. 시트가 붙은 릴만 titleMotion 객체가 갈리고 나머지는 null로 안정된다.
  *
  * @param rank - 피드 안 순위(0부터). 조회 기록에 실린다
+ * @param entry - 조회 기록의 진입 화면. 탭 피드는 `reels`, 딥링크 진입은 `reels_deeplink` (KAN-584)
  * @param active - 지금 보고 있는 릴인가. 아니면 `inert`로 묶어 화면 밖 릴의 버튼이
  *   탭 포커스를 받거나 스크린리더에 읽히지 않게 한다.
  * @param onOpenDetail - 릴 화면 어디든(버튼·링크 제외) 또는 댓글 아이콘 탭 시 호출. 어느 릴인지와
@@ -98,6 +100,7 @@ const ShareDialog = dynamic(
 export const ReelItem = memo(function ReelItem({
   reel,
   rank,
+  entry,
   active,
   onOpenDetail,
   titleMotion,
@@ -107,6 +110,7 @@ export const ReelItem = memo(function ReelItem({
 }: {
   reel: ReelCard;
   rank: number;
+  entry: EntryPoint;
   active: boolean;
   onOpenDetail: (reel: ReelCard, lift: number) => void;
   titleMotion: TitleMotion | null;
@@ -128,8 +132,8 @@ export const ReelItem = memo(function ReelItem({
 
   /* 활성 슬라이드가 되는 즉시 조회로 기록한다 (KAN-310). 릴스 전용 엔드포인트가
      없어 기사와 같은 걸 쓴다. 릴과 기사가 같은 articleSummaryId 체계다. 피드 안
-     순위를 같이 실어 서버가 `feed_rank`로 남긴다 (KAN-543) */
-  useArticleView(reel.id, active, rank);
+     순위를 같이 실어 서버가 `feed_rank`로 남긴다 (KAN-543). 진입 화면은 피드가 정한다 (KAN-584) */
+  useArticleView(reel.id, active, rank, entry);
 
   /** 임베드 영역의 아래선(제목 윗선)까지의 거리(px, 릴 바닥 기준) */
   const [regionBottom, setRegionBottom] = useState(0);
