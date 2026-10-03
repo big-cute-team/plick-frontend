@@ -160,6 +160,32 @@ prefetch가 쿠키를 먼저 먹는 경우는 prefetch를 꺼서 없다.
 웹은 프록시와 링크, 훅이 모바일과 같은 코드라 단위 테스트와 타입 검사, 빌드로 갈음했다. `pnpm
 format:check`, `test:hooks`, `test:unit`, `lint`, `check-types`, `build` 통과.
 
+## 리뷰 게이트가 짚은 것
+
+push 전 헤드리스 리뷰(`scripts/review/pr-review.sh`)는 두 번 실패하고 세 번째에 돌았다. diff가 80KB라
+기본 예산 1달러에서 `error_max_budget_usd`로 끊겼고, 예산을 올리니 이번엔 기본 벽시계 300초에서
+`perl alarm`에 죽었다. 예산 5달러, 40턴, 1500초로 돌려 20턴 1.28달러에 끝났다. ADR이 diff에 같이 들어가는
+구조라 ADR이 길면 리뷰 비용도 같이 는다.
+
+CRITICAL은 없었고 WARN 둘이 맞는 말이라 고쳤다.
+
+첫째, 크롤러 패턴을 넓히면서 같은 판정에 "쓰기 전부 차단"을 묶어 오탐 비용이 커졌다는 지적이다.
+전에는 사람을 크롤러로 잘못 봐도 게스트를 못 받는 정도였는데, 이번 변경으로 그 사람의 좋아요·댓글·투표가
+조용히 204로 사라질 수 있었다. 차단을 분석 쓰기 둘(`POST /api/v1/events`, `POST …/view`)로 좁혔다
+(`isAnalyticsWrite`). 오탐의 대가가 분석값 누락으로 돌아간다. `perplexity`도 `perplexity-user`로 좁혔다.
+`PerplexityBot`은 `bot`으로 이미 걸리고, 퍼플렉시티가 브라우저를 내면 그 UA가 토큰을 품을 수 있어서다.
+
+둘째, 진입 화면 우선순위와 크롤러 차단이 `NextRequest`에 묶여 있어 단위 테스트가 없고 Playwright
+한 번에만 기대고 있었다는 지적이다. KAN-577이 `resolveRequestMarketing`을 코어로 뺀 것과 같은 방법으로
+`resolveRequestEntry`와 `isAnalyticsWrite`를 `@plick/core/analytics`에 두고 두 프록시가 호출 한 번으로
+쓴다. 프록시는 `NextRequest`에서 여섯 값(경로, 쿼리, Referer, 쿠키, `/be` 여부, `RSC` 여부)만 뽑아 넘기고
+읽은 쿠키를 지울지는 결과(`consumed`)로 받는다. 우선순위 조합 열 가지와 차단 경계 일곱 가지를
+`tests/unit/entry-point.test.mjs`에 더했다. 두 프록시 파일은 머리 주석 한 줄만 다른 상태로 돌아왔다.
+
+INFO 하나는 `utm_source=share`로 들어와도 `share_link`가 된다는 것인데, `plick_path`를 읽는
+`readPathParam`이 원래 `utm_source`를 폴백으로 보는 규칙이라 유입 경로 쿠키도 같은 요청에서 `share`가
+된다. 둘이 같은 함수를 쓰니 어긋나지 않는 쪽이 맞아 그대로 뒀다.
+
 ## 남은 것
 
 - 배포 뒤 prod `events`에서 다시 본다. 기대는 이렇다. `entry_point` 커버리지가 열람 이벤트에서 90%

@@ -221,3 +221,80 @@ export function handEntryPoint(entry: EntryPoint): void {
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${ENTRY_COOKIE}=${entry}; Max-Age=${ENTRY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax${secure}`;
 }
+
+/** `resolveRequestEntry`가 요청에서 읽는 것. 프록시가 `NextRequest`에서 뽑아 넘긴다. */
+export interface RequestEntryInput {
+  /** `/be` fetch인가 */
+  isProxy: boolean;
+  /** 라우터의 소프트 내비게이션(`RSC` 헤더가 있는 페이지 요청)인가 */
+  isRsc: boolean;
+  /** 요청 경로 */
+  pathname: string;
+  /** 요청 쿼리 */
+  searchParams: URLSearchParams;
+  /** Referer 헤더 원문. 없으면 null */
+  referer: string | null;
+  /** 일회용 진입 쿠키(`ENTRY_COOKIE`) 값. 없으면 undefined */
+  handed: string | null | undefined;
+}
+
+/** `resolveRequestEntry`의 결과. */
+export interface RequestEntry {
+  /** `X-Plick-Entry`에 실을 값. 모르면 null */
+  entry: EntryPoint | null;
+  /** 일회용 쿠키를 읽었으니 이번 응답에서 지워야 하는가 */
+  consumed: boolean;
+}
+
+/**
+ * 요청 하나의 진입 화면(`X-Plick-Entry`)을 고른다 (KAN-542, KAN-584). 두 앱 프록시가 같이 쓴다.
+ * 앞선 것이 이긴다.
+ *
+ * 1. 기사 링크를 누른 쪽이 심은 일회용 쿠키(`ENTRY_COOKIE`, `rememberArticleOrigin`). 핫이슈처럼
+ *    주소로는 모르는 값이 이 길로 오고, 페이지 요청이 읽으면 지운다(`consumed`). 30초 수명이지만
+ *    그 사이 다른 페이지 요청에 묻으면 안 된다. `/be` fetch는 안 읽는다. 조회 기록은 브라우저가
+ *    헤더로 직접 싣고 나머지 fetch는 Referer면 충분하다.
+ * 2. 요청 주소. 페이지 요청은 그 경로와 쿼리(`?path=share`면 `share_link`), `/be` fetch는 Referer.
+ * 3. 소프트 내비게이션(RSC 요청)이면 떠나온 화면(Referer). 홈에서 기사를 열면 기사 경로로는
+ *    값이 없지만 Referer `/`가 `home_feed`다. 전체 로드로 바로 연 기사는 값이 없다.
+ *
+ * @param input 요청에서 뽑은 값
+ */
+export function resolveRequestEntry(input: RequestEntryInput): RequestEntry {
+  let fromReferer: EntryPoint | null = null;
+  if (input.referer) {
+    try {
+      const url = new URL(input.referer);
+      fromReferer = resolveEntryPoint(url.pathname, url.searchParams);
+    } catch {
+      fromReferer = null;
+    }
+  }
+  if (input.isProxy) return { entry: fromReferer, consumed: false };
+
+  if (isEntryPoint(input.handed)) {
+    return { entry: input.handed, consumed: true };
+  }
+  const own = resolveEntryPoint(input.pathname, input.searchParams);
+  if (own) return { entry: own, consumed: false };
+  return { entry: input.isRsc ? fromReferer : null, consumed: false };
+}
+
+/**
+ * 크롤러가 보내도 BE까지 가면 안 되는 분석 쓰기 요청인지 (KAN-584). 행동 이벤트
+ * (`POST /api/v1/events`)와 조회 기록(`POST /api/v1/articles/{id}/view`) 둘이다.
+ *
+ * 구글봇·애플봇처럼 JS를 돌리는 크롤러는 기사 화면에서 이 둘을 보낸다. 이벤트는 토큰이 없어 BE가
+ * 401로 버리지만 조회 기록은 비로그인 허용이라 `article_opened`가 기기 없이 남아 열람을 부풀린다.
+ * 좋아요·댓글·투표 같은 다른 쓰기는 여기 안 든다. 크롤러 판정이 사람을 잘못 잡아도 잃는 건
+ * 분석값 하나지 그 사람의 행동이 아니어야 한다.
+ *
+ * @param method 요청 메서드
+ * @param apiPath `/be`를 뗀 BE 경로 (`/api/v1/events`)
+ */
+export function isAnalyticsWrite(method: string, apiPath: string): boolean {
+  return (
+    method === "POST" &&
+    /^\/api\/v1\/(events|articles\/[^/]+\/view)$/.test(apiPath)
+  );
+}

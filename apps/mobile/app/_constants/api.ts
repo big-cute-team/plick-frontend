@@ -154,4 +154,4 @@ export const GUEST_NOTICE = {
  * 인앱 브라우저(`NAVER(inapp`, `KAKAOTALK`)는 사람이라 `naver`·`kakao`는 넣지 않는다.
  */
 export const CRAWLER_UA_PATTERN =
-  /bot|crawler|spider|crawling|slurp|facebookexternalhit|meta-externalagent|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome|yeti|daum\/|chatgpt-user|perplexity|bingpreview|prefetch proxy|python|curl|wget|go-http-client|okhttp|java\/|axios|node-fetch|scrapy|phantomjs|puppeteer|playwright/i;
+  /bot|crawler|spider|crawling|slurp|facebookexternalhit|meta-externalagent|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome|yeti|daum\/|chatgpt-user|perplexity-user|bingpreview|prefetch proxy|python|curl|wget|go-http-client|okhttp|java\/|axios|node-fetch|scrapy|phantomjs|puppeteer|playwright/i;

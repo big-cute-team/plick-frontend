@@ -5,8 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   ENTRY_POINTS,
+  isAnalyticsWrite,
   isEntryPoint,
   resolveEntryPoint,
+  resolveRequestEntry,
 } from "../../packages/core/src/analytics.ts";
 import { resolveScreen } from "../../packages/core/src/screens.ts";
 
@@ -50,6 +52,112 @@ test("라이브 팀 필터와 채팅도 화면 표에 있다", () => {
   });
 });
 
+/** 프록시가 넘기는 모양을 흉내 낸다. 안 넘긴 칸은 "없음"이다 */
+const req = (over) => ({
+  isProxy: false,
+  isRsc: false,
+  pathname: "/articles/12",
+  searchParams: q(""),
+  referer: null,
+  handed: undefined,
+  ...over,
+});
+
+test("페이지 요청: 일회용 쿠키가 주소와 Referer를 이기고 읽히면 지워진다", () => {
+  assert.deepEqual(
+    resolveRequestEntry(
+      req({ handed: "hot", isRsc: true, referer: "https://m.plick.co.kr/" }),
+    ),
+    { entry: "hot", consumed: true },
+  );
+  /* 릴스 경로로 왔어도 쿠키가 먼저다 */
+  assert.deepEqual(
+    resolveRequestEntry(req({ handed: "home_feed", pathname: "/reels" })),
+    { entry: "home_feed", consumed: true },
+  );
+  /* 고친 쿠키 값은 없는 것과 같다. 지우지도 않는다(어차피 30초면 사라진다) */
+  assert.deepEqual(
+    resolveRequestEntry(req({ handed: "admin", pathname: "/reels" })),
+    { entry: "reels", consumed: false },
+  );
+});
+
+test("페이지 요청: 쿠키가 없으면 주소, 그다음 소프트 내비게이션의 Referer", () => {
+  assert.deepEqual(
+    resolveRequestEntry(
+      req({
+        pathname: "/",
+        isRsc: true,
+        referer: "https://m.plick.co.kr/reels",
+      }),
+    ),
+    { entry: "home_feed", consumed: false },
+  );
+  assert.deepEqual(
+    resolveRequestEntry(req({ searchParams: q("path=share") })),
+    { entry: "share_link", consumed: false },
+  );
+  assert.deepEqual(
+    resolveRequestEntry(
+      req({ isRsc: true, referer: "https://m.plick.co.kr/" }),
+    ),
+    { entry: "home_feed", consumed: false },
+  );
+  /* 전체 로드로 바로 연 기사. 외부 Referer는 화면이 아니다 */
+  assert.deepEqual(
+    resolveRequestEntry(req({ referer: "https://www.google.com/" })),
+    { entry: null, consumed: false },
+  );
+  assert.deepEqual(resolveRequestEntry(req({ isRsc: true, referer: null })), {
+    entry: null,
+    consumed: false,
+  });
+  assert.deepEqual(
+    resolveRequestEntry(req({ isRsc: true, referer: "not a url" })),
+    { entry: null, consumed: false },
+  );
+});
+
+test("/be fetch: Referer만 보고 쿠키는 읽지도 지우지도 않는다", () => {
+  assert.deepEqual(
+    resolveRequestEntry(
+      req({
+        isProxy: true,
+        handed: "hot",
+        referer: "https://m.plick.co.kr/reels/8032",
+      }),
+    ),
+    { entry: "reels_deeplink", consumed: false },
+  );
+  assert.deepEqual(
+    resolveRequestEntry(
+      req({
+        isProxy: true,
+        referer: "https://m.plick.co.kr/articles/12?path=share",
+      }),
+    ),
+    { entry: "share_link", consumed: false },
+  );
+  assert.deepEqual(resolveRequestEntry(req({ isProxy: true })), {
+    entry: null,
+    consumed: false,
+  });
+});
+
+test("크롤러가 보내면 끊는 쓰기는 행동 이벤트와 조회 기록뿐이다", () => {
+  assert.equal(isAnalyticsWrite("POST", "/api/v1/events"), true);
+  assert.equal(isAnalyticsWrite("POST", "/api/v1/articles/12/view"), true);
+  /* 좋아요·댓글·게스트 발급은 끊지 않는다. 사람을 크롤러로 잘못 봐도 행동은 가야 한다 */
+  assert.equal(isAnalyticsWrite("POST", "/api/v1/articles/12/like"), false);
+  assert.equal(isAnalyticsWrite("POST", "/api/v1/articles/12/comments"), false);
+  assert.equal(isAnalyticsWrite("DELETE", "/api/v1/articles/12/like"), false);
+  assert.equal(isAnalyticsWrite("GET", "/api/v1/events"), false);
+  assert.equal(
+    isAnalyticsWrite("POST", "/api/v1/articles/12/view/extra"),
+    false,
+  );
+});
+
 /** prod ALB 로그(2026-10-02)에서 실제로 본 UA들. JS를 돌려 이벤트까지 보내던 크롤러가 앞의 셋이다 */
 const CRAWLERS = [
   "Mozilla/5.0 (compatible; Yeti/1.1; +https://naver.me/spd)",
@@ -59,6 +167,7 @@ const CRAWLERS = [
   "curl/8.4.0",
   "Mozilla/5.0 (compatible; Daum/4.1; +http://cs.daum.net/faq/15/4118.html?faqId=28966)",
   "Chrome Privacy Preserving Prefetch Proxy",
+  "Mozilla/5.0 (compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)",
 ];
 
 /** 사람이 쓰는 브라우저. 네이버·카카오·인스타그램 앱의 인앱 브라우저가 크롤러로 잡히면 안 된다 */
