@@ -47,7 +47,7 @@ export function TopBarMenu() {
         aria-label="메뉴"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="text-icon rounded-control grid size-9 place-items-center active:opacity-60"
+        className="text-icon -mr-1 grid size-8 place-items-center active:opacity-60"
       >
         <MenuIcon size={20} />
       </button>
@@ -66,7 +66,7 @@ export function TopBarMenu() {
 
           <ul
             role="menu"
-            className="bg-nav border-border rounded-card drop-shadow-media absolute top-full right-0 mt-1.5 w-33 overflow-hidden border py-1"
+            className="bg-nav border-border-strong rounded-card shadow-dialog absolute top-full right-0 mt-1.5 w-33 overflow-hidden border py-1"
           >
             {TABS.map(({ href, label, Icon, match }) => {
               const active = match(pathname);

@@ -32,10 +32,10 @@ const SECTIONS = [
  */
 export function TermsBody() {
   return (
-    <div className="text-body text-text-2 flex flex-col gap-6 leading-relaxed">
+    <div className="text-body text-text flex flex-col gap-6 leading-relaxed">
       <p>
         이 약관은 팀 기엽대(이하 &ldquo;운영자&rdquo;)가 제공하는 프리미어리그
-        이적 소식 서비스 PLick(이하 &ldquo;서비스&rdquo;)의 이용과 관련하여
+        이적 소식 서비스 해축이모(이하 &ldquo;서비스&rdquo;)의 이용과 관련하여
         운영자와 회원의 권리·의무 및 책임사항을 정합니다. 서비스에 가입하거나
         서비스를 이용하면 이 약관에 동의한 것으로 봅니다.
       </p>
@@ -60,7 +60,7 @@ export function TermsBody() {
         <ol className="flex list-decimal flex-col gap-1.5 pl-5">
           <li>
             &ldquo;서비스&rdquo;란 운영자가 웹과 모바일을 통해 제공하는
-            프리미어리그 이적 소식·루머 큐레이션 서비스 PLick을 말합니다.
+            프리미어리그 이적 소식·루머 큐레이션 서비스 해축이모를 말합니다.
           </li>
           <li>
             &ldquo;회원&rdquo;이란 이 약관에 동의하고 소셜

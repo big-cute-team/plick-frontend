@@ -5,7 +5,8 @@ import { NicknameCheckNotice } from "@/_components/NicknameCheckNotice";
 import type { NicknameCheckResult } from "@/_hooks/useNicknameCheck";
 
 /**
- * 닉네임 입력 필드 — accent 보더 인풋 + 글자수 카운터 + 중복확인 버튼 (KAN-269).
+ * 닉네임 입력 필드. 입력 면 인풋 + 글자수 카운터 + 중복확인 버튼 (KAN-269, KAN-567에서
+ * 입력 면 토큰과 rounded-control로 정리).
  * 상태는 전부 부모(NicknameStep)가 든다 — 값은 다음 단계로 넘겨야 하고,
  * 중복확인 결과는 "다음" 버튼 잠금 판단에 필요해서다. 이 컴포넌트는 표시만 한다.
  *
@@ -33,17 +34,17 @@ export function NicknameField({
   return (
     <div>
       <div className="flex items-stretch gap-2">
-        <div className="bg-elevate-2 border-accent rounded-card flex h-14 min-w-0 flex-1 items-center gap-2.5 border px-4.75">
+        <div className="bg-input rounded-control flex h-12 min-w-0 flex-1 items-center gap-2.5 px-3.5">
           <input
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             maxLength={NICKNAME_MAX_LENGTH}
             aria-label="닉네임"
-            placeholder={`한글·영문·숫자 1~${NICKNAME_MAX_LENGTH}자`}
-            className="text-body-lg text-text placeholder:text-text-4 min-w-0 flex-1 bg-transparent font-bold outline-none placeholder:font-semibold"
+            placeholder={`한글, 영문, 숫자 ${NICKNAME_MAX_LENGTH}자까지`}
+            className="text-body-md text-text-strong placeholder:text-text-4 min-w-0 flex-1 bg-transparent font-bold outline-none placeholder:font-normal"
           />
-          <span className="text-label text-text-4 font-semibold">
+          <span className="text-label text-text-4">
             {value.length}/{NICKNAME_MAX_LENGTH}
           </span>
         </div>
@@ -52,9 +53,9 @@ export function NicknameField({
           type="button"
           onClick={onCheck}
           disabled={!trimmed || pending}
-          className="bg-elevate-2 border-border text-text-3 rounded-card text-body h-14 shrink-0 border px-4 font-semibold active:opacity-70 disabled:opacity-40"
+          className="border-border-strong text-text-2 rounded-control text-label-lg h-12 shrink-0 border px-3.5 font-bold active:opacity-70 disabled:opacity-40"
         >
-          {pending ? "검사 중…" : "닉네임 검사"}
+          {pending ? "검사 중" : "닉네임 검사"}
         </button>
       </div>
 

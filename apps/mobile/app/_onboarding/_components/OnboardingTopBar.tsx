@@ -3,7 +3,7 @@ import { TopBarShell } from "@/_components/TopBarShell";
 import { ONBOARDING_TOTAL_STEPS } from "@/_constants/onboarding";
 
 /**
- * 온보딩 상단바 — 뒤로가기 + 우측 스텝 표시(`1 / 2`).
+ * 온보딩 상단바. 뒤로가기 + 우측 스텝 표시(`1 / 2`).
  *
  * @param step - 현재 스텝(1부터)
  * @param backHref - 뒤로가기 목적지
@@ -18,7 +18,7 @@ export function OnboardingTopBar({
   return (
     <TopBarShell innerClassName="justify-between">
       <BackButton href={backHref} />
-      <span className="text-body text-text-4 tracking-label font-bold">
+      <span className="text-body text-text-3 font-bold">
         {step} / {ONBOARDING_TOTAL_STEPS}
       </span>
     </TopBarShell>

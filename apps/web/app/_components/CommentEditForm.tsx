@@ -8,10 +8,10 @@ import { useUpdateComment } from "@/_hooks/useUpdateComment";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 
 /**
- * 댓글 인라인 수정 폼 (KAN-333, 모바일 이식) — 내 댓글의 "수정"을 누르면 본문
- * 자리에 나타난다. 입력 스타일과 글자수 제한, 에러 표시는 작성 입력바
- * (`CommentComposer`)와 같은 관용이고, 전송 대신 저장·취소 텍스트 버튼을 쓴다.
- * 데스크톱이라 hover·focus 스타일을 얹는다.
+ * 댓글 인라인 수정 폼 (KAN-333, 모바일 이식, 시안 KAN-567) — 내 댓글의 "수정"을
+ * 누르면 본문 자리에 나타난다. 입력 스타일과 글자수 제한, 에러 표시는 답글
+ * 입력바(`CommentComposer`)와 같은 관용(각진 표 테두리 34px)이고, 채운 면 "저장"과
+ * 글자 "취소"를 둔다.
  *
  * 저장 성공은 뮤테이션(`useUpdateComment`)이 목록 캐시를 고치므로 폼만 닫으면
  * 바뀐 본문이 그려진다. 토큰 만료로 401 `AUTH_REQUIRED`가 오면 작성과 같은
@@ -60,7 +60,7 @@ export function CommentEditForm({
           setError(
             err instanceof ApiError
               ? err.message
-              : "댓글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요.",
+              : "댓글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요",
           );
         },
       },
@@ -69,7 +69,7 @@ export function CommentEditForm({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -77,26 +77,26 @@ export function CommentEditForm({
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           aria-label="댓글 수정"
-          className="bg-elevate-2 border-border text-body text-text focus-visible:border-border-strong rounded-pill h-9.5 min-w-0 flex-1 border px-4 focus-visible:outline-none"
+          className="border-border-table text-label text-text focus-visible:border-accent h-8.5 min-w-0 flex-1 border px-2.75 focus-visible:outline-none"
         />
         <button
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="text-label text-text-3 hover:text-text-2 focus-visible:outline-accent shrink-0 rounded font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
+          className="text-label text-text-3 hover:text-text-strong focus-visible:outline-accent inline-flex h-8.5 shrink-0 items-center px-3.5 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={isPending || !value.trim()}
-          className="text-label text-accent focus-visible:outline-accent shrink-0 rounded font-semibold hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
+          className="bg-accent text-on-accent text-label hover:bg-accent-hover focus-visible:outline-accent inline-flex h-8.5 shrink-0 items-center px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
         >
           저장
         </button>
       </form>
 
-      {error && <p className="text-caption text-danger px-1">{error}</p>}
+      {error && <p className="text-caption text-danger">{error}</p>}
 
       {showLogin && <LoginPromptDialog onClose={() => setShowLogin(false)} />}
     </div>

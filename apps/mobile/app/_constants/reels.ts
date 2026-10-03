@@ -104,10 +104,14 @@ export const REELS_REMEASURE_EPSILON = 1;
 /** 시트 상단을 이 거리(px) 이상 끌어내리면 닫는다 */
 export const DRAG_CLOSE_THRESHOLD = 100;
 
-/** 릴 섹션 대비 시트 높이 비율 — 피그마 352/480.7 */
+/**
+ * 릴 섹션 대비 시트 높이 비율. 피그마 352/480.7이다. KAN-567 시안이 86%로 키웠다가
+ * KAN-569에서 풀스크린 릴로 돌아오며 되돌렸다. 도킹된 팀·제목(최대 3줄)이 들어갈
+ * 위쪽 자리가 필요하다.
+ */
 export const SHEET_HEIGHT_RATIO = 0.73;
 
-/** 칩·제목 블록 하단과 시트 상단 라인 사이 간격(px) — 피그마 9.9(0.55배율) */
+/** 팀·제목 블록 하단과 시트 상단 라인 사이 간격(px). 피그마 9.9(0.55배율) */
 export const SHEET_TITLE_GAP = 18;
 
 /** 시트와 칩·제목이 공유하는 슬라이드 타이밍 — 두 요소가 한 몸처럼 움직이는 전제 */
@@ -122,3 +126,9 @@ export const SHEET_TRANSITION =
  * 따라간다. 값은 px 단위 길이고, 참조하는 쪽은 `var(..., 0px)` 폴백을 쓴다.
  */
 export const SHEET_DRAG_Y_VAR = "--reel-sheet-drag-y";
+
+/**
+ * 릴 글자 받침이 팀 줄 위로 번지는 길이 (KAN-574). 이 길이 동안 투명에서 배경색으로
+ * 바뀌고 그 아래는 단색이다. 전체 배율을 따르도록 rem이다.
+ */
+export const REEL_BACKDROP_FADE = "2.5rem";

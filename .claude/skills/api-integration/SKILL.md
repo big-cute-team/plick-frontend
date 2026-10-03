@@ -49,10 +49,11 @@ BE는 모든 응답을 `{ code, message, data }` 봉투로 감싼다(스웨거 `
 (`apps/mobile/app/_services/users.ts`). 만료는 미들웨어가 refresh로 잇는다(ADR 0021).
 보호 API를 실제로 밟는 검증은 `be-verify` 서브에이전트가 토큰을 민팅해서 한다(§6).
 
-분석 헤더 넷(`X-Plick-Device`, `X-Plick-Path`, `X-Plick-Client`, `X-Plick-Entry`)은 호출부가 붙이지
+분석 헤더(`X-Plick-Device`, `X-Plick-Path`, `X-Plick-Client`, `X-Plick-Entry`와 utm·리퍼러·클릭 식별자 여섯 개)는 호출부가 붙이지
 않는다. 각 앱 `proxy.ts`가 쿠키와 URL에서 값을 정해 요청 헤더에 찍고, 브라우저 `/be` fetch는 그대로
 BE로, 서버 측 `apiFetch`는 `instrumentation.ts`가 꽂은 헤더 제공자(`_services/analytics-headers.ts`)가
-`headers()`에서 옮겨 싣는다. 계약 상수는 `@plick/core/analytics`(ADR 0161).
+`headers()`에서 옮겨 싣는다. 계약 상수는 `@plick/core/analytics`(ADR 0161), 마케팅 값 규칙은
+`@plick/core/marketing`(ADR 0177). 광고 매체가 늘면 `CLICK_ID_PARAMS`에 한 줄만 더한다.
 
 서버가 모르는 행동(진입, 화면 전환, 원문 클릭, 읽기 종료, 링크 복사)은 브라우저가 `POST /api/v1/events`로
 모아 보낸다. 큐와 전송은 `@plick/core/events`(`trackEvent`, `trackScreenViewed` 등), 라우트 → 화면 값 표는

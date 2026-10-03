@@ -21,10 +21,13 @@ function Caret({ down = false }: { down?: boolean }) {
 }
 
 /**
- * 급상승 랭킹 한 줄의 오른쪽 끝 — 순위가 얼마나 움직였는지 (KAN-501).
+ * 급상승 한 줄의 오른쪽 끝 — 순위가 얼마나 움직였는지 (KAN-501, 시안 KAN-567).
  *
- * 무엇을 그릴지는 {@link toTrendDelta}가 정한다. 상승은 accent, 하락은 danger,
- * 새로 진입은 글자 배지, 그대로면 가로줄이다. 퍼센트는 그리지 않는다(KAN-523).
+ * 무엇을 그릴지는 {@link toTrendDelta}가 정한다. 시안 색 규칙대로 상승은 강조색,
+ * 하락은 흐린 회색(text-4), 새로 진입은 빨간 `NEW` 글자, 그대로면 가로줄이다.
+ * 전에는 하락이 빨강이고 NEW가 알약 배지였는데, 빨강은 댓글 수와 새 글에만 쓴다는
+ * 시안 규칙에 맞춰 바꿨다. 퍼센트는 그리지 않는다(KAN-523). 칸 폭은 26px 고정이라
+ * 이름 열이 변동 글자 길이에 흔들리지 않는다.
  *
  * 화살표는 색으로만 방향을 알리지 않는다 — 삼각형 방향이 형태로 한 번,
  * `sr-only` 문구가 스크린리더로 한 번 더 말한다.
@@ -33,29 +36,27 @@ function Caret({ down = false }: { down?: boolean }) {
  */
 export function TrendDeltaBadge({ item }: { item: TrendItem }) {
   const delta = toTrendDelta(item);
+  const cell = "text-caption w-6.5 shrink-0 text-right font-bold";
 
   if (delta.kind === "new") {
-    return (
-      <span className="bg-accent-tint text-accent rounded-badge text-micro px-1.5 py-0.5 font-extrabold">
-        NEW
-      </span>
-    );
+    return <span className={`${cell} text-danger`}>NEW</span>;
   }
 
   if (delta.kind === "same") {
     return (
-      <span className="text-caption text-text-4" aria-label="순위 변동 없음">
+      <span className={`${cell} text-text-4`} aria-label="순위 변동 없음">
         -
       </span>
     );
   }
 
   const up = delta.kind === "up";
-  const tone = up ? "text-accent" : "text-danger";
 
   return (
     <span
-      className={`text-caption flex items-center gap-0.5 font-bold ${tone}`}
+      className={`${cell} flex items-center justify-end gap-0.5 ${
+        up ? "text-accent" : "text-text-4"
+      }`}
     >
       <Caret down={!up} />
       <span className="sr-only">{up ? "상승" : "하락"}</span>

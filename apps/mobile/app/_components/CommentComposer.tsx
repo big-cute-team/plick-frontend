@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { SendMiniIcon } from "@plick/ui/icons";
 import { ApiError, needsSocialAccount } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import { useCreateComment } from "@/_hooks/useCreateComment";
@@ -17,12 +16,14 @@ const LoginPromptDialog = dynamic(
 );
 
 /**
- * 댓글 입력바 — pill 인풋 + accent 원형 전송 버튼. 기사 세부·릴 세부 시트 공용.
+ * 댓글 입력줄 — 채운 면 인풋(h 42, bg-input, radius 14, placeholder "댓글 입력") +
+ * 채운 "등록" 버튼(accent, 13/700). 기사 세부·릴 세부 시트 공용. 시안(KAN-567)이
+ * 등록 같은 확정 행동만 채운 면으로 두는 규칙이라 전송 아이콘 원 대신 글자 버튼이다.
  *
- * 두 자리에서 쓰인다. 화면 하단의 원 댓글 입력바가 기본이고(placeholder는
- * KAN-307로 없앴다), `parentCommentId`가 오면 답글 입력바다 — 유튜브처럼 원 댓글의 "답글"을
- * 누른 자리에 인라인으로 생기며(`CommentThread`), 마운트되자마자 포커스를
- * 받고 취소 버튼이 붙는다. 등록 성공도 `onCancel`로 입력바를 접는다.
+ * 두 자리에서 쓰인다. 댓글 헤더 밑의 원 댓글 입력줄이 기본이고, `parentCommentId`가
+ * 오면 답글 입력줄이다. 원 댓글의 "답글"을 누른 자리에 인라인으로 생기며
+ * (`CommentThread`), 마운트되자마자 포커스를 받고 취소 버튼이 붙는다. 등록 성공도
+ * `onCancel`로 입력줄을 접는다.
  *
  * 비로그인 게이트(KAN-303 티켓 요구): 인풋에 포커스가 오거나 제출하려 하면
  * 로그인 유도 팝업을 띄우고 입력 자체를 막는다. 로그인 여부는 서버가 심어 준
@@ -31,7 +32,7 @@ const LoginPromptDialog = dynamic(
  * 같은 팝업으로 받는다.
  *
  * 글자수는 BE 검증(1~500자)을 클라에서 미리 건다 — `maxLength`로 초과 입력을
- * 막고, 공백만 입력은 전송을 건너뛴다. 그 밖의 실패(BE 거절·순단)는 입력바
+ * 막고, 공백만 입력은 전송을 건너뛴다. 그 밖의 실패(BE 거절·순단)는 입력줄
  * 밑에 문구로 보여주고 입력값은 남겨 다시 보낼 수 있게 한다.
  *
  * @param articleId 댓글을 달 기사(릴) id
@@ -62,7 +63,7 @@ export function CommentComposer({
 
   const isReply = parentCommentId != null;
 
-  /* 답글 입력바는 "답글"을 누른 순간 생기므로 바로 입력을 시작하게 포커스한다 */
+  /* 답글 입력줄은 "답글"을 누른 순간 생기므로 바로 입력을 시작하게 포커스한다 */
   useEffect(() => {
     if (isReply) inputRef.current?.focus();
   }, [isReply]);
@@ -93,7 +94,7 @@ export function CommentComposer({
           setError(
             err instanceof ApiError
               ? err.message
-              : "댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
+              : "댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요",
           );
         },
       },
@@ -102,7 +103,7 @@ export function CommentComposer({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -115,16 +116,14 @@ export function CommentComposer({
               setShowLogin(true);
             }
           }}
-          placeholder={isReply ? "답글 남기기…" : undefined}
-          className={`bg-elevate-2 border-border text-body text-text placeholder:text-text-4 rounded-pill min-w-0 flex-1 border px-4 focus-visible:outline-none ${
-            isReply ? "h-9.5" : "h-11"
-          }`}
+          placeholder={isReply ? "답글 입력" : "댓글 입력"}
+          className="bg-input text-label-lg text-text placeholder:text-text-4 rounded-control h-10.5 min-w-0 flex-1 px-3.25 focus-visible:outline-none"
         />
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="text-label text-text-3 shrink-0 font-semibold active:opacity-60"
+            className="text-label-lg text-text-3 shrink-0 font-bold active:opacity-60"
           >
             취소
           </button>
@@ -133,11 +132,9 @@ export function CommentComposer({
           type="submit"
           aria-label={isReply ? "답글 등록" : "댓글 등록"}
           disabled={isPending}
-          className={`bg-accent text-on-accent grid shrink-0 place-items-center rounded-full active:opacity-60 disabled:opacity-40 ${
-            isReply ? "size-9.5" : "size-11"
-          }`}
+          className="bg-accent text-on-accent text-body rounded-control flex h-10.5 shrink-0 items-center px-4.5 font-bold active:opacity-60 disabled:opacity-40"
         >
-          <SendMiniIcon size={isReply ? 15 : 17} />
+          등록
         </button>
       </form>
 

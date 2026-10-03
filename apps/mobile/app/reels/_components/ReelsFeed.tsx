@@ -1,5 +1,6 @@
 "use client";
 
+import type { EntryPoint } from "@plick/core/analytics";
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,7 +50,7 @@ const ReelDetailSheet = dynamic(
  * ({@link useReelsCarousel}).
  *
  * 릴의 정보 블록/댓글 아이콘을 탭하면 세부 바텀시트(KAN-168)를 띄운다.
- * 개폐·드래그 상태(motion)는 여기서 소유 — 시트와 릴의 칩·제목이 같은 상태를
+ * 개폐·드래그 상태(motion)는 여기서 소유 — 시트와 릴의 정보 블록이 같은 상태를
  * 공유해야 하나의 요소처럼 함께 오르내린다.
  *
  * 지금 보고 있는 릴은 주소창에 되비춘다 (KAN-349, {@link useReelUrlSync}) — 탭
@@ -94,7 +95,7 @@ export function ReelsFeed({
   }, []);
   const queryClient = useQueryClient();
   const throwAsync = useAsyncError();
-  /** 세부 시트 대상 릴 + 그 릴의 칩·제목이 도킹 지점까지 이동할 거리 */
+  /** 세부 시트 대상 릴 + 그 릴의 정보 블록이 도킹 지점까지 이동할 거리 */
   const [detail, setDetail] = useState<{
     reel: ReelCard;
     lift: number;
@@ -126,6 +127,9 @@ export function ReelsFeed({
   } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
+  /* 조회 기록의 진입 화면 (KAN-584). 주소로 정하면 릴을 넘기며 `/reels/{id}`로 바뀐 뒤부터
+     탭 피드도 딥링크로 보이므로, 들어온 길을 아는 여기서 고정한다 */
+  const entry: EntryPoint = anchorId ? "reels_deeplink" : "reels";
   /** 릴 뒤에 붙는 자리(스피너 또는 재시도)도 슬라이드 한 장이다 */
   const trailingSlide = isFetchNextPageError || hasNextPage;
   const { viewportRef, activeIndex } = useReelsCarousel(
@@ -227,6 +231,7 @@ export function ReelsFeed({
               key={reel.id}
               reel={reel}
               rank={i}
+              entry={entry}
               active={i === activeIndex}
               nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
               /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —

@@ -8,30 +8,34 @@ import type { CommentReportReason } from "@plick/domain/types";
 import { useReportComment } from "@/_hooks/useReportComment";
 
 /**
- * 댓글 신고 팝업 (KAN-411, 모바일 `ReportCommentDialog` 복제) — 사유를 골라
- * 접수한다. 기사 세부·릴 세부 패널 공용. 데스크톱이라 hover·focus 스타일만 얹는다.
+ * 댓글 신고 팝업 (KAN-411, 모바일 `ReportCommentDialog` 복제, 시안 KAN-567
+ * "댓글 신고" 다이얼로그) — 사유를 골라 접수한다. 기사 세부·릴 세부 패널 공용.
  *
- * `ConfirmDialog`와 같은 스크림 + 중앙 카드 관용에 사유 라디오 목록을 얹었다.
- * 접수 성공하면 카드가 "신고가 접수되었어요" 안내로 바뀐다(`ShareDialog`가
- * 복사 성공을 버튼 문구 전환으로 알리는 것과 같은 인플레이스 피드백 —
- * 토스트가 아직 코드베이스에 없어 이 관용을 따른다). 실패 문구는 카드 안에
- * 남겨 사유를 바꾸거나 다시 시도할 수 있게 한다.
+ * 시안: `ConfirmDialog`와 같은 각진 상자에 제목 "댓글 신고", "OOO님의 댓글을
+ * 신고합니다", 사유 다섯 줄(윗선 연한 선, 13.5px, 고르면 700 제목색과 강조색 링
+ * 17px), 버튼 줄은 테두리 "취소"와 빨간 "신고하기". 사유를 고르기 전에는
+ * 신고 버튼이 흐리다. 접수 성공하면 "신고가 접수되었어요" 안내로 바뀐다
+ * (`ShareDialog`가 복사 성공을 버튼 문구 전환으로 알리는 것과 같은 인플레이스
+ * 피드백). 실패 문구는 상자 안에 남겨 사유를 바꾸거나 다시 시도할 수 있게 한다.
  *
  * body 포털 이유는 `ConfirmDialog`와 같다 — 릴 세부 패널의 `transform` 안에서
  * `fixed` 기준 상자가 패널이 되는 것을 피한다.
  *
  * @param commentId 신고할 댓글(대댓글) id
- * @param onClose 취소·완료·스크림 클릭으로 닫을 때
+ * @param nickname 신고할 댓글의 작성자. 설명 줄에 쓴다
+ * @param onClose 취소·완료·딤 클릭으로 닫을 때
  * @param onAuthRequired 토큰 만료(401 `AUTH_REQUIRED`)나 게스트 차단(403
  *   `AUTH_GUEST_FORBIDDEN`, KAN-514)일 때 — 호출부가 이
  *   팝업을 닫고 로그인 유도로 돌린다
  */
 export function ReportCommentDialog({
   commentId,
+  nickname,
   onClose,
   onAuthRequired,
 }: {
   commentId: number;
+  nickname?: string;
   onClose: () => void;
   onAuthRequired: () => void;
 }) {
@@ -62,7 +66,7 @@ export function ReportCommentDialog({
           setError(
             err instanceof ApiError
               ? err.message
-              : "신고를 접수하지 못했어요. 잠시 후 다시 시도해 주세요.",
+              : "신고를 접수하지 못했어요. 잠시 후 다시 시도해 주세요",
           );
         },
       },
@@ -76,34 +80,30 @@ export function ReportCommentDialog({
       aria-modal="true"
       aria-labelledby="report-dialog-title"
     >
-      {/* 스크림 — 클릭하면 닫는다 */}
+      {/* 딤 — 클릭하면 닫는다 */}
       <button
         type="button"
         aria-label="닫기"
         onClick={() => !isPending && onClose()}
-        className="absolute inset-0"
-        style={{
-          backgroundColor:
-            "color-mix(in srgb, var(--plk-scrim) 60%, transparent)",
-        }}
+        className="bg-dim-strong absolute inset-0"
       />
 
-      <div className="bg-bg border-border rounded-card relative w-full max-w-72 border p-6">
+      <div className="bg-bg border-border-strong shadow-dialog relative w-full max-w-76 border px-5.5 pt-5.5 pb-5">
         {done ? (
           <>
             <p
               id="report-dialog-title"
-              className="text-body-lg text-text text-center font-extrabold"
+              className="text-body-lg text-text-strong text-center font-black"
             >
               신고가 접수되었어요
             </p>
-            <p className="text-label text-text-3 mt-2 text-center">
-              운영자가 확인한 뒤 조치할게요.
+            <p className="text-label-lg text-text-3 mt-2 text-center leading-[1.6]">
+              운영자가 확인한 뒤 조치할게요
             </p>
             <button
               type="button"
               onClick={onClose}
-              className="bg-accent text-on-accent rounded-control text-body focus-visible:outline-accent mt-5 w-full py-3 font-extrabold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60"
+              className="bg-accent text-on-accent text-body hover:bg-accent-hover focus-visible:outline-accent mt-4.5 flex h-9.5 w-full items-center justify-center font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               확인
             </button>
@@ -112,18 +112,20 @@ export function ReportCommentDialog({
           <>
             <p
               id="report-dialog-title"
-              className="text-body-lg text-text text-center font-extrabold"
+              className="text-body-lg text-text-strong text-center font-black"
             >
               댓글 신고
             </p>
-            <p className="text-label text-text-3 mt-2 text-center">
-              신고 사유를 골라 주세요.
+            <p className="text-label text-text-3 mt-1.75 text-center">
+              {nickname
+                ? `${nickname}님의 댓글을 신고합니다`
+                : "신고 사유를 골라 주세요"}
             </p>
 
             <div
               role="radiogroup"
               aria-label="신고 사유"
-              className="divide-border mt-4 flex flex-col divide-y"
+              className="mt-4 flex flex-col"
             >
               {COMMENT_REPORT_REASONS.map(({ value, label }) => {
                 const selected = reason === value;
@@ -134,23 +136,23 @@ export function ReportCommentDialog({
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setReason(value)}
-                    className="focus-visible:outline-accent flex items-center justify-between rounded py-2.75 hover:opacity-80 focus-visible:outline-2 focus-visible:-outline-offset-2 active:opacity-60"
+                    className="border-border-soft focus-visible:outline-accent flex items-center justify-between border-t py-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
                   >
                     <span
                       className={`text-body ${
-                        selected ? "text-text font-bold" : "text-text-2"
+                        selected ? "text-text-strong font-bold" : "text-text-2"
                       }`}
                     >
                       {label}
                     </span>
-                    {/* 라디오 표시 — 선택되면 accent 링 + 안쪽 점 */}
+                    {/* 라디오 표시 — 선택되면 강조색 링 + 안쪽 점 */}
                     <span
-                      className={`rounded-pill grid size-4.5 place-items-center border ${
+                      className={`grid size-4.25 place-items-center rounded-full border ${
                         selected ? "border-accent" : "border-border-strong"
                       }`}
                     >
                       {selected && (
-                        <span className="bg-accent rounded-pill size-2.5" />
+                        <span className="bg-accent size-2.25 rounded-full" />
                       )}
                     </span>
                   </button>
@@ -164,12 +166,12 @@ export function ReportCommentDialog({
               </p>
             )}
 
-            <div className="mt-4 flex gap-2.5">
+            <div className="mt-4 flex gap-2.25">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isPending}
-                className="border-border text-text-2 rounded-control text-body hover:bg-elevate focus-visible:outline-accent flex-1 border py-3 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60 disabled:opacity-40"
+                className="border-border-strong text-text-2 text-body hover:bg-elevate focus-visible:outline-accent inline-flex h-9.5 flex-1 items-center justify-center border font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
               >
                 취소
               </button>
@@ -177,7 +179,7 @@ export function ReportCommentDialog({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isPending || reason === null}
-                className="border-border-strong text-danger rounded-control text-body hover:bg-elevate focus-visible:outline-accent flex-1 border py-3 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-60 disabled:opacity-40"
+                className="bg-danger text-on-accent text-body focus-visible:outline-accent inline-flex h-9.5 flex-1 items-center justify-center font-bold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
               >
                 신고하기
               </button>

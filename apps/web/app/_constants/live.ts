@@ -27,12 +27,13 @@ export const LIVE_MAX_RETRIES = 1;
  *
  * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
  * 기사 목록으로 나갔다 오는 대신 같은 지면에서 본다. 덕분에 예정 경기도 탭이
- * 둘(프리뷰·뉴스)이라 탭 줄이 선다.
+ * 둘(프리뷰·뉴스)이라 탭 줄이 선다. 순위 탭은 KAN-567 시안(경기 상세 탭 줄)대로
+ * 붙였다. 시안의 채팅 탭은 웹에서 우측 aside가 맡으므로 탭에 없다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "news"],
-  LIVE: ["summary", "lineups", "stats", "news"],
-  FINISHED: ["summary", "lineups", "stats", "news"],
+  SCHEDULED: ["preview", "table", "news"],
+  LIVE: ["summary", "lineups", "stats", "table", "news"],
+  FINISHED: ["summary", "lineups", "stats", "table", "news"],
   POSTPONED: [],
   CANCELLED: [],
 };
@@ -90,16 +91,25 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
+  table: "순위",
   news: "뉴스",
 };
 
 /**
  * 서버 거절 사유 → 입력바 밑 안내 문구. 목록에 없는 사유는 일반 실패 문구로 떨어진다.
  * `RATE_LIMITED`(KAN-465)는 한 접속이 5초에 5건을 넘긴 것으로, 접속과 입력창은
- * 그대로라 "잠시 후"만 안내한다.
+ * 그대로라 "잠시 후"만 안내한다. `ROOM_BUSY`(KAN-572)는 방 전체가 붐빈 것이라 내 탓이
+ * 아님을 밝히고, 입력창은 튕긴 글을 다시 채운다.
  */
 export const CHAT_REJECT_MESSAGE: Record<string, string> = {
   EMPTY_MESSAGE: "내용을 입력해 주세요",
   MESSAGE_TOO_LONG: "200자까지 보낼 수 있어요",
   RATE_LIMITED: "너무 빠르게 보내고 있어요. 잠시 후 다시 보내 주세요",
+  ROOM_BUSY: "채팅이 몰리고 있어요. 잠시 뒤 다시 보내 주세요",
 };
+
+/**
+ * 날짜 줄이 선택 칸을 화면 안으로 되돌릴 때 남기는 좌우 여백(px) (KAN-569, 모바일과 같은 값).
+ * 0이면 칸이 줄 가장자리에 붙어 다음 칸이 있는지 안 보인다.
+ */
+export const DATE_STRIP_KEEP_PAD = 12;

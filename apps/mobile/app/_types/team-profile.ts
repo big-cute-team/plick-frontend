@@ -1,10 +1,9 @@
 /**
- * @file 팀 프로필 화면 전용 타입 (KAN-484).
+ * @file 팀 프로필 화면 전용 타입 (KAN-574).
  */
 
 /**
- * 팀 프로필 본문 탭. `squad`는 API-Football 이번 시즌 등록 명단이고 `figures`는
- * PLick이 기사에서 뽑아 쌓은 인물 사전이다 — 출처가 달라 한 목록으로 합칠 수
- * 없다(ADR 0151).
+ * 팀 프로필 본문 탭. `squad`는 API-Football 이번 시즌 등록 명단, `info`는 관련
+ * 이슈 링크와 기본 정보다.
  */
-export type TeamProfileTabKey = "squad" | "figures";
+export type TeamProfileTabKey = "squad" | "info";

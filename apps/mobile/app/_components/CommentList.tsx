@@ -14,7 +14,10 @@ import { CommentThread } from "./CommentThread";
  *
  * 새 댓글은 여기서 그리지 않아도 나타난다 — 작성 뮤테이션(`useCreateComment`)이
  * 같은 쿼리키의 캐시에 성공 응답을 끼워 넣는다(원 댓글은 맨 앞, 답글은 부모 밑).
- * 답글 입력바는 각 스레드가 인라인으로 연다(`CommentThread`).
+ * 답글 입력줄은 각 스레드가 인라인으로 연다(`CommentThread`).
+ *
+ * 스레드마다 목록 행 구분선을 밑에 긋고(시안 KAN-567), 끝에 "댓글 더 보기"를 테두리
+ * 버튼(h 44, radius 14, 12.5/700)으로 둔다.
  *
  * @param articleId 기사(릴) id
  * @param initial 서버가 미리 받아 둔 첫 페이지(기사 세부). 릴 시트는 없이 들어온다.
@@ -51,7 +54,7 @@ export function CommentList({
   }
 
   return (
-    <div className="flex flex-col gap-3.75">
+    <div className="flex flex-col">
       {comments.map((comment) => (
         <CommentThread
           key={comment.id}
@@ -67,12 +70,12 @@ export function CommentList({
           type="button"
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="text-label text-text-3 py-2 text-center font-semibold active:opacity-60 disabled:opacity-40"
+          className="border-border-strong text-label-lg text-text-2 rounded-control mt-3.5 flex h-11 items-center justify-center border font-bold active:opacity-60 disabled:opacity-40"
         >
           {isFetchingNextPage
-            ? "불러오는 중…"
+            ? "불러오는 중"
             : isFetchNextPageError
-              ? "더 불러오지 못했어요 · 다시 시도"
+              ? "더 불러오지 못했어요, 다시 시도"
               : "댓글 더 보기"}
         </button>
       )}
@@ -80,17 +83,18 @@ export function CommentList({
   );
 }
 
-/** 댓글 로딩 자리 — QueryBoundary의 Suspense fallback으로 쓴다. */
+/** 댓글 로딩 자리 — QueryBoundary의 Suspense fallback으로 쓴다. 아바타 없이 글줄만. */
 export function CommentListSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-3.75 py-1">
+    <div className="flex animate-pulse flex-col">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="flex gap-2.5">
-          <div className="bg-elevate size-8 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-1.5 pt-0.5">
-            <div className="bg-elevate rounded-pill h-3 w-24" />
-            <div className="bg-elevate rounded-pill h-4 w-full" />
-          </div>
+        <div
+          key={i}
+          className="border-border-soft flex flex-col gap-2 border-b py-3.5"
+        >
+          <div className="bg-elevate rounded-pill h-3 w-24" />
+          <div className="bg-elevate rounded-pill h-4 w-full" />
+          <div className="bg-elevate rounded-pill h-3 w-20" />
         </div>
       ))}
     </div>

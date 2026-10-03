@@ -24,10 +24,10 @@ import { ReelViewer } from "./ReelViewer";
  * 릴스 작업 영역 (KAN-219, API 연결 KAN-323) — 세로 스냅 뷰어 + 오른쪽 세부
  * 패널을 가로로 배치하고, 피드 데이터와 패널 개폐 상태를 소유한다.
  *
- * 데스크톱에선 패널이 처음부터 열려 있다 (KAN-483) — 릴 옆에 댓글이 바로 보인다.
- * 닫으면 뷰어가 폭을 되찾고, 제목 영역이나 댓글 버튼을 누르면 오른쪽에서 다시
- * 미끄러져 들어온다. 모바일 뷰에선 패널이 전체 화면 오버레이라 릴을 덮으므로
- * 닫힌 채로 시작하고 눌러야 뜬다(`ReelDetailPanel`).
+ * 데스크톱에선 패널이 처음부터 열려 있다 (KAN-483, 시안 KAN-567도 "댓글 패널은 항상
+ * 열려 있다"). 릴 옆에 댓글이 바로 보인다. 닫으면 뷰어가 폭을 되찾고, 카드나 레일의
+ * 댓글 버튼을 누르면 오른쪽에서 다시 미끄러져 들어온다. 좁은 폭에선 패널이 전체 화면
+ * 오버레이라 릴을 덮으므로 닫힌 채로 시작하고 눌러야 뜬다(`ReelDetailPanel`).
  *
  * "기본 열림"을 서버가 그릴 수 없어서 개폐 상태는 세 값이다. `null`은 아직 사용자가
  * 열고 닫지 않은 상태로, 이때는 패널이 CSS(`lg:`)로 데스크톱 열림·좁은 폭 닫힘을
@@ -86,8 +86,14 @@ export function ReelsWorkspace({
 
   /* 활성 릴이 되면 조회로 기록한다 (KAN-332). 모바일은 릴마다 active prop을 이미
      들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
-     뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
-  useArticleView(activeReel?.id ?? "", activeReel !== undefined, activeIndex);
+     뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. 진입 화면은
+     들어온 길로 고정한다 (KAN-584) — 주소는 릴을 넘기면 `/reels/{id}`로 바뀌어 딥링크처럼 보인다 */
+  useArticleView(
+    activeReel?.id ?? "",
+    activeReel !== undefined,
+    activeIndex,
+    anchorId ? "reels_deeplink" : "reels",
+  );
 
   /* 미정 상태를 실제 창 폭으로 확정한다 — 서버는 창 폭을 모르니 여기서만 알 수 있다 */
   useEffect(() => {
@@ -135,13 +141,13 @@ export function ReelsWorkspace({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 overflow-hidden">
+    <div className="bg-chip flex min-h-0 flex-1 overflow-hidden">
       {isPending ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelSkeleton />
         </main>
       ) : isError && reels.length === 0 ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelStatus
             message="릴스를 불러오지 못했어요."
             onRetry={() => refetch()}
@@ -149,12 +155,13 @@ export function ReelsWorkspace({
           />
         </main>
       ) : reels.length === 0 ? (
-        <main className="bg-bg min-w-0 flex-1">
+        <main className="bg-chip min-w-0 flex-1">
           <ReelStatus message="아직 올라온 릴스가 없어요." />
         </main>
       ) : (
         <ReelViewer
           reels={reels}
+          activeIndex={activeIndex}
           onOpenDetail={() => {
             setDetailOpen(true);
             /* 패널은 서버 요청 없이 열리는 화면이라 여기서 화면 전환으로 센다 (KAN-543) */

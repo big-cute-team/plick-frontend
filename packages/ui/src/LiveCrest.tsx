@@ -4,11 +4,12 @@ import { useState } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import type { LiveTeam } from "@plick/domain/live";
 import { TeamCrest } from "@plick/ui/TeamCrest";
+import { rem } from "@plick/domain/format";
 
 /**
  * 라이브 데이터의 팀 표식 — 빅6는 로컬 크레스트, 빅6 밖은 API-Football CDN 로고,
- * 로고가 없거나 로드에 실패하면 축약 코드를 넣은 제네릭 원형(디자인의 이니셜
- * 폴백). 실패 상태 때문에 클라 컴포넌트다. CDN 로고는 수 KB 정적 이미지라
+ * 로고가 없거나 로드에 실패하면 축약 코드를 넣은 회색 원(시안: #eceef0 바탕에
+ * #767676 글자, 토큰 avatar·text-4). 실패 상태 때문에 클라 컴포넌트다. CDN 로고는 수 KB 정적 이미지라
  * `next/image` 없이 일반 img로 그린다(`TeamCrest`·`MediaThumb`과 같은 판단).
  *
  * 두 앱 `live/_components`에 같은 구현으로 복제돼 있던 것을 KAN-504에서 승격했다.
@@ -45,7 +46,7 @@ export function LiveCrest({
         height={size}
         loading="lazy"
         onError={() => setFailed(true)}
-        style={{ width: size, height: size }}
+        style={{ width: rem(size), height: rem(size) }}
         className={`shrink-0 object-contain ${className}`}
       />
     );
@@ -53,8 +54,12 @@ export function LiveCrest({
   return (
     <span
       aria-label={team.name}
-      className={`bg-elevate text-text-4 grid shrink-0 place-items-center rounded-full font-bold ${className}`}
-      style={{ width: size, height: size, fontSize: Math.max(7, size * 0.3) }}
+      className={`bg-avatar text-text-4 grid shrink-0 place-items-center rounded-full font-bold ${className}`}
+      style={{
+        width: rem(size),
+        height: rem(size),
+        fontSize: rem(Math.max(7, size * 0.3)),
+      }}
     >
       {team.shortName.slice(0, 3)}
     </span>

@@ -1,23 +1,22 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
-import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
- * 킥오프 전 프리뷰 지면(피그마 LW5 → KAN-462에서 좌측 컬럼 안 2열로) — 왼쪽에
- * 결장자·상대전적, 오른쪽에 리그 순위·직전 선발을 둔다. 우측 컬럼은 채팅
- * 패널 몫이라 여기서 레일을 만들지 않는다. 각 블록은 비어 있으면 그리지
- * 않는다(서버가 조각 실패 시 그 조각만 빼고 내리는 구조).
+ * 킥오프 전 프리뷰 (KAN-462 → KAN-567 톤 정리). 왼쪽에 결장자, 상대전적, 오른쪽에
+ * 리그 순위, 직전 선발을 둔다. 시안 웹 규칙대로 본문 카드에 면과 테두리를 두르지
+ * 않고 섹션 제목 14/900과 여백으로 끊는다. 각 블록은 비어 있으면 그리지 않는다
+ * (서버가 조각 실패 시 그 조각만 빼고 내리는 구조).
  */
 export function PreviewGrid({ preview }: { preview: MatchPreview }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2">
+      <div>
         {preview.absentees.length > 0 && <Absentees preview={preview} />}
         {preview.headToHead.length > 0 && <HeadToHead preview={preview} />}
       </div>
-      <div className="flex h-fit flex-col gap-4">
+      <div>
         {preview.leaguePositions.length > 0 && (
           <LeaguePositions preview={preview} />
         )}
@@ -27,45 +26,46 @@ export function PreviewGrid({ preview }: { preview: MatchPreview }) {
   );
 }
 
-/** 결장자는 팀별로 묶어 홈 그룹부터 보여준다 (KAN-459). 팀 줄 아래에 선수 줄이 들여쓰기로 붙는다. */
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-body-md text-text-strong pt-4.5 pb-2 font-black">
+      {children}
+    </p>
+  );
+}
+
+/** 결장자는 팀별로 묶어 홈 그룹부터 보여준다 (KAN-459). 팀 줄 아래에 선수 줄이 붙는다. */
 function Absentees({ preview }: { preview: MatchPreview }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-4 p-6">
-      <h2 className="text-title text-text font-bold">결장자</h2>
+    <section>
+      <SectionTitle>결장자</SectionTitle>
       {groupAbsenteesByTeam(preview.absentees).map((group) => (
-        <div key={group.team.shortName} className="flex flex-col gap-2">
-          <p className="flex items-center gap-2">
+        <div key={group.team.shortName} className="pb-3">
+          <p className="flex items-center gap-2 pb-1">
             <TeamProfileLink
               team={group.team}
-              className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-2 px-1 py-0.5 transition-colors focus-visible:outline-2"
+              className="hover:text-accent flex items-center gap-1.75 transition-colors"
             >
-              <LiveCrest team={group.team} size={22} />
-              <span className="text-body-lg text-text font-bold">
+              <LiveCrest team={group.team} size={18} />
+              <span className="text-body text-text-strong font-bold">
                 {group.team.name}
               </span>
             </TeamProfileLink>
-            <span className="text-body text-text-4">
+            <span className="text-caption-lg text-text-4">
               {group.players.length}명
             </span>
           </p>
           {group.players.map((absentee) => (
             <div
               key={absentee.playerName}
-              className="flex items-center gap-3 pl-1"
+              className="border-border-soft flex items-center gap-3 border-b py-2"
             >
-              <PlayerPhoto
-                src={absentee.photo}
-                name={absentee.playerName}
-                size={40}
-              />
-              <span className="text-body-lg text-text min-w-0 flex-1 truncate font-semibold">
+              <span className="text-body text-text-strong min-w-0 flex-1 truncate font-medium">
                 {absentee.playerName}
               </span>
               <span
-                className={`rounded-badge text-label px-2.5 py-1 font-bold ${
-                  absentee.kind === "SUSPENSION"
-                    ? "bg-danger/15 text-danger"
-                    : "bg-warn-tint text-warn"
+                className={`text-caption-lg font-bold ${
+                  absentee.kind === "SUSPENSION" ? "text-danger" : "text-warn"
                 }`}
               >
                 {absentee.reason}
@@ -80,26 +80,26 @@ function Absentees({ preview }: { preview: MatchPreview }) {
 
 function HeadToHead({ preview }: { preview: MatchPreview }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-3 p-6">
-      <h2 className="text-title text-text font-bold">상대 전적 · 최근 5경기</h2>
+    <section>
+      <SectionTitle>상대 전적, 최근 5경기</SectionTitle>
       {preview.headToHead.map((game) => (
         <div
           key={`${game.date}-${game.line}`}
-          className="flex items-center gap-2"
+          className="border-border-soft flex items-center gap-2 border-b py-2"
         >
-          <span className="text-body text-text-4 w-20 shrink-0">
+          <span className="text-label text-text-3 w-20 shrink-0">
             {game.date}
           </span>
-          <span className="text-body-lg text-text-2 flex-1 text-center font-semibold">
+          <span className="text-body text-text-strong flex-1 text-center font-medium">
             {game.line}
           </span>
           <span
-            className={`rounded-badge text-label grid size-7 shrink-0 place-items-center font-bold ${
+            className={`text-label-lg w-7 shrink-0 text-center font-black ${
               game.result === "W"
-                ? "bg-accent-tint text-accent"
+                ? "text-accent"
                 : game.result === "L"
-                  ? "bg-danger/15 text-danger"
-                  : "bg-elevate-2 text-text-3"
+                  ? "text-text-4"
+                  : "text-text-3"
             }`}
           >
             {game.result}
@@ -112,32 +112,30 @@ function HeadToHead({ preview }: { preview: MatchPreview }) {
 
 function LeaguePositions({ preview }: { preview: MatchPreview }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-3 p-6">
-      <h2 className="text-title text-text font-bold">리그 순위</h2>
+    <section>
+      <SectionTitle>리그 순위</SectionTitle>
       {preview.leaguePositions.map((position) => (
         <div
           key={position.team.shortName}
-          className="flex items-center gap-2.5"
+          className="border-border-soft flex items-center gap-2.5 border-b py-2"
         >
+          <span className="text-body text-text-strong w-8 shrink-0 font-black">
+            {position.rank}위
+          </span>
           <TeamProfileLink
             team={position.team}
-            className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex min-w-0 flex-1 items-center gap-2.5 px-1 py-0.5 transition-colors focus-visible:outline-2"
+            className="hover:text-accent flex min-w-0 flex-1 items-center gap-2 transition-colors"
           >
-            <LiveCrest team={position.team} size={28} />
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-body-lg text-text truncate font-semibold">
-                {position.team.name}
-              </span>
-              <span className="text-body text-text-4">
-                승점 {position.points} ·{" "}
-                {position.goalDiff > 0
-                  ? `+${position.goalDiff}`
-                  : position.goalDiff}
-              </span>
+            <LiveCrest team={position.team} size={18} />
+            <span className="text-body text-text-strong truncate font-bold">
+              {position.team.name}
             </span>
           </TeamProfileLink>
-          <span className="text-title text-text font-bold">
-            {position.rank}위
+          <span className="text-label text-text-3 shrink-0">
+            승점 {position.points}, 득실{" "}
+            {position.goalDiff > 0
+              ? `+${position.goalDiff}`
+              : position.goalDiff}
           </span>
         </div>
       ))}
@@ -147,32 +145,30 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
 
 function LastLineups({ preview }: { preview: MatchPreview }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-4 p-6">
+    <section>
+      <SectionTitle>직전 경기 선발</SectionTitle>
       {/* "직전 경기의 확정 선발" 문구는 명세가 요구하는 FE 표기다 — 지우지 말 것 */}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-title text-text font-bold">직전 경기 선발</h2>
-        <p className="text-body text-text-4">
-          예상 라인업이 아니라 직전 경기의 확정 선발이에요
-        </p>
-      </div>
+      <p className="text-label text-text-4 pb-2">
+        예상 라인업이 아니라 직전 경기의 확정 선발이에요
+      </p>
       {preview.lastLineups.map((lineup) => (
-        <div key={lineup.team.shortName} className="flex flex-col gap-1.5">
-          <p className="flex items-center gap-2">
+        <div key={lineup.team.shortName} className="pb-3">
+          <p className="flex items-center gap-2 pb-1">
             <TeamProfileLink
               team={lineup.team}
-              className="rounded-tile hover:bg-elevate-2 focus-visible:outline-accent flex items-center gap-2 px-1 py-0.5 transition-colors focus-visible:outline-2"
+              className="hover:text-accent flex items-center gap-1.75 transition-colors"
             >
-              <LiveCrest team={lineup.team} size={22} />
-              <span className="text-body-lg text-text font-bold">
+              <LiveCrest team={lineup.team} size={18} />
+              <span className="text-body text-text-strong font-bold">
                 {lineup.team.name}
               </span>
             </TeamProfileLink>
-            <span className="bg-accent-tint text-accent rounded-badge text-label px-2 py-0.5 font-bold">
+            <span className="text-label text-accent font-bold">
               {lineup.formation}
             </span>
           </p>
-          <p className="text-body text-text-3 leading-body">
-            {lineup.playerNames.join(" · ")}
+          <p className="text-label text-text-3 leading-body">
+            {lineup.playerNames.join(", ")}
           </p>
         </div>
       ))}

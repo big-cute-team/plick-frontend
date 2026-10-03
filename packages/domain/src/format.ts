@@ -14,8 +14,7 @@ import type { DebateListItem, Filter, TeamCode } from "./types";
 
 /**
  * 하위 페이지 title을 layout의 title.template과 같은 문자열로 감싼다 (KAN-386).
- * 아래 문서 제목 헬퍼들이 "… | PLick"을 손으로 복제하다 템플릿("%s | 플릭
- * PLick")과 어긋나, 탭 전환 직후와 새로고침 후의 제목이 달랐다. 템플릿에서
+ * 아래 문서 제목 헬퍼들이 "… | PLick"을 손으로 복제하다 템플릿과 어긋나, 탭 전환 직후와 새로고침 후의 제목이 달랐다. 템플릿에서
  * 파생시키면 다시 벌어질 수 없다.
  */
 function brandTitle(page: string): string {
@@ -60,41 +59,6 @@ export function teamHubTitle(filter: Filter): string {
   return filter === "ALL"
     ? BRAND_TITLE
     : brandTitle(`${TEAM_FULL_NAMES[filter]} 이적 루머`);
-}
-
-/**
- * 기사 surface의 팀 필터 → URL (KAN-350). 전체는 `/articles`, 팀은
- * `/articles/teams/[slug]`다. 홈의 팀 허브(`/teams/[slug]`)와 별개 URL인 이유:
- * 기사 페이지에서 고른 팀을 팀 허브 URL로 바꾸면 새로고침 시 홈 화면으로
- * 건너뛰어 버린다 — 새로고침해도 기사 surface에 남아야 한다.
- * web 전용이던 것을 모바일 기사 페이지 신설(KAN-386)에서 승격했다.
- */
-export function articlesTeamPath(filter: Filter): string {
-  return filter === "ALL"
-    ? "/articles"
-    : `/articles/teams/${TEAMS[filter].slug}`;
-}
-
-/**
- * 경로 → 기사 surface 팀 필터 역산. `/articles/teams/[slug]`면 그 팀,
- * `/articles`(및 그 외)는 전체다. `/articles` 접두를 벗기고 홈 surface 파서를
- * 재사용한다 — slug 판정 규칙이 한 곳에 남는다.
- */
-export function articlesTeamFilterFromPathname(pathname: string): Filter {
-  if (!pathname.startsWith("/articles")) return "ALL";
-  return teamFilterFromPathname(pathname.slice("/articles".length) || "/");
-}
-
-/**
- * 기사 surface의 문서 제목. 탭 전환이 `history.replaceState`라 서버 메타데이터가
- * 다시 렌더되지 않으므로 클라가 `document.title`을 이걸로 직접 맞춘다.
- * `/articles`·`/articles/teams/[slug]`의 metadata title을 템플릿이 감싼 것과
- * 같은 문자열이어야 한다.
- */
-export function articlesTeamTitle(filter: Filter): string {
-  return brandTitle(
-    filter === "ALL" ? "기사" : `${TEAM_FULL_NAMES[filter]} 기사`,
-  );
 }
 
 /**
@@ -447,4 +411,17 @@ export function formatChatTime(iso: string): string {
     minute: "2-digit",
     hour12: false,
   }).format(new Date(iso));
+}
+
+/**
+ * 시안 px 값을 rem 문자열로 바꾼다 (KAN-574). 아이콘·크레스트처럼 크기를 숫자
+ * prop으로 받는 컴포넌트가 인라인 크기를 px로 박으면 전체 배율(html font-size
+ * 110%)을 따라오지 못한다. 토큰과 같은 16px = 1rem 기준이다.
+ *
+ * @param px 시안 픽셀 값
+ * @example
+ * rem(20); // "1.25rem"
+ */
+export function rem(px: number): string {
+  return `${px / 16}rem`;
 }

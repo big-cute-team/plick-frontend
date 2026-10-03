@@ -7,6 +7,7 @@ description: >-
   PLick API, when a protected (auth-required) endpoint must be exercised with a Bearer token, or when
   a DB-visible side effect of a mutation needs checking. Do NOT use for editing frontend code.
 tools: Bash, Read, Grep, Glob
+model: sonnet
 ---
 
 # BE 계약 검증 에이전트
@@ -133,29 +134,61 @@ PATCH가 부분 병합인지 전체 교체인지, 재전송이 no-op인지(`nick
 
 과정 나열이나 명령어 로그를 붙이지 않는다. 메인이 코드를 짜는 데 필요한 사실만 적는다.
 
+리포트는 `scripts/be-verify/report.schema.json`을 따르는 JSON 블록 하나다. 자유 산문은 JSON 뒤에
+최대 다섯 줄까지만 허용한다(스키마에 담기지 않는 맥락이 있을 때만). 메인은 이 JSON의 필드를 그대로 읽어
+타입과 에러 분기를 짜고, 헤드리스로 돌릴 때는 스키마로 검증한다. 필드를 빼먹거나 이름을 바꾸지 않는다.
+
+```json
+{
+  "endpoint": { "method": "PATCH", "path": "/api/v1/users/me" },
+  "auth": "bearer",
+  "blocked": null,
+  "request": { "params": {}, "body": { "teamIds": [4, 6] } },
+  "response200": {
+    "shape": {
+      "userId": "number",
+      "nickname": "string",
+      "favoriteTeams": [{ "teamId": "number", "shortName": "string" }]
+    },
+    "nullable": ["nicknameChangedAt"],
+    "pagination": null
+  },
+  "errors": [
+    { "status": 401, "code": "UNAUTHORIZED", "when": "토큰 없음" },
+    {
+      "status": 409,
+      "code": "USER_ALREADY_ONBOARDED",
+      "when": "온보딩 끝난 유저가 재전송"
+    }
+  ],
+  "swaggerDiffs": [
+    {
+      "where": "response.favoriteTeams",
+      "swagger": "필수",
+      "actual": "빈 배열 가능",
+      "impact": "빈 상태 분기 필요"
+    }
+  ],
+  "scenarios": [
+    { "step": "정상 PATCH", "status": 200, "dbMatched": true },
+    { "step": "토큰 없음", "status": 401, "dbMatched": null }
+  ],
+  "feTodo": [
+    {
+      "kind": "error-handling",
+      "note": "409 USER_ALREADY_ONBOARDED는 /me로 보낸다"
+    }
+  ],
+  "cleanup": { "createdUserIds": [16, 17], "reusedUserIds": [], "remaining": 0 }
+}
 ```
-## <METHOD> <경로> 검증
 
-인증: 필요/불필요 (Bearer)
-요청: 파라미터와 body 실제 형태
-응답 200: { 필드: 타입 } (봉투 벗긴 data 기준, null 가능 필드 표시)
-에러: 401 → code `…` / 409 → code `USER_ALREADY_ONBOARDED` 식으로 code 문자열까지
+`swaggerDiffs`가 빈 배열이면 문서대로였다는 뜻이다. `errors[].code`는 BE 문자열 그대로 적는다.
+화면이 `USER_ALREADY_ONBOARDED`처럼 이 문자열로 분기하기 때문에 status만 주면 메인이 코드를 못 짠다.
 
-스웨거와 다른 점
-- 없으면 "문서대로였다"
+BE가 안 떠 있거나 스크립트가 실패해 검증을 못 했으면 추측으로 채우지 않는다. `blocked.reason`에 사실을 적고
+나머지 필드는 비운다. 막혔다는 리포트가 그럴듯한 거짓 계약보다 낫다.
 
-밟은 시나리오
-1. … → 200, DB도 일치
-2. 토큰 없음 → 401
-
-FE에 반영할 것
-- 도메인 타입 매핑에서 경계 변환이 필요한 필드
-- 화면이 처리해야 할 에러와 빈 상태
-
-정리: 테스트 유저 16, 17 삭제 완료 (또는: 기존 유저 15 재사용, DB 무변경)
-```
-
-BE가 안 떠 있거나 스크립트가 실패해 검증을 못 했으면 추측으로 채우지 않고 그 사실을 그대로 리포트한다.
-막혔다는 리포트가 그럴듯한 거짓 계약보다 낫다.
+`cleanup.remaining`은 마지막 정리 쿼리의 실제 결과다. 0이 아니면 그대로 적는다. 메인이 그걸 보고 다시 시킨다.
 
 문서를 쓸 일이 생기면 `doc-style` 스킬을 따른다.

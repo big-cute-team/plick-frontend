@@ -10,7 +10,7 @@ import { PullSpinner } from "./PullSpinner";
 /**
  * 피드 화면 본문을 당겨서 새로고침으로 감싸는 클라 껍데기 (KAN-379).
  *
- * 서버 컴포넌트(HomeScreen·ArticlesScreen)는 클라에 함수를 못 넘기므로, 모바일
+ * 서버 컴포넌트(HomeScreen)는 클라에 함수를 못 넘기므로, 모바일
  * `HomeScrollArea`처럼 얇은 클라 경계를 한 겹 두고 여기서 `useFeedRefresh`를
  * 만든다. `children`은 서버에서 렌더된 채 지나가므로 아래를 클라로 끌어내리지
  * 않는다.

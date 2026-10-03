@@ -23,16 +23,20 @@ import { getGuestExpiresAt, isLoggedIn } from "@/_services/session";
 import "./globals.css";
 
 /**
- * Pretendard 셀프호스팅 (KAN-421). jsdelivr 동기 CSS(렌더 블로킹 + 한글 전 글리프
- * variable woff2 2.0MB)를 `next/font/local`로 교체한다. 모바일 layout과 같은 구성 —
- * Std 서브셋(2,780자, 285KB), 패밀리는 `--font-pretendard` 변수로 노출하고
- * `@plick/tokens`의 `--font-sans`가 읽는다.
+ * Noto Sans KR 셀프호스팅 (KAN-567). 시안 폰트가 Noto Sans KR 400·500·700·900이라
+ * Pretendard(KAN-421)를 교체했다. 구글 폰트 CSS 대신 `next/font/local`로 싣는
+ * 이유는 전과 같다 — preload와 `font-display: swap`, 사이즈 조정된 fallback이
+ * 자동으로 붙고 `/_next/static`이라 CloudFront immutable 캐시를 그대로 탄다.
+ * 파일은 google/fonts의 가변 TTF를 KS X 1001 완성형 2,350자 + 라틴·기호로
+ * 서브셋해 woff2로 굳힌 것이다(`scripts/fonts/subset-noto.sh`). 서브셋 밖 희귀
+ * 음절은 fallback 시스템 폰트로 표시된다. 폰트 패밀리는 `--font-noto` 변수로
+ * 노출하고 `@plick/tokens`의 `--font-sans`가 이를 읽는다.
  */
-const pretendard = localFont({
-  src: "./fonts/PretendardStdVariable.woff2",
+const notoSansKr = localFont({
+  src: "./fonts/NotoSansKR-Variable.woff2",
   display: "swap",
-  weight: "45 920",
-  variable: "--font-pretendard",
+  weight: "100 900",
+  variable: "--font-noto",
 });
 
 /**
@@ -81,7 +85,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0b0d12",
+  themeColor: "#ffffff",
 };
 
 /**
@@ -100,7 +104,7 @@ export default async function RootLayout({
   const guestExpiresAt = await getGuestExpiresAt();
 
   return (
-    <html lang="ko" data-theme="dark" className={pretendard.variable}>
+    <html lang="ko" data-theme="light" className={notoSansKr.variable}>
       <head>
         {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
             미리 열어 둔다 (KAN-421) */}

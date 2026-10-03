@@ -1,41 +1,38 @@
 import { statHomeRatio, type MatchStat } from "@plick/domain/live";
 
 /**
- * 스탯 탭의 팀 스탯 비교 카드 (KAN-452 우측 레일 → KAN-462 탭 본문). 홈 accent,
- * 어웨이 info 막대에 값을 좌우로 크게 둔다. value 파싱 실패 시 막대만
- * 생략한다(명세 함정 대응).
+ * 스탯 탭의 팀 비교 (KAN-452 → KAN-567 시안 경기 상세 973-982행). 줄마다 홈 값 14/900,
+ * 라벨 12.5 보조색, 원정 값을 양끝에 두고 아래 6px 막대(홈 강조색, 원정 `bg-muted`,
+ * 각진)를 깐다. value 파싱 실패 시 막대만 생략한다(명세 함정 대응).
  */
 export function StatsCard({ stats }: { stats: MatchStat[] }) {
   return (
-    <section className="bg-elevate rounded-card flex flex-col gap-5 px-6 py-6">
-      <h2 className="text-title text-text font-bold">경기 스탯</h2>
+    <div className="pt-5">
       {stats.map((stat) => {
         const ratio = statHomeRatio(stat);
         return (
-          <div key={stat.label} className="flex flex-col gap-2">
-            <p className="flex items-center justify-between">
-              <span className="text-title text-text font-bold">
+          <div key={stat.label} className="pb-4">
+            <p className="flex items-baseline justify-between pb-1.5">
+              <span className="text-body-md text-text-strong font-black">
                 {stat.home}
               </span>
-              <span className="text-body text-text-3 font-medium">
-                {stat.label}
-              </span>
-              <span className="text-title text-text font-bold">
+              <span className="text-label-lg text-text-3">{stat.label}</span>
+              <span className="text-body-md text-text-strong font-black">
                 {stat.away}
               </span>
             </p>
             {ratio !== null && (
-              <div aria-hidden className="flex gap-1">
+              <div aria-hidden className="flex h-1.5 gap-0.75">
                 <span
-                  className="bg-accent h-2 rounded-full"
+                  className="bg-accent"
                   style={{ width: `${ratio * 100}%` }}
                 />
-                <span className="bg-info h-2 flex-1 rounded-full opacity-80" />
+                <span className="bg-muted flex-1" />
               </div>
             )}
           </div>
         );
       })}
-    </section>
+    </div>
   );
 }

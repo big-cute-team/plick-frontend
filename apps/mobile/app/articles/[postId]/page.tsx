@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
 import { getArticleDebate } from "@plick/core/debates";
+import { TEAMS } from "@plick/domain/constants";
 import { truncateText } from "@plick/domain/format";
 import { newsArticleJsonLd } from "@plick/domain/jsonld";
 import type {
@@ -19,13 +21,22 @@ import { WEB_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
 
 /**
+ * 상세를 한 렌더에 한 번만 받는다 (KAN-584). `generateMetadata`와 페이지 본문이 같은 기사를
+ * 각각 불렀는데, 메타데이터는 토큰 없이(익명 60초 캐시) 본문은 토큰을 실어(`no-store`) 부르니
+ * 사람 한 명의 열람에 상세 API가 두 번 나가고 서버는 그때마다 `article_opened`를 센다.
+ * 익명 fetch끼리는 Next가 중복 제거하지만 헤더가 다른 두 호출은 별개다. React `cache`로 묶어
+ * 같은 인자면 한 번만 부르고, 크롤러(토큰 없음)는 전처럼 익명 캐시를 탄다.
+ */
+const loadArticle = cache((postId: string, accessToken?: string) =>
+  getArticle(postId, accessToken),
+);
+
+/**
  * 기사별 고유 메타데이터 (KAN-346) — 기사 하나하나가 롱테일 검색어의 랜딩이라
  * title·description·OG가 페이지마다 달라야 한다. canonical은 같은 콘텐츠의
  * 데스크톱 기사 URL이다(별도 모바일 URL 패턴).
  *
- * 본문 렌더와 별개로 상세를 한 번 더 부르지만, 메타데이터는 유저 무관이라
- * 토큰 없이 부른다 — 익명 fetch는 같은 렌더 안에서 중복 제거되고, 토큰을
- * 실으면 오히려 no-store라 두 번 나간다. 없는 기사는 빈 메타데이터로 두면
+ * 상세는 본문과 같은 호출(`loadArticle`)을 나눠 쓴다. 없는 기사는 빈 메타데이터로 두면
  * 페이지 본문이 notFound()로 떨어진다.
  */
 export async function generateMetadata({
@@ -35,7 +46,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { postId } = await params;
   try {
-    const article = await getArticle(postId);
+    const article = await loadArticle(postId, await getAccessToken());
     const description = truncateText(article.summary, 160);
     return {
       title: article.title,
@@ -102,7 +113,7 @@ export default async function ArticleDetailPage({
   const accessToken = await getAccessToken();
   const [articleResult, commentsResult, debateResult] =
     await Promise.allSettled([
-      getArticle(postId, accessToken),
+      loadArticle(postId, accessToken),
       getComments(postId, { accessToken }),
       // 투표형 게시물인지는 이 호출이 판별한다 — 토론 없는 기사는 null이 온다
       getArticleDebate(postId, accessToken ? { accessToken } : undefined),
@@ -160,7 +171,15 @@ export default async function ArticleDetailPage({
       />
       {/* 진입을 조회로 기록한다 (KAN-310). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
-      <ArticleTopBar />
+      {/* 상단바 제목은 `{팀명} 이슈` (KAN-567) — 대표 팀은 첫 팀이다 */}
+      <ArticleTopBar
+        teamName={
+          articleResult.value.teams[0]
+            ? TEAMS[articleResult.value.teams[0]].name
+            : null
+        }
+        articleId={articleResult.value.id}
+      />
       <ScrollArea className="pb-section">
         <ArticleBody
           article={articleResult.value}

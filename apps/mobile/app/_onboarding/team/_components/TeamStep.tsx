@@ -42,12 +42,10 @@ export function TeamStep({ nickname }: { nickname: string }) {
     <>
       <ScrollArea>
         <section className="px-edge pt-5.5 pb-6">
-          <h1 className="text-headline text-text font-extrabold">
+          <h1 className="text-headline tracking-title text-text-strong font-black">
             응원하는 팀을 선택해주세요
           </h1>
-          <p className="text-body text-text-3 mt-2.5 font-semibold">
-            마이팀 소식을 가장 먼저 보여드려요
-          </p>
+          <p className="text-body text-text-3 mt-2">여러 팀을 골라도 돼요</p>
 
           <div className="mt-7.5">
             <TeamSelectGrid selected={teams} onToggle={toggle} />
@@ -58,7 +56,7 @@ export function TeamStep({ nickname }: { nickname: string }) {
       <BottomActionBar>
         <SkipLink />
         <PrimaryButton onClick={submit} disabled={pending}>
-          {pending ? "저장 중…" : "시작하기"}
+          {pending ? "저장 중" : "시작하기"}
         </PrimaryButton>
       </BottomActionBar>
 

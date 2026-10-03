@@ -13,16 +13,14 @@ export default function StoryNotFound() {
       <SiteHeader />
       <main className="flex flex-col items-center justify-center gap-7 px-6 py-40">
         <div className="flex flex-col items-center gap-2.5">
-          <p className="text-headline text-text font-extrabold">
+          <p className="text-headline text-text-strong tracking-title font-black">
             이슈를 찾을 수 없어요
           </p>
-          <p className="text-body text-text-3 font-semibold">
-            없어졌거나 내려간 이슈예요
-          </p>
+          <p className="text-body text-text-3">없어졌거나 내려간 이슈예요</p>
         </div>
         <Link
           href="/"
-          className="bg-accent text-on-accent rounded-pill text-body-lg focus-visible:outline-accent flex h-13 w-full max-w-60 items-center justify-center font-extrabold transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 active:opacity-80"
+          className="bg-accent text-on-accent text-label-lg hover:bg-accent-hover focus-visible:outline-accent flex h-9.5 items-center justify-center px-6 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           홈으로
         </Link>

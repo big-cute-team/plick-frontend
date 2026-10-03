@@ -21,8 +21,8 @@ import type { PostListVariant } from "@/_types/app";
 
 type ViewState = {
   /**
-   * surface별 팀 필터. KAN-350부터 원본은 URL이다(홈 `/`·`/teams/[slug]`,
-   * 기사 `/articles`·`/articles/teams/[slug]`) — PostFeed가 URL에서 파생한 값을
+   * surface별 팀 필터. KAN-350부터 원본은 URL이다(홈 `/`·`/teams/[slug]`) —
+   * 기사 목록 라우트는 KAN-569에서 없어져 지금 쓰는 surface는 홈(news)뿐이다. PostFeed가 URL에서 파생한 값을
    * 여기 동기화해 두고, GNB의 홈·기사 링크(마지막으로 보던 팀 URL로 복귀,
    * NavItem)와 재클릭 새로고침(useFeedRefresh)이 읽는다.
    */
@@ -35,17 +35,6 @@ type ViewState = {
    */
   scrollTops: Partial<Record<PostListVariant, number>>;
   setScrollTop: (surface: PostListVariant, top: number) => void;
-  /**
-   * 기사 페이지 팀 탭별 스크롤 오프셋(px). 탭을 떠날 때 PostFeed가 적어 두고,
-   * 이미 봤던 팀으로 되돌아오면 그 팀에서 보던 자리로 복원한다. `scrollTops`는
-   * 화면 단위(피드를 떠났다 돌아올 때) 복원용이라 따로 둔다.
-   *
-   * article surface에만 있다 (KAN-386). 홈 리스트는 첫 페이지 고정으로
-   * 짧아지면서 팀 전환 때 스크롤을 건드리지 않게 됐고, 그러면 팀별로 기억할
-   * 위치도 없다(모바일과 같은 판단).
-   */
-  articleTabScrollTops: Partial<Record<Filter, number>>;
-  setArticleTabScrollTop: (filter: Filter, top: number) => void;
 };
 
 /** 화면별 뷰 상태 스토어 — 앱에서 유일한 zustand 스토어다. */
@@ -60,11 +49,5 @@ export const useViewState = create<ViewState>((set) => ({
   setScrollTop: (surface, top) =>
     set((state) => ({
       scrollTops: { ...state.scrollTops, [surface]: top },
-    })),
-
-  articleTabScrollTops: {},
-  setArticleTabScrollTop: (filter, top) =>
-    set((state) => ({
-      articleTabScrollTops: { ...state.articleTabScrollTops, [filter]: top },
     })),
 }));

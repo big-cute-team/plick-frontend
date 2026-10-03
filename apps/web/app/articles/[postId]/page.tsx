@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
 import { getComments } from "@plick/core/comments";
@@ -12,23 +13,36 @@ import type {
   InitialCommentPage,
 } from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { LiveStrip } from "@/_components/LiveStrip";
 import { PageContainer } from "@/_components/PageContainer";
+import { SideRail } from "@/_components/SideRail";
+import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import {
   MOBILE_ALTERNATE_MEDIA,
   MOBILE_SITE_URL,
   SITE_URL,
 } from "@/_constants/site";
+import { RELATED_ARTICLES_COUNT } from "@/_constants/app";
 import { getAccessToken } from "@/_services/session";
+
+/**
+ * 상세를 한 렌더에 한 번만 받는다 (KAN-584). `generateMetadata`와 페이지 본문이 같은 기사를
+ * 각각 불렀는데, 메타데이터는 토큰 없이(익명 60초 캐시) 본문은 토큰을 실어(`no-store`) 부르니
+ * 사람 한 명의 열람에 상세 API가 두 번 나가고 서버는 그때마다 `article_opened`를 센다.
+ * 익명 fetch끼리는 Next가 중복 제거하지만 헤더가 다른 두 호출은 별개다. React `cache`로 묶어
+ * 같은 인자면 한 번만 부르고, 크롤러(토큰 없음)는 전처럼 익명 캐시를 탄다.
+ */
+const loadArticle = cache((postId: string, accessToken?: string) =>
+  getArticle(postId, accessToken),
+);
 
 /**
  * 기사별 고유 메타데이터 (KAN-346) — 기사 하나하나가 롱테일 검색어의 랜딩이라
  * title·description·OG가 페이지마다 달라야 한다. 이 URL이 canonical이고, 같은
  * 콘텐츠의 모바일 기사 URL을 alternate로 선언한다(별도 모바일 URL 패턴).
  *
- * 본문 렌더와 별개로 상세를 한 번 더 부르지만, 메타데이터는 유저 무관이라
- * 토큰 없이 부른다 — 익명 fetch는 같은 렌더 안에서 중복 제거되고, 토큰을
- * 실으면 오히려 no-store라 두 번 나간다. 없는 기사는 빈 메타데이터로 두면
+ * 상세는 본문과 같은 호출(`loadArticle`)을 나눠 쓴다. 없는 기사는 빈 메타데이터로 두면
  * 페이지 본문이 notFound()로 떨어진다.
  */
 export async function generateMetadata({
@@ -38,7 +52,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { postId } = await params;
   try {
-    const article = await getArticle(postId);
+    const article = await loadArticle(postId, await getAccessToken());
     const description = truncateText(article.summary, 160);
     return {
       title: article.title,
@@ -71,15 +85,14 @@ export async function generateMetadata({
   }
 }
 import { ArticleMain } from "./_components/ArticleMain";
-import { ArticleSidebar } from "./_components/ArticleSidebar";
 import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
 /**
- * 데스크톱 기사 세부 페이지 (퍼블리싱 KAN-233, API 연결 KAN-322, 댓글 KAN-329) —
- * GNB + 본문 컬럼(추천 기사 포함) + 우측 사이드바(관련·인기). 홈·기사 목록에서
- * 기사를 선택하면 진입한다. 피그마 W11(node 293-2).
+ * 데스크톱 기사 세부 페이지 (퍼블리싱 KAN-233, API 연결 KAN-322, 댓글 KAN-329,
+ * 시안 KAN-567 "기사 상세") — 상단 바, LIVE 띠, 본문 컬럼(관련 기사·댓글 포함),
+ * 우측 레일(급상승), 푸터. 홈·기사 목록에서 기사를 선택하면 진입한다.
  *
- * 데스크톱은 본문(1fr) + 사이드바(320px) 2열, `lg` 미만에선 사이드바를 숨기고
+ * 데스크톱은 홈과 같은 본문(1fr) + 레일(288px) 2열, `lg` 미만에선 레일을 숨기고
  * 본문 1열로 스택한다(홈과 동일한 반응형 규칙).
  *
  * 상세(`GET /api/v1/articles/{articleId}`)는 단발 읽기라 서버 컴포넌트 fetch로
@@ -92,14 +105,12 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 사이드바는 KAN-338에서 채웠다. 관련 기사는 기사의 팀태그가 필요해 상세를 받은
- * 뒤 이어 받는다 (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고
- * 5개). 실패해도 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다.
- * 실시간 급상승은 KAN-501에서 카드가 스스로 받게 바뀌어 이 페이지가 손대지
- * 않는다 — 그러면서 사이드바 하나를 위해 부르던 핫이슈 호출이 빠졌다.
- * 본문 밑 추천 행은
- * 웹에선 채우지 않기로 해서(사이드바 관련 기사와 중복) 준비 중 문구로 남긴다 —
- * 모바일 "함께 보면 좋은 기사"는 같은 데이터로 채웠다.
+ * 관련 기사는 기사의 팀태그가 필요해 상세를 받은 뒤 이어 받는다
+ * (`getRelatedArticles` — 팀 필터 목록에서 자기 자신을 거르고 4개, 시안의 관련
+ * 기사 칸 수). 실패해도 기사 본문은 떠야 해서 그 섹션 자리에만 실패를 보여준다.
+ * KAN-563에서 웹 관련 기사를 뺐었는데 시안이 본문 밑 "관련 기사" 2열을 그려
+ * 모바일 `suggested`와 같은 데이터로 되살렸다. 실시간 급상승은 KAN-501에서
+ * 레일이 스스로 받게 바뀌어 이 페이지가 손대지 않는다.
  */
 export default async function ArticleDetailPage({
   params,
@@ -111,7 +122,7 @@ export default async function ArticleDetailPage({
 
   const [articleResult, commentsResult, debateResult] =
     await Promise.allSettled([
-      getArticle(postId, accessToken),
+      loadArticle(postId, accessToken),
       getComments(postId, { accessToken }),
       // 투표형 게시물인지는 이 호출이 판별한다 (KAN-418) — 토론 없는 기사는
       // null이 온다. 토큰을 실어야 `myVote`가 이 유저 기준으로 온다
@@ -151,6 +162,7 @@ export default async function ArticleDetailPage({
     related = await getRelatedArticles(
       articleResult.value.id,
       articleResult.value.teams,
+      RELATED_ARTICLES_COUNT,
     );
   } catch (error) {
     console.error("[article] 관련 기사 로드 실패:", error);
@@ -171,17 +183,18 @@ export default async function ArticleDetailPage({
       {/* 진입을 조회로 기록한다 (KAN-332). 그리는 것 없는 클라 경계 */}
       <ArticleViewTracker articleId={articleResult.value.id} />
       <SiteHeader />
+      <LiveStrip />
       <main>
-        <PageContainer className="pt-6 pb-16">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <ArticleMain
-              article={articleResult.value}
-              initialComments={initialComments}
-              debate={debate}
-            />
-            <ArticleSidebar related={related} className="hidden lg:flex" />
-          </div>
+        <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <ArticleMain
+            article={articleResult.value}
+            related={related}
+            initialComments={initialComments}
+            debate={debate}
+          />
+          <SideRail />
         </PageContainer>
+        <SiteFooter />
       </main>
     </>
   );

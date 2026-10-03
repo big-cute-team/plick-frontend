@@ -1,9 +1,11 @@
 /**
- * @file 동적 OG 렌더 자산 로더 (KAN-351) — Pretendard 폰트와 팀 로고 PNG.
+ * @file 동적 OG 렌더 자산 로더 (KAN-351) — Noto Sans KR 폰트와 팀 로고 PNG.
  *
  * 자산은 `apps/web/assets/og/`에 커밋돼 있다. satori(next/og)는 CSS로 폰트를
- * 못 받고 바이트를 직접 요구하며, webp도 못 읽어 로고는 PNG 사본을 쓴다
- * (`scripts/og-image/team-logos.mjs`로 생성).
+ * 못 받고 바이트를 직접 요구하며, woff2와 가변 폰트도 못 읽어 정적 TTF(Bold 700)를
+ * 둔다(`scripts/fonts/subset-noto.sh`로 생성). 워드마크용 Black 900은 로고가
+ * 이미지가 되면서(KAN-583) 빠졌다. webp도 못
+ * 읽어 로고는 PNG 사본을 쓴다(`scripts/og-image/team-logos.mjs`로 생성).
  *
  * `process.cwd()` 기준 리터럴 경로로 읽는 이유: Next의 파일 추적(nft)이 이
  * 패턴을 정적 분석해 standalone 산출물에 자산을 포함시킨다. `public/`과 달리
@@ -16,13 +18,25 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TeamCode } from "@plick/domain/types";
 
-let fontCache: Buffer | null = null;
+/** satori `fonts` 옵션에 그대로 넘기는 폰트 항목 */
+export interface OgFont {
+  name: string;
+  data: Buffer;
+  weight: 700;
+  style: "normal";
+}
 
-/** OG 텍스트 렌더용 Pretendard SemiBold 바이트를 읽는다. */
-export async function loadOgFont(): Promise<Buffer> {
-  fontCache ??= await readFile(
-    join(process.cwd(), "assets/og/Pretendard-SemiBold.otf"),
+let fontCache: OgFont[] | null = null;
+
+/** OG 텍스트(제목·태그라인) 렌더용 Noto Sans KR Bold 바이트를 읽는다. */
+export async function loadOgFonts(): Promise<OgFont[]> {
+  if (fontCache) return fontCache;
+  const bold = await readFile(
+    join(process.cwd(), "assets/og/NotoSansKR-Bold.ttf"),
   );
+  fontCache = [
+    { name: "Noto Sans KR", data: bold, weight: 700, style: "normal" },
+  ];
   return fontCache;
 }
 
@@ -44,4 +58,20 @@ export async function loadTeamLogo(code: TeamCode): Promise<string> {
   const dataUri = `data:image/png;base64,${png.toString("base64")}`;
   logoCache.set(code, dataUri);
   return dataUri;
+}
+
+let brandLogoCache: string | null = null;
+
+/**
+ * 해축이모 가로형 로고 PNG(KAN-583, `scripts/brand-assets` 산출물의 사본)를 data URI로
+ * 읽는다. 팀 로고와 같은 이유로 data URI다. 전에는 글자 워드마크를 satori가 폰트로
+ * 그렸는데 새 로고가 래스터라 이미지로 앉힌다.
+ */
+export async function loadBrandLogo(): Promise<string> {
+  if (brandLogoCache) return brandLogoCache;
+  const png = await readFile(
+    join(process.cwd(), "assets/og/logo-horizontal.png"),
+  );
+  brandLogoCache = `data:image/png;base64,${png.toString("base64")}`;
+  return brandLogoCache;
 }

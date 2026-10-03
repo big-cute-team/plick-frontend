@@ -2,7 +2,8 @@
  * @file 라우트 경로를 `screen_viewed`의 화면 값으로 옮기는 표 (KAN-543).
  *
  * 값 목록은 BE 계약(`ClientEventIntakeService`)의 허용 목록 열아홉이고 라우트를 그대로
- * 옮긴 것이다. 두 앱의 라우트가 거의 같아(이슈 상세는 데스크톱만) 표를 하나로 둔다.
+ * 옮긴 것이다. `articles`는 기사 목록 라우트가 없어져(KAN-569) 더는 내지 않지만 계약
+ * 목록이라 타입에 남긴다. 두 앱의 라우트가 거의 같아(이슈 상세는 데스크톱만) 표를 하나로 둔다.
  * 모르는 경로는 null이라 보내지 않는다 - 서버가 버리는 건을 실어 보낼 이유가 없다.
  *
  * 화면 안 탭(`match_detail.lineups`)은 여기서 내지 않는다. 라우트로는 모르는 값이라
@@ -41,11 +42,11 @@ export interface ResolvedScreen {
 /** 고정 경로 → 화면. 동적 세그먼트가 없는 것들. */
 const STATIC_SCREENS: Record<string, ScreenName> = {
   "/": "home",
-  "/articles": "articles",
   "/reels": "reels",
   "/debates": "debates",
   "/live": "live",
   "/live/standings": "live_standings",
+  "/live/chat": "live",
   "/me": "me",
   "/me/activity": "me_activity",
   "/me/edit": "me_edit",
@@ -71,7 +72,6 @@ const DYNAMIC_SCREENS: { pattern: RegExp; screen: ScreenName; ref: boolean }[] =
       ref: true,
     },
     { pattern: /^\/teams\/([^/]+)$/, screen: "team_hub", ref: true },
-    { pattern: /^\/articles\/teams\/([^/]+)$/, screen: "articles", ref: true },
     { pattern: /^\/articles\/([^/]+)$/, screen: "article_detail", ref: true },
     { pattern: /^\/reels\/([^/]+)$/, screen: "reels", ref: false },
     {
@@ -79,6 +79,8 @@ const DYNAMIC_SCREENS: { pattern: RegExp; screen: ScreenName; ref: boolean }[] =
       screen: "match_detail",
       ref: true,
     },
+    /* 팀별 경기 목록은 라이브 화면의 팀 필터다 (KAN-584). 표에 없어 안 나가던 전환 */
+    { pattern: /^\/live\/teams\/([^/]+)$/, screen: "live", ref: true },
     { pattern: /^\/figures\/([^/]+)$/, screen: "figure", ref: true },
     { pattern: /^\/stories\/([^/]+)$/, screen: "story", ref: true },
   ];

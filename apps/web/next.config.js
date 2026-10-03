@@ -59,6 +59,23 @@ const nextConfig = {
     const base = process.env.API_BASE_URL || "http://localhost:8080";
     return [{ source: "/be/:path*", destination: `${base}/:path*` }];
   },
+
+  /**
+   * 기사 목록 라우트 폐지 (KAN-569). 홈 목록이 더 보기로 이어 받게 되면서 따로 있던
+   * `/articles`·`/articles/teams/[slug]`를 지우고 홈과 팀 허브로 영구 이동시킨다.
+   * 검색엔진과 외부 링크에 남은 옛 주소를 살리는 몫이다. 기사 세부
+   * `/articles/[postId]`는 그대로다.
+   */
+  async redirects() {
+    return [
+      { source: "/articles", destination: "/", permanent: true },
+      {
+        source: "/articles/teams/:slug",
+        destination: "/teams/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

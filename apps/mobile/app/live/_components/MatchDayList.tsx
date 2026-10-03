@@ -1,10 +1,13 @@
 import type { MatchSummary } from "@plick/domain/live";
-import { MatchCard } from "./MatchCard";
+import { MatchRow } from "./MatchRow";
 
 /**
- * 하루치 경기 목록 — 대회별로 그룹핑해 그룹 헤더(악센트 바 + 대회명) 아래
- * 카드를 쌓는다(피그마 L1). 그룹 키는 대회 id(BE 권고)이고 등장 순서는
- * 데이터 순서(킥오프 오름차순)를 따른다.
+ * 하루치 경기 목록 (시안 KAN-567). 행을 그대로 쌓는다. 대회별 그룹 헤더는
+ * 시안에 없어 대회가 하나면 그리지 않고, 프리미어리그와 컵 경기가 섞인 날처럼
+ * 둘 이상일 때만 작은 회색 라벨을 그룹 위에 둔다. 그룹 키는 대회 id(BE 권고)이고
+ * 등장 순서는 데이터 순서(킥오프 오름차순)를 따른다.
+ *
+ * @param matches 그 날짜의 경기 목록
  */
 export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
   const groups: {
@@ -25,17 +28,16 @@ export function MatchDayList({ matches }: { matches: MatchSummary[] }) {
   }
 
   return (
-    <div className="px-edge flex flex-col gap-3 pt-2 pb-4">
+    <div className="px-edge flex flex-col">
       {groups.map((group) => (
-        <section key={group.id} className="flex flex-col gap-2">
-          <h2 className="flex items-center gap-1.5">
-            <span aria-hidden className="bg-accent h-3 w-0.5 rounded-full" />
-            <span className="text-label text-text-3 font-bold">
+        <section key={group.id} className="flex flex-col">
+          {groups.length > 1 && (
+            <h2 className="text-micro-lg text-text-4 pt-3 pb-0.5">
               {group.competition}
-            </span>
-          </h2>
+            </h2>
+          )}
           {group.matches.map((match) => (
-            <MatchCard key={match.id} match={match} />
+            <MatchRow key={match.id} match={match} />
           ))}
         </section>
       ))}

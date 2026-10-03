@@ -17,8 +17,8 @@ const LoginPromptDialog = dynamic(
 
 /**
  * 댓글 인라인 수정 폼 (KAN-333) — 내 댓글의 "수정"을 누르면 본문 자리에 나타난다.
- * 입력 스타일과 글자수 제한, 에러 표시는 작성 입력바(`CommentComposer`)와 같은
- * 관용이고, 전송 대신 저장·취소 텍스트 버튼을 쓴다.
+ * 입력 스타일과 글자수 제한, 에러 표시는 작성 입력줄(`CommentComposer`)과 같은
+ * 관용이고(KAN-567 시안의 채운 면 인풋), 등록 대신 저장·취소 텍스트 버튼을 쓴다.
  *
  * 저장 성공은 뮤테이션(`useUpdateComment`)이 목록 캐시를 고치므로 폼만 닫으면
  * 바뀐 본문이 그려진다. 토큰 만료로 401 `AUTH_REQUIRED`가 오면 작성과 같은
@@ -67,7 +67,7 @@ export function CommentEditForm({
           setError(
             err instanceof ApiError
               ? err.message
-              : "댓글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요.",
+              : "댓글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요",
           );
         },
       },
@@ -76,7 +76,7 @@ export function CommentEditForm({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -84,20 +84,20 @@ export function CommentEditForm({
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           aria-label="댓글 수정"
-          className="bg-elevate-2 border-border text-body text-text rounded-pill h-9.5 min-w-0 flex-1 border px-4 focus-visible:outline-none"
+          className="bg-input text-label-lg text-text rounded-control h-10.5 min-w-0 flex-1 px-3.25 focus-visible:outline-none"
         />
         <button
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="text-label text-text-3 shrink-0 font-semibold active:opacity-60 disabled:opacity-40"
+          className="text-label-lg text-text-3 shrink-0 font-bold active:opacity-60 disabled:opacity-40"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={isPending || !value.trim()}
-          className="text-label text-accent shrink-0 font-semibold active:opacity-60 disabled:opacity-40"
+          className="text-label-lg text-accent shrink-0 font-bold active:opacity-60 disabled:opacity-40"
         >
           저장
         </button>

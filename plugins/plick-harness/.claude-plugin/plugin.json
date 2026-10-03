@@ -1,0 +1,12 @@
+{
+  "name": "plick-harness",
+  "version": "0.1.0",
+  "description": "PLick 팀 하네스. 문서 문체(doc-style), PR 본문 틀(pr-writing), ADR 회고체(adr-writing) 스킬과 Git 금지 동작을 도구 호출 시점에 막는 PreToolUse 가드 훅을 한 묶음으로 설치한다.",
+  "author": {
+    "name": "kimdowan",
+    "email": "whoru3918@gmail.com"
+  },
+  "repository": "https://github.com/big-cute-team/plick-frontend",
+  "license": "UNLICENSED",
+  "keywords": ["harness", "guardrails", "hooks", "plick"]
+}

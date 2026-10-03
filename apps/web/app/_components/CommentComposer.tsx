@@ -3,18 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, needsSocialAccount } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
-import { SendMiniIcon } from "@plick/ui/icons";
 import { useCreateComment } from "@/_hooks/useCreateComment";
 import { useAuth } from "./AuthProvider";
 import { LoginPromptDialog } from "./LoginPromptDialog";
 
 /**
- * 댓글 입력바 — pill 인풋 + accent 원형 전송 버튼. 기사 세부·릴 세부 패널 공용.
- * 표시는 KAN-323까지의 퍼블리싱 그대로고, KAN-329에서 작성 API를 물렸다.
+ * 댓글 입력바 (시안 KAN-567) — 각진 테두리 인풋 38px + 채운 면 "등록" 버튼. 기사
+ * 세부·릴 세부 패널 공용. 알약 인풋과 원형 전송 아이콘이었는데 시안이 각진
+ * 표 테두리(`border-table`)와 글자 버튼이라 바꿨다. 등록·투표·보내기 같은
+ * 확정 행동만 채운 면이라는 시안 규칙의 그 채운 면이다.
+ * 표시는 KAN-323까지의 퍼블리싱에서 왔고, KAN-329에서 작성 API를 물렸다.
  *
  * 두 자리에서 쓰인다. 댓글 헤더 밑의 원 댓글 입력바가 기본이고, `parentCommentId`가
  * 오면 답글 입력바다 — 유튜브처럼 원 댓글의 "답글"을 누른 자리에 인라인으로
  * 생기며(`CommentThread`), 마운트되자마자 포커스를 받고 취소 버튼이 붙는다.
+ * 시안대로 34px로 낮고 왼쪽에 22px 들여쓰며 placeholder는 "OOO님에게 답글"이다.
  * 등록 성공도 `onCancel`로 입력바를 접는다.
  *
  * 비로그인 게이트: 인풋에 포커스가 오거나 제출하려 하면 로그인 유도 팝업을 띄우고
@@ -28,6 +31,7 @@ import { LoginPromptDialog } from "./LoginPromptDialog";
  *
  * @param articleId 댓글을 달 기사(릴) id
  * @param parentCommentId 답글이면 원 댓글 id. 없으면 원 댓글 작성 모드
+ * @param replyTo 답글이면 원 댓글 작성자 닉네임. placeholder에 쓴다
  * @param onCancel 답글 입력바를 접을 때(취소 클릭·등록 성공) 호출
  * @param onPosted 등록 성공 시 호출 — 호출부가 헤더 카운트를 올리는 데 쓴다
  * @param className 래퍼에 덧붙일 클래스(여백 등)
@@ -35,12 +39,14 @@ import { LoginPromptDialog } from "./LoginPromptDialog";
 export function CommentComposer({
   articleId,
   parentCommentId,
+  replyTo,
   onCancel,
   onPosted,
   className = "",
 }: {
   articleId: string;
   parentCommentId?: number;
+  replyTo?: string;
   onCancel?: () => void;
   onPosted?: () => void;
   className?: string;
@@ -85,16 +91,20 @@ export function CommentComposer({
           setError(
             err instanceof ApiError
               ? err.message
-              : "댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
+              : "댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요",
           );
         },
       },
     );
   }
 
+  const height = isReply ? "h-8.5" : "h-9.5";
+
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+    <div
+      className={`flex flex-col gap-1.5 ${isReply ? "ml-5.5" : ""} ${className}`}
+    >
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -108,33 +118,38 @@ export function CommentComposer({
               setShowLogin(true);
             }
           }}
-          placeholder={isReply ? "답글 남기기…" : undefined}
-          className={`bg-elevate-2 border-border text-body text-text placeholder:text-text-4 focus-visible:border-border-strong rounded-pill min-w-0 flex-1 border px-4 focus-visible:outline-none ${
-            isReply ? "h-9.5" : "h-11"
+          placeholder={
+            isReply
+              ? replyTo
+                ? `${replyTo}님에게 답글`
+                : "답글 입력"
+              : "댓글 입력"
+          }
+          className={`border-border-table text-text placeholder:text-text-4 focus-visible:border-accent min-w-0 flex-1 border focus-visible:outline-none ${height} ${
+            isReply ? "text-label px-2.75" : "text-label-lg px-3"
           }`}
         />
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="text-label text-text-3 hover:text-text-2 focus-visible:outline-accent shrink-0 rounded font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+            className={`text-label text-text-3 hover:text-text-strong focus-visible:outline-accent inline-flex shrink-0 items-center px-3.5 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${height}`}
           >
             취소
           </button>
         )}
         <button
           type="submit"
-          aria-label={isReply ? "답글 등록" : "댓글 등록"}
           disabled={isPending}
-          className={`bg-accent text-on-accent focus-visible:outline-accent grid shrink-0 place-items-center rounded-full hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40 ${
-            isReply ? "size-9.5" : "size-11"
+          className={`bg-accent text-on-accent hover:bg-accent-hover focus-visible:outline-accent inline-flex shrink-0 items-center font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40 ${height} ${
+            isReply ? "text-label px-4" : "text-label-lg px-5"
           }`}
         >
-          <SendMiniIcon size={isReply ? 15 : 17} />
+          등록
         </button>
       </form>
 
-      {error && <p className="text-caption text-danger px-1">{error}</p>}
+      {error && <p className="text-caption text-danger">{error}</p>}
 
       {showLogin && <LoginPromptDialog onClose={() => setShowLogin(false)} />}
     </div>

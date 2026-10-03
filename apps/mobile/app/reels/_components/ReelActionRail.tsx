@@ -4,17 +4,18 @@ import { ChatIcon, LikeIcon, SendIcon } from "@plick/ui/icons";
 import type { ReelCard } from "@plick/domain/types";
 
 /**
- * 릴 우측 액션 레일 — 좋아요·댓글·공유. 저장은 계약에 없어 뺐다 (KAN-299).
+ * 릴 오른쪽 세로 액션 레일, 좋아요·댓글·공유. 저장은 계약에 없어 뺐다 (KAN-299).
+ * 릴 오른쪽 아래에 본문색 아이콘으로 겹쳐 선다(KAN-569에서 전 배치로 되돌렸고,
+ * KAN-574에서 흰 아이콘과 그림자를 걷었다).
  *
- * 좋아요는 눌리는 즉시 하트가 차고 카운트가 오른다 (KAN-308). 토글 로직과 상태
- * 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다 —
- * 비로그인 팝업을 이 안에서 그리면 레일에 걸린 `drop-shadow` 필터가 화면 전체
- * 오버레이의 기준 상자가 돼 팝업이 레일만 덮는다.
+ * 좋아요는 눌리면 하트와 수가 빨강으로 찬다 (KAN-308, 색은 KAN-567 톤). 토글 로직과
+ * 상태 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다.
+ * 비로그인 시트는 부모 층이 그린다. 레일에 필터나 transform이 걸리면 화면 전체
+ * 오버레이의 기준 상자가 레일이 돼 시트가 레일만 덮는다.
  *
  * @param onLike - 하트 탭 시 호출
  * @param onComment - 댓글 아이콘 탭 시 호출 (세부 시트 열기)
- * @param onShare - 공유 아이콘 탭 시 호출 (링크 공유 팝업 열기, KAN-312).
- *   팝업도 좋아요 팝업과 같은 이유로 부모가 그린다
+ * @param onShare - 공유 아이콘 탭 시 호출 (링크 공유 시트 열기, KAN-312)
  */
 export function ReelActionRail({
   reel,
@@ -28,7 +29,7 @@ export function ReelActionRail({
   onShare: () => void;
 }) {
   return (
-    <div className="drop-shadow-media absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
+    <div className="absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
       <RailAction
         icon={<LikeIcon size={34} filled={reel.liked} />}
         label={formatCount(reel.likeCount)}
@@ -41,6 +42,7 @@ export function ReelActionRail({
         icon={<ChatIcon size={33} />}
         label={formatCount(reel.commentCount)}
         onClick={onComment}
+        ariaLabel="댓글"
       />
       <RailAction
         icon={<SendIcon size={33} />}
@@ -52,9 +54,9 @@ export function ReelActionRail({
 }
 
 /**
- * 액션 레일 버튼 하나 (아이콘 + 라벨).
+ * 액션 레일 버튼 하나 (아이콘 + 라벨). 밝은 바탕 위라 본문색이다 (KAN-574).
  *
- * @param active - 켜진 토글이면 아이콘과 숫자를 강조색으로 (기사 세부 좋아요 알약과 같은 신호)
+ * @param active - 켜진 토글(눌린 좋아요)이면 아이콘과 수를 빨강으로
  * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다
  * @param ariaPressed - 토글 버튼이면 눌린 상태
  */
@@ -80,11 +82,11 @@ function RailAction({
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       className={`${
-        active ? "text-accent" : "text-media-on"
+        active ? "text-danger" : "text-text-strong"
       } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}
-      <span className="text-label font-semibold">{label}</span>
+      <span className="text-label font-bold">{label}</span>
     </button>
   );
 }

@@ -431,13 +431,6 @@ export async function getHotArticles(): Promise<HotArticles> {
 }
 
 /**
- * 캐러셀 아래 사진 없는 핫이슈를 몇 칸 깔지 (KAN-480). BE는 그룹마다 5건까지
- * 주는데 화면은 세 칸으로 정해져 있어 여기서 자른다 — 데스크톱은 3열 한 줄,
- * 모바일은 3행이다.
- */
-export const HOT_NO_IMAGE_COUNT = 3;
-
-/**
  * 팀태그 기반 관련 기사 (KAN-338). 전용 추천 API가 없어 기사의 대표 팀
  * (`teams[0]`)으로 팀 필터 목록(`GET /api/v1/articles?teamId=`)을 받아 관련
  * 기사로 쓴다. 목록에 지금 보는 기사가 섞여 올 수 있어 하나 더 받아 거른 뒤

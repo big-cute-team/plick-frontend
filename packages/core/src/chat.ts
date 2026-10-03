@@ -1,7 +1,10 @@
 /**
- * @file 라이브 경기 채팅 클라이언트 (KAN-458). 프레임 파싱, 방 수명 판정, 재접속
- * 정책, 웹소켓 수명 관리까지 React와 무관한 부분을 여기 모은다. 두 앱의
- * `useMatchChat` 훅은 이 클래스를 감싸 상태만 React로 옮긴다.
+ * @file 라이브 채팅 클라이언트 (KAN-458). 프레임 파싱, 재접속 정책, 웹소켓 수명
+ * 관리까지 React와 무관한 부분을 여기 모은다. 두 앱의 `useLiveChat` 훅은 이
+ * 클래스를 감싸 상태만 React로 옮긴다.
+ *
+ * KAN-572부터 경기별 방이 아니라 언제나 열린 통합 방 하나다(BE KAN-571). 접속
+ * 주소에 경기 id가 없고, 방이 닫히지 않으니 킥오프 기준 수명 판정도 없다.
  *
  * 계약 정본은 Confluence [API 명세] 라이브 경기 채팅(59146245). 프레임은 언제나
  * 배열이고, 서버가 끊을 때 종료 코드 4000에 사유 `retry={밀리초}`를 실어 준다.
@@ -12,16 +15,14 @@ import type {
   ChatFailure,
   ChatFrame,
   ChatMessage,
-  ChatRoomPhase,
 } from "@plick/domain/chat";
 
 /**
- * 라이브 채팅 노출 스위치 (KAN-486). 채팅 BE가 아직 실서비스에 올라오지 않아
- * 당분간 닫아 둔다. 모바일은 경기 상세의 채팅 탭을, 웹은 우측 채팅 패널을 이
- * 값으로 가린다. 훅·소켓·세션 라우트는 그대로 두었으니 BE가 올라오면 true로만
- * 돌리면 된다. 두 앱이 같은 값을 봐야 해서 앱 상수가 아니라 여기 둔다.
+ * 라이브 채팅 노출 스위치 (KAN-486). 모바일은 경기 상세 채팅 탭과 라이브 목록
+ * 배너를, 웹은 경기 상세와 홈 우측 채팅 패널을 이 값으로 가린다. 두 앱이 같은
+ * 값을 봐야 해서 앱 상수가 아니라 여기 둔다. KAN-572에서 통합 방과 함께 켰다.
  */
-export const CHAT_ENABLED: boolean = false;
+export const CHAT_ENABLED: boolean = true;
 
 /** 메시지 한 건의 최대 길이(글자). BE `chat.max-message-length`와 같은 값이다. */
 export const CHAT_MAX_MESSAGE_LENGTH = 200;
@@ -39,12 +40,6 @@ export const CHAT_RATE_LIMIT_WINDOW_MS = 5_000;
  */
 export const CHAT_REJECT_NOTICE_MS = CHAT_RATE_LIMIT_WINDOW_MS;
 
-/** 방이 열리는 시각 — 킥오프 30분 전. BE `chat.open-before` 기본값이다. */
-export const CHAT_OPEN_BEFORE_MS = 30 * 60_000;
-
-/** 방이 닫히는 시각 — 킥오프 3시간 뒤. BE `chat.open-after` 기본값이다. */
-export const CHAT_OPEN_AFTER_MS = 3 * 3_600_000;
-
 /** 서버가 정리하며 끊을 때의 종료 코드. 사유에 `retry={밀리초}`가 실린다. */
 export const CHAT_RETRY_CLOSE_CODE = 4000;
 
@@ -60,23 +55,6 @@ export const CHAT_MESSAGE_CAP = 300;
 
 /** 세션 발급 라우트(같은 오리진). 접속 주소와 토큰을 서버가 조립해 준다. */
 export const CHAT_SESSION_PATH = "/live/chat/session";
-
-/**
- * 킥오프 시각으로 지금이 방 수명의 어느 구간인지 판정한다.
- *
- * @param kickoffAt 킥오프 ISO 문자열(BE가 KST 오프셋으로 준다)
- * @param now 판정 시각(ms). 테스트용으로 열어 둔다
- */
-export function chatRoomPhase(
-  kickoffAt: string,
-  now: number = Date.now(),
-): ChatRoomPhase {
-  const kickoff = new Date(kickoffAt).getTime();
-  if (Number.isNaN(kickoff)) return "open";
-  if (now < kickoff - CHAT_OPEN_BEFORE_MS) return "before";
-  if (now >= kickoff + CHAT_OPEN_AFTER_MS) return "after";
-  return "open";
-}
 
 /**
  * 종료 사유 `retry=17320`에서 대기 시간(ms)을 꺼낸다. 형식이 다르면 null.
@@ -125,7 +103,7 @@ function isChatFrame(value: unknown): value is ChatFrame {
 
 /**
  * 메시지 식별 키. 서버가 id를 주지 않아 보낸 사람·시각·본문으로 같은 건을 알아본다.
- * 다시 붙으면 최근 20개가 또 오는데, 이미 화면에 있는 것을 겹쳐 그리지 않으려는 용도다.
+ * 실시간 프레임끼리 겹친 것을 한 번만 그리려는 용도다.
  */
 export function chatMessageKey(message: ChatMessage): string {
   return `${message.userId}|${message.sentAt}|${message.content}`;
@@ -157,6 +135,18 @@ export function mergeChatMessages(
 }
 
 /**
+ * 입장 지급분(최근 50개)으로 목록을 통째로 갈아 끼운다 (KAN-572). 다시 붙었을 때
+ * 기존 목록 뒤에 붙이지 않는 이유: 끊긴 사이의 대화가 지급분에만 있고, 화면에
+ * 남은 옛 줄과 지급분이 겹치는 경계를 키로 맞추면 같은 시각·본문을 가진 서로
+ * 다른 메시지를 하나로 뭉갤 수 있다. 지급분 안의 중복만 걸러 낸다.
+ *
+ * @param snapshot 입장 직후 첫 프레임의 메시지들(오래된 순)
+ */
+export function replaceChatMessages(snapshot: ChatMessage[]): ChatMessage[] {
+  return mergeChatMessages([], snapshot);
+}
+
+/**
  * n번째 재시도 대기(ms) — 1초에서 두 배씩 늘어 30초에서 멈추고, 전원이 같은
  * 순간에 돌아오지 않게 절반까지 무작위로 흩는다.
  *
@@ -174,19 +164,19 @@ export function chatBackoffDelay(attempt: number): number {
  * 서버(라우트 핸들러)가 접속 주소를 조립한다. 브라우저는 BE 오리진을 모르고
  * 토큰도 HttpOnly 쿠키라 못 읽으므로, 둘 다 서버가 채워 완성된 URL을 내려준다.
  *
+ * 경기 id는 싣지 않는다(KAN-572). 서버는 붙어 와도 무시하고 통합 방에 넣는다.
+ *
  * 기본은 `API_BASE_URL`의 스킴을 ws로 바꾼 것이다(로컬 `http://localhost:8080` →
  * `ws://localhost:8080/ws/chat`). 배포 환경은 `API_BASE_URL`이 내부 ALB라 브라우저가
  * 못 닿으므로 공개 경로를 `CHAT_WS_URL`로 따로 준다(런타임 env, 재빌드 불필요).
  *
- * @param matchId 경기 id
  * @param token 액세스 토큰
  */
-export function chatSocketUrl(matchId: number, token: string): string {
+export function chatSocketUrl(token: string): string {
   const base =
     process.env.CHAT_WS_URL ??
     `${(process.env.API_BASE_URL ?? "http://localhost:8080").replace(/^http/, "ws")}/ws/chat`;
   const url = new URL(base);
-  url.searchParams.set("matchId", String(matchId));
   url.searchParams.set("token", token);
   return url.toString();
 }
@@ -207,11 +197,9 @@ export class ChatSessionError extends Error {
  * 부른다 — 끊긴 뒤 다시 붙을 때는 새 토큰이 필요하고(접속 중 만료는 안 끊지만
  * 재접속엔 유효 토큰이 있어야 한다), 라우트가 프록시를 지나며 만료된 access를
  * refresh로 갈아 끼우기 때문이다.
- *
- * @param matchId 경기 id
  */
-export async function fetchChatSessionUrl(matchId: number): Promise<string> {
-  const response = await fetch(`${CHAT_SESSION_PATH}?matchId=${matchId}`, {
+export async function fetchChatSessionUrl(): Promise<string> {
+  const response = await fetch(CHAT_SESSION_PATH, {
     cache: "no-store",
     credentials: "same-origin",
   });
@@ -225,8 +213,12 @@ export async function fetchChatSessionUrl(matchId: number): Promise<string> {
 export interface ChatSocketOptions {
   /** 접속 직전 매번 불러 완성된 wss URL을 받는다 */
   getSessionUrl: () => Promise<string>;
-  /** 프레임 하나(메시지 배열)를 받을 때 */
-  onFrames: (frames: ChatFrame[]) => void;
+  /**
+   * 프레임 하나(메시지 배열)를 받을 때. `snapshot`은 붙은 뒤 첫 프레임이라는 뜻이다.
+   * 서버는 입장 직후 최근 메시지를 한 프레임으로 먼저 보내므로 화면은 이걸로
+   * 목록을 갈아 끼운다. 방이 비어 지급분이 없으면 첫 실시간 묶음이 이 자리에 온다.
+   */
+  onFrames: (frames: ChatFrame[], snapshot: boolean) => void;
   /** 연결 상태가 바뀔 때. `failed`면 원인이 같이 온다 */
   onStatus: (status: ChatConnectionStatus, failure?: ChatFailure) => void;
   /** 한 번도 못 붙고 연속 거절될 때 멈추는 횟수. 기본 3 */
@@ -242,8 +234,7 @@ export interface ChatSocketOptions {
  *   네 배로 는다(BE 실측 7,000 대 1,843).
  * - 그 밖의 코드(1006 등)는 FE 정책이다. 붙었다가 끊긴 것이면 지수 백오프로 끝없이
  *   다시 붙고, 한 번도 못 붙은 채 연속 거절이면 `maxHandshakeFailures`에서 멈춘다.
- *   브라우저는 핸드셰이크의 HTTP 코드를 안 알려주므로 방이 안 열렸는지(404)
- *   서버가 죽었는지 구분할 수 없다 — 화면이 킥오프 시각으로 문구를 고른다.
+ *   통합 방은 닫히지 않으니(KAN-572) 연속 거절은 서버 장애로 본다.
  *
  * @example
  * const socket = new ChatSocket({ getSessionUrl, onFrames, onStatus });
@@ -256,6 +247,7 @@ export class ChatSocket {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
   private opened = false;
+  private awaitingSnapshot = false;
   private attempt = 0;
   private handshakeFailures = 0;
   private readonly maxHandshakeFailures: number;
@@ -320,6 +312,7 @@ export class ChatSocket {
     ws.onopen = () => {
       if (ws !== this.ws) return;
       this.opened = true;
+      this.awaitingSnapshot = true;
       this.attempt = 0;
       this.handshakeFailures = 0;
       this.options.onStatus("open");
@@ -327,7 +320,12 @@ export class ChatSocket {
     ws.onmessage = (event: MessageEvent) => {
       if (ws !== this.ws) return;
       const frames = parseChatFrames(event.data);
-      if (frames.length > 0) this.options.onFrames(frames);
+      if (frames.length === 0) return;
+      /* 거절 통보만 든 프레임은 지급분이 아니다. 메시지가 든 첫 프레임까지 기다린다 */
+      const snapshot =
+        this.awaitingSnapshot && frames.some((f) => f.type === "MESSAGE");
+      if (snapshot) this.awaitingSnapshot = false;
+      this.options.onFrames(frames, snapshot);
     };
     ws.onclose = (event: CloseEvent) => {
       if (ws !== this.ws || this.disposed) return;

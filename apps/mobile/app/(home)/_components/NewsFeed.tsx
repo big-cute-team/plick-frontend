@@ -2,7 +2,11 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "@plick/core/client";
+import { articleKeys } from "@plick/core/articleKeys";
 import { ARTICLES_PAGE_SIZE } from "@plick/core/articles";
+import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
 import { useViewState } from "@/_stores/view-state";
@@ -18,29 +22,28 @@ import { TeamFeedPreview } from "@/_components/TeamFeedPreview";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
 import { SwipePager } from "@/_components/SwipePager";
 import { neighborFilter } from "@/_constants/team-filter";
-import { MoreArticlesLink } from "./MoreArticlesLink";
 
 /**
- * 스켈레톤 자리 개수 — 노출 건수와 같게 둔다 (KAN-386). 팀 전환으로 스켈레톤이
+ * 스켈레톤 자리 개수. 한 페이지 건수와 같게 둔다 (KAN-386). 팀 전환으로 스켈레톤이
  * 리스트를 대신하는 동안 문서가 짧아지면 브라우저가 scrollTop을 깎아 화면이
  * 위로 딸려 올라간다. 행 높이가 비슷한 자리를 같은 개수로 깔아 수축을 막는다.
  */
 const SKELETON_COUNT = ARTICLES_PAGE_SIZE;
 
 /**
- * "지금 올라온 소식" 섹션 — 팀 필터 + 첫 페이지 고정 리스트.
+ * "지금 올라온 소식" 섹션. 팀 필터 + 리스트 + "기사 더 보기" 버튼.
  *
- * KAN-386에서 무한스크롤을 걷어냈다. 홈은 첫 페이지(10건)만 보여주고 끝까지
- * 내려보는 경험은 더보기 링크가 가리키는 기사 페이지(`/articles`)가 맡는다.
- * 무한스크롤 시절에는 팀을 바꿀 때 스크롤을 강제로 옮겨야 했다 — 리스트가
- * 짧아졌다 자라는 동안 스크롤 앵커링이 감시 요소를 화면에 붙잡아 다음 페이지
- * 요청이 연쇄로 나갔다. 리스트가 첫 페이지 고정이 되면서 그 보정이 통째로
- * 필요 없어졌고, 이제 팀을 바꿔도 스크롤은 그 자리 그대로다.
+ * 첫 페이지(10건)를 보여 주고, 리스트 끝 "기사 더 보기"를 누르면 다음 페이지를
+ * 이 자리에 이어 붙인다 (KAN-569). 전에는 그 버튼이 따로 있던 기사 페이지
+ * (`/articles`)로 보냈는데, 기사 목록을 홈 하나로 합치면서 그 라우트를 지웠다.
+ * 자동 무한스크롤(KAN-386에서 걷어냄)로 되돌리지 않고 누를 때만 받는다. 무한스크롤
+ * 시절에는 팀을 바꿀 때 스크롤 앵커링이 감시 요소를 화면에 붙잡아 다음 페이지
+ * 요청이 연쇄로 나갔다. 버튼은 누르기 전엔 요청이 없어 그 문제가 없고, 팀을 바꿔도
+ * 스크롤은 그 자리 그대로다.
  *
  * 필터는 화면에서 거르지 않고 BE `teamId`로 넘겨 팀별 최신순 목록을 새로 받는다
  * (KAN-271). 선택 탭 첫 페이지는 서버가 미리 받아 `initial`로 내려주므로 첫
- * 렌더에는 스켈레톤이 보이지 않는다. 쿼리키가 기사 페이지와 같아 캐시를 공유하고,
- * 기사 페이지에서 여러 페이지를 쌓아 뒀어도 여기서는 첫 페이지 몫만 잘라 그린다.
+ * 렌더에는 스켈레톤이 보이지 않는다.
  *
  * 어느 팀을 보고 있는지는 URL이 정한다 (KAN-350). 홈(`/`)이 전체, 팀 허브
  * (`/teams/[slug]`)가 그 팀이다. 탭 선택은 `history.replaceState`로 URL만 바꾼다 —
@@ -95,17 +98,38 @@ export function NewsFeed({
     window.history.replaceState(null, "", teamHubPath(next));
   }
 
-  const { data, isPending, isError, isFetching, refetch } = useArticleFeed(
-    filter,
-    initial,
-    initialTeam,
-  );
+  const queryClient = useQueryClient();
+  const {
+    data,
+    error,
+    isPending,
+    isError,
+    isFetching,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useArticleFeed(filter, initial, initialTeam);
 
-  /* 기사 페이지와 캐시를 공유하므로 여러 페이지가 쌓여 있을 수 있다 — 홈 몫만 자른다 */
-  const articles = (data?.pages.flatMap((page) => page.items) ?? []).slice(
-    0,
-    ARTICLES_PAGE_SIZE,
-  );
+  const articles = data?.pages.flatMap((page) => page.items) ?? [];
+
+  /**
+   * 다음 페이지 받기. 커서는 서버가 발급한 값이라 상하면 400으로 온다. 같은 커서로
+   * 다시 받아 봐야 계속 400이므로 첫 페이지부터 다시 받는다(대신 이어 본 자리는
+   * 잃는다). 캐시를 비우지 않고 첫 페이지만 남겨 다시 받는다 (KAN-379).
+   */
+  function loadMore() {
+    if (
+      isFetchNextPageError &&
+      error instanceof ApiError &&
+      error.status === 400
+    ) {
+      void restartFeedQuery(queryClient, articleKeys.feed(filter));
+      return;
+    }
+    void fetchNextPage();
+  }
 
   return (
     <>
@@ -133,12 +157,12 @@ export function NewsFeed({
             ))
           ) : isError && articles.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-body text-text-4">소식을 불러오지 못했어요.</p>
+              <p className="text-body text-text-4">소식을 불러오지 못했어요</p>
               <button
                 type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+                className="border-border-strong text-label-lg text-text-2 rounded-control mt-3 border px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
               >
                 다시 시도
               </button>
@@ -151,13 +175,31 @@ export function NewsFeed({
                   article={article}
                   filter={filter}
                   rank={i}
+                  entry="home_feed"
                 />
               ))}
-              <MoreArticlesLink variant="footer" />
+              {isFetchingNextPage && <NewsItemSkeleton />}
+              {isFetchNextPageError && (
+                <p className="text-caption text-text-4 pt-3.5 text-center">
+                  다음 소식을 불러오지 못했어요
+                </p>
+              )}
+              {/* 첫 페이지 refetch 중에도 막는다. 캐시에 남은 옛 커서로 다음 페이지를
+                  쏘면 복구 refetch가 취소돼 400 루프에 갇힌다 (KAN-404) */}
+              {(hasNextPage || isFetchNextPageError) && (
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={isFetching}
+                  className="border-border-strong text-label-lg text-text-2 rounded-control mt-3.5 flex h-11 w-full items-center justify-center border font-bold active:opacity-70 disabled:opacity-50"
+                >
+                  {isFetchNextPageError ? "다시 시도" : "기사 더 보기"}
+                </button>
+              )}
             </>
           ) : (
             <p className="text-body text-text-4 py-12 text-center">
-              아직 이 팀 소식이 없어요.
+              아직 이 팀 소식이 없어요
             </p>
           )}
         </div>

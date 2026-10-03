@@ -1,0 +1,17 @@
+{
+  "description": "plick-harness 가드 훅. gh pr create/merge, main·develop 직접 push와 commit, --no-verify, 도구 산출물(pnpm-lock.yaml, node_modules, .next) 편집을 도구 호출 시점에 exit 2로 막는다.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

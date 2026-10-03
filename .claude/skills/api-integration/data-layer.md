@@ -63,7 +63,7 @@ export default nextConfig;
 
 ## 2. 스웨거를 실제로 읽는다 (티켓을 믿지 말 것)
 
-이 절차는 보통 `be-verify` 서브에이전트가 대신 밟고 요약 리포트를 준다(SKILL §6).
+이 절차는 보통 `be-verify` 서브에이전트가 대신 밟고 `scripts/be-verify/report.schema.json` 형태의 JSON 리포트를 준다(SKILL §6).
 아래는 손으로 확인할 때 쓰는 명령어다.
 
 응답 shape의 진실은 스웨거다. 붙이기 전 항상 실제 스펙을 확인한다.

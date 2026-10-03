@@ -14,13 +14,13 @@ import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 const SKELETON_COUNT = 4;
 
 /**
- * 인물 관련 기사 무한스크롤 리스트 (KAN-500).
+ * 인물 관련 이슈 무한스크롤 리스트 (KAN-500, KAN-567에서 끝 문구와 버튼 톤 정리).
  *
  * 항목은 홈 피드의 `NewsItem`을 그대로 쓴다 — 응답이 홈 피드와 같은 카드라
  * 전용 카드를 만들면 같은 카드가 둘로 갈린다(좋아요 목록 KAN-495와 같은
  * 판단). 팀 탭이 없으므로 대표 팀은 기사의 첫 팀이다.
  *
- * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`ArticlesFeed`)와 같다.
+ * 로딩·에러·빈 상태와 커서 400 복구는 릴스 피드(`ReelsFeed`)와 같다.
  * 인물 태그는 앞으로 수집되는 기사부터 붙어서 배포 직후엔 빈 상태가 흔하다.
  *
  * @param figureId 인물 id
@@ -47,7 +47,7 @@ export function FigureArticlesFeed({
     refetch,
   } = useFigureArticles(figureId, initial);
 
-  /* `isFetching`으로 막는 이유는 ArticlesFeed와 같다 (KAN-404 커서 400 루프) */
+  /* `isFetching`으로 막는 이유는 ReelsFeed와 같다 (KAN-404 커서 400 루프) */
   const sentinelRef = useInfiniteScroll(
     fetchNextPage,
     hasNextPage && !isFetching && !isFetchNextPageError,
@@ -76,13 +76,13 @@ export function FigureArticlesFeed({
 
   if (isError && articles.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-body text-text-4">관련 기사를 불러오지 못했어요.</p>
+      <div className="py-10 text-center">
+        <p className="text-body text-text-4">관련 이슈를 불러오지 못했어요</p>
         <button
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="bg-elevate text-label text-text rounded-control mt-3 px-4 py-2 font-bold active:opacity-70 disabled:opacity-50"
+          className="text-label-lg text-accent mt-2 font-bold active:opacity-60 disabled:opacity-50"
         >
           다시 시도
         </button>
@@ -92,8 +92,8 @@ export function FigureArticlesFeed({
 
   if (articles.length === 0) {
     return (
-      <p className="text-body text-text-4 py-12 text-center">
-        아직 이 인물의 소식이 없어요.
+      <p className="text-body text-text-4 px-edge py-6">
+        아직 올라온 이슈가 없어요
       </p>
     );
   }
@@ -108,13 +108,13 @@ export function FigureArticlesFeed({
 
       {isFetchNextPageError && (
         <div className="py-6 text-center">
-          <p className="text-caption text-text-4">
-            다음 기사를 불러오지 못했어요.
+          <p className="text-caption-lg text-text-4">
+            다음 이슈를 불러오지 못했어요
           </p>
           <button
             type="button"
             onClick={retryNextPage}
-            className="bg-elevate text-label text-text rounded-control mt-2 px-4 py-2 font-bold active:opacity-70"
+            className="text-label-lg text-accent mt-2 font-bold active:opacity-60"
           >
             다시 시도
           </button>
@@ -123,12 +123,6 @@ export function FigureArticlesFeed({
 
       {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다 */}
       <div ref={sentinelRef} aria-hidden className="h-px" />
-
-      {!hasNextPage && (
-        <p className="text-caption text-text-4 pt-6 pb-4 text-center">
-          관련 기사를 전부 봤어요.
-        </p>
-      )}
     </div>
   );
 }

@@ -37,12 +37,10 @@ export function NicknameStep({ initial = "" }: { initial?: string }) {
   return (
     <>
       <section className="px-edge flex flex-1 flex-col pt-5.5">
-        <h1 className="text-headline text-text font-extrabold">
+        <h1 className="text-headline tracking-title text-text-strong font-black">
           닉네임을 정해주세요
         </h1>
-        <p className="text-body text-text-3 mt-2.5 font-semibold">
-          댓글과 반응에 표시될 이름이에요
-        </p>
+        <p className="text-body text-text-3 mt-2">댓글에 표시될 이름이에요</p>
 
         <div className="mt-7.5">
           <NicknameField

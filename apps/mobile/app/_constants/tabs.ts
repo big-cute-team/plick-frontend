@@ -16,7 +16,8 @@ import type { Tab } from "@/_types/app";
 /**
  * 하단 탭 구성 — TabBar가 그린다. 검색·알림 탭은 기능이 없어 뺐다 (KAN-297).
  * 기사 탭은 LIVE(라이브 스코어, 준비 중)로 대체했다 (KAN-435) — 기사 라우트
- * 자체는 남아 있고 탭 진입점만 빠졌다.
+ * 자체는 남아 있고 탭 진입점만 빠졌다. 순서와 라벨(홈, LIVE, 릴스, 투표, MY)은
+ * 시안(KAN-567) 그대로다 — VS 탭이 "투표"로 바뀌었다.
  */
 export const TABS: Tab[] = [
   {
@@ -49,7 +50,7 @@ export const TABS: Tab[] = [
   },
   {
     href: "/debates",
-    label: "VS",
+    label: "투표",
     Icon: VsIcon,
     match: (p) => p.startsWith("/debates"),
     screen: "debate",

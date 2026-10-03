@@ -7,19 +7,19 @@ import type { Filter } from "@plick/domain/types";
 import { FILTER_ORDER } from "@/_constants/team-filter";
 
 /**
- * 팀 필터 탭 (전체 + 빅6) — 제어형: 선택 상태는 부모(NewsFeed)가 소유한다.
+ * 팀 탭 (전체 + 빅6) — 제어형: 선택 상태는 부모(NewsFeed)가 소유한다.
+ *
+ * 시안(KAN-567)은 글자만 나열한 탭이다 — 13px, 활성은 강조색 700, 비활성은 보조
+ * 회색 500, 밑줄이나 선이 없고 항목 사이는 오른쪽 여백 12px이다. 시안의 "기타"
+ * 탭은 빅6 밖 팀 필터 API가 없어 뺐다(백엔드 후속 티켓).
  *
  * 버튼이 아니라 앵커다 (KAN-350). href가 팀 허브(`/teams/[slug]`)를 가리켜야
- * 크롤러가 내부 링크를 따라 팀 페이지를 발견한다 — 어디서도 링크 안 된 페이지는
- * 구글이 못 찾는다(SEO 전략 Step 2-2). 사용자 클릭은 가로채서 `onChange`에
- * 넘기므로 페이지 이동 없이 기존 필터 UX 그대로다. 새 탭 열기(cmd/ctrl·중클릭)는
- * 가로채지 않고 링크 본연의 동작에 맡긴다.
+ * 크롤러가 내부 링크를 따라 팀 페이지를 발견한다. 사용자 클릭은 가로채서
+ * `onChange`에 넘기므로 페이지 이동 없이 기존 필터 UX 그대로다. 새 탭 열기
+ * (cmd/ctrl·중클릭)는 가로채지 않고 링크 본연의 동작에 맡긴다.
  *
- * 가로 스크롤이라 좁은 화면(폴드 접힘)에서도 넘치지 않는다.
- *
- * 스크롤 영역 상단에 붙는다(sticky) — 리스트를 한참 내린 뒤에도 맨 위로
- * 돌아오지 않고 팀을 바꿀 수 있다. 밑으로 지나가는 리스트가 비치지 않게
- * 배경(`bg-bg`)을 깐다.
+ * 가로 스크롤이라 좁은 화면(폴드 접힘)에서도 넘치지 않는다. 스크롤 영역 상단에
+ * 붙는다(sticky) — 리스트를 한참 내린 뒤에도 팀을 바꿀 수 있다.
  *
  * @param value - 현재 선택된 필터
  * @param onChange - 탭 선택 시 호출되는 콜백
@@ -48,11 +48,9 @@ export function TeamFilterTabs({
   }
 
   /**
-   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386). 좁은 화면에서는 끝쪽
-   * 탭이 반쯤 잘린 채 클릭되는데, 그대로 두면 선택돼 놓고 여전히 잘려 있어
-   * 어디를 골랐는지 안 보인다. 클릭이든 URL 직접 진입이든 `value`가 정하므로
-   * 클릭 핸들러가 아니라 value 변화에 반응한다. `nearest`라 이미 다 보이는
-   * 탭에는 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
+   * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386). 클릭이든 URL 직접
+   * 진입이든 `value`가 정하므로 value 변화에 반응한다. `nearest`라 이미 다
+   * 보이는 탭에는 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
    */
   const listRef = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
@@ -69,9 +67,8 @@ export function TeamFilterTabs({
     <div
       ref={listRef}
       /* -top-px: 소수점 스크롤 위치에서 sticky 레이어와 콘텐츠 레이어의 픽셀
-         반올림이 어긋나 위에 실금이 비친다 (KAN-386). 1px 위로 겹쳐 배경으로
-         덮는다 — 넘친 1px는 스크롤 영역이 잘라낸다 */
-      className="no-scrollbar border-border px-edge bg-bg sticky -top-px z-10 flex gap-4 overflow-x-auto border-b"
+         반올림이 어긋나 위에 실금이 비친다 (KAN-386). 1px 위로 겹쳐 배경으로 덮는다 */
+      className="no-scrollbar px-edge bg-bg sticky -top-px z-10 flex overflow-x-auto pb-0.5"
     >
       {items.map(({ key, label }) => {
         const on = value === key;
@@ -81,8 +78,8 @@ export function TeamFilterTabs({
             href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-title shrink-0 scroll-mx-6 border-b-2 pt-1 pb-2 font-bold ${
-              on ? "border-accent text-text" : "text-text-4 border-transparent"
+            className={`text-body shrink-0 scroll-mx-4 py-1.75 pr-3 whitespace-nowrap ${
+              on ? "text-accent font-bold" : "text-text-3 font-medium"
             }`}
           >
             {label}

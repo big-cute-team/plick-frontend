@@ -6,6 +6,7 @@ import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { PostListItem } from "@/_components/PostListItem";
 import { PostListItemSkeleton } from "@/_components/PostListItemSkeleton";
+import { PostTableHead } from "@/_components/PostTableHead";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { useScopedArticles } from "@/_hooks/useScopedArticles";
 import type { ArticleScope } from "@/_types/articles";
@@ -21,7 +22,8 @@ const SKELETON_COUNT = 4;
  * 데스크톱 판이고, 줄은 기사 페이지와 같은 `PostListItem`(article 변형)이다 —
  * 응답이 기사 목록과 같은 카드라 전용 줄을 만들면 같은 카드가 둘로 갈린다.
  *
- * 팀 탭이 없으므로 대표 팀은 기사의 첫 팀이다(`filter` 기본값 ALL).
+ * 팀 탭이 없으므로 대표 팀은 기사의 첫 팀이다(`filter` 기본값 ALL). 시안(KAN-567)
+ * 대로 홈과 같은 표 머리를 얹는다.
  *
  * 로딩·에러·빈 상태와 커서 400 복구는 기사 페이지(`PostFeed`)와 같다. 인물
  * 태그는 앞으로 수집되는 기사부터 붙어서 빈 상태가 흔하다.
@@ -73,8 +75,9 @@ export function ScopedArticlesFeed({
   if (isPending) {
     return (
       <div>
+        <PostTableHead />
         {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-          <PostListItemSkeleton key={i} variant="article" />
+          <PostListItemSkeleton key={i} />
         ))}
       </div>
     );
@@ -83,7 +86,7 @@ export function ScopedArticlesFeed({
   if (isError && articles.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-body text-text-4">관련 기사를 불러오지 못했어요.</p>
+        <p className="text-body text-text-4">관련 기사를 불러오지 못했어요</p>
         <RetryButton onClick={() => refetch()} disabled={isFetching} />
       </div>
     );
@@ -97,16 +100,17 @@ export function ScopedArticlesFeed({
 
   return (
     <div>
+      <PostTableHead />
       {articles.map((article) => (
         <PostListItem key={article.id} post={article} variant="article" />
       ))}
 
-      {isFetchingNextPage && <PostListItemSkeleton variant="article" />}
+      {isFetchingNextPage && <PostListItemSkeleton />}
 
       {isFetchNextPageError && (
         <div className="py-6 text-center">
           <p className="text-caption text-text-4">
-            다음 기사를 불러오지 못했어요.
+            다음 기사를 불러오지 못했어요
           </p>
           <RetryButton onClick={retryNextPage} />
         </div>
@@ -117,7 +121,7 @@ export function ScopedArticlesFeed({
 
       {!hasNextPage && (
         <p className="text-caption text-text-4 pt-6 pb-4 text-center">
-          관련 기사를 전부 봤어요.
+          관련 기사를 전부 봤어요
         </p>
       )}
     </div>
@@ -137,7 +141,7 @@ function RetryButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="bg-elevate text-label text-text rounded-control focus-visible:outline-accent mt-3 px-4 py-2 font-bold transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+      className="border-border-strong text-label-lg text-text-2 hover:text-accent focus-visible:outline-accent mt-3 h-8.5 border px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
     >
       다시 시도
     </button>

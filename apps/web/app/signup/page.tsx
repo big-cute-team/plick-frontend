@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/signup" },
 };
 
-/** W7 회원가입 — 다크 배경 중앙 카드(로고·태그라인 + 카카오/구글 소셜 가입 + 약관 + 로그인 링크). KAN-246, 피그마 205-2. */
+/** W7 회원가입 — 라이트 바탕 중앙 카드(로고·태그라인 + 카카오/구글/애플 소셜 가입 + 약관 + 로그인 링크). KAN-246, KAN-567. */
 export default function SignupPage() {
   return (
     <AuthCard

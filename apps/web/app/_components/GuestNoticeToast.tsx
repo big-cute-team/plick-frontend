@@ -8,7 +8,8 @@ import { readCookie } from "@/_utils/cookie";
 
 /**
  * 게스트 안내 토스트 (KAN-514) — 게스트를 방금 발급했거나, 연동했더니 기존 계정이었을 때
- * 하단에 한 번 띄운다. 루트 레이아웃에 한 번만 마운트한다.
+ * 하단에 한 번 띄운다. 루트 레이아웃에 한 번만 마운트한다. 모양은 시안(KAN-567)의
+ * 각진 다이얼로그 상자(`border-strong` + `shadow-dialog`)를 작게 쓴 것이다.
  *
  * 왜 쿠키를 신호로 쓰나: 안내는 "발급이 일어난 그 순간"에만 떠야 하는데, 발급은 edge에서
  * 도는 프록시가 하고 토스트는 브라우저에 있다. 그 사이를 이을 수 있는 게 응답 쿠키뿐이다
@@ -39,7 +40,7 @@ export function GuestNoticeToast({
 
     setMessage(
       kind === GUEST_NOTICE.existing
-        ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요."
+        ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요"
         : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
     );
     const timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
@@ -52,9 +53,9 @@ export function GuestNoticeToast({
     <div
       role="status"
       aria-live="polite"
-      className="px-edge pointer-events-none fixed inset-x-0 bottom-8 z-50 flex justify-center"
+      className="px-gutter pointer-events-none fixed inset-x-0 bottom-8 z-50 flex justify-center"
     >
-      <p className="bg-elevate border-border text-text rounded-card text-label border px-4 py-2.5 text-center font-semibold">
+      <p className="bg-bg border-border-strong shadow-dialog text-text text-label border px-4 py-2.5 text-center font-bold">
         {message}
       </p>
     </div>

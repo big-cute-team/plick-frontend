@@ -9,7 +9,7 @@ import { activityTabFrom } from "@/_utils/activity";
 
 /**
  * 진행 중인 활동 화면 갱신. 당겨서 새로고침이 연달아 걸려도 새 요청을 만들지
- * 않고 같은 프로미스를 돌려준다(`useArticlesRefresh`와 같은 판단).
+ * 않고 같은 프로미스를 돌려준다(`useHomeRefresh`와 같은 판단).
  */
 let inFlight: Promise<void> | null = null;
 

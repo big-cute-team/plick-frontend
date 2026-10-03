@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { getStandings } from "@plick/core/live";
 import { AppShell } from "@/_components/AppShell";
+import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
-import { TopBar } from "@/_components/TopBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { LiveScrollArea } from "@/live/_components/LiveScrollArea";
-import { LiveSubTabs } from "@/live/_components/LiveSubTabs";
 import { StandingsTable } from "@/live/_components/StandingsTable";
 
 /**
@@ -26,10 +25,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * 순위표 라우트(피그마 L3, KAN-452). 폴링이 없는 단발 읽기라 서버 컴포넌트
- * fetch다 — BE 캐시 1시간에 `apiFetch` 익명 GET 캐시 60초가 겹친다. 실패하면
- * 표 자리에 에러 지면을 두고 다시 시도는 세그먼트 새로고침이다. 맨 위에서
- * 당기면 서버 갱신(`router.refresh`)을 기다렸다 스피너를 멈춘다(KAN-462).
+ * 순위표 라우트(피그마 L3, KAN-452). 시안(KAN-567)은 순위표를 LIVE 목록 맨 아래
+ * 붙였고 서브탭이 없다. 이 라우트는 지우지 않고 남긴다. 팀 404 지면과 색인된 주소가
+ * 여기를 가리키고, 목록 화면과 같은 표를 세부 상단바("순위표") 아래 보여 준다.
+ *
+ * 폴링이 없는 단발 읽기라 서버 컴포넌트 fetch다. BE 캐시 1시간에 `apiFetch`
+ * 익명 GET 캐시 60초가 겹친다. 실패하면 표 자리에 에러 지면을 두고 다시 시도는
+ * 세그먼트 새로고침이다. 맨 위에서 당기면 서버 갱신(`router.refresh`)을 기다렸다
+ * 스피너를 멈춘다(KAN-462).
  */
 export default async function StandingsPage() {
   let rows;
@@ -41,10 +44,15 @@ export default async function StandingsPage() {
 
   return (
     <AppShell>
-      <TopBar />
+      <SubTopBar title="순위표" backHref="/live" backBehavior="back" />
       <LiveScrollArea>
-        <LiveSubTabs active="standings" />
-        {rows ? <StandingsTable rows={rows} /> : <LiveLoadError />}
+        {rows ? (
+          <div className="px-edge pt-4 pb-6">
+            <StandingsTable rows={rows} legend />
+          </div>
+        ) : (
+          <LiveLoadError />
+        )}
       </LiveScrollArea>
       <TabBar />
     </AppShell>

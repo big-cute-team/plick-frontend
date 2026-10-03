@@ -6,7 +6,8 @@ import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import type { TeamCode } from "@plick/domain/types";
 
 /**
- * 응원팀 선택 그리드 — 빅6 팀 카드 2열, 선택 카드는 accent 보더 + 체크 배지.
+ * 응원팀 선택 그리드. 빅6 팀 카드 2열, 선택 카드는 accent 틴트 면과 보더 + 체크 배지
+ * (KAN-567 라이트 톤). 안 고른 카드는 테두리 없이 채운 면이다.
  * 다중 선택(토글)이며, 선택 상태는 부모(TeamStep)가 들고 있는 제어형 — 제출 시 선택값이 필요해서다.
  *
  * @param selected - 현재 선택된 팀 코드 목록
@@ -29,12 +30,14 @@ export function TeamSelectGrid({
             type="button"
             onClick={() => onToggle(code)}
             aria-pressed={active}
-            className={`bg-elevate-2 rounded-card relative flex h-30 flex-col items-center justify-center gap-2.5 border active:opacity-80 ${
-              active ? "border-accent" : "border-border"
+            className={`rounded-card relative flex h-30 flex-col items-center justify-center gap-2.5 border active:opacity-80 ${
+              active
+                ? "bg-accent-tint border-accent"
+                : "bg-elevate-2 border-transparent"
             }`}
           >
             <TeamCrest team={TEAMS[code]} size={51} />
-            <span className="text-body text-text font-bold">
+            <span className="text-body text-text-strong font-bold">
               {TEAMS[code].name}
             </span>
             {active && (

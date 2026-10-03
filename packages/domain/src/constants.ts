@@ -211,14 +211,3 @@ export const FIGURE_TYPE_LABEL: Record<FigureType, string> = {
   OWNER: "구단주",
   OTHER: "관계자",
 };
-
-/**
- * 팀 프로필의 소속 인물 섹션 순서 (KAN-500). 감독·코칭스태프가 먼저, 선수단이
- * 그 다음, 구단주·관계자가 마지막이다. BE는 구분 없이 한글명순 한 배열로 주므로
- * 화면이 이 순서로 갈라 그린다.
- */
-export const FIGURE_SECTIONS: { types: FigureType[]; label: string }[] = [
-  { types: ["MANAGER", "COACH"], label: "감독·코칭스태프" },
-  { types: ["PLAYER"], label: "선수" },
-  { types: ["OWNER", "OTHER"], label: "구단주·관계자" },
-];

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plick.co.kr/schemas/be-verify-report.json",
+  "title": "be-verify 리포트",
+  "description": "be-verify 서브에이전트가 메인 세션에 돌려주는 엔드포인트 계약 리포트. 메인은 이 JSON만 보고 FE 코드를 짠다.",
+  "type": "object",
+  "required": [
+    "endpoint",
+    "auth",
+    "blocked",
+    "swaggerDiffs",
+    "scenarios",
+    "cleanup"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "endpoint": {
+      "type": "object",
+      "required": ["method", "path"],
+      "properties": {
+        "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+        "path": {
+          "type": "string",
+          "description": "스웨거 경로 그대로. 예: /api/v1/users/me"
+        }
+      }
+    },
+    "auth": { "enum": ["bearer", "none"] },
+    "blocked": {
+      "description": "검증을 못 했으면 이유. 정상 완료면 null. 추측으로 채우지 않는다.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["reason"],
+          "properties": { "reason": { "type": "string" } }
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "description": "실제로 통한 요청 형태. 예시값을 넣는다.",
+      "properties": {
+        "params": { "type": "object" },
+        "body": {}
+      }
+    },
+    "response200": {
+      "type": "object",
+      "description": "봉투({code,message,data})를 벗긴 data의 shape.",
+      "required": ["shape"],
+      "properties": {
+        "shape": { "description": "필드: 타입 형태의 객체 또는 배열 예시" },
+        "nullable": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "null이 올 수 있는 필드 경로"
+        },
+        "pagination": {
+          "type": ["string", "null"],
+          "description": "cursor, page, none 같은 페이지네이션 모양"
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["status", "code", "when"],
+        "properties": {
+          "status": { "type": "integer" },
+          "code": {
+            "type": "string",
+            "description": "BE 에러 code 문자열 그대로. 화면이 이걸로 분기한다."
+          },
+          "when": { "type": "string" }
+        }
+      }
+    },
+    "swaggerDiffs": {
+      "type": "array",
+      "description": "스웨거 문서와 실제 동작의 차이. 빈 배열이면 문서대로였다는 뜻이다.",
+      "items": {
+        "type": "object",
+        "required": ["where", "swagger", "actual"],
+        "properties": {
+          "where": { "type": "string" },
+          "swagger": { "type": "string" },
+          "actual": { "type": "string" },
+          "impact": {
+            "type": "string",
+            "description": "FE에 미치는 영향 한 줄"
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "status"],
+        "properties": {
+          "step": { "type": "string" },
+          "status": { "type": "integer" },
+          "dbMatched": {
+            "type": ["boolean", "null"],
+            "description": "DB 대조 결과. 대조 안 했으면 null"
+          }
+        }
+      }
+    },
+    "feTodo": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "note"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "type-mapping",
+              "error-handling",
+              "empty-state",
+              "auth",
+              "other"
+            ]
+          },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "required": ["createdUserIds", "remaining"],
+      "properties": {
+        "createdUserIds": { "type": "array", "items": { "type": "integer" } },
+        "reusedUserIds": { "type": "array", "items": { "type": "integer" } },
+        "remaining": {
+          "type": "integer",
+          "description": "정리 후 남은 KAN* 테스트 유저 수. 0이어야 끝난 것이다."
+        }
+      }
+    }
+  }
+}

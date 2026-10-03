@@ -5,9 +5,10 @@
  * BE 프록시(`/be/*`)로 나가는 브라우저 fetch에 Bearer 토큰을 실어 주는 일도 여기서 한다.
  * 모바일 `proxy.ts`와 같은 로직이다(KAN-318) — refresh·guest fetcher는 `@plick/core` 공용.
  *
- * 분석 헤더 넷(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`)
- * 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·`X-Plick-Path`·`X-Plick-Client`·
- * `X-Plick-Entry`를 찍는다. 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
+ * 분석 헤더(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`),
+ * 마케팅 유입(`plick_mkt`, KAN-577) 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·
+ * `X-Plick-Path`·`X-Plick-Client`·`X-Plick-Entry`와 utm·리퍼러·클릭 식별자 헤더 여섯 개를 찍는다.
+ * 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
  * 페이지 요청은 서버 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는다
  * (`_services/analytics-headers.ts`). 값을 정하는 자리가 하나라 두 경로가 어긋나지 않는다.
  *
@@ -31,12 +32,19 @@ import {
   ANALYTICS_HEADERS,
   DEVICE_ID_COOKIE,
   DIRECT_PATH,
+  ENTRY_COOKIE,
   PATH_COOKIE,
+  isAnalyticsWrite,
   isDeviceId,
   isPathValue,
   readPathParam,
-  resolveEntryPoint,
+  resolveRequestEntry,
 } from "@plick/core/analytics";
+import {
+  MARKETING_COOKIE,
+  marketingHeaders,
+  resolveRequestMarketing,
+} from "@plick/core/marketing";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
 import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { issueGuest } from "@plick/core/guest";
@@ -63,26 +71,12 @@ import { PLICK_CLIENT } from "@/_constants/analytics";
 interface Analytics {
   /** 메인 API로 가는 요청에 실을 헤더. 모르는 값은 키를 빼서 BE가 `unknown`으로 접게 둔다 */
   headers: Record<string, string>;
-  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다 */
+  /** 이번 응답에 새로 심거나 갱신할 쿠키. 값이 그대로면 비어 있어 Set-Cookie가 안 나간다. 값이 빈 문자열이면 지운다 */
   cookies: { name: string; value: string; httpOnly: boolean }[];
 }
 
 /**
- * 브라우저 `/be` fetch가 어느 화면에서 나갔는지는 Referer로만 안다. same-origin fetch라
- * 기본 Referrer-Policy에서도 경로까지 실려 온다.
- */
-function refererPathname(request: NextRequest): string | null {
-  const referer = request.headers.get("referer");
-  if (!referer) return null;
-  try {
-    return new URL(referer).pathname;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * 쿠키와 URL에서 분석 값 넷을 정한다 (KAN-542).
+ * 쿠키와 URL에서 분석 값을 정한다 (KAN-542, KAN-577).
  *
  * 기기 식별자: 쿠키가 있으면 그것. 없으면 전환 배너가 쿼리(`?did=`)로 넘긴 값을 받고,
  * 그것도 없으면 새 UUID를 만든다. 쿼리 채택은 "쿠키가 없을 때만"이다 - 있는 사람의
@@ -94,8 +88,12 @@ function refererPathname(request: NextRequest): string | null {
  * 유입 경로: 페이지 요청의 `?path=`, 없으면 `utm_source`. 새 값이 오면 갱신하고, 없으면
  * 쿠키 값을 유지하고, 쿠키도 없으면 `direct`다. 형식이 안 맞는 쿠키 값은 없는 것으로 본다.
  *
- * 진입 화면: 페이지 요청은 그 경로, `/be` fetch는 Referer 경로에서 고른다. 경로로 못 정하는
- * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
+ * 진입 화면: `resolveRequestEntry`. 일회용 쿠키(읽으면 지운다), 요청 주소(공유 표식 포함), 소프트
+ * 내비게이션의 Referer 순이다. 조회 기록처럼 클라이언트가 직접 실은 헤더는 그대로 살린다(`forward`).
+ *
+ * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
+ * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
+ * `@plick/core/marketing`의 `resolveRequestMarketing`이다.
  *
  * @param request 이번 요청
  * @param isProxy `/be` fetch인가
@@ -138,12 +136,39 @@ function resolveAnalytics(
     request.cookies.set(PATH_COOKIE, path);
   }
 
-  const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
-  const entry = screen ? resolveEntryPoint(screen) : null;
+  const { marketing, cookie: marketingCookie } = resolveRequestMarketing({
+    cookie: request.cookies.get(MARKETING_COOKIE)?.value,
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer"),
+    ownHost: request.nextUrl.hostname,
+    isProxy,
+    isCrawler,
+  });
+  if (marketingCookie !== null) {
+    cookies.push({
+      name: MARKETING_COOKIE,
+      value: marketingCookie,
+      httpOnly: true,
+    });
+    if (marketingCookie) request.cookies.set(MARKETING_COOKIE, marketingCookie);
+    else request.cookies.delete(MARKETING_COOKIE);
+  }
+
+  const { entry, consumed } = resolveRequestEntry({
+    isProxy,
+    isRsc: request.headers.has("rsc"),
+    pathname: request.nextUrl.pathname,
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer"),
+    handed: request.cookies.get(ENTRY_COOKIE)?.value,
+  });
+  if (consumed)
+    cookies.push({ name: ENTRY_COOKIE, value: "", httpOnly: false });
 
   const headers: Record<string, string> = {
     [ANALYTICS_HEADERS.path]: path,
     [ANALYTICS_HEADERS.client]: PLICK_CLIENT,
+    ...marketingHeaders(marketing),
   };
   if (deviceId) headers[ANALYTICS_HEADERS.device] = deviceId;
   if (entry) headers[ANALYTICS_HEADERS.entry] = entry;
@@ -151,7 +176,7 @@ function resolveAnalytics(
 }
 
 /**
- * 요청 헤더에 분석 헤더 넷을 찍고(KAN-542), BE 프록시(`/be/*`)면 access 토큰까지
+ * 요청 헤더에 분석 헤더를 찍고(KAN-542), BE 프록시(`/be/*`)면 access 토큰까지
  * Bearer로 실어 통과시킨다. 프록시가 돌려주는 모든 `next()`가 이 함수를 거친다.
  *
  * 왜 여기서 싣나: 브라우저 fetch(릴스 다음 페이지 등)는 HttpOnly 쿠키를 읽을 수
@@ -274,6 +299,23 @@ export async function proxy(request: NextRequest) {
   const isCrawler = CRAWLER_UA_PATTERN.test(
     request.headers.get("user-agent") ?? "",
   );
+  /**
+   * 크롤러의 분석 쓰기(행동 이벤트, 조회 기록)는 BE까지 보내지 않는다 (KAN-584). 구글봇·애플봇처럼
+   * JS를 돌리는 크롤러가 기사 화면에서 둘 다 보내는데, 조회 기록은 비로그인 허용이라
+   * `article_opened`가 기기 없이 남아 열람을 부풀린다(prod ALB 로그 하루치에서 구글봇 조회 기록이
+   * 사람 모바일 브라우저 전체와 맞먹었다). 그 둘만 끊는다. 크롤러 판정이 사람을 잘못 잡아도
+   * 좋아요·댓글은 그대로 가고 분석값만 빠진다. 읽기는 전처럼 익명으로 통과시킨다.
+   */
+  if (
+    isProxy &&
+    isCrawler &&
+    isAnalyticsWrite(
+      request.method,
+      request.nextUrl.pathname.slice(BE_PROXY_PREFIX.length),
+    )
+  ) {
+    return new NextResponse(null, { status: 204 });
+  }
   const analytics = resolveAnalytics(request, isProxy, isCrawler);
   const response = await route(request, isProxy, isCrawler, analytics);
   /**
@@ -281,6 +323,10 @@ export async function proxy(request: NextRequest) {
    * 심어도 브라우저가 저장하므로 재시도 갈래에서도 새 기기가 생기지 않는다.
    */
   for (const cookie of analytics.cookies) {
+    if (!cookie.value) {
+      response.cookies.delete(cookie.name);
+      continue;
+    }
     response.cookies.set(cookie.name, cookie.value, {
       ...AUTH_COOKIE_BASE,
       httpOnly: cookie.httpOnly,
