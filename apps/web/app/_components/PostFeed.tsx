@@ -172,6 +172,7 @@ export function PostFeed({
                 variant="news"
                 filter={filter}
                 rank={i}
+                entry="home_feed"
               />
             ))}
 

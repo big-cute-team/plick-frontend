@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { openDebates } from "@plick/domain/format";
 import type { DebateListItem } from "@plick/domain/types";
 import { VsMark } from "@plick/ui/VsMark";
@@ -30,8 +30,8 @@ export function OpenDebateBanner({ debates }: { debates: DebateListItem[] }) {
     total === 0 ? 0 : Math.round((featured.voteCountA / total) * 100);
 
   return (
-    <Link
-      href={`/articles/${featured.articleId}`}
+    <ArticleLink
+      articleId={featured.articleId}
       className="bg-elevate rounded-card flex items-center gap-2.25 p-3 active:opacity-80"
     >
       <VsMark size="md" />
@@ -41,6 +41,6 @@ export function OpenDebateBanner({ debates }: { debates: DebateListItem[] }) {
       <span className="text-caption-lg text-accent shrink-0 font-bold">
         {pctA}%
       </span>
-    </Link>
+    </ArticleLink>
   );
 }

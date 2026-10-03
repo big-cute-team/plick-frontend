@@ -146,6 +146,12 @@ export const GUEST_NOTICE = {
  *
  * 패턴을 정확히 맞히지 못해도 손해가 작다 — 못 걸러낸 크롤러는 게스트 계정 하나를
  * 만들 뿐이고, 사람을 크롤러로 잘못 보면 게스트 없이 둘러보던 예전 동작이 된다.
+ *
+ * 분석 지표에는 손해가 크다 (KAN-584). 못 걸러낸 크롤러는 기기 식별자까지 받아 사람으로
+ * 세어지고, JS를 돌리는 크롤러면 `app_entered`·`screen_viewed`까지 남긴다. prod ALB 로그
+ * 하루치에서 네이버 `Yeti`와 메타 `meta-externalagent`가 그랬다. 그래서 이름에 bot이 없는
+ * 검색·AI 크롤러와 HTTP 라이브러리(`python-requests`, `curl`)를 더했다. 네이버·카카오 앱의
+ * 인앱 브라우저(`NAVER(inapp`, `KAKAOTALK`)는 사람이라 `naver`·`kakao`는 넣지 않는다.
  */
 export const CRAWLER_UA_PATTERN =
-  /bot|crawler|spider|crawling|slurp|facebookexternalhit|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome/i;
+  /bot|crawler|spider|crawling|slurp|facebookexternalhit|meta-externalagent|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome|yeti|daum\/|chatgpt-user|perplexity-user|bingpreview|prefetch proxy|python|curl|wget|go-http-client|okhttp|java\/|axios|node-fetch|scrapy|phantomjs|puppeteer|playwright/i;

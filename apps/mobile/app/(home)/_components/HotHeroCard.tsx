@@ -72,6 +72,7 @@ export function HotHeroCard({
       <ArticleLink
         articleId={article.id}
         rank={rank}
+        entry="hot"
         aria-label={article.title}
         className="absolute inset-0"
       />

@@ -86,8 +86,14 @@ export function ReelsWorkspace({
 
   /* 활성 릴이 되면 조회로 기록한다 (KAN-332). 모바일은 릴마다 active prop을 이미
      들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
-     뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. */
-  useArticleView(activeReel?.id ?? "", activeReel !== undefined, activeIndex);
+     뷰어·릴로 prop을 내리는 대신 한 번만 부른다. 로드 전에는 active를 끈다. 진입 화면은
+     들어온 길로 고정한다 (KAN-584) — 주소는 릴을 넘기면 `/reels/{id}`로 바뀌어 딥링크처럼 보인다 */
+  useArticleView(
+    activeReel?.id ?? "",
+    activeReel !== undefined,
+    activeIndex,
+    anchorId ? "reels_deeplink" : "reels",
+  );
 
   /* 미정 상태를 실제 창 폭으로 확정한다 — 서버는 창 폭을 모르니 여기서만 알 수 있다 */
   useEffect(() => {

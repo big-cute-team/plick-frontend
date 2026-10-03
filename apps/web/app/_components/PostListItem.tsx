@@ -1,3 +1,4 @@
+import type { EntryPoint } from "@plick/core/analytics";
 import Link from "next/link";
 import { NewBadge } from "@plick/ui/NewBadge";
 import { TeamCrest } from "@plick/ui/TeamCrest";
@@ -56,12 +57,15 @@ export function PostListItem({
   variant,
   filter = "ALL",
   rank,
+  entry,
 }: {
   post: ArticleCard;
   variant: PostListVariant;
   filter?: Filter;
   /** 목록 안 순위(0부터). 조회 기록의 `feed_rank`가 된다 (KAN-543). 순위 없는 자리는 생략 */
   rank?: number;
+  /** 이 행이 놓인 화면. 홈 피드는 `home_feed` (KAN-584). 없는 자리는 생략 */
+  entry?: EntryPoint;
 }) {
   const Title = HEADING[variant];
   const team =
@@ -93,6 +97,7 @@ export function PostListItem({
           <ArticleLink
             articleId={post.id}
             rank={rank}
+            entry={entry}
             className="focus-visible:outline-accent after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:-outline-offset-2"
           >
             {post.title}

@@ -175,6 +175,7 @@ export function NewsFeed({
                   article={article}
                   filter={filter}
                   rank={i}
+                  entry="home_feed"
                 />
               ))}
               {isFetchingNextPage && <NewsItemSkeleton />}

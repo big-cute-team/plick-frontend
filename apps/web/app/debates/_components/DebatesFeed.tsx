@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
@@ -85,12 +85,12 @@ export function DebatesFeed({
             size={tab === "closed" ? "sm" : "md"}
           />
           <div className="flex justify-end pt-2.5">
-            <Link
-              href={`/articles/${debate.articleId}`}
+            <ArticleLink
+              articleId={debate.articleId}
               className="text-label text-accent hover:text-accent-hover font-bold"
             >
               기사 보기
-            </Link>
+            </ArticleLink>
           </div>
         </li>
       ))}

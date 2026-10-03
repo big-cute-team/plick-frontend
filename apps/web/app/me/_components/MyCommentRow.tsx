@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ArticleLink } from "@/_components/ArticleLink";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import type { MyComment } from "@/_types/activity";
@@ -41,12 +41,12 @@ export function MyCommentRow({ comment }: { comment: MyComment }) {
           </span>
         </div>
       </div>
-      <Link
-        href={`/articles/${comment.article.id}`}
+      <ArticleLink
+        articleId={comment.article.id}
         className="text-label-lg text-text-3 hover:text-accent focus-visible:outline-accent block min-w-0 shrink-0 truncate focus-visible:outline-2 focus-visible:outline-offset-2 lg:w-61.5"
       >
         {comment.article.title}
-      </Link>
+      </ArticleLink>
     </div>
   );
 }

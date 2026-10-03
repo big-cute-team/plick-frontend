@@ -1,3 +1,4 @@
+import { ArticleLink } from "@/_components/ArticleLink";
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import {
@@ -231,8 +232,8 @@ export function ArticleMain({
           <ul className="grid grid-cols-1 gap-x-8.5 sm:grid-cols-2">
             {related.map((item) => (
               <li key={item.id} className="border-border-soft border-b">
-                <Link
-                  href={`/articles/${item.id}`}
+                <ArticleLink
+                  articleId={item.id}
                   className="group flex h-8.5 items-center gap-2.25"
                 >
                   <span className="text-body text-text group-hover:text-accent min-w-0 flex-1 truncate">
@@ -243,7 +244,7 @@ export function ArticleMain({
                       [{formatCount(item.commentCount)}]
                     </span>
                   )}
-                </Link>
+                </ArticleLink>
               </li>
             ))}
           </ul>

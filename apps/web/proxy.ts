@@ -32,11 +32,13 @@ import {
   ANALYTICS_HEADERS,
   DEVICE_ID_COOKIE,
   DIRECT_PATH,
+  ENTRY_COOKIE,
   PATH_COOKIE,
+  isAnalyticsWrite,
   isDeviceId,
   isPathValue,
   readPathParam,
-  resolveEntryPoint,
+  resolveRequestEntry,
 } from "@plick/core/analytics";
 import {
   MARKETING_COOKIE,
@@ -74,20 +76,6 @@ interface Analytics {
 }
 
 /**
- * 브라우저 `/be` fetch가 어느 화면에서 나갔는지는 Referer로만 안다. same-origin fetch라
- * 기본 Referrer-Policy에서도 경로까지 실려 온다.
- */
-function refererPathname(request: NextRequest): string | null {
-  const referer = request.headers.get("referer");
-  if (!referer) return null;
-  try {
-    return new URL(referer).pathname;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * 쿠키와 URL에서 분석 값을 정한다 (KAN-542, KAN-577).
  *
  * 기기 식별자: 쿠키가 있으면 그것. 없으면 전환 배너가 쿼리(`?did=`)로 넘긴 값을 받고,
@@ -100,8 +88,8 @@ function refererPathname(request: NextRequest): string | null {
  * 유입 경로: 페이지 요청의 `?path=`, 없으면 `utm_source`. 새 값이 오면 갱신하고, 없으면
  * 쿠키 값을 유지하고, 쿠키도 없으면 `direct`다. 형식이 안 맞는 쿠키 값은 없는 것으로 본다.
  *
- * 진입 화면: 페이지 요청은 그 경로, `/be` fetch는 Referer 경로에서 고른다. 경로로 못 정하는
- * 값(`hot`, `share_link`)은 클라이언트가 직접 실은 헤더가 있으면 그것을 살린다(`forward`).
+ * 진입 화면: `resolveRequestEntry`. 일회용 쿠키(읽으면 지운다), 요청 주소(공유 표식 포함), 소프트
+ * 내비게이션의 Referer 순이다. 조회 기록처럼 클라이언트가 직접 실은 헤더는 그대로 살린다(`forward`).
  *
  * 마케팅 여섯 칸(KAN-577): 페이지 요청의 utm·클릭 식별자 쿼리와 외부 Referer로 새 유입을 알아보고,
  * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
@@ -166,8 +154,16 @@ function resolveAnalytics(
     else request.cookies.delete(MARKETING_COOKIE);
   }
 
-  const screen = isProxy ? refererPathname(request) : request.nextUrl.pathname;
-  const entry = screen ? resolveEntryPoint(screen) : null;
+  const { entry, consumed } = resolveRequestEntry({
+    isProxy,
+    isRsc: request.headers.has("rsc"),
+    pathname: request.nextUrl.pathname,
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer"),
+    handed: request.cookies.get(ENTRY_COOKIE)?.value,
+  });
+  if (consumed)
+    cookies.push({ name: ENTRY_COOKIE, value: "", httpOnly: false });
 
   const headers: Record<string, string> = {
     [ANALYTICS_HEADERS.path]: path,
@@ -303,6 +299,23 @@ export async function proxy(request: NextRequest) {
   const isCrawler = CRAWLER_UA_PATTERN.test(
     request.headers.get("user-agent") ?? "",
   );
+  /**
+   * 크롤러의 분석 쓰기(행동 이벤트, 조회 기록)는 BE까지 보내지 않는다 (KAN-584). 구글봇·애플봇처럼
+   * JS를 돌리는 크롤러가 기사 화면에서 둘 다 보내는데, 조회 기록은 비로그인 허용이라
+   * `article_opened`가 기기 없이 남아 열람을 부풀린다(prod ALB 로그 하루치에서 구글봇 조회 기록이
+   * 사람 모바일 브라우저 전체와 맞먹었다). 그 둘만 끊는다. 크롤러 판정이 사람을 잘못 잡아도
+   * 좋아요·댓글은 그대로 가고 분석값만 빠진다. 읽기는 전처럼 익명으로 통과시킨다.
+   */
+  if (
+    isProxy &&
+    isCrawler &&
+    isAnalyticsWrite(
+      request.method,
+      request.nextUrl.pathname.slice(BE_PROXY_PREFIX.length),
+    )
+  ) {
+    return new NextResponse(null, { status: 204 });
+  }
   const analytics = resolveAnalytics(request, isProxy, isCrawler);
   const response = await route(request, isProxy, isCrawler, analytics);
   /**
