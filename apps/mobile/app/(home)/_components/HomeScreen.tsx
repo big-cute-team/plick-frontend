@@ -15,6 +15,7 @@ import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { HotHeroCard } from "./HotHeroCard";
+import { HotHeroTrack } from "./HotHeroTrack";
 import { NewsFeed } from "./NewsFeed";
 import { OpenDebateBanner } from "./OpenDebateBanner";
 import { TodayMatchBanner } from "./TodayMatchBanner";
@@ -32,9 +33,9 @@ import { TodayMatchBanner } from "./TodayMatchBanner";
  * 바꾸는 순간부터는 클라가 이어받는다 (KAN-271).
  *
  * 핫이슈는 `GET /api/v1/articles/hot`을 단발로 받는다 (KAN-282). 응답이 원문 사진
- * 유무로 갈린 두 목록인데(KAN-480) 사진 있는 기사만 168px 카드 한 줄 가로 스크롤
- * 트랙에 깐다. 사진 없는 기사의 텍스트 카드 페이저는 KAN-569에서 뺐다. 핫이슈 전체가
- * 채운 면(radius 16) 상자 하나다.
+ * 유무로 갈린 두 목록인데(KAN-480) 사진 있는 기사만 두 장씩 보이는 한 줄 가로 스크롤
+ * 트랙에 깐다 (KAN-585). 사진 없는 기사의 텍스트 카드 페이저는 KAN-569에서 뺐다.
+ * 핫이슈 전체가 채운 면(radius 16) 상자 하나다.
  *
  * 네 API는 서로 독립이라 병렬로 받고, 한쪽이 실패해도 페이지 전체를 에러로
  * 떨어뜨리지 않고 그 섹션 자리에만 실패를 보여준다. 배너 둘은 실패해도 자리를
@@ -112,9 +113,8 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           <OpenDebateBanner debates={debates} />
         </div>
 
-        {/* 핫이슈 상자. 채운 면 하나에 제목과 사진 카드 한 줄 트랙.
-            트랙은 스냅이 첫 카드를 스크롤 상자 왼끝에 붙이지 않게 패딩만큼
-            scroll-padding을 준다 (KAN-569) */}
+        {/* 핫이슈 상자. 채운 면 하나에 제목과 사진 카드 한 줄 트랙, 그 아래 위치
+            손잡이. 트랙은 두 장씩 보이고 두 장 단위로 스냅한다 (KAN-569, KAN-585) */}
         <section className="px-edge pt-3">
           <div className="bg-elevate-2 rounded-card py-3.25">
             <h2 className="text-body-lg text-text-strong tracking-section px-3 pb-2.5 font-black">
@@ -129,7 +129,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                 아직 핫이슈가 없어요
               </p>
             ) : (
-              <div className="snap-x-carousel no-scrollbar flex scroll-px-3 gap-2.5 overflow-x-auto px-3">
+              <HotHeroTrack count={heroes.length}>
                 {heroes.map((article, i) => (
                   <HotHeroCard
                     key={article.id}
@@ -138,7 +138,7 @@ export async function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                     fetchPriority={i < 2 ? "high" : "low"}
                   />
                 ))}
-              </div>
+              </HotHeroTrack>
             )}
           </div>
         </section>
