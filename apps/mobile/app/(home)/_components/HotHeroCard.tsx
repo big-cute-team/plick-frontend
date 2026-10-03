@@ -6,9 +6,14 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
 
 /**
- * 핫이슈 사진 카드 (시안 KAN-567) — 168px 폭, 6:5 사진 위 왼쪽 위 순위 배지(21px,
- * 강조색), 아래 팀(엠블럼 13 + 이름 10.5/700)과 제목 두 줄(13/700) + `[댓글]`(빨강).
- * 가로 스크롤 트랙에 두 장이 보이고 스냅으로 넘긴다.
+ * 핫이슈 사진 카드 (시안 KAN-567) — 6:5 사진 위 왼쪽 위 순위 배지(21px, 강조색),
+ * 아래 팀(엠블럼 13 + 이름 10.5/700)과 제목 두 줄(13/700) + `[댓글]`(빨강).
+ *
+ * 폭은 트랙({@link HotHeroTrack}) 안쪽 폭에서 간격 하나를 뺀 절반이라 어떤 폰 폭에서도
+ * 정확히 두 장이 보인다 (KAN-585). 시안의 168px 고정 폭은 폭이 넓은 기기에서 셋째
+ * 카드가 걸쳐 보였다. 스냅은 홀수 번째 카드(`odd:`)에만 걸어 두 장 단위로 넘긴다.
+ * 마지막 카드는 끝맞춤(`snap-end`)이다. 카드가 홀수 장이면 마지막 카드의 시작 맞춤이
+ * 스크롤 한계 밖이라 크롬이 스냅 후보에서 빼 버려 마지막 카드까지 못 간다.
  *
  * 사진은 `imageUrl`을 쓰고, 홈 서버 컴포넌트가 `withTweetPhotos`로 원문 게시물의
  * 제일 큰 사진을 뽑아 채운다(KAN-484). 그것도 못 구한 카드는 홈이 아예 빼므로
@@ -32,7 +37,7 @@ export function HotHeroCard({
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
 
   return (
-    <div className="relative w-42 shrink-0 snap-start">
+    <div className="relative w-[calc((100%-0.625rem)/2)] shrink-0 last:snap-end odd:not-last:snap-start">
       <div className="rounded-tile bg-media relative mb-2 aspect-[6/5] overflow-hidden">
         {article.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유)
