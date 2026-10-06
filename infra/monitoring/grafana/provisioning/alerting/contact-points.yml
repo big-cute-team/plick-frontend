@@ -1,5 +1,9 @@
 # 알림 수신처와 라우팅 (KAN-457). 슬랙 Incoming Webhook 하나로 다 보낸다.
 #
+# main API 서버 알림(KAN-601)은 같은 웹훅을 쓰되 수신처와 메시지 틀이 따로 있다. 수신처와 규칙은
+# plick-infra의 observability/grafana/alerting/plick-main.yml에 있고, 모니터링 서버의 같은 폴더에
+# 그 파일을 함께 둔다. 그라파나는 조직당 정책 트리를 하나만 받아서 라우팅만 여기에 둔다.
+#
 # 웹훅 URL은 시크릿이라 파일에 적지 않는다. 그라파나는 프로비저닝 파일 안의 $VAR를
 # 환경변수로 치환하므로 compose가 SLACK_WEBHOOK_URL을 넘기고, 그 값은 user data가
 # SSM Parameter Store(/plick/frontend/monitoring/prod/slack-webhook)에서 읽어
@@ -23,3 +27,18 @@ policies:
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
+    routes:
+      # team=main 규칙은 main 전용 수신처로 보낸다. 알림 이름별로 묶어 인스턴스 두 대가 같이 울리면 한 메시지로 간다
+      - receiver: slack-plick-main
+        object_matchers: [["team", "=", "main"]]
+        group_by: [alertname]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+      # 하트비트는 슬랙이 아니라 Lambda로 간다. 항상 울리는 규칙이라 3분마다 다시 보내 신호를 이어 간다.
+      # 신호가 15분 끊기면 CloudWatch 알람이 기존 SNS 경로로 슬랙에 알린다
+      - receiver: heartbeat-plick-monitoring
+        object_matchers: [["team", "=", "heartbeat"]]
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 3m

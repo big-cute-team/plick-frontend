@@ -6,6 +6,7 @@
 #
 # `or ... * 0`: web은 아직 5xx 시리즈가 한 번도 안 생겨서 분자가 비어 있다. 비어 있으면
 # 나눗셈 결과 자체가 없어 영원히 NoData가 된다. 분모의 라벨 집합에 0을 깔아 0%로 만든다.
+# summary의 비율은 humanizePercentage로 쓴다. 그라파나 템플릿에는 mul 같은 산술 함수가 없다.
 apiVersion: 1
 groups:
   - orgId: 1
@@ -22,7 +23,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "{{ $labels.app }} BE 호출 에러율(5xx·0) {{ printf \"%.1f\" (mul $values.A.Value 100) }}% (30분 창, 20건 이상)"
+          summary: "{{ $labels.app }} BE 호출 에러율(5xx·0) {{ humanizePercentage $values.A.Value }} (30분 창, 20건 이상)"
         data:
           - refId: A
             relativeTimeRange: { from: 1800, to: 0 }
@@ -64,7 +65,9 @@ groups:
               refId: A
               instant: true
               range: false
-              expr: up{job=~"plick-.*"} == 0
+              # 프런트 잡만 본다. main 잡(plick-main, plick-main-node)은 plick-main.yml의 규칙이 따로 본다(KAN-601).
+              # 넓혀 두면 node_exporter 설치 전(main 운영 릴리스 전) 9100 타깃이 down이라 이 규칙이 계속 울린다
+              expr: up{job=~"plick-front-.*"} == 0
           - refId: C
             datasourceUid: __expr__
             model:
