@@ -50,6 +50,7 @@ webhook="\$(aws ssm get-parameter --region ap-northeast-2 \
 heartbeat="\$(aws ssm get-parameter --region ap-northeast-2 \
   --name /plick/frontend/monitoring/prod/heartbeat-token --with-decryption \
   --query Parameter.Value --output text 2>/dev/null || true)"
+[ -n "\$heartbeat" ] || echo "경고: 하트비트 토큰을 SSM에서 읽지 못했다. 15분 뒤 grafana-heartbeat-missing 알람이 울린다" >&2
 printf 'SLACK_WEBHOOK_URL=%s\nHEARTBEAT_TOKEN=%s\n' "\$webhook" "\$heartbeat" > /srv/monitoring/.env
 chmod 600 /srv/monitoring/.env
 

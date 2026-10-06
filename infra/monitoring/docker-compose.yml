@@ -21,12 +21,11 @@ services:
     image: grafana/grafana:12.1.0
     container_name: grafana
     restart: unless-stopped
-    # 그라파나만 사설 IP에 연다(grafana.plick.co.kr). 보안그룹이 prod 공개 ALB에서 오는 3000번만 받고,
-    # ALB 리스너 규칙이 허용 IP만 넘긴다(plick-infra/observability/grafana_access.tf).
-    # 127.0.0.1도 함께 열어 두어 SSM 포트 포워딩은 그대로 쓴다.
+    # 그라파나는 모든 인터페이스에 연다(grafana.plick.co.kr). 접근은 보안그룹이 prod 공개 ALB에서 오는 3000번만
+    # 받고, ALB 리스너 규칙이 허용 IP만 넘긴다(plick-infra/observability/grafana_access.tf). 사설 IP를 적어 두면
+    # 인스턴스를 새로 만들어 IP가 바뀔 때 바인딩에 실패해 그라파나가 안 뜬다. 프로메테우스는 계속 127.0.0.1에만 둔다.
     ports:
-      - "127.0.0.1:3000:3000"
-      - "192.168.2.112:3000:3000"
+      - "3000:3000"
     environment:
       GF_SERVER_ROOT_URL: https://grafana.plick.co.kr
       # 첫 로그인은 admin/admin, 로그인 직후 비밀번호 변경을 강제한다.

@@ -65,9 +65,10 @@ groups:
               refId: A
               instant: true
               range: false
-              # 프런트 잡만 본다. main 잡(plick-main, plick-main-node)은 plick-main.yml의 규칙이 따로 본다(KAN-601).
-              # 넓혀 두면 node_exporter 설치 전(main 운영 릴리스 전) 9100 타깃이 down이라 이 규칙이 계속 울린다
-              expr: up{job=~"plick-front-.*"} == 0
+              # main 잡(plick-main, plick-main-node)은 빼고 본다. 그 둘은 plick-infra plick-main.yml의 규칙이
+              # 따로 본다(KAN-601). 포함하면 node_exporter 설치 전(main 운영 릴리스 전) 9100 타깃 down으로 계속 울린다.
+              # 제외 방식이라 plick- 접두사로 새로 넣는 잡은 그대로 이 규칙에 걸린다(ADR 0136)
+              expr: up{job=~"plick-.*",job!~"plick-main.*"} == 0
           - refId: C
             datasourceUid: __expr__
             model:
