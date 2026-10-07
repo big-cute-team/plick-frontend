@@ -21,6 +21,11 @@ dev는 WAF `plick-dev-lock`이 팀 IP 밖을 403으로 막는다. 팀 IP 로컬�
 `E2E_BYPASS_TOKEN`을 쿠키 `plick_e2e`로 실어 통과한다(WAF 규칙 `allow-e2e-cookie`, KAN-573).
 CI에서 `Wait for targets`가 403으로 멈추면 WAF 규칙의 문자열과 시크릿 값이 어긋난 것이다.
 
+같은 쿠키가 봇 표시이기도 하다(KAN-607). 앱 프록시는 `plick_e2e`가 보이면 값과 상관없이 BE 요청에
+`X-Plick-Bot: 1`을 실어 그 이벤트가 `is_bot = true`로 남게 한다. 테스트마다 새 브라우저라 쿠키 없이
+들어오는 E2E가 매번 새 방문자로 세어지던 걸 막는 장치라, dev·prod 대상이면 토큰이 없어도(팀 IP 로컬)
+쿠키를 심는다. 그래서 AX 지표에서 E2E를 빼려면 이 쿠키가 빠지면 안 된다.
+
 ## 구조
 
 ```

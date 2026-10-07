@@ -35,16 +35,20 @@ const webURL = process.env.E2E_WEB_URL ?? TARGETS[target].web;
 /**
  * dev는 WAF plick-dev-lock이 팀 IP 밖을 403으로 막는다. CI 러너는 쿠키 plick_e2e에
  * E2E_BYPASS_TOKEN을 실어 통과한다(KAN-573). 헤더가 아니라 쿠키인 건 도메인을 .plick.co.kr로
- * 좁혀 외부 호스트(twimg 등)에 값이 새지 않게 하려는 것이다. 토큰이 없으면(팀 IP 로컬) 싣지 않는다.
+ * 좁혀 외부 호스트(twimg 등)에 값이 새지 않게 하려는 것이다.
+ *
+ * 같은 쿠키가 봇 표시다(KAN-607). 앱 프록시는 이름만 보고 BE 요청에 X-Plick-Bot: 1을 실어
+ * E2E 이벤트가 is_bot으로 남게 한다. 그래서 토큰이 없어도(팀 IP 로컬) 배포 대상이면 자리 값으로
+ * 심는다. local 대상은 도메인이 안 맞아 뺀다.
  */
 const bypassToken = process.env.E2E_BYPASS_TOKEN;
 const storageState =
-  target === "dev" && bypassToken
+  target !== "local"
     ? {
         cookies: [
           {
             name: "plick_e2e",
-            value: bypassToken,
+            value: bypassToken ?? "e2e",
             domain: ".plick.co.kr",
             path: "/",
             expires: -1,
