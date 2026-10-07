@@ -8,7 +8,7 @@
  * 분석 헤더(KAN-542)도 여기서 정한다. 기기 식별자(`plick_did`)와 유입 경로(`plick_path`),
  * 마케팅 유입(`plick_mkt`, KAN-577) 쿠키를 심고, 메인 API로 가는 요청 헤더에 `X-Plick-Device`·
  * `X-Plick-Path`·`X-Plick-Client`·`X-Plick-Entry`와 utm·리퍼러·클릭 식별자 헤더 여섯 개,
- * 크롤러와 E2E를 가르는 `X-Plick-Bot`(KAN-607)을 찍는다.
+ * 크롤러와 E2E를 가르는 `X-Plick-Bot`(KAN-607), UA로 가른 인앱 브라우저 종류 `X-Plick-Browser`(KAN-610)를 찍는다.
  * 브라우저 `/be` fetch는 그 헤더가 rewrites를 타고 BE까지 그대로 가고,
  * 페이지 요청은 서버 컴포넌트가 `headers()`로 읽어 서버 측 `apiFetch`에 옮겨 싣는다
  * (`_services/analytics-headers.ts`). 값을 정하는 자리가 하나라 두 경로가 어긋나지 않는다.
@@ -32,6 +32,7 @@ import {
   ANALYTICS_COOKIE_MAX_AGE,
   ANALYTICS_HEADERS,
   BOT_HEADER_VALUE,
+  type BrowserKind,
   DEVICE_ID_COOKIE,
   DIRECT_PATH,
   E2E_COOKIE,
@@ -41,6 +42,7 @@ import {
   isBotRequest,
   isPathValue,
   readPathParam,
+  resolveBrowserKind,
   resolveDeviceId,
   resolveRequestEntry,
 } from "@plick/core/analytics";
@@ -101,14 +103,20 @@ interface Analytics {
  * 새 유입이면 `plick_mkt` 쿠키를 통째로 갈아 끼운다. 아니면 쿠키 값을 쓴다. 규칙과 조립은
  * `@plick/core/marketing`의 `resolveRequestMarketing`이다.
  *
+ * 인앱 브라우저(KAN-610): `proxy`가 UA로 정한 `resolveBrowserKind` 값을 그대로 싣는다. 쿠키가 없고
+ * 요청마다 정하므로 여기서 저장할 것이 없다. 외부 브라우저도 `browser`로 늘 싣는다. BE가 "없음"과
+ * "외부"를 가를 수 있어야 인앱과 외부의 체류·재방문을 비교한다.
+ *
  * @param request 이번 요청
  * @param isProxy `/be` fetch인가
  * @param isCrawler 검색 크롤러인가(`CRAWLER_UA_PATTERN`)
+ * @param browser UA로 가른 인앱 브라우저 종류(`resolveBrowserKind`)
  */
 function resolveAnalytics(
   request: NextRequest,
   isProxy: boolean,
   isCrawler: boolean,
+  browser: BrowserKind,
 ): Analytics {
   const cookies: Analytics["cookies"] = [];
 
@@ -167,6 +175,7 @@ function resolveAnalytics(
   const headers: Record<string, string> = {
     [ANALYTICS_HEADERS.path]: path,
     [ANALYTICS_HEADERS.client]: PLICK_CLIENT,
+    [ANALYTICS_HEADERS.browser]: browser,
     ...marketingHeaders(marketing),
   };
   if (device.send && device.id) {
@@ -302,9 +311,9 @@ async function startGuestSession(
 
 export async function proxy(request: NextRequest) {
   const isProxy = request.nextUrl.pathname.startsWith(BE_PROXY_PREFIX);
-  const isCrawler = CRAWLER_UA_PATTERN.test(
-    request.headers.get("user-agent") ?? "",
-  );
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const isCrawler = CRAWLER_UA_PATTERN.test(userAgent);
+  const browser = resolveBrowserKind(userAgent);
   /**
    * 크롤러의 분석 쓰기(행동 이벤트, 조회 기록)는 BE까지 보내지 않는다 (KAN-584). 구글봇·애플봇처럼
    * JS를 돌리는 크롤러가 기사 화면에서 둘 다 보내는데, 조회 기록은 비로그인 허용이라
@@ -322,7 +331,7 @@ export async function proxy(request: NextRequest) {
   ) {
     return new NextResponse(null, { status: 204 });
   }
-  const analytics = resolveAnalytics(request, isProxy, isCrawler);
+  const analytics = resolveAnalytics(request, isProxy, isCrawler, browser);
   const response = await route(request, isProxy, isCrawler, analytics);
   /**
    * 분석 쿠키는 어느 갈래로 끝났든 이번 응답에 싣는다 (KAN-542). 리다이렉트 응답에

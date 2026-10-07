@@ -20,6 +20,7 @@
  * 조용히 버리므로 재시도하지 않는다. 서버 렌더에서는 아무것도 하지 않는다.
  */
 
+import { DEVICE_RESTORED_KEY } from "./analytics";
 import { BE_PROXY_PREFIX } from "./client";
 
 /**
@@ -28,8 +29,11 @@ import { BE_PROXY_PREFIX } from "./client";
  * `reaction`(`reaction_type=share`)으로 기록한다.
  */
 export type ClientEvent =
-  /** 서비스 진입. 유휴 30분 뒤 다시 쓰기 시작하면 다시 한 번 */
-  | { type: "app_entered" }
+  /**
+   * 서비스 진입. 유휴 30분 뒤 다시 쓰기 시작하면 다시 한 번. `device_restored`는 이번 진입에서
+   * 기기 식별자를 localStorage에서 되살렸을 때만 `true`다(KAN-610). 이름은 티켓의 표기를 따른다
+   */
+  | { type: "app_entered"; device_restored?: true }
   /**
    * 라우트 전환과 화면 안 탭 전환. `screen`은 `screens.ts`의 목록이고 화면 안 탭은
    * `match_detail.lineups`처럼 점으로 잇는다. `ref`는 그 화면의 주인공 id
@@ -181,19 +185,43 @@ function writeLastActive(now: number): void {
 }
 
 /**
+ * 기기 식별자 복원 표식을 한 번 읽고 지운다 (KAN-610). `<head>`의 `deviceSyncScript`가 심는다.
+ * 저장소를 못 쓰는 환경이면 복원도 못 했으니 false다.
+ */
+function consumeDeviceRestored(): boolean {
+  try {
+    if (window.sessionStorage.getItem(DEVICE_RESTORED_KEY) !== "1")
+      return false;
+    window.sessionStorage.removeItem(DEVICE_RESTORED_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 사용자가 지금 서비스를 쓰고 있다고 표시한다. 진입, 라우트 전환, 탭이 다시 보일 때,
  * 터치·키 입력마다 부른다.
  *
  * 마지막 조작이 30분보다 오래됐거나 기록이 없으면 `app_entered`를 보낸다. 새로고침이나
  * 탭을 하나 더 여는 건 방문이 아니다 - 저장소의 시각이 최근이라 안 보낸다. 저장소 쓰기는
  * 10초에 한 번으로 줄인다. 조작마다 쓰면 스크롤 중 프레임마다 디스크를 건드린다.
+ *
+ * 기기 식별자를 방금 되살렸으면(KAN-610) 유휴 판정과 무관하게 `app_entered`를
+ * `device_restored: true`로 보낸다. 쿠키가 지워진 재방문은 서버 쪽에서는 어차피 새 방문이고,
+ * 복원 건수를 빠짐없이 세야 복원을 유지할지 정할 수 있다.
  */
 export function touchSession(): void {
   if (!isBrowser()) return;
   const now = Date.now();
+  const restored = consumeDeviceRestored();
   const last = readLastActive();
-  if (now - last > IDLE_MS) {
-    trackEvent({ type: "app_entered" });
+  if (restored || now - last > IDLE_MS) {
+    trackEvent(
+      restored
+        ? { type: "app_entered", device_restored: true }
+        : { type: "app_entered" },
+    );
     writeLastActive(now);
     return;
   }
