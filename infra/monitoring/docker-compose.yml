@@ -21,9 +21,13 @@ services:
     image: grafana/grafana:12.1.0
     container_name: grafana
     restart: unless-stopped
+    # 그라파나는 모든 인터페이스에 연다(grafana.plick.co.kr). 접근은 보안그룹이 prod 공개 ALB에서 오는 3000번만
+    # 받고, ALB 리스너 규칙이 허용 IP만 넘긴다(plick-infra/observability/grafana_access.tf). 사설 IP를 적어 두면
+    # 인스턴스를 새로 만들어 IP가 바뀔 때 바인딩에 실패해 그라파나가 안 뜬다. 프로메테우스는 계속 127.0.0.1에만 둔다.
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     environment:
+      GF_SERVER_ROOT_URL: https://grafana.plick.co.kr
       # 첫 로그인은 admin/admin, 로그인 직후 비밀번호 변경을 강제한다.
       # 바깥에서 닿을 수 없는 포트라 초기값을 user data에 박아 두지 않는다.
       GF_SECURITY_ADMIN_USER: admin
@@ -34,6 +38,9 @@ services:
       # 없으면 자리표시자로 두어 프로비저닝은 통과시키고 전송만 실패하게 한다 — 시크릿 하나
       # 때문에 그라파나 자체가 못 뜨면 안 된다.
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/PLACEHOLDER}
+      # 하트비트 웹훅 토큰 (KAN-601). user data가 SSM(/plick/frontend/monitoring/prod/heartbeat-token)에서
+      # 읽어 .env에 쓴다. 비어 있어도 그라파나는 뜨고, 하트비트만 401로 거절된다
+      HEARTBEAT_TOKEN: ${HEARTBEAT_TOKEN:-}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

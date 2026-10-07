@@ -7,6 +7,7 @@ import {
   BRAND_TITLE,
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
+import { deviceSyncScript } from "@plick/core/analytics";
 import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GuestNoticeToast } from "@/_components/GuestNoticeToast";
@@ -133,6 +134,10 @@ export default async function RootLayout({
               '(function(){try{if(screen.height-window.innerHeight>24)document.documentElement.setAttribute("data-inset-viewport","")}catch(e){}})()',
           }}
         />
+        {/* 기기 식별자 쿠키를 localStorage와 맞춘다 (KAN-610). 인앱 브라우저가 지운 쿠키를
+            되살리는 자리다. 뒤따르는 /be fetch보다 먼저 돌아야 그 요청들이 옛 식별자를
+            달고 나가므로 위와 같이 head 동기 스크립트다. 내용은 @plick/core/analytics가 만든다 */}
+        <script dangerouslySetInnerHTML={{ __html: deviceSyncScript() }} />
         {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
             미리 열어 둔다 (KAN-421) */}
         <link rel="preconnect" href="https://pbs.twimg.com" />

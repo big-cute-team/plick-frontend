@@ -1,10 +1,38 @@
 # 알림 수신처와 라우팅 (KAN-457). 슬랙 Incoming Webhook 하나로 다 보낸다.
 #
+# main API 서버 알림(KAN-601)은 같은 웹훅을 쓰되 수신처와 메시지 틀이 따로 있다. 규칙은 plick-infra의
+# observability/grafana/alerting/plick-main.yml에 있고 모니터링 서버의 같은 폴더에 함께 둔다.
+# 수신처와 틀은 라우팅과 같이 이 파일에 둔다. 서버를 새로 만들어 그 파일이 아직 없어도 라우팅이 가리키는
+# 수신처가 있어야 그라파나가 뜬다.
+#
 # 웹훅 URL은 시크릿이라 파일에 적지 않는다. 그라파나는 프로비저닝 파일 안의 $VAR를
 # 환경변수로 치환하므로 compose가 SLACK_WEBHOOK_URL을 넘기고, 그 값은 user data가
 # SSM Parameter Store(/plick/frontend/monitoring/prod/slack-webhook)에서 읽어
 # /srv/monitoring/.env에 써 둔 것이다. 리포에도 user data 스크립트에도 값이 남지 않는다.
 apiVersion: 1
+templates:
+  - orgId: 1
+    name: plick-main-slack
+    template: |
+      {{ define "plick_main.severity" }}{{ if eq . "critical" }}심각{{ else if eq . "warning" }}주의{{ else }}{{ . }}{{ end }}{{ end }}
+
+      {{ define "plick_main.title" -}}
+      [PLick main {{ if eq .Status "firing" }}{{ template "plick_main.severity" .CommonLabels.severity }}{{ else }}해소{{ end }}] {{ .CommonLabels.alertname }}{{ if gt (len .Alerts.Firing) 1 }} ({{ len .Alerts.Firing }}건){{ end }}
+      {{- end }}
+
+      {{ define "plick_main.text" -}}
+      {{ range .Alerts.Firing -}}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      시작 {{ .StartsAt | tz "Asia/Seoul" | date "01-02 15:04" }}{{ if .Labels.instance }}, 인스턴스 {{ .Labels.instance }}{{ end }}{{ if .PanelURL }}
+      대시보드 {{ .PanelURL }}{{ end }}
+
+      {{ end -}}
+      {{ range .Alerts.Resolved -}}
+      해소: {{ .Annotations.summary }} ({{ .EndsAt | tz "Asia/Seoul" | date "01-02 15:04" }})
+      {{ end -}}
+      {{- end }}
+
 contactPoints:
   - orgId: 1
     name: slack-plick-frontend
@@ -16,6 +44,31 @@ contactPoints:
           title: "[PLick FE] {{ .CommonLabels.alertname }}"
           text: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
         disableResolveMessage: false
+  - orgId: 1
+    name: slack-plick-main
+    receivers:
+      - uid: slack-plick-main
+        type: slack
+        settings:
+          url: $SLACK_WEBHOOK_URL
+          title: '{{ template "plick_main.title" . }}'
+          text: '{{ template "plick_main.text" . }}'
+        disableResolveMessage: false
+  # 그라파나가 살아서 알림을 보내고 있다는 신호. 받는 쪽(Lambda)이 신호가 끊기면 CloudWatch 알람을 울린다.
+  # 토큰은 /srv/monitoring/.env의 HEARTBEAT_TOKEN에서 온다(SSM /plick/frontend/monitoring/prod/heartbeat-token).
+  - orgId: 1
+    name: heartbeat-plick-monitoring
+    receivers:
+      - uid: heartbeat-plick-monitoring
+        type: webhook
+        settings:
+          url: https://bdjbvsa6fwu6vgrt6ywswn6v7y0gjhne.lambda-url.ap-northeast-2.on.aws/
+          httpMethod: POST
+          authorization_scheme: Bearer
+          # 따옴표가 있어야 값이 비어도(SSM 읽기 실패) 그라파나가 뜬다. 그라파나는 치환한 값이 t, true, 숫자처럼
+          # 보이면 그 타입으로 바꿔 시작에 실패하므로, 토큰은 Terraform이 만드는 40자 영문 숫자 섞인 값을 쓴다
+          authorization_credentials: "$HEARTBEAT_TOKEN"
+        disableResolveMessage: true
 policies:
   - orgId: 1
     receiver: slack-plick-frontend
@@ -23,3 +76,18 @@ policies:
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
+    routes:
+      # team=main 규칙은 main 전용 수신처로 보낸다. 알림 이름별로 묶어 인스턴스 두 대가 같이 울리면 한 메시지로 간다
+      - receiver: slack-plick-main
+        object_matchers: [["team", "=", "main"]]
+        group_by: [alertname]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+      # 하트비트는 슬랙이 아니라 Lambda로 간다. 항상 울리는 규칙이라 3분마다 다시 보내 신호를 이어 간다.
+      # 신호가 15분 끊기면 CloudWatch 알람이 기존 SNS 경로로 슬랙에 알린다
+      - receiver: heartbeat-plick-monitoring
+        object_matchers: [["team", "=", "heartbeat"]]
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 3m

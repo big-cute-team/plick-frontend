@@ -19,6 +19,12 @@ export const RESTORE_MAX_FRAMES = 30;
 export const SWITCH_BANNER_DISMISS_KEY = "plick-switch-banner-dismissed";
 
 /**
+ * 외부 브라우저로 열기 배너(KAN-610)를 닫았음을 기억하는 localStorage 키. 인앱이 localStorage까지
+ * 지우는 환경이면 다시 뜨지만, 그런 환경은 기기 복원도 안 되는 곳이라 따로 막지 않는다.
+ */
+export const INAPP_BANNER_DISMISS_KEY = "plick-inapp-banner-dismissed";
+
+/**
  * 데스크톱 버전 전환을 추천할 뷰포트 조건 (KAN-379). UA 스니핑 대신 뷰포트로
  * 판별한다 — 이 코드베이스의 반응형 판단은 전부 뷰포트 기준이고(웹 lg 분기,
  * `MOBILE_ALTERNATE_MEDIA`), 판별이 틀려도 배너 하나라 대가가 없다.

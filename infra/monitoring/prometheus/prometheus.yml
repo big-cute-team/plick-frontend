@@ -73,3 +73,22 @@ scrape_configs:
         target_label: instance
       - source_labels: [__meta_ec2_availability_zone]
         target_label: az
+
+  # 메인 API 서버의 호스트 지표(node_exporter, 9100) (KAN-601). 앱 지표(9466)는 JVM 안만 봐서
+  # 머신 메모리 부족, 디스크 스래싱, iowait를 못 본다. 설치는 plick-backend 배포 훅
+  # (scripts/install_node_exporter.sh)이 하고, 보안그룹 9100 인바운드는 plick-infra가 연다.
+  - job_name: plick-main-node
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9100
+        refresh_interval: 60s
+        filters:
+          - name: tag:Name
+            values: [plick-main-prod]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az

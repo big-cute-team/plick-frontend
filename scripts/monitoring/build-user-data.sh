@@ -46,7 +46,12 @@ apt-get install -y awscli
 webhook="\$(aws ssm get-parameter --region ap-northeast-2 \
   --name /plick/frontend/monitoring/prod/slack-webhook --with-decryption \
   --query Parameter.Value --output text 2>/dev/null || true)"
-printf 'SLACK_WEBHOOK_URL=%s\n' "\$webhook" > /srv/monitoring/.env
+# 하트비트 토큰 (KAN-601). 같은 방식으로 읽는다. 없으면 비워 두고, 하트비트만 거절된다
+heartbeat="\$(aws ssm get-parameter --region ap-northeast-2 \
+  --name /plick/frontend/monitoring/prod/heartbeat-token --with-decryption \
+  --query Parameter.Value --output text 2>/dev/null || true)"
+[ -n "\$heartbeat" ] || echo "경고: 하트비트 토큰을 SSM에서 읽지 못했다. 15분 뒤 grafana-heartbeat-missing 알람이 울린다" >&2
+printf 'SLACK_WEBHOOK_URL=%s\nHEARTBEAT_TOKEN=%s\n' "\$webhook" "\$heartbeat" > /srv/monitoring/.env
 chmod 600 /srv/monitoring/.env
 
 # 그라파나 컨테이너는 uid 472로 돈다. 프로비저닝 폴더는 읽기 전용 마운트라 상관없지만
