@@ -152,6 +152,11 @@ export const GUEST_NOTICE = {
  * 하루치에서 네이버 `Yeti`와 메타 `meta-externalagent`가 그랬다. 그래서 이름에 bot이 없는
  * 검색·AI 크롤러와 HTTP 라이브러리(`python-requests`, `curl`)를 더했다. 네이버·카카오 앱의
  * 인앱 브라우저(`NAVER(inapp`, `KAKAOTALK`)는 사람이라 `naver`·`kakao`는 넣지 않는다.
+ *
+ * `googleother`(구글의 비검색 크롤러)도 이름에 bot이 없다. prod ALB 10/06 6시간 표본에서 144건이 패턴을
+ * 지나쳤다(KAN-607). 크롤러로 잡히면 게스트·기기를 안 받는 데 더해 `X-Plick-Bot: 1`이 실려 서버 렌더링
+ * 이벤트도 봇으로 남는다. 2019년 iOS 13 UA처럼 의심스럽지만 사람과 겹치는 것은 넣지 않는다. 그쪽은
+ * 쿠키를 돌려주는지로 거른다(`resolveDeviceId`).
  */
 export const CRAWLER_UA_PATTERN =
-  /bot|crawler|spider|crawling|slurp|facebookexternalhit|meta-externalagent|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome|yeti|daum\/|chatgpt-user|perplexity-user|bingpreview|prefetch proxy|python|curl|wget|go-http-client|okhttp|java\/|axios|node-fetch|scrapy|phantomjs|puppeteer|playwright/i;
+  /bot|crawler|spider|crawling|slurp|facebookexternalhit|meta-externalagent|embedly|quora link preview|showyoubot|outbrain|pinterest|vkshare|w3c_validator|whatsapp|telegram|lighthouse|headlesschrome|yeti|daum\/|googleother|chatgpt-user|perplexity-user|bingpreview|prefetch proxy|python|curl|wget|go-http-client|okhttp|java\/|axios|node-fetch|scrapy|phantomjs|puppeteer|playwright/i;

@@ -34,7 +34,39 @@ export const ANALYTICS_HEADERS = {
   clickId: "X-Plick-Click-Id",
   /** 클릭 식별자가 어느 플랫폼 것인지 (`meta`, `google`, `tiktok`) */
   clickSource: "X-Plick-Click-Source",
+  /** 봇 표시 (KAN-607, BE KAN-606). 값이 `1`이면 BE가 이벤트를 `is_bot = true`로 남긴다. 프록시가 정한다 */
+  bot: "X-Plick-Bot",
 } as const;
+
+/** `X-Plick-Bot`에 싣는 유일한 값. BE는 `1`만 봇으로 읽고 나머지는 전부 사람으로 접는다. */
+export const BOT_HEADER_VALUE = "1";
+
+/**
+ * E2E가 dev WAF를 지나려고 싣는 쿠키 (KAN-573). 이름이 보이면 봇으로 표시한다 (KAN-607).
+ *
+ * 값은 안 본다. 위조해 봐야 보낸 사람 자기 이벤트가 판단 수치에서 빠질 뿐이고, 그걸 막으려고
+ * WAF 토큰을 프록시에 풀어 둘 이유가 없다. 이름은 `tests/e2e/playwright.config.ts`와 같다.
+ */
+export const E2E_COOKIE = "plick_e2e";
+
+/**
+ * 봇으로 표시할 요청인지 (KAN-607). 두 앱 프록시가 같이 쓴다.
+ *
+ * 크롤러(`CRAWLER_UA_PATTERN`)와 E2E(`E2E_COOKIE`)다. 둘 다 사람 기기처럼 보이는 이벤트를 남기는데,
+ * E2E는 갤럭시·데스크톱 크롬 UA를 쓰고 테스트마다 새 브라우저라 UA로도 쿠키로도 사람과 안 갈린다.
+ * dev 기기 187대 중 180대가 E2E였다. 크롤러는 게스트를 안 받아도 서버 렌더링이 피드를 불러
+ * `feed_served`가 사람으로 남아 조회율을 10배 넘게 낮춰 보이게 했다.
+ *
+ * @param input 프록시가 요청에서 뽑은 판정 재료
+ */
+export function isBotRequest(input: {
+  /** 검색 크롤러인가(`CRAWLER_UA_PATTERN`) */
+  isCrawler: boolean;
+  /** `E2E_COOKIE`가 요청에 있는가 */
+  hasE2eCookie: boolean;
+}): boolean {
+  return input.isCrawler || input.hasE2eCookie;
+}
 
 /** 서버 측 fetch가 요청 헤더에서 그대로 옮겨 실을 헤더 이름 목록. */
 export const ANALYTICS_HEADER_NAMES: readonly string[] =
@@ -91,6 +123,64 @@ const PATH_VALUE_PATTERN = /^[a-z0-9_]{1,32}$/;
  */
 export function isDeviceId(value: string | null | undefined): value is string {
   return !!value && DEVICE_ID_PATTERN.test(value);
+}
+
+/** `resolveDeviceId`가 요청에서 읽는 것. 프록시가 `NextRequest`에서 뽑아 넘긴다. */
+export interface DeviceIdInput {
+  /** 기기 쿠키(`DEVICE_ID_COOKIE`) 값. 없으면 undefined */
+  cookie: string | null | undefined;
+  /** 전환 배너가 쿼리(`?did=`)로 넘긴 값. 없으면 null */
+  handed: string | null;
+  /** `/be` fetch인가 */
+  isProxy: boolean;
+  /** 검색 크롤러인가(`CRAWLER_UA_PATTERN`) */
+  isCrawler: boolean;
+}
+
+/** `resolveDeviceId`의 결과. */
+export interface DeviceIdResult {
+  /** 이번 요청의 기기 식별자. 크롤러나 쿠키 없는 `/be` fetch면 null */
+  id: string | null;
+  /** `X-Plick-Device`에 실을지. 쿠키를 들고 온 요청만 true다 */
+  send: boolean;
+  /** 이번 응답에 쿠키를 심을지. 새로 만들었거나 배너에서 넘겨받았을 때 true다 */
+  issue: boolean;
+}
+
+/**
+ * 요청 하나의 기기 식별자를 정하고, 헤더에 실을지와 쿠키를 심을지를 가른다 (KAN-542, KAN-607).
+ * 두 앱 프록시가 같이 쓴다.
+ *
+ * 값은 셋 중 하나다. 쿠키가 있으면 그것. 없으면 전환 배너가 쿼리로 넘긴 값. 그것도 없으면 새
+ * UUID다. 쿼리 채택은 쿠키가 없을 때만이다. 있는 사람의 식별자를 남이 보낸 링크가 덮어쓰면 안
+ * 된다. 만드는 건 페이지 요청에서만 한다. `/be` fetch는 항상 페이지 뒤에 오므로 그때는 이미
+ * 쿠키가 있고, 없는 채로 여러 fetch가 동시에 오면 각자 다른 값을 만들어 마지막 Set-Cookie만
+ * 남는 꼴이 된다. 크롤러에게는 만들지 않는다. 쿠키를 안 들고 다녀 요청마다 새 기기가 된다.
+ *
+ * 헤더에는 쿠키에서 온 값만 싣는다 (KAN-607). UA를 사람처럼 위장한 크롤러는 패턴으로 못 거르고
+ * 쿠키도 안 들고 다녀서, 첫 요청에 바로 실으면 페이지 하나마다 새 기기가 BE에 남는다(prod 기기
+ * 절반이 이랬다. 한 IP가 1분에 페이지 162개를 긁어 기기 146대를 만들었다). 새 값은 쿠키에만 심고,
+ * 브라우저가 그 쿠키를 들고 다시 올 때부터 싣는다. 사람은 첫 화면 JS가 보내는 `app_entered`부터
+ * 쿠키가 있으니 거기서부터 기기가 붙고, 첫 서버 렌더링 이벤트 하나만 기기 없이 남는다. 쿠키를
+ * 버리는 크롤러는 영원히 첫 요청이라 기기를 한 번도 못 받는다. 배너가 넘긴 값도 같은 규칙이다.
+ * 다음 요청부터 같은 기기로 이어지므로 첫 페이지 한 번만 빈다.
+ *
+ * @param input 요청에서 뽑은 값
+ * @param generate 새 식별자를 만드는 함수. 테스트가 바꿔 끼운다
+ */
+export function resolveDeviceId(
+  input: DeviceIdInput,
+  generate: () => string = () => crypto.randomUUID(),
+): DeviceIdResult {
+  if (isDeviceId(input.cookie)) {
+    return { id: input.cookie, send: true, issue: false };
+  }
+  if (input.isProxy) return { id: null, send: false, issue: false };
+  if (isDeviceId(input.handed)) {
+    return { id: input.handed.toLowerCase(), send: false, issue: true };
+  }
+  if (input.isCrawler) return { id: null, send: false, issue: false };
+  return { id: generate(), send: false, issue: true };
 }
 
 /**
