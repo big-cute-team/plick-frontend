@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { OpenInBrowserBanner } from "./OpenInBrowserBanner";
 import { SwitchToWebBanner } from "./SwitchToWebBanner";
 
 /**
@@ -12,11 +13,13 @@ import { SwitchToWebBanner } from "./SwitchToWebBanner";
  * PC 전환 배너(KAN-379)를 맨 위에 둔다. 셸이 높이를 못박고 있어 `shrink-0`으로
  * 자리를 지키게 하고(안 그러면 눌린다), 그만큼 아래 스크롤 영역이 줄어든다.
  * 넓은 화면에서만 뜨는 배너라 폰에서는 아무 자리도 차지하지 않는다.
+ * 외부 브라우저로 열기 배너(KAN-610)도 같은 자리, 같은 이유다. 인스타·페이스북 인앱에서만 뜬다.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="bg-bg text-text relative mx-auto flex h-[100dvh] w-full max-w-[480px] flex-col overflow-hidden">
       <SwitchToWebBanner />
+      <OpenInBrowserBanner />
       {children}
     </div>
   );

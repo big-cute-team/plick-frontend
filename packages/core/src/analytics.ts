@@ -36,6 +36,8 @@ export const ANALYTICS_HEADERS = {
   clickSource: "X-Plick-Click-Source",
   /** 봇 표시 (KAN-607, BE KAN-606). 값이 `1`이면 BE가 이벤트를 `is_bot = true`로 남긴다. 프록시가 정한다 */
   bot: "X-Plick-Bot",
+  /** 인앱 브라우저 종류 (KAN-610, BE KAN-609). `BROWSER_KINDS` 중 하나. 프록시가 UA로 정한다 */
+  browser: "X-Plick-Browser",
 } as const;
 
 /** `X-Plick-Bot`에 싣는 유일한 값. BE는 `1`만 봇으로 읽고 나머지는 전부 사람으로 접는다. */
@@ -68,6 +70,88 @@ export function isBotRequest(input: {
   return input.isCrawler || input.hasE2eCookie;
 }
 
+/**
+ * `X-Plick-Browser` 값 (KAN-610, BE KAN-609). 인앱 브라우저 다섯 종과 우리 앱 셸, 그 밖의 인앱, 외부
+ * 브라우저다. BE는 `X-Plick-Path`처럼 형식(`[a-z0-9_]{1,32}`)만 보고 원값을 남기므로 여기 목록이
+ * 곧 값의 출처다.
+ *
+ * `plick_app`은 티켓 목록에 없던 값이다. 우리 네이티브 앱 셸(RN WebView)은 UA 끝에 `PlickApp/x.y`를
+ * 붙이는데, 그걸 안 가르면 웹뷰라서 `other_inapp`으로 접혀 우리 앱 사용자가 남의 인앱과 섞인다.
+ */
+export const BROWSER_KINDS = [
+  "instagram",
+  "facebook",
+  "kakaotalk",
+  "naver",
+  "line",
+  "plick_app",
+  "other_inapp",
+  "browser",
+] as const;
+
+/** `X-Plick-Browser`에 실을 수 있는 값. */
+export type BrowserKind = (typeof BROWSER_KINDS)[number];
+
+/**
+ * UA에서 인앱 종류를 알아보는 규칙. 앞선 것이 이긴다.
+ *
+ * 인스타그램 인앱 UA는 `Instagram 3xx.x.x.x.xxx Android (...)`처럼 이름이 그대로 들어 있고,
+ * 페이스북은 `FBAN/FB4A` `FBAV/4xx` 꼴이다. 카카오톡은 `KAKAOTALK 10.x`, 네이버는 `NAVER(inapp; search; ...)`,
+ * 라인은 `Line/14.x`다. 인스타 UA에 `FBAN`이 같이 붙는 빌드가 있어 인스타를 먼저 본다.
+ * 우리 앱 셸은 `PlickApp/x.y`를 UA 끝에 단다(plick-AppShell `USER_AGENT_SUFFIX`).
+ */
+const BROWSER_KIND_RULES: readonly (readonly [BrowserKind, RegExp])[] = [
+  ["plick_app", /\bPlickApp(\/|\b)/],
+  ["instagram", /\bInstagram\b/i],
+  ["facebook", /\bFB(AN|AV|_IAB)\b/],
+  ["kakaotalk", /\bKAKAOTALK\b/i],
+  ["naver", /NAVER\(inapp/i],
+  ["line", /\bLine\//],
+];
+
+/**
+ * 이름 없는 인앱 웹뷰 표식. 안드로이드 WebView는 UA에 `; wv)`를 단다(크롬 정책). iOS WKWebView는
+ * 사파리와 달리 `Safari/` 토큰이 없다. 크롬·파이어폭스 iOS는 `CriOS`·`FxiOS`지만 `Safari/`도 같이
+ * 있어 여기 안 걸린다.
+ */
+const ANDROID_WEBVIEW_PATTERN = /;\s*wv\)/;
+const IOS_PATTERN = /\b(iPhone|iPad|iPod)\b/;
+
+/**
+ * UA로 인앱 브라우저 종류를 정한다 (KAN-610). 두 앱 프록시가 같이 쓰고, 모바일 배너는 브라우저에서
+ * `navigator.userAgent`로 같은 함수를 부른다. 한 함수를 양쪽이 쓰니 "헤더는 인스타인데 배너는
+ * 안 뜨는" 어긋남이 없다.
+ *
+ * 크롤러는 따로 안 가른다. 봇 표시는 `X-Plick-Bot`(KAN-607)이 맡고, 크롤러 UA는 대개 `browser`로
+ * 떨어진다. 모르는 값은 `other_inapp`이 아니라 `browser`다. 인앱이라는 적극적 표식이 있을 때만
+ * 인앱으로 센다.
+ *
+ * @param userAgent 요청의 User-Agent. 없으면 빈 문자열
+ */
+export function resolveBrowserKind(userAgent: string): BrowserKind {
+  for (const [kind, pattern] of BROWSER_KIND_RULES) {
+    if (pattern.test(userAgent)) return kind;
+  }
+  if (ANDROID_WEBVIEW_PATTERN.test(userAgent)) return "other_inapp";
+  if (
+    IOS_PATTERN.test(userAgent) &&
+    /AppleWebKit/.test(userAgent) &&
+    !/Safari\//.test(userAgent)
+  ) {
+    return "other_inapp";
+  }
+  return "browser";
+}
+
+/**
+ * 외부 브라우저로 열기를 권할 인앱 종류 (KAN-610). 광고 유입이 오는 인스타·페이스북부터다. 카카오톡과
+ * 네이버는 쿠키를 지우는지 아직 모르고, 우리 앱 셸은 인앱이어도 우리 것이다.
+ */
+export const EXTERNAL_BROWSER_SUGGEST_KINDS: readonly BrowserKind[] = [
+  "instagram",
+  "facebook",
+];
+
 /** 서버 측 fetch가 요청 헤더에서 그대로 옮겨 실을 헤더 이름 목록. */
 export const ANALYTICS_HEADER_NAMES: readonly string[] =
   Object.values(ANALYTICS_HEADERS);
@@ -84,6 +168,66 @@ export type PlickClient = "mobile_web" | "desktop_web";
  * UUID 형식이 아니면 비운다.
  */
 export const DEVICE_ID_COOKIE = "plick_did";
+
+/**
+ * 기기 식별자를 같이 두는 localStorage 키 (KAN-610). 인앱 브라우저(인스타·페이스북)는 쿠키를
+ * 날을 넘겨 안 들고 다녀 같은 사람이 매번 새 기기가 됐다(prod 10/02~10/07, 인스타 유입 기기 중
+ * 이틀 이상 온 비율 4.7%). 쿠키와 함께 여기에도 적어 두고, 쿠키가 사라졌으면 `deviceSyncScript`가
+ * 여기 값으로 쿠키를 되살린다.
+ */
+export const DEVICE_ID_STORAGE_KEY = "plick_did";
+
+/**
+ * 이번 탭에서 기기 식별자를 localStorage에서 되살렸다는 표식(sessionStorage). `deviceSyncScript`가
+ * 심고 `touchSession`이 한 번 읽고 지워 `app_entered`에 `device_restored: true`를 싣는다. 인앱이
+ * 쿠키와 localStorage를 같이 지우면 복원은 일어나지 않으니, 이 수치가 복원을 유지할지의 근거다.
+ */
+export const DEVICE_RESTORED_KEY = "plick_did_restored";
+
+/**
+ * `<head>`에 동기로 박는 기기 식별자 동기화 스크립트 (KAN-610). 두 앱 루트 레이아웃이 같은 문자열을
+ * 쓴다. 쿠키 이름·수명·형식을 이 파일의 상수에서 조립하므로 프록시와 어긋나지 않는다.
+ *
+ * 하는 일은 둘이다. localStorage에 유효한 값이 있는데 쿠키가 그 값이 아니면 쿠키를 그 값으로 다시
+ * 심고 복원 표식을 남긴다. localStorage가 비었고 쿠키가 유효하면 localStorage에 적는다.
+ *
+ * 왜 서버가 아니라 브라우저가 심나: 프록시는 쿠키 없는 페이지 요청에서 JS가 돌기 전에 이미 새 UUID를
+ * 심는다(`resolveDeviceId`). 그래서 JS가 보는 시점엔 쿠키가 "없는" 게 아니라 "방금 생긴" 상태고,
+ * 다음 요청의 프록시는 그게 방금 만든 값인지 원래 값인지 가를 수 없다. 쿠키는 어차피 HttpOnly가
+ * 아니고 서버가 심든 JS가 심든 같은 저장소라 보존이 다르지 않다. 방금 만든 값은 헤더로 나간 적이
+ * 없어(KAN-607, 쿠키에서 온 값만 싣는다) 덮어써도 BE에 흔적이 없다.
+ *
+ * 왜 `<head>` 동기인가: 하이드레이션 뒤 이펙트에서 하면 그보다 먼저 나간 `/be` fetch(릴스 조회 등)가
+ * 새 값을 `X-Plick-Device`로 싣고 간다. 첫 바이트 전에 돌아야 이번 페이지의 모든 요청이 옛 값을 단다.
+ * DOM은 안 건드리니 하이드레이션 경고와 무관하다.
+ *
+ * 쿠키 속성은 프록시(`AUTH_COOKIE_BASE` + `ANALYTICS_COOKIE_MAX_AGE`)와 같다. `Secure`는 프록시가
+ * `NODE_ENV`로 정하는데 브라우저는 그걸 모르니 프로토콜로 본다. 결과는 같다(로컬 http만 빠진다).
+ *
+ * 되살릴 때마다 수명이 400일로 다시 시작하므로 localStorage가 사는 한 식별자는 사실상 만료되지 않는다.
+ * 의도한 것이다. 400일은 "1년 이상 길게"라는 요구에 크롬의 `Max-Age` 상한을 그대로 쓴 값이지 만료
+ * 정책이 아니고, 식별자는 익명 난수 하나라 오래 살아도 잃을 것이 없다. 사용자가 사이트 데이터를 지우면
+ * 둘 다 같이 사라진다.
+ */
+export function deviceSyncScript(): string {
+  const cookie = DEVICE_ID_COOKIE;
+  const pattern = DEVICE_ID_PATTERN.source;
+  const attrs = `; Max-Age=${ANALYTICS_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+  return (
+    "(function(){try{" +
+    `var m=document.cookie.match(/(?:^|; )${cookie}=([^;]*)/);` +
+    "var c=m?m[1]:null;" +
+    `var l=localStorage.getItem("${DEVICE_ID_STORAGE_KEY}");` +
+    `var re=/${pattern}/i;` +
+    'if(re.test(l||"")){' +
+    "if(c!==l){" +
+    `document.cookie="${cookie}="+l+"${attrs}"+(location.protocol==="https:"?"; Secure":"");` +
+    `sessionStorage.setItem("${DEVICE_RESTORED_KEY}","1")` +
+    "}" +
+    `}else if(re.test(c||"")){localStorage.setItem("${DEVICE_ID_STORAGE_KEY}",c)}` +
+    "}catch(e){}})()"
+  );
+}
 
 /**
  * 유입 경로를 들고 있는 쿠키 (KAN-542). 첫 진입 URL의 `?path=`, 없으면 `utm_source`, 둘 다

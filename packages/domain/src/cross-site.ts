@@ -53,3 +53,23 @@ export function crossSiteUrl(
   if (!deviceId) return url;
   return `${url}?${DEVICE_ID_QUERY_PARAM}=${encodeURIComponent(deviceId)}`;
 }
+
+/**
+ * 아무 절대 주소에 기기 식별자 쿼리를 더한다 (KAN-610). 외부 브라우저로 열기 배너가 쓴다.
+ * 인앱에서 크롬으로 넘어가면 쿠키 저장소가 갈려 새 기기가 되므로, 전환 배너와 같은 파라미터로
+ * 넘겨 받는 쪽 프록시가 자기 쿠키가 없을 때 채택하게 한다. 기존 쿼리(utm 등)는 그대로 둔다.
+ *
+ * `crossSiteUrl`과 달리 URL API로 붙인다. 지금 보는 주소는 쿼리가 이미 있을 수 있어서다.
+ *
+ * @param href 지금 보고 있는 절대 주소(`location.href`)
+ * @param deviceId 이 브라우저의 기기 식별자. 없으면 주소를 그대로 돌려준다
+ */
+export function withDeviceIdParam(
+  href: string,
+  deviceId: string | null | undefined,
+): string {
+  if (!deviceId) return href;
+  const url = new URL(href);
+  url.searchParams.set(DEVICE_ID_QUERY_PARAM, deviceId);
+  return url.toString();
+}
