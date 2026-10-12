@@ -1,4 +1,7 @@
-import type { PlayerCompetitionStats } from "@plick/domain/player-profile";
+import {
+  zeroIfPlayed,
+  type PlayerCompetitionStats,
+} from "@plick/domain/player-profile";
 import { RATING_TONE_CLASS } from "@/_constants/profile";
 
 /**
@@ -23,8 +26,6 @@ export function PlayerNumberBand({
   const s = stats;
   const n = (v: number | null | undefined) =>
     v === null || v === undefined ? "-" : String(v);
-  const played = (v: number | null | undefined) =>
-    v == null && s?.appearances ? "0" : n(v);
   const rating = s?.rating ?? null;
   const cells: {
     label: string;
@@ -48,8 +49,11 @@ export function PlayerNumberBand({
           { label: "클린시트", value: n(cleanSheets) },
         ]
       : [
-          { label: "골", value: played(s?.goals) },
-          { label: "도움", value: played(s?.assists) },
+          { label: "골", value: n(s && zeroIfPlayed(s.goals, s.appearances)) },
+          {
+            label: "도움",
+            value: n(s && zeroIfPlayed(s.assists, s.appearances)),
+          },
         ]),
     {
       label: "평점",

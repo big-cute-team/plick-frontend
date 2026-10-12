@@ -10,8 +10,8 @@ import {
 import { PREMIER_LEAGUE_ID } from "@plick/domain/team-profile";
 import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { ProfileTabBar } from "@/_components/ProfileTabBar";
-import { PLAYER_PROFILE_TABS } from "@/_constants/team-profile";
-import type { PlayerProfileTabKey } from "@/_types/team-profile";
+import { PLAYER_PROFILE_TABS } from "@/_constants/player-profile";
+import type { PlayerProfileTabKey } from "@/_types/player-profile";
 import { PlayerNumberBand } from "./PlayerNumberBand";
 import { PlayerStatGroups } from "./PlayerStatGroups";
 

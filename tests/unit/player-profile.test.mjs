@@ -12,6 +12,7 @@ import {
   playerStatGroups,
   teammates,
   usageCounts,
+  zeroIfPlayed,
 } from "../../packages/domain/src/player-profile.ts";
 
 const stats = (over = {}) => ({
@@ -208,4 +209,11 @@ test("같은 팀 선수는 본인을 빼고 포지션 순, 번호 순으로 자�
     picked.map((p) => p.playerId),
     [2, 4, 3, 5, 1],
   );
+});
+
+test("출전했으면 기록 없는 값을 0으로, 출전이 없거나 모르면 그대로 둔다", () => {
+  assert.equal(zeroIfPlayed(null, 6), 0);
+  assert.equal(zeroIfPlayed(3, 6), 3);
+  assert.equal(zeroIfPlayed(null, 0), null);
+  assert.equal(zeroIfPlayed(null, null), null);
 });

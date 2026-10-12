@@ -151,8 +151,16 @@ export function per90(total: number | null, minutes: number | null): string {
 
 /**
  * 출전했는데 기록이 없는 골, 도움은 0이다(빈 값 처리 예외). 출전이 없거나 모르면 null 그대로.
+ * 숫자 띠와 기록 탭이 같은 값을 보이게 둘 다 이 함수를 쓴다.
+ *
+ * @example
+ * zeroIfPlayed(null, 6); // 0
+ * zeroIfPlayed(null, 0); // null
  */
-function zeroIfPlayed(value: number | null, appearances: number | null) {
+export function zeroIfPlayed(
+  value: number | null,
+  appearances: number | null,
+): number | null {
   return value === null && appearances ? 0 : value;
 }
 

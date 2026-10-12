@@ -153,7 +153,22 @@ mock BE(8081) 앞에 다시 고장 주입 프록시(8083)를 뒀다. mock에 선
   감독은 `/figures/102`.
 - 340px: 세 탭 모두 페이지 가로 스크롤 없음. 경기 표와 시즌 표는 자기 안에서만 넘어간다.
 - 팀 프로필 회귀: 네 탭, 레일 카드 넷, 선수 링크 정상.
-- format:check, test:hooks(40), test:unit(66, 선수 8건 추가), lint, check-types, web·mobile build 통과.
+- format:check, test:hooks(40), test:unit(67, 선수 9건 추가), lint, check-types, web·mobile build 통과.
+
+## 헤드리스 리뷰
+
+첫 커밋 뒤 돌린 리뷰는 라인업 변경 요청이 와서 중간에 끊고, 라인업 커밋까지 얹은 뒤 다시 돌렸다. 그런데 이번엔 예산이 아니라 턴
+상한(`--max-turns` 기본 12)에 걸려 exit 3이었다(`.review/raw.json`의 `subtype: error_max_turns`). diff가 138KB라 리뷰어가 파일을
+여는 데 턴을 다 썼다. 스크립트가 `REVIEW_MAX_TURNS`, `REVIEW_TIMEOUT_SEC`도 env로 받아서 턴 30, 예산 $3, 10분으로 올려 다시 돌렸고
+32턴, $1.75에 끝났다. diff가 100KB를 넘으면 처음부터 이 값으로 돌리는 게 낫다.
+
+CRITICAL 없이 WARN 1, INFO 2였고 다 반영했다.
+
+- "출전했는데 기록 없는 골, 도움은 0" 규칙이 domain의 `zeroIfPlayed`(기록 탭)와 숫자 띠 컴포넌트 안에 따로 있었다. 한쪽만 고치면
+  같은 선수의 골이 숫자 띠와 기록 탭에서 다르게 보인다. `zeroIfPlayed`를 export해 숫자 띠도 그걸 쓰게 하고 테스트를 붙였다.
+- 공통 상수가 `_constants/profile.ts`와 `team-profile.ts`에 나뉘어 있었다. 팀 전용(`team-profile.ts`), 선수 전용(`player-profile.ts`),
+  두 화면 공통(`profile.ts`)으로 다시 갈랐다. 탭 키 타입도 `_types/player-profile.ts`로 옮겼다.
+- 시즌별 기록 행 key가 팀 이름에 기대고 있어 팀이 null인 줄이 겹치면 중복될 수 있었다. 인덱스를 더했다.
 
 ## 남은 것
 

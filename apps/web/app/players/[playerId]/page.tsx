@@ -14,11 +14,11 @@ import { ProfileBreadcrumb } from "@/_components/ProfileBreadcrumb";
 import { ProfileSection } from "@/_components/ProfileSection";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { TEAMMATE_COUNT } from "@/_constants/player-profile";
 import {
-  TEAMMATE_COUNT,
   PROFILE_ISSUE_COUNT,
   PROFILE_RECENT_COUNT,
-} from "@/_constants/team-profile";
+} from "@/_constants/profile";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { PlayerMatchRows } from "./_components/PlayerMatchRows";
 import { PlayerOverviewPanel } from "./_components/PlayerOverviewPanel";

@@ -42,9 +42,9 @@ export function PlayerSeasonsTable({
               <span className="text-center">도움</span>
               <span className="text-center">평점</span>
             </div>
-            {lines.map((line) => (
+            {lines.map((line, i) => (
               <div
-                key={`${line.season}-${line.competitionId}-${line.team?.name ?? ""}`}
+                key={`${line.season}-${line.competitionId}-${i}`}
                 role="row"
                 className={`border-border-soft grid h-10 items-center gap-2 border-b ${COLS}`}
               >

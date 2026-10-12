@@ -25,7 +25,7 @@ import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import {
   PROFILE_ISSUE_COUNT,
   PROFILE_RECENT_COUNT,
-} from "@/_constants/team-profile";
+} from "@/_constants/profile";
 import { ClubInfoCard } from "./_components/ClubInfoCard";
 import { InjuriesCard } from "./_components/InjuriesCard";
 import { StandingsWindowCard } from "./_components/StandingsWindowCard";
