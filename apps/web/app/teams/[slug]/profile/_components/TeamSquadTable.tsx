@@ -6,17 +6,12 @@ import {
   type TeamSquadMember,
 } from "@plick/domain/team-profile";
 import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
-import { PlayerLink } from "./PlayerLink";
+import { RATING_TONE_CLASS } from "@/_constants/profile";
+import { PlayerLink } from "@/_components/PlayerLink";
 
 /** 선수단 표 열 (시안 1338행: #, 선수, 나이, 국적, 경기, 골, 도움, 평점). */
 const COLS =
   "grid-cols-[2rem_minmax(0,1fr)_2.75rem_5.75rem_2.75rem_2.5rem_2.5rem_3rem]";
-
-const RATING_COLOR = {
-  accent: "text-accent",
-  normal: "text-text-2",
-  muted: "text-text-4",
-} as const;
 
 /**
  * 선수단 탭 표 (KAN-599, 시안 팀 프로필 1331-1356행). 포지션 묶음마다 표 머리(묶음 이름
@@ -105,7 +100,7 @@ function SquadRow({
       <span className={cell}>{stats?.goals ?? "-"}</span>
       <span className={cell}>{stats?.assists ?? "-"}</span>
       <span
-        className={`text-label-lg text-center font-black tabular-nums ${RATING_COLOR[profileRatingTone(rating)]}`}
+        className={`text-label-lg text-center font-black tabular-nums ${RATING_TONE_CLASS[profileRatingTone(rating)]}`}
       >
         {rating?.toFixed(1) ?? "-"}
       </span>

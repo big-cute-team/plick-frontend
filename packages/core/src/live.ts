@@ -89,12 +89,16 @@ interface MatchDetailResponse {
     side: Side;
     minute: number | null;
     extraMinute: number | null;
+    /** API 선수 id (KAN-590). 옛 BE 응답엔 없어 optional */
+    playerId?: number | null;
     playerName: string;
     detail: string | null;
   }[];
   preview: {
     absences: {
       side: Side;
+      /** API 선수 id (KAN-590). 옛 BE 응답엔 없어 optional */
+      playerId?: number | null;
       playerName: string;
       photo: string | null;
       type: string | null;
@@ -128,7 +132,10 @@ interface MatchDetailResponse {
         extraMinute: number | null;
         type: string;
         detail: string | null;
+        /** API 선수 id와 도움(교체면 나가는 선수) id (KAN-590). 옛 BE 응답엔 없어 optional */
+        playerId?: number | null;
         playerName: string | null;
+        assistId?: number | null;
         assistName: string | null;
       }[]
     | null;
@@ -378,6 +385,7 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
       .filter((goal) => goal.detail !== "Missed Penalty")
       .map((goal) => ({
         minute: eventMinuteLabel(goal.minute, goal.extraMinute),
+        playerId: goal.playerId ?? null,
         playerName: goal.playerName,
         detail: GOAL_DETAIL_LABEL[goal.detail ?? ""] ?? null,
         side: goal.side,
@@ -390,6 +398,7 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
             .map(
               (absence): Absentee => ({
                 team: teamOf(absence.side),
+                playerId: absence.playerId ?? null,
                 playerName: absence.playerName,
                 photo: absence.photo,
                 reason: absence.reason ?? absence.type ?? "결장",
@@ -473,23 +482,32 @@ function toMatchEvent(event: {
   extraMinute: number | null;
   type: string;
   detail: string | null;
+  playerId?: number | null;
   playerName: string | null;
+  assistId?: number | null;
   assistName: string | null;
 }): MatchEvent {
+  const playerId = event.playerId ?? null;
+  /** 부가 설명이 "X 도움"이나 "X 아웃"일 때만 그 선수를 따로 싣는다(웹 링크용) */
+  const assistOf = (suffix: string) =>
+    event.assistName
+      ? { id: event.assistId ?? null, name: event.assistName, suffix }
+      : null;
   const minute = eventMinuteLabel(event.minute, event.extraMinute);
   const type = event.type.toLowerCase();
   const detail = event.detail ?? "";
 
   if (type === "goal") {
+    const label =
+      detail === "Missed Penalty" ? "페널티 실축" : GOAL_DETAIL_LABEL[detail];
+    const assist = label ? null : assistOf("도움");
     return {
       minute,
       type: "GOAL",
+      playerId,
       playerName: event.playerName,
-      detail:
-        detail === "Missed Penalty"
-          ? "페널티 실축"
-          : (GOAL_DETAIL_LABEL[detail] ??
-            (event.assistName ? `${event.assistName} 도움` : null)),
+      detail: label ?? (assist ? `${assist.name} 도움` : null),
+      assist,
       side: event.side,
     };
   }
@@ -499,26 +517,33 @@ function toMatchEvent(event: {
     return {
       minute,
       type: red ? "RED_CARD" : "CARD",
+      playerId,
       playerName: event.playerName,
       detail: red && /second/i.test(detail) ? "경고 누적" : null,
+      assist: null,
       side: event.side,
     };
   }
   if (type === "subst") {
     // 원본은 player가 들어오는 선수, assist가 나가는 선수다
+    const assist = assistOf("아웃");
     return {
       minute,
       type: "SUB",
+      playerId,
       playerName: event.playerName,
-      detail: event.assistName ? `${event.assistName} 아웃` : null,
+      detail: assist ? `${assist.name} 아웃` : null,
+      assist,
       side: event.side,
     };
   }
   return {
     minute,
     type: "VAR",
+    playerId,
     playerName: event.playerName,
     detail: VAR_DETAIL_LABEL[detail] ?? (detail || null),
+    assist: null,
     side: event.side,
   };
 }

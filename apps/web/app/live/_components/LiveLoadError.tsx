@@ -9,13 +9,16 @@ import { useRouter } from "next/navigation";
  * @param onRetry 다시 시도 콜백. 쿼리 지면은 `refetch`를 넘기고, 서버
  *   컴포넌트 fetch 지면(순위표)은 생략해 세그먼트 새로고침으로 간다
  * @param compact 레일처럼 좁은 자리용 낮은 패딩
+ * @param message 안내 문구. 경기 정보가 아닌 자리(선수 프로필 머리)에서 바꾼다
  */
 export function LiveLoadError({
   onRetry,
   compact = false,
+  message = "경기 정보를 불러오지 못했어요",
 }: {
   onRetry?: () => void;
   compact?: boolean;
+  message?: string;
 }) {
   const router = useRouter();
 
@@ -23,7 +26,7 @@ export function LiveLoadError({
     <div
       className={`flex items-baseline gap-3 px-2 ${compact ? "py-6" : "py-10"}`}
     >
-      <p className="text-body-md text-text-4">경기 정보를 불러오지 못했어요</p>
+      <p className="text-body-md text-text-4">{message}</p>
       <button
         type="button"
         onClick={onRetry ?? (() => router.refresh())}

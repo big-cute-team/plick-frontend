@@ -5,17 +5,21 @@ import type { ReactNode } from "react";
  * 머리 38px에 제목 13/900, 아래 구분선.
  *
  * @param title 카드 제목
+ * @param icon 제목 앞에 둘 표식(소속팀 엠블럼 등)
  */
 export function RailCard({
   title,
+  icon,
   children,
 }: {
   title: string;
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className="border-border-strong border">
-      <div className="border-border flex h-9.5 items-center border-b px-3.5">
+      <div className="border-border flex h-9.5 items-center gap-2 border-b px-3.5">
+        {icon}
         <h2 className="text-body text-text-strong font-black">{title}</h2>
       </div>
       {children}

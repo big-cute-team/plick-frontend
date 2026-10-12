@@ -2,7 +2,7 @@ import { ArticleLink } from "@/_components/ArticleLink";
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import {
-  figurePath,
+  figureHref,
   formatCount,
   formatRelativeTime,
   hashtagHref,
@@ -187,7 +187,7 @@ export function ArticleMain({
           {article.figures.map((figure) => (
             <Link
               key={figure.id}
-              href={figurePath(figure.id)}
+              href={figureHref(figure)}
               className="text-label-lg text-text-3 hover:text-accent font-bold"
             >
               #{figure.name}

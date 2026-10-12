@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  figurePath,
+  figureHref,
   formatCount,
   formatRelativeTime,
   hashtagHref,
@@ -160,7 +160,7 @@ export function ReelDetailPanel({
               {rendered.figures.map((figure) => (
                 <Link
                   key={`figure-${figure.id}`}
-                  href={figurePath(figure.id)}
+                  href={figureHref(figure)}
                   className="text-label text-text-3 hover:text-accent font-bold"
                 >
                   {figure.name}

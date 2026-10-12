@@ -8,7 +8,7 @@ import type { LiveTeam } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { TeamProfileLink } from "@/live/_components/TeamProfileLink";
-import { ProfileSection } from "./ProfileSection";
+import { ProfileSection } from "@/_components/ProfileSection";
 import { ResultBox } from "./ResultBox";
 
 /** 경기 행 열 그리드 (시안 1299행: 라운드 40, 일시 118, 홈, 스코어 64, 원정, 결과 26). */

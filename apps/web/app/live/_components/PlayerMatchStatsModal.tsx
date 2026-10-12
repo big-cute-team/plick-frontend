@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { playerProfilePath } from "@plick/domain/format";
 import { POSITION_LABEL, ratingTone } from "@plick/domain/live";
 import type { LiveTeam } from "@plick/domain/live";
 import { usePlayerMatchStats } from "@/_hooks/usePlayerMatchStats";
@@ -9,7 +11,8 @@ import { LiveModal } from "./LiveModal";
  * 선수 경기 스탯 다이얼로그 — 모바일 L10 바텀시트의 데스크톱판 (KAN-567 톤 정리).
  * 라인업, 벤치에서 선수를 누르면 열리고, 열려 있을 때만 GET /matches/{id}/players/{pid}를
  * 부른다(`enabled`, ADR 0126). 팀명은 응답에 없어 눌린 자리에서 받는다. 선수 사진은
- * 시안 규칙(프로필 이미지 없음)대로 그리지 않는다.
+ * 시안 규칙(프로필 이미지 없음)대로 그리지 않는다. 이름은 선수 프로필 링크다(KAN-600). 라인업을
+ * 누르면 이 경기 스탯이 먼저 뜨고, 시즌 전체는 이름을 눌러 프로필로 넘어간다.
  *
  * @param player 열려는 선수와 소속 팀 (null이면 닫힘)
  */
@@ -45,7 +48,12 @@ export function PlayerMatchStatsModal({
           <div className="flex items-start gap-3 pr-6 pb-4">
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-title text-text-strong tracking-heading font-black">
-                {stats.name}
+                <Link
+                  href={playerProfilePath(stats.playerId)}
+                  className="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  {stats.name}
+                </Link>
                 {stats.captain && (
                   <span className="text-caption text-accent ml-1.5 font-bold">
                     C

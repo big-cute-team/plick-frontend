@@ -1,6 +1,7 @@
 import { groupAbsenteesByTeam } from "@plick/domain/live";
 import type { MatchPreview } from "@plick/domain/live";
 import { LiveCrest } from "@plick/ui/LiveCrest";
+import { PlayerLink } from "@/_components/PlayerLink";
 import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
@@ -60,9 +61,13 @@ function Absentees({ preview }: { preview: MatchPreview }) {
               key={absentee.playerName}
               className="border-border-soft flex items-center gap-3 border-b py-2"
             >
-              <span className="text-body text-text-strong min-w-0 flex-1 truncate font-medium">
+              <PlayerLink
+                playerId={absentee.playerId}
+                className="text-body text-text-strong min-w-0 flex-1 truncate font-medium"
+                linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
+              >
                 {absentee.playerName}
-              </span>
+              </PlayerLink>
               <span
                 className={`text-caption-lg font-bold ${
                   absentee.kind === "SUSPENSION" ? "text-danger" : "text-warn"

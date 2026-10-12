@@ -8,3 +8,6 @@
  * 돌아간다(시안 "탭은 프로필을 열 때마다 개요로 초기화").
  */
 export type TeamProfileTabKey = "overview" | "matches" | "squad" | "stats";
+
+/** 선수 프로필 본문 탭. 팀 프로필과 같이 열 때마다 개요로 돌아간다. */
+export type PlayerProfileTabKey = "overview" | "stats" | "matches";

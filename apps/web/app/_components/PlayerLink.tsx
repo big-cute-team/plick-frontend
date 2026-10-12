@@ -8,21 +8,27 @@ import type { ReactNode } from "react";
  *
  * @param playerId API-Football 선수 id
  * @param className 링크와 span 공통 클래스
+ * @param linkClassName 링크일 때만 붙일 클래스(hover 색 등). 링크가 아닌 이름이 눌릴 것처럼 보이지 않게 한다
  */
 export function PlayerLink({
   playerId,
   className = "",
+  linkClassName = "",
   children,
 }: {
   playerId: number | null;
   className?: string;
+  linkClassName?: string;
   children: ReactNode;
 }) {
   if (playerId === null) {
     return <span className={className}>{children}</span>;
   }
   return (
-    <Link href={playerProfilePath(playerId)} className={className}>
+    <Link
+      href={playerProfilePath(playerId)}
+      className={`${className} ${linkClassName}`}
+    >
       {children}
     </Link>
   );

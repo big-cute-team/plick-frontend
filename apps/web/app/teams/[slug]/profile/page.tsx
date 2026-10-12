@@ -23,8 +23,8 @@ import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import {
-  TEAM_PROFILE_ISSUE_COUNT,
-  TEAM_PROFILE_RECENT_COUNT,
+  PROFILE_ISSUE_COUNT,
+  PROFILE_RECENT_COUNT,
 } from "@/_constants/team-profile";
 import { ClubInfoCard } from "./_components/ClubInfoCard";
 import { InjuriesCard } from "./_components/InjuriesCard";
@@ -100,7 +100,7 @@ export default async function TeamProfilePage({
     getTeamSeasonStats(teamId),
     getTeamSquadTable(teamId),
     getStandings(),
-    getArticles({ team: code, size: TEAM_PROFILE_ISSUE_COUNT }),
+    getArticles({ team: code, size: PROFILE_ISSUE_COUNT }),
   ] as const);
   const [
     fixturesResult,
@@ -149,7 +149,7 @@ export default async function TeamProfilePage({
                 code={code}
                 issues={issues?.items ?? null}
                 recent={
-                  fixtures?.results.slice(0, TEAM_PROFILE_RECENT_COUNT) ?? null
+                  fixtures?.results.slice(0, PROFILE_RECENT_COUNT) ?? null
                 }
               />
             }

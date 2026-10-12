@@ -5,7 +5,7 @@ import type {
   TeamRecord,
 } from "@plick/domain/team-profile";
 import { MINUTE_BAR_MAX_PX } from "@/_constants/team-profile";
-import { ProfileSection } from "./ProfileSection";
+import { ProfileSection } from "@/_components/ProfileSection";
 
 /** 성적 표 열 (시안 1361행: 라벨 + 56px 여섯 칸). */
 const COLS = "grid-cols-[minmax(0,1fr)_repeat(6,3.5rem)]";
