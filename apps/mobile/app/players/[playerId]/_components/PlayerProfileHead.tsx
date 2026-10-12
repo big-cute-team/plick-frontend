@@ -19,7 +19,7 @@ export function PlayerProfileHead({ profile }: { profile: PlayerProfile }) {
   ]
     .filter(Boolean)
     .join(", ");
-  const bio = [
+  const bio: { label: string; value: string | null; warn?: boolean }[] = [
     { label: "생년월일", value: birthLabel(profile.birthDate, profile.age) },
     { label: "국적", value: profile.nationality },
     { label: "키, 몸무게", value: body || null },

@@ -39,7 +39,7 @@ export function TeamProfileHead({
   ]
     .filter(Boolean)
     .join(", ");
-  const cells = [
+  const cells: { label: string; value: string; end?: boolean }[] = [
     { label: "순위", value: standing ? `${standing.rank}위` : "-" },
     { label: "승점", value: standing ? String(standing.points) : "-" },
     {
