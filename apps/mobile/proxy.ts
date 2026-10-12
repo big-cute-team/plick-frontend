@@ -257,7 +257,8 @@ function skipsGuestIssue(pathname: string): boolean {
  * 컴포넌트(`isLoggedIn`·`getMyProfile`)가 방금 받은 토큰을 보게 하려면 응답만으로는
  * 늦다. 응답 쿠키는 브라우저가 다음 요청부터 실어 보내게 하는 몫이다.
  *
- * 발급이 실패하면(BE 다운, 429 `COMMON_RATE_LIMITED`) 삼키고 익명으로 통과시킨다.
+ * 발급이 실패하거나(BE 다운, 429 `COMMON_RATE_LIMITED`) 상한(`GUEST_ISSUE_TIMEOUT_MS`,
+ * 1.5초)을 넘기면(KAN-602) 삼키고 익명으로 통과시킨다.
  * 게스트는 참여를 앞당기는 편의지 열람의 전제가 아니라서, 여기서 막으면 읽기만
  * 하려던 사람까지 빈 화면을 보게 된다. 다음 네비게이션이 다시 시도한다.
  */

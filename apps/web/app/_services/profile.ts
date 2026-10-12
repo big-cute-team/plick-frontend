@@ -11,6 +11,7 @@ import { TEAMS } from "@plick/domain/constants";
 import type { MyProfile, TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "@plick/core/client";
 import { AUTH_COOKIES } from "@/_constants/api";
+import type { ProfileSeed } from "@/_types/auth";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `ProfileResponse` 그대로). 닉네임은 가입 시 BE가
  * 자동 부여(plick+숫자)하지만 자동 부여 도입 전 레거시 유저는 null일 수 있고,
@@ -76,5 +77,27 @@ export async function getMyProfile(): Promise<MyProfile | null> {
       return null;
     }
     throw e;
+  }
+}
+
+/**
+ * 루트 레이아웃이 `AuthProvider`로 내려 줄 프로필 조각을 받는다 (KAN-602). 레이아웃은
+ * 이 Promise를 기다리지 않고 그대로 넘겨, 프로필 조회(`/users/me`)가 첫 화면을 막지
+ * 않게 한다. 실패는 null로 삼킨다. 내 댓글 판별과 닉네임 표시만 빠질 뿐 앱은 떠야 한다.
+ *
+ * @returns 게스트 여부, userId, 닉네임. 비로그인·토큰 무효·조회 실패면 null
+ */
+export async function getProfileSeed(): Promise<ProfileSeed | null> {
+  try {
+    const profile = await getMyProfile();
+    return (
+      profile && {
+        isGuest: profile.isGuest,
+        userId: profile.userId,
+        nickname: profile.nickname,
+      }
+    );
+  } catch {
+    return null;
   }
 }
