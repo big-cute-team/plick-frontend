@@ -15,6 +15,7 @@ import { ProfileSection } from "@/_components/ProfileSection";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { TEAMMATE_COUNT } from "@/_constants/player-profile";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import {
   PROFILE_ISSUE_COUNT,
   PROFILE_RECENT_COUNT,
@@ -42,8 +43,8 @@ function settled<T>(result: PromiseSettledResult<T>, label: string): T | null {
 
 /**
  * 선수 프로필 메타데이터 (KAN-600). 프로필 fetch는 본문과 같은 URL, 같은 캐시 옵션이라 Next 데이터
- * 캐시에서 한 번만 나간다. 실패하면(404, 502) 빈 메타데이터로 두고 본문이 처리한다. 모바일 선수
- * 화면이 아직 없어 alternate는 선언하지 않는다.
+ * 캐시에서 한 번만 나간다. 실패하면(404, 502) 빈 메타데이터로 두고 본문이 처리한다. 대응 모바일
+ * 선수 프로필(KAN-604)을 alternate로 선언한다(팀 프로필과 같은 상호 참조).
  */
 export async function generateMetadata({
   params,
@@ -58,7 +59,12 @@ export async function generateMetadata({
     return {
       title: `${profile.name} 선수 프로필`,
       description: `${team}${profile.name} 시즌 기록, 경기 기록, 관련 이슈 모아보기`,
-      alternates: { canonical: `/players/${playerId}` },
+      alternates: {
+        canonical: `/players/${playerId}`,
+        media: {
+          [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/players/${playerId}`,
+        },
+      },
     };
   } catch {
     return {};
