@@ -1,47 +1,36 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
+import { playerProfilePath } from "@plick/domain/format";
 import {
   lineupPitchLines,
   ratingTone,
   type LineupPlayer,
-  type LiveTeam,
   type TeamLineup,
 } from "@plick/domain/live";
-import { PlayerMatchStatsModal } from "./PlayerMatchStatsModal";
 
 /**
  * 라인업 탭 (KAN-462 → KAN-567 시안 경기 상세 922-970행). 팀명 13.5/700 + 포메이션 12
  * 줄 아래 짙은 초록 피치(`bg-pitch`, 각진, 위아래 20px 좌우 16px, 최소 280px)에 선수를
  * 줄 단위로 깐다. 선수는 등번호 원 26(11/900) + 이름 10/700 흰색 + 평점 9.5/900이다.
  * `grid`는 "줄:칸"(GK가 1줄), 원정 위, 홈 아래 반전(명세 규약)이고 칸 좌우는
- * `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551). 선수를 누르면 경기 스탯
- * 모달이 열린다. 그 상태 때문에 클라 컴포넌트다. 스탯 응답엔 팀명이 없어 눌린
- * 자리의 팀을 같이 들고 간다.
+ * `lineupPitchLines`가 팀 방향에 맞춰 정한다(KAN-551). 선수(피치와 벤치)를 누르면
+ * 선수 프로필(`/players/<id>`)로 간다(KAN-600). 전에는 이 경기 스탯 다이얼로그가
+ * 열렸는데 선수 링크 규칙을 한 갈래로 맞추면서 프로필로 바꿨다. 라인업의 `id`가
+ * API 선수 id라 그대로 쓴다.
  *
  * 시안의 "선수별 스탯" 표(출전, 슈팅, 패스, 평점)는 선수 전원의 경기 스탯을 한 번에
  * 주는 API가 없어 벤치 표로 대신한다(번호, 선수, 팀, 포지션, 평점).
  *
- * @param matchId 경기 id (선수 스탯 조회용)
- * @param live 라이브 중이면 모달을 열 때마다 스탯을 다시 받는다
+ * @param home 홈 라인업
+ * @param away 원정 라인업
  */
 export function LineupCard({
-  matchId,
-  live,
   home,
   away,
 }: {
-  matchId: number;
-  live: boolean;
   home: TeamLineup;
   away: TeamLineup;
 }) {
-  const [player, setPlayer] = useState<{ id: number; team: LiveTeam } | null>(
-    null,
-  );
-  const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
-
   return (
     <div>
       <div className="flex items-baseline gap-3 pt-4.5 pb-3">
@@ -67,22 +56,12 @@ export function LineupCard({
         />
         <div className="relative flex min-h-70 flex-col justify-between gap-5">
           {lineupPitchLines(away.players, "down").map((line, i) => (
-            <PitchLine
-              key={`away-${i}`}
-              lineup={away}
-              players={line}
-              onPlayerTap={onPlayerTap}
-            />
+            <PitchLine key={`away-${i}`} lineup={away} players={line} />
           ))}
           {lineupPitchLines(home.players, "up")
             .reverse()
             .map((line, i) => (
-              <PitchLine
-                key={`home-${i}`}
-                lineup={home}
-                players={line}
-                onPlayerTap={onPlayerTap}
-              />
+              <PitchLine key={`home-${i}`} lineup={home} players={line} />
             ))}
         </div>
       </div>
@@ -103,10 +82,9 @@ export function LineupCard({
             lineup.bench.map((bench) => {
               const tone = ratingTone(bench.rating);
               return (
-                <button
+                <Link
                   key={`${lineup.team.shortName}-${bench.id}`}
-                  type="button"
-                  onClick={() => onPlayerTap(bench.id, lineup.team)}
+                  href={playerProfilePath(bench.id)}
                   className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[1.5rem_minmax(0,1fr)_3.875rem_2.625rem_2.625rem] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
                 >
                   <span className="text-caption-lg text-text-4 text-center">
@@ -132,19 +110,12 @@ export function LineupCard({
                   >
                     {bench.rating === null ? "-" : bench.rating.toFixed(1)}
                   </span>
-                </button>
+                </Link>
               );
             }),
           )}
         </>
       )}
-
-      <PlayerMatchStatsModal
-        matchId={matchId}
-        live={live}
-        player={player}
-        onClose={() => setPlayer(null)}
-      />
     </div>
   );
 }
@@ -152,11 +123,9 @@ export function LineupCard({
 function PitchLine({
   lineup,
   players,
-  onPlayerTap,
 }: {
   lineup: TeamLineup;
   players: LineupPlayer[];
-  onPlayerTap: (playerId: number, team: LiveTeam) => void;
 }) {
   const colorVar = lineup.team.code
     ? TEAMS[lineup.team.code].colorVar
@@ -166,10 +135,9 @@ function PitchLine({
       {players.map((player) => {
         const tone = ratingTone(player.rating);
         return (
-          <button
+          <Link
             key={player.id}
-            type="button"
-            onClick={() => onPlayerTap(player.id, lineup.team)}
+            href={playerProfilePath(player.id)}
             className="group focus-visible:outline-accent-bright flex w-20 flex-col items-center gap-0.75 focus-visible:outline-2"
           >
             <span
@@ -190,7 +158,7 @@ function PitchLine({
                 {player.rating.toFixed(1)}
               </span>
             )}
-          </button>
+          </Link>
         );
       })}
     </div>

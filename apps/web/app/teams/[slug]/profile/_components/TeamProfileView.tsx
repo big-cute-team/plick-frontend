@@ -10,8 +10,9 @@ import {
 } from "@plick/domain/team-profile";
 import { TEAM_PROFILE_TABS } from "@/_constants/team-profile";
 import type { TeamProfileTabKey } from "@/_types/team-profile";
+import { ProfileTabBar } from "@/_components/ProfileTabBar";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
-import { CompetitionPicker } from "./CompetitionPicker";
+import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { TeamLeadersCard } from "./TeamLeadersCard";
 import { TeamSquadTable } from "./TeamSquadTable";
 import { TeamStatsPanel } from "./TeamStatsPanel";
@@ -76,31 +77,12 @@ export function TeamProfileView({
 
   return (
     <>
-      <div
-        role="tablist"
-        aria-label="팀 프로필 보기"
-        className="border-border mt-1.5 flex h-12 items-stretch gap-7 border-b"
-      >
-        {tabs.map(({ key, label }) => {
-          const on = key === tab;
-          return (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              onClick={() => setTab(key)}
-              className={`text-tab focus-visible:outline-accent -mb-px border-b-2 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 ${
-                on
-                  ? "border-accent text-text-strong font-black"
-                  : "text-text-3 hover:text-text-strong border-transparent font-bold"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <ProfileTabBar
+        label="팀 프로필 보기"
+        tabs={tabs}
+        active={tab}
+        onSelect={setTab}
+      />
       <div className="grid grid-cols-1 gap-10 pt-7 lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-11">
         <div role="tabpanel" className="flex min-w-0 flex-col gap-9.5">
           {tab === "overview" && overview}

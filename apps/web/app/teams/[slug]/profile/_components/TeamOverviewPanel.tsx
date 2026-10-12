@@ -10,7 +10,7 @@ import { LiveCrest } from "@plick/ui/LiveCrest";
 import { PostListItem } from "@/_components/PostListItem";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { TeamProfileLink } from "@/live/_components/TeamProfileLink";
-import { ProfileSection } from "./ProfileSection";
+import { ProfileSection } from "@/_components/ProfileSection";
 import { ResultBox } from "./ResultBox";
 
 /**

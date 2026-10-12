@@ -84,6 +84,8 @@ export interface StandingRow {
 export interface MatchGoal {
   /** "45+2'" 표기 문자열 */
   minute: string;
+  /** API 선수 id. 선수 프로필 링크 키이고 없으면 링크하지 않는다 (KAN-600) */
+  playerId: number | null;
   playerName: string;
   /** 자책골·페널티 같은 부가 표기 — 일반 골이면 null */
   detail: string | null;
@@ -98,9 +100,16 @@ export interface MatchEvent {
   /** "45+2'" 같은 표기 문자열 */
   minute: string;
   type: "GOAL" | "SUB" | "CARD" | "RED_CARD" | "VAR";
+  /** API 선수 id. 선수 프로필 링크 키이고 없으면 링크하지 않는다 (KAN-600) */
+  playerId: number | null;
   playerName: string | null;
   /** 도움·교체 아웃·판정 내용 등 부가 설명 — 없으면 null */
   detail: string | null;
+  /**
+   * `detail`이 도움("X 도움")이나 교체 아웃("X 아웃")일 때 그 선수. 웹은 이름만 선수
+   * 프로필로 링크하고 나머지 글자는 그대로 둔다. 그 밖의 부가 설명이면 null (KAN-600)
+   */
+  assist: { id: number | null; name: string; suffix: string } | null;
   side: "HOME" | "AWAY";
 }
 
@@ -146,6 +155,8 @@ export interface MatchStat {
 /** 프리뷰 결장자 한 명. */
 export interface Absentee {
   team: LiveTeam;
+  /** API 선수 id. 선수 프로필 링크 키이고 없으면 링크하지 않는다 (KAN-600) */
+  playerId: number | null;
   playerName: string;
   photo: string | null;
   reason: string;

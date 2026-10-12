@@ -1,6 +1,6 @@
 import type { TeamInjury } from "@plick/domain/team-profile";
-import { PlayerLink } from "./PlayerLink";
-import { RailCard } from "./RailCard";
+import { PlayerLink } from "@/_components/PlayerLink";
+import { RailCard } from "@/_components/RailCard";
 
 /**
  * 레일 "부상자" (KAN-599, 시안 팀 프로필 1466-1478행). 다음 경기 기준 결장자 이름과 사유다.

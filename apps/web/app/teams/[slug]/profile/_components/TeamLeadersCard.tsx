@@ -1,6 +1,6 @@
 import { teamLeaders, type TeamSquadMember } from "@plick/domain/team-profile";
-import { PlayerLink } from "./PlayerLink";
-import { RailCard } from "./RailCard";
+import { PlayerLink } from "@/_components/PlayerLink";
+import { RailCard } from "@/_components/RailCard";
 
 /**
  * 레일 "팀 내 순위" (KAN-599, 시안 팀 프로필 1449-1464행). 서버가 순위를 주지 않아 선택한

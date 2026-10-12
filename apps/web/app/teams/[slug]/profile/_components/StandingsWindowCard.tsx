@@ -3,7 +3,7 @@ import { goalDiffLabel } from "@plick/domain/team-profile";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { TeamProfileLink } from "@/live/_components/TeamProfileLink";
-import { RailCard } from "./RailCard";
+import { RailCard } from "@/_components/RailCard";
 
 /** 순위 5팀 열 (시안 1424행: #, 팀, 경기, 득실, 승점). */
 const COLS = "grid-cols-[1.25rem_minmax(0,1fr)_1.875rem_2.125rem_1.875rem]";

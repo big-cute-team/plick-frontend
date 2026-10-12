@@ -1,5 +1,5 @@
 import { placeLabel, type TeamInfo } from "@plick/domain/team-profile";
-import { RailCard } from "./RailCard";
+import { RailCard } from "@/_components/RailCard";
 
 /**
  * 레일 "구단 정보" (KAN-599, 시안 팀 프로필 1436-1447행). 감독, 홈구장, 수용 인원, 연고지,

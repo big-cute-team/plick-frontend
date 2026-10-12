@@ -330,8 +330,8 @@ function toRecord(record: RecordResponse | null): TeamRecord {
   };
 }
 
-/** BE `positionCode`(GK, DF, MF, FW) 그대로. 그 밖과 null은 포지션 미상이다. */
-function toPositionCode(code: string | null): Position | null {
+/** BE `positionCode`(GK, DF, MF, FW) 그대로. 그 밖과 null은 포지션 미상이다. 선수 프로필도 쓴다. */
+export function toPositionCode(code: string | null): Position | null {
   return code === "GK" || code === "DF" || code === "MF" || code === "FW"
     ? code
     : null;
