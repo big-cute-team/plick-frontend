@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { getDebates } from "@plick/core/debates";
-import type { InitialDebateList } from "@plick/domain/types";
+import { Suspense } from "react";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { getAccessToken } from "@/_services/session";
 import { DEBATE_TABS } from "@/_constants/debates";
 import type { DebateTab } from "@/_types/debates";
-import { DebatesFeed } from "./DebatesFeed";
+import { DebateListSkeleton } from "./DebateListSkeleton";
+import { DebatesSection } from "./DebatesSection";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { SideRail } from "@/_components/SideRail";
@@ -21,24 +20,12 @@ import { SideRail } from "@/_components/SideRail";
  * 상세로 보냈다. BE에 필터, 페이지네이션이 없어 팀 탭도 무한스크롤도 없다. 탭의
  * 원본은 URL `?tab=`이라 링크로 그린다.
  *
- * 첫 리스트는 서버에서 받아 씨앗으로 내려준다. `myVote`(내가 투표한 카드 표시)가
- * 유저별 값이라 토큰을 실어 부른다. 기사 상세와 같은 규약이다.
+ * 목록 조회는 {@link DebatesSection}이 Suspense 안에서 맡는다 (KAN-602). 상단 바,
+ * 제목, 탭 줄, 레일 틀은 기다리지 않고 바로 나간다.
  *
  * @param tab 지금 탭
  */
-export async function DebatesScreen({ tab }: { tab: DebateTab }) {
-  let initial: InitialDebateList | undefined;
-  try {
-    const accessToken = await getAccessToken();
-    initial = {
-      items: await getDebates(accessToken ? { accessToken } : undefined),
-      fetchedAt: Date.now(),
-    };
-  } catch (error) {
-    // 서버에서 못 받아도 클라가 다시 받아 리스트 자리에만 에러와 재시도를 보여준다
-    console.error("[debates] 토론 리스트 초기 로드 실패:", error);
-  }
-
+export function DebatesScreen({ tab }: { tab: DebateTab }) {
   return (
     <>
       <SiteHeader />
@@ -73,7 +60,9 @@ export async function DebatesScreen({ tab }: { tab: DebateTab }) {
                 );
               })}
             </div>
-            <DebatesFeed initial={initial} tab={tab} />
+            <Suspense fallback={<DebateListSkeleton />}>
+              <DebatesSection tab={tab} />
+            </Suspense>
           </div>
           <SideRail />
         </PageContainer>

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
-import { getMatches, getStandings } from "@plick/core/live";
+import { Suspense } from "react";
 import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
-import type { InitialMatchList, StandingRow } from "@plick/domain/live";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
@@ -10,9 +9,10 @@ import { WEB_SITE_URL } from "@/_constants/site";
 import { ChatRoomBanner } from "@/live/_components/ChatRoomBanner";
 import { DateStrip } from "@/live/_components/DateStrip";
 import { LiveDatePager } from "@/live/_components/LiveDatePager";
-import { LiveMatchesFeed } from "@/live/_components/LiveMatchesFeed";
+import { LiveMatchesSection } from "@/live/_components/LiveMatchesSection";
 import { LiveScrollArea } from "@/live/_components/LiveScrollArea";
-import { StandingsTable } from "@/live/_components/StandingsTable";
+import { MatchListSkeleton } from "@/live/_components/MatchListSkeleton";
+import { StandingsSection } from "@/live/_components/StandingsSection";
 
 /**
  * canonical은 날짜 쿼리와 무관하게 대응 데스크톱 `/live`다. 날짜별 URL은
@@ -32,11 +32,10 @@ export const metadata: Metadata = {
  *
  * 날짜는 `/live?date=YYYY-MM-DD` 쿼리로 승격돼 있고 없거나 깨졌으면 KST 오늘이다.
  *
- * 첫 목록은 서버에서 받아 씨앗으로 내려주고(토론 리스트와 같은 패턴), 이후
- * 폴링·재시도는 클라 훅이 맡는다. 서버 fetch가 실패하면(502 등) 씨앗 없이
- * 내려보내 클라가 다시 받고, 그것도 실패하면 목록 자리에만 에러 지면이 선다.
- * 순위표는 폴링 없는 단발 읽기라 서버에서 받고, 실패하면 표 자리에 문구만 둔다.
- * 목록과 순위표는 서로 독립이라 병렬로 받는다.
+ * 경기 목록({@link LiveMatchesSection})과 순위표({@link StandingsSection})는 각자
+ * Suspense 경계 안에서 받아 따로 스트리밍된다 (KAN-602). 상단바, 채팅방 배너, 날짜
+ * 줄은 기다리지 않고 바로 나간다. 같은 라우트 안의 날짜 이동은 트랜지션이라 경계가
+ * 뼈대로 돌아가지 않고 옛 목록을 들고 있다가 바뀐다.
  *
  * 채팅방 배너는 경기와 무관하게 늘 선다(KAN-572). 방이 언제나 열린 통합 방
  * 하나라 전처럼 오늘 진행 중인 경기를 찾으려고 오늘 목록을 따로 받지 않는다.
@@ -57,22 +56,6 @@ export default async function LivePage({
   const today = todayDateKeyKst();
   const selected = isDateKey(date) ? date : today;
 
-  const [matchResult, standingsResult] = await Promise.allSettled([
-    getMatches(selected),
-    getStandings(),
-  ]);
-
-  let initial: InitialMatchList | undefined;
-  if (matchResult.status === "fulfilled") {
-    initial = { items: matchResult.value, fetchedAt: Date.now() };
-  } else {
-    console.error("[live] 경기 목록 초기 로드 실패:", matchResult.reason);
-  }
-
-  let standings: StandingRow[] | null = null;
-  if (standingsResult.status === "fulfilled") standings = standingsResult.value;
-  else console.error("[live] 순위표 로드 실패:", standingsResult.reason);
-
   return (
     <AppShell>
       <TopBar />
@@ -83,17 +66,13 @@ export default async function LivePage({
         <ChatRoomBanner />
         <DateStrip selected={selected} today={today} />
         <LiveDatePager date={selected} today={today} className="flex-1">
-          <LiveMatchesFeed date={selected} initial={initial} />
+          <Suspense fallback={<MatchListSkeleton />}>
+            <LiveMatchesSection date={selected} />
+          </Suspense>
         </LiveDatePager>
-        <section className="px-edge pt-7">
-          {standings ? (
-            <StandingsTable rows={standings} title="순위표" legend />
-          ) : (
-            <p className="text-body text-text-4 py-10 text-center">
-              순위표를 불러오지 못했어요
-            </p>
-          )}
-        </section>
+        <Suspense fallback={null}>
+          <StandingsSection />
+        </Suspense>
       </LiveScrollArea>
       <TabBar />
     </AppShell>

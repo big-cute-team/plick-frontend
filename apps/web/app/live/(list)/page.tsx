@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
-import { getMatches, getStandings } from "@plick/core/live";
+import { Suspense } from "react";
 import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
-import type { InitialMatchList, StandingRow } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { DateStrip } from "@/live/_components/DateStrip";
-import { LiveLoadError } from "@/live/_components/LiveLoadError";
-import { LiveMatchesFeed } from "@/live/_components/LiveMatchesFeed";
-import { StandingsRail } from "@/live/_components/StandingsRail";
+import { LiveMatchesSection } from "@/live/_components/LiveMatchesSection";
+import { MatchListSkeleton } from "@/live/_components/MatchListSkeleton";
+import { StandingsRailSkeleton } from "@/live/_components/StandingsRailSkeleton";
+import { StandingsSection } from "@/live/_components/StandingsSection";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 
@@ -30,7 +30,8 @@ export const metadata: Metadata = {
  * LIVE 목록 (KAN-452 → KAN-567 리디자인, 시안 LIVE 741-817행). 데스크톱은 순위를 별도
  * 라우트로 빼지 않고 `minmax(0,1fr) 340px` 2열(경기 목록 + 순위표 aside)로 항상 함께
  * 보여준다. 목록은 서버 씨앗 + 클라 폴링, 순위표는 서버 컴포넌트 fetch(단발 읽기)다.
- * 둘은 독립이라 한쪽이 실패해도 다른 쪽은 그대로 뜬다. 시안의 안내 부제는 지웠다.
+ * 둘은 독립이라 각자 Suspense 경계 안에서 받아 따로 스트리밍되고(KAN-602), 한쪽이
+ * 실패해도 다른 쪽은 그대로 뜬다. 시안의 안내 부제는 지웠다.
  */
 export default async function LivePage({
   searchParams,
@@ -40,25 +41,6 @@ export default async function LivePage({
   const { date } = await searchParams;
   const today = todayDateKeyKst();
   const selected = isDateKey(date) ? date : today;
-
-  const [matches, standings] = await Promise.allSettled([
-    getMatches(selected),
-    getStandings(),
-  ]);
-
-  let initial: InitialMatchList | undefined;
-  if (matches.status === "fulfilled") {
-    initial = { items: matches.value, fetchedAt: Date.now() };
-  } else {
-    console.error("[live] 경기 목록 초기 로드 실패:", matches.reason);
-  }
-
-  let rows: StandingRow[] | undefined;
-  if (standings.status === "fulfilled") {
-    rows = standings.value;
-  } else {
-    console.error("[live] 순위표 로드 실패:", standings.reason);
-  }
 
   return (
     <>
@@ -71,21 +53,14 @@ export default async function LivePage({
               LIVE
             </h1>
             <DateStrip selected={selected} today={today} />
-            <LiveMatchesFeed date={selected} initial={initial} />
+            <Suspense fallback={<MatchListSkeleton />}>
+              <LiveMatchesSection date={selected} />
+            </Suspense>
           </div>
           <aside>
-            {rows ? (
-              <StandingsRail rows={rows} />
-            ) : (
-              <>
-                <div className="flex items-baseline justify-between pb-2.5">
-                  <h2 className="text-body-md text-text-strong font-black">
-                    순위표
-                  </h2>
-                </div>
-                <LiveLoadError compact />
-              </>
-            )}
+            <Suspense fallback={<StandingsRailSkeleton />}>
+              <StandingsSection />
+            </Suspense>
           </aside>
         </PageContainer>
       </main>
