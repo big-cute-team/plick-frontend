@@ -2,7 +2,7 @@
  * @file 토론(투표) 화면 상수 (KAN-418).
  */
 
-import type { DebateTab } from "@/debates/_components/DebatesFeed";
+import type { DebateTab } from "@/_types/debates";
 
 /** 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). */
 export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [

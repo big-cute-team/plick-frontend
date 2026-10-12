@@ -5,10 +5,8 @@ import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useDebates } from "@/_hooks/useDebates";
+import type { DebateTab } from "@/_types/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
-
-/** 투표 탭. 진행 중은 열린 토론, 마감은 contentType FINISH이거나 마감 시각이 지난 토론. */
-export type DebateTab = "open" | "closed";
 
 /**
  * 투표 목록 본체 (KAN-418 → KAN-567 시안 투표 1078-1165행). 진행 중 항목은 투표 카드
