@@ -51,7 +51,7 @@ type Side = "HOME" | "AWAY";
 /** 홈·원정 정렬 키 — 홈이 먼저. */
 const sideOrder = (side: Side) => (side === "HOME" ? 0 : 1);
 
-interface SideResponse {
+export interface SideResponse {
   teamId: number | null;
   name: string;
   /** 카드용 영문 3글자 코드(KAN-550). 구버전 서버 응답엔 없어 optional로 둔다 */
@@ -338,7 +338,7 @@ export async function getPlayerSeasonStats(
  * 아니면 이름 앞 세 글자)으로 떨어진다 — BE보다 FE가 먼저 배포돼도 카드가
  * 깨지지 않게 하기 위한 폴백이고, dev·prod BE가 다 반영되면 지워도 된다.
  */
-function toLiveTeam(side: SideResponse): LiveTeam {
+export function toLiveTeam(side: SideResponse): LiveTeam {
   const code = side.teamId === null ? null : (TEAM_CODES[side.teamId] ?? null);
   return {
     id: side.teamId,
@@ -668,14 +668,14 @@ function toPosition(raw: string | null): Position {
 }
 
 /** "7.8" → 7.8, null·비숫자 → null(무출전). */
-function parseRating(raw: string | null): number | null {
+export function parseRating(raw: string | null): number | null {
   if (raw === null) return null;
   const value = Number.parseFloat(raw);
   return Number.isNaN(value) ? null : value;
 }
 
 /** "WWDLW" → 최근 5경기 배열. W/D/L 외 문자는 버린다. */
-function toForm(form: string | null): ("W" | "D" | "L")[] {
+export function toForm(form: string | null): ("W" | "D" | "L")[] {
   return (form ?? "")
     .split("")
     .filter((c): c is "W" | "D" | "L" => c === "W" || c === "D" || c === "L")

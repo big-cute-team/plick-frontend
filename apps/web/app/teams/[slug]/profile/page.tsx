@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
-import { getTeamProfile } from "@plick/core/figures";
-import { getStandings, getTeamSquad } from "@plick/core/live";
+import { getStandings } from "@plick/core/live";
+import {
+  getTeamFixtures,
+  getTeamSeasonStats,
+  getTeamSquadTable,
+  getTeamSummary,
+} from "@plick/core/team-profile";
 import {
   TEAMS,
   TEAM_BY_SLUG,
@@ -10,21 +16,30 @@ import {
   TEAM_IDS,
 } from "@plick/domain/constants";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
-import { TeamCrest } from "@plick/ui/TeamCrest";
+import { standingsWindow, type TeamSummary } from "@plick/domain/team-profile";
 import { PageContainer } from "@/_components/PageContainer";
 import { ProfileBreadcrumb } from "@/_components/ProfileBreadcrumb";
-import { ProfileFacts } from "@/_components/ProfileFacts";
+import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { SquadRows } from "./_components/SquadRows";
-import { TeamStatsRow } from "./_components/TeamStatsRow";
-import { SiteFooter } from "@/_components/SiteFooter";
+import {
+  TEAM_PROFILE_ISSUE_COUNT,
+  TEAM_PROFILE_RECENT_COUNT,
+} from "@/_constants/team-profile";
+import { ClubInfoCard } from "./_components/ClubInfoCard";
+import { InjuriesCard } from "./_components/InjuriesCard";
+import { StandingsWindowCard } from "./_components/StandingsWindowCard";
+import { TeamFixturesPanel } from "./_components/TeamFixturesPanel";
+import { TeamNumberBand } from "./_components/TeamNumberBand";
+import { TeamOverviewPanel } from "./_components/TeamOverviewPanel";
+import { TeamProfileHead } from "./_components/TeamProfileHead";
+import { TeamProfileView } from "./_components/TeamProfileView";
 
 /**
- * 팀 프로필 메타데이터 (KAN-507). 팀 검색어("토트넘 이적 루머")의 랜딩은 팀
- * 허브(`/teams/[slug]`)가 맡으므로 여기는 선수단 검색어 쪽으로 제목을 잡는다.
- * 이 URL이 canonical이고 대응 모바일 팀 프로필을 alternate로 선언한다. 모르는
- * slug는 빈 메타데이터로 두면 본문이 notFound()로 떨어진다.
+ * 팀 프로필 메타데이터 (KAN-507 → KAN-599). 팀 검색어("토트넘 이적 루머")의 랜딩은 팀
+ * 허브(`/teams/[slug]`)가 맡으므로 여기는 순위, 일정, 선수단 쪽으로 제목을 잡는다. 이
+ * URL이 canonical이고 대응 모바일 팀 프로필을 alternate로 선언한다. 모르는 slug는 빈
+ * 메타데이터로 두면 본문이 notFound()로 떨어진다.
  */
 export async function generateMetadata({
   params,
@@ -36,8 +51,8 @@ export async function generateMetadata({
   if (!code) return {};
   const fullName = TEAM_FULL_NAMES[code];
   return {
-    title: `${fullName} 선수단`,
-    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단 모아보기`,
+    title: `${fullName} 팀 프로필`,
+    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 순위, 경기 일정, 선수단, 기록 모아보기`,
     alternates: {
       canonical: `/teams/${slug}/profile`,
       media: {
@@ -47,20 +62,27 @@ export async function generateMetadata({
   };
 }
 
+/** allSettled 결과에서 값만 꺼낸다. 실패는 로그를 남기고 null이라 그 영역만 실패를 그린다. */
+function settled<T>(result: PromiseSettledResult<T>, label: string): T | null {
+  if (result.status === "fulfilled") return result.value;
+  console.error(`[team] ${label} 로드 실패:`, result.reason);
+  return null;
+}
+
 /**
- * 데스크톱 팀 프로필 (KAN-507 → KAN-567 시안 프로필 1215-1420행). 빵부스러기, 머리
- * (엠블럼 72, "팀" 라벨, 이름 30/900, 영문명), 숫자 4개(순위, 승점, 전적, 득실),
- * 선수단, 우측 기본 정보 카드를 `minmax(0,1fr) 300px` 그리드에 둔다.
- * 모바일 `/teams/[slug]/profile`의 데스크톱 판이다.
+ * 데스크톱 팀 프로필 (KAN-507 → KAN-599 시안 팀 프로필 1216-1480행). 경로 표시, 머리,
+ * 숫자 띠, 탭(개요, 경기, 선수단, 기록), 본문 `minmax(0,1fr)` + 우측 레일 300px이다.
  *
- * 선수단은 API-Football 이번 시즌 등록 명단이고 칩을 누르면 시즌 스탯 다이얼로그가
- * 열린다. 옆에 있던 "기사 속 인물" 탭과 "2026-27 프리미어리그" 줄은 KAN-576에서
- * 뺐다. 탭이 하나만 남아 탭 줄 대신 섹션 제목을 둔다.
+ * BE 팀 프로필 API 넷과 순위표, 팀 이슈를 서버에서 한 번에 받는다. 머리를 그리는 요약이
+ * 404(빅6 밖, 마스터 재시드로 id가 어긋난 경우)면 not-found다. 그 밖의 실패(외부 데이터
+ * 장애 502)는 화면을 통째로 막지 않는다. 머리는 레지스트리 이름으로 그리고 숫자 띠는 "-",
+ * 보조 블록은 빈 것으로 둔다. 관련 이슈는 우리 DB라 외부 장애와 무관하게 살아 있어서다.
+ * 나머지 API도 실패하면 그 영역만 다시 시도를 띄운다. 요약 안의 보조 블록(`info`,
+ * `nextFixture`, `standing`)이 null로 오는 부분 실패도 같은 길을 탄다.
  *
- * 시안의 최근 5경기 카드와 관련 이슈 표는 팀 단위 API가 없어 뺐다(팀 기사는 팀
- * 허브가 맡는다). 기본 정보의 감독, 홈구장, 창단도 API에 없어 영문명과 시즌만 둔다.
- * 인물 사전이 404면 보여 줄 게 없어 not-found고, 선수단만 실패하면 그 섹션 자리에만
- * 실패를 보여준다. 라이브 API는 외부 의존이라 덜 미덥다.
+ * 경로는 `/teams/[slug]/profile`을 그대로 쓴다. 핸드오프는 `teams/[teamId]`를 제안했지만
+ * 같은 깊이에 팀 허브 `(home)/teams/[slug]`가 있어 동적 세그먼트 이름이 부딪히고, 이미
+ * 색인되고 공유된 주소와 모든 팀 링크(`teamProfilePath`)가 이 경로를 가리킨다.
  */
 export default async function TeamProfilePage({
   params,
@@ -70,85 +92,85 @@ export default async function TeamProfilePage({
   const { slug } = await params;
   const code = TEAM_BY_SLUG[slug];
   if (!code) notFound();
-
   const teamId = TEAM_IDS[code];
-  const [profileResult, squadResult, standingsResult] =
-    await Promise.allSettled([
-      getTeamProfile(teamId),
-      getTeamSquad(teamId, TEAMS[code].name),
-      getStandings(),
-    ]);
 
-  if (profileResult.status === "rejected") {
-    const error = profileResult.reason;
+  const [summaryResult, ...rest] = await Promise.allSettled([
+    getTeamSummary(teamId),
+    getTeamFixtures(teamId),
+    getTeamSeasonStats(teamId),
+    getTeamSquadTable(teamId),
+    getStandings(),
+    getArticles({ team: code, size: TEAM_PROFILE_ISSUE_COUNT }),
+  ] as const);
+  const [
+    fixturesResult,
+    statsResult,
+    squadResult,
+    standingsResult,
+    issuesResult,
+  ] = rest;
+
+  if (summaryResult.status === "rejected") {
+    const error = summaryResult.reason;
     if (error instanceof ApiError && error.status === 404) notFound();
-    throw error;
+    console.error("[team] 요약 로드 실패:", error);
   }
-  const profile = profileResult.value;
-
-  const squad = squadResult.status === "fulfilled" ? squadResult.value : null;
-  if (squadResult.status === "rejected") {
-    console.error("[team] 선수단 로드 실패:", squadResult.reason);
-  }
-
-  /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격, 강등으로
-     레지스트리와 어긋난 시즌) 숫자 줄을 비운다. 부가 정보라 없는 편이 낫다 */
-  const standing =
-    standingsResult.status === "fulfilled"
-      ? (standingsResult.value.find((row) => row.team.id === teamId) ?? null)
-      : null;
-  if (standingsResult.status === "rejected") {
-    console.error("[team] 순위표 로드 실패:", standingsResult.reason);
-  }
-
-  const team = TEAMS[code];
+  const summary: TeamSummary =
+    summaryResult.status === "fulfilled"
+      ? summaryResult.value
+      : {
+          teamId,
+          name: TEAMS[code].name,
+          nameEn: "",
+          leagueName: "프리미어리그",
+          info: null,
+          nextFixture: null,
+          standing: null,
+          injuries: [],
+        };
+  const fixtures = settled(fixturesResult, "경기");
+  const stats = settled(statsResult, "기록");
+  const squad = settled(squadResult, "선수단");
+  const standings = settled(standingsResult, "순위표");
+  const issues = settled(issuesResult, "이슈");
 
   return (
     <>
       <SiteHeader />
       <main>
-        <PageContainer className="grid grid-cols-1 gap-10 pt-5.5 pb-12 lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-11">
-          <div className="min-w-0">
-            <ProfileBreadcrumb kind="팀" />
-            <header className="border-border flex items-center gap-5 border-b pb-5.5">
-              <TeamCrest team={team} size={72} className="shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-label text-accent pb-1.5 font-bold">팀</p>
-                <h1 className="text-read-title text-text-strong tracking-title truncate leading-[1.2] font-black">
-                  {profile.name}
-                </h1>
-                <p className="text-body text-text-3 truncate pt-2.25">
-                  {profile.nameEn}
-                </p>
-              </div>
-            </header>
-
-            {standing ? (
-              <TeamStatsRow row={standing} />
-            ) : (
-              <div className="h-6.5" />
-            )}
-
-            <h2 className="text-body-lg text-text-strong pb-2 font-black tracking-tight">
-              선수단
-            </h2>
-            {squad ? (
-              <SquadRows squad={squad} />
-            ) : (
-              <p className="text-body-md text-text-4 py-10">
-                선수단을 불러오지 못했어요
-              </p>
-            )}
-          </div>
-          <aside className="flex flex-col gap-3.5">
-            <ProfileFacts
-              facts={[
-                { label: "영문명", value: profile.nameEn },
-                { label: "리그", value: "프리미어리그" },
-                { label: "시즌", value: LIVE_SEASON_LABEL },
-              ]}
-            />
-          </aside>
+        <PageContainer className="pt-5.5 pb-12">
+          <ProfileBreadcrumb kind="팀" />
+          <TeamProfileHead code={code} summary={summary} />
+          <TeamNumberBand standing={summary.standing} />
+          <TeamProfileView
+            key={slug}
+            overview={
+              <TeamOverviewPanel
+                code={code}
+                issues={issues?.items ?? null}
+                recent={
+                  fixtures?.results.slice(0, TEAM_PROFILE_RECENT_COUNT) ?? null
+                }
+              />
+            }
+            matches={<TeamFixturesPanel fixtures={fixtures} />}
+            squad={squad}
+            stats={stats}
+            railTop={
+              <StandingsWindowCard
+                rows={standings && standingsWindow(standings, teamId)}
+                teamId={teamId}
+              />
+            }
+            railBottom={
+              <>
+                {summary.info && <ClubInfoCard info={summary.info} />}
+                {summary.injuries.length > 0 && (
+                  <InjuriesCard injuries={summary.injuries} />
+                )}
+              </>
+            }
+          />
         </PageContainer>
       </main>
       <SiteFooter />
