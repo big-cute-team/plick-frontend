@@ -1,3 +1,4 @@
+import { LIVE_SCORE_PAUSED } from "../../../../packages/domain/src/live-pause";
 import { test, expect } from "../../fixtures/failure";
 
 /**
@@ -47,22 +48,27 @@ test.describe("기사", () => {
       .getByRole("link", { name: /^#/ })
       .and(page.locator('[href^="/teams/"]'))
       .first();
-    let teamName = "";
     await test.step("팀 해시태그를 누른다", async () => {
       await expect(hashtag).toBeVisible();
-      teamName = (await hashtag.textContent())!.trim().replace(/^#/, "");
       await hashtag.click();
     });
 
     await test.step("그 팀 프로필이 뜬다", async () => {
       await expect(page).toHaveURL(/\/teams\/[\w-]+\/profile$/);
-      /* 헤더 배너에도 짧은 팀 이름 h1이 있어 main 안의 정식 이름을 본다 */
+      /* 라이브 스코어를 닫아 둔 동안은 같은 주소에 준비중 화면이 뜬다 (KAN-644) */
+      if (LIVE_SCORE_PAUSED) {
+        await expect(
+          page.getByRole("main").getByText("경기 정보를 준비 중이에요"),
+        ).toBeVisible();
+        return;
+      }
+      /* 제목은 BE 팀 요약의 이름이라 해시태그 정식 이름과 다를 수 있다("맨시티", KAN-604) */
       await expect(
         page.getByRole("main").getByRole("heading", { level: 1 }),
-      ).toHaveText(teamName);
-      /* 선수단은 본문 탭의 첫 탭이다 (KAN-574) */
+      ).not.toBeEmpty();
+      /* 첫 탭은 개요다 (KAN-604) */
       await expect(
-        page.getByRole("tab", { name: "선수단", selected: true }),
+        page.getByRole("tab", { name: "개요", selected: true }),
       ).toBeVisible();
     });
   });
