@@ -154,6 +154,21 @@ KAN-600이 만든다. 지금 웹에는 `/players` 라우트가 없어서 KAN-600
 
 CI와 같은 명령(format:check, test:hooks 40, test:unit 57, lint, check-types, build)을 로컬에서 돌려 통과했다.
 
+## 헤드리스 리뷰
+
+push 전에 `./scripts/review/pr-review.sh`를 돌렸는데 첫 회는 exit 3 "실행 오류: None"으로 끝났다. 로그가 한 줄뿐이라
+`.review/raw.json`을 열어 보니 `subtype: error_max_budget_usd`, 기본 예산 $1을 12턴 만에 다 쓴 것이었다. diff가 118KB(새 파일 20개
+남짓)라 리뷰어가 파일을 읽는 데만 예산을 썼다. 이때 `.review/latest.json`은 10월 7일 KAN-610 리뷰 결과가 그대로 남아 있어서, 파일만
+열었으면 남의 PR 지적을 이번 것으로 착각할 뻔했다. 결과 파일의 시각과 요약 첫 줄을 먼저 확인해야 한다.
+
+`REVIEW_BUDGET_USD=2.5`로 다시 돌리자 CRITICAL 없이 WARN 1, INFO 2가 나왔다. 셋 다 반영했다.
+
+- `placeLabel`만 단위 테스트가 비어 있었다. 사전에 있는 값과 없는 값(원문 그대로) 두 경로를 추가했다.
+- 대회가 둘 이상일 때만 선택 UI를 보이는 판정이 `CompetitionPicker` 안과 호출부 두 곳에 있었다. 한쪽 기준만 바뀌면 어긋난다.
+  `TeamProfileView`에서 `picker`를 한 번만 만들고(대회가 하나면 null) 선수단과 기록이 그 값을 같이 쓰게 했다.
+- `<section aria-label={title}>` 안에 같은 텍스트의 `<h2>`가 있어 스크린리더가 같은 말을 두 번 읽는다. 섹션 이름은 h2가 맡도록
+  `aria-label`을 뺐다.
+
 ## 남은 것
 
 - 선수 프로필 화면(KAN-600)이 들어오기 전까지 `/players/<id>` 링크는 404다. 릴리스 순서를 맞춰야 한다.

@@ -20,7 +20,7 @@ export function ProfileSection({
   children: ReactNode;
 }) {
   return (
-    <section aria-label={title}>
+    <section>
       <div className="flex items-baseline gap-2.25 pb-2">
         <h2 className="text-body-lg text-text-strong font-black tracking-tight">
           {title}

@@ -8,6 +8,7 @@ import {
   competitionOptions,
   groupSquadByPosition,
   memberStats,
+  placeLabel,
   playedDateLabel,
   profileRatingTone,
   roundLabel,
@@ -155,4 +156,13 @@ test("대회 선택지는 기록 순서를 따르고 선수단에만 있는 대�
 test("지난 경기 날짜는 KST 기준 월일이다", () => {
   assert.equal(playedDateLabel("2026-08-15T23:00:00+09:00"), "8월 15일");
   assert.equal(playedDateLabel("2026-10-03T16:00:00Z"), "10월 4일");
+});
+
+test("연고지와 구장은 빅6 표기만 한글로 바꾸고 모르는 값은 원문이다", () => {
+  assert.equal(placeLabel("London"), "런던");
+  assert.equal(
+    placeLabel("Tottenham Hotspur Stadium"),
+    "토트넘 홋스퍼 스타디움",
+  );
+  assert.equal(placeLabel("Villa Park"), "Villa Park");
 });

@@ -14,7 +14,7 @@ export function RailCard({
   children: ReactNode;
 }) {
   return (
-    <section aria-label={title} className="border-border-strong border">
+    <section className="border-border-strong border">
       <div className="border-border flex h-9.5 items-center border-b px-3.5">
         <h2 className="text-body text-text-strong font-black">{title}</h2>
       </div>

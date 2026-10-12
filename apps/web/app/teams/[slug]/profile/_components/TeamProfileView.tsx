@@ -64,13 +64,15 @@ export function TeamProfileView({
   const tabs = TEAM_PROFILE_TABS.filter(
     ({ key }) => key !== "squad" || squad === null || squad.players.length > 0,
   );
-  const picker = (
-    <CompetitionPicker
-      options={options}
-      value={competitionId}
-      onChange={setCompetitionId}
-    />
-  );
+  /* 대회가 둘 이상일 때만 고를 게 있다. 이 판정 하나를 선수단과 기록이 같이 쓴다 */
+  const picker =
+    options.length > 1 ? (
+      <CompetitionPicker
+        options={options}
+        value={competitionId}
+        onChange={setCompetitionId}
+      />
+    ) : null;
 
   return (
     <>
@@ -108,9 +110,7 @@ export function TeamProfileView({
               <LiveLoadError />
             ) : (
               <>
-                {options.length > 1 && (
-                  <div className="flex justify-end">{picker}</div>
-                )}
+                {picker && <div className="flex justify-end">{picker}</div>}
                 <TeamSquadTable
                   players={squad.players}
                   competitionId={competitionId}
@@ -125,7 +125,7 @@ export function TeamProfileView({
                 stats={
                   stats.find((c) => c.competitionId === competitionId) ?? null
                 }
-                picker={options.length > 1 ? picker : null}
+                picker={picker}
               />
             ))}
         </div>
