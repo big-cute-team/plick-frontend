@@ -16,26 +16,30 @@ import { rem } from "@plick/domain/format";
  * @param src - 사진 URL (null이면 바로 폴백)
  * @param name - alt 텍스트
  * @param size - 한 변 px
+ * @param square - 정사각 칸(팀 프로필 선수단 표, KAN-599). 칩 면 바탕에 상단 기준으로 자른다
  */
 export function PlayerPhoto({
   src,
   name,
   size,
+  square = false,
   className = "",
 }: {
   src: string | null;
   name: string;
   size: number;
+  square?: boolean;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const box = { width: rem(size), height: rem(size) };
+  const shape = square ? "bg-chip object-top" : "bg-avatar rounded-full";
 
   if (!src || failed) {
     return (
       <span
         aria-hidden
-        className={`bg-avatar shrink-0 rounded-full ${className}`}
+        className={`${shape} shrink-0 ${className}`}
         style={box}
       />
     );
@@ -50,7 +54,7 @@ export function PlayerPhoto({
       loading="lazy"
       onError={() => setFailed(true)}
       style={box}
-      className={`bg-avatar shrink-0 rounded-full object-cover ${className}`}
+      className={`${shape} shrink-0 object-cover ${className}`}
     />
   );
 }
