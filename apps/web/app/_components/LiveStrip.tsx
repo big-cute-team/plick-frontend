@@ -7,6 +7,7 @@ import {
   todayDateKeyKst,
   type MatchSummary,
 } from "@plick/domain/live";
+import { LIVE_SCORE_PAUSED } from "@plick/domain/live-pause";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /**
@@ -40,9 +41,12 @@ async function loadToday(): Promise<MatchSummary[]> {
  * 멈춘다. 대가로 경기가 있는 날 조회가 늦으면 띠가 늦게 끼어들며 본문이 띠 높이만큼
  * 밀린다. 캐시 히트면 셸과 같은 응답 안에 붙어 와 첫 페인트 전에 자리를 잡는다.
  *
+ * 라이브 스코어를 닫아 둔 동안(KAN-644)은 조회 없이 아무것도 그리지 않는다.
+ *
  * @param currentMatchId 지금 보고 있는 경기 id. 그 칸에 강조색 밑줄을 긋는다(경기 상세)
  */
 export function LiveStrip({ currentMatchId }: { currentMatchId?: number }) {
+  if (LIVE_SCORE_PAUSED) return null;
   return (
     <Suspense fallback={null}>
       <LiveStripContent currentMatchId={currentMatchId} />

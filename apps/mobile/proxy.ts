@@ -52,6 +52,11 @@ import {
 } from "@plick/core/marketing";
 import { ApiError, BE_PROXY_PREFIX } from "@plick/core/client";
 import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
+import {
+  LIVE_PAUSED_PATH,
+  LIVE_SCORE_PAUSED,
+  isLiveScorePath,
+} from "@plick/domain/live-pause";
 import { issueGuest } from "@plick/core/guest";
 import { refreshTokensShared } from "@plick/core/refresh";
 import {
@@ -211,6 +216,9 @@ function resolveAnalytics(
  * 헤더 스냅샷은 호출 시점에 뜬다. 게스트 발급·재발급이 `request.cookies.set`으로 바꾼
  * 쿠키를 다운스트림이 보려면 그 뒤에 불러야 한다.
  *
+ * 라이브 스코어를 닫아 둔 동안(KAN-644) 그 화면 경로는 `next` 대신 준비중 화면으로 rewrite한다.
+ * 페이지 갈래가 모두 여기를 지나므로 게스트 발급과 재발급은 그대로 돌고 화면만 바뀐다.
+ *
  * @param request 이번 요청. `request.cookies.set`이 끝난 뒤의 상태
  * @param analytics `resolveAnalytics`가 정한 값
  * @param accessToken `/be` 요청에 실을 토큰. 페이지 요청이면 생략
@@ -228,6 +236,11 @@ function forward(
     else headers.delete(name);
   }
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  if (LIVE_SCORE_PAUSED && isLiveScorePath(request.nextUrl.pathname)) {
+    return NextResponse.rewrite(new URL(LIVE_PAUSED_PATH, request.url), {
+      request: { headers },
+    });
+  }
   return NextResponse.next({ request: { headers } });
 }
 

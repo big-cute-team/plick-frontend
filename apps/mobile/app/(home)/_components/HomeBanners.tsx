@@ -1,6 +1,7 @@
 import { getDebates } from "@plick/core/debates";
 import { getMatches } from "@plick/core/live";
 import { todayDateKeyKst } from "@plick/domain/live";
+import { LIVE_SCORE_PAUSED } from "@plick/domain/live-pause";
 import { OpenDebateBanner } from "./OpenDebateBanner";
 import { TodayMatchBanner } from "./TodayMatchBanner";
 
@@ -13,10 +14,11 @@ import { TodayMatchBanner } from "./TodayMatchBanner";
  *
  * 둘 다 부가 정보라 실패를 빈 배열로 접는다. 자리를 비워 두면 경기·투표가 없는 날과
  * 똑같이 보이고, 그게 맞는 처리다. 둘 다 없는 날은 `empty:hidden`으로 상자째 지운다.
+ * 라이브 스코어를 닫아 둔 동안(KAN-644)은 경기 조회를 건너뛰어 LIVE 띠가 서지 않는다.
  */
 export async function HomeBanners() {
   const [matchResult, debateResult] = await Promise.allSettled([
-    getMatches(todayDateKeyKst()),
+    LIVE_SCORE_PAUSED ? [] : getMatches(todayDateKeyKst()),
     getDebates(),
   ]);
 
