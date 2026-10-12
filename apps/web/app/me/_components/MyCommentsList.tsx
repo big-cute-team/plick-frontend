@@ -10,6 +10,7 @@ import type { MyCommentPage } from "@/_types/activity";
 import { ActivityEmpty } from "./ActivityEmpty";
 import { ActivityRetry } from "./ActivityRetry";
 import { MyCommentRow } from "./MyCommentRow";
+import { MyCommentRowSkeleton } from "./MyCommentRowSkeleton";
 
 /** 첫 로딩에 보여줄 자리 개수. */
 const SKELETON_COUNT = 3;
@@ -62,7 +63,7 @@ export function MyCommentsList({
     return (
       <div>
         {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-          <RowSkeleton key={i} />
+          <MyCommentRowSkeleton key={i} />
         ))}
       </div>
     );
@@ -88,7 +89,7 @@ export function MyCommentsList({
         <MyCommentRow key={comment.id} comment={comment} />
       ))}
 
-      {isFetchingNextPage && <RowSkeleton />}
+      {isFetchingNextPage && <MyCommentRowSkeleton />}
 
       {isFetchNextPageError && (
         <ActivityRetry
@@ -99,19 +100,6 @@ export function MyCommentsList({
 
       {/* 이 자리가 보이면 다음 페이지를 당긴다. 마지막 페이지면 관찰을 끈다 */}
       <div ref={sentinelRef} aria-hidden className="h-px" />
-    </div>
-  );
-}
-
-/** 댓글 줄 자리 — 본문 두 줄과 오른쪽 기사 제목 칸의 실루엣. */
-function RowSkeleton() {
-  return (
-    <div className="border-border-soft flex animate-pulse gap-5 border-b py-3.75">
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="bg-chip h-4 w-4/5" />
-        <div className="bg-chip h-4 w-2/5" />
-      </div>
-      <div className="bg-chip h-4 w-61.5 shrink-0" />
     </div>
   );
 }

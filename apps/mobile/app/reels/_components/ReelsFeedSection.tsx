@@ -1,35 +1,24 @@
-import type { Metadata } from "next";
-import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
-import { AppShell } from "@/_components/AppShell";
-import { ReelsFeed } from "./_components/ReelsFeed";
-import { TabBar } from "@/_components/TabBar";
-import { WEB_SITE_URL } from "@/_constants/site";
 import { getReels } from "@plick/core/reels";
+import type { InitialReelFeed } from "@plick/domain/types";
 import { getAccessToken } from "@/_services/session";
 import { getReelSeedTweet } from "@/_services/tweet";
-import { tweetImageUrl } from "@/_utils/tweet";
-import type { InitialReelFeed } from "@plick/domain/types";
 import type { ReelSeedTweet } from "@/_types/reels";
-
-/** canonical은 데스크톱 릴스다 (KAN-346) — 모바일 홈 canonical과 같은 이유. */
-export const metadata: Metadata = {
-  title: "릴스",
-  description: PAGE_DESCRIPTIONS.reels,
-  alternates: { canonical: `${WEB_SITE_URL}/reels` },
-};
+import { tweetImageUrl } from "@/_utils/tweet";
+import { ReelsFeed } from "./ReelsFeed";
 
 /**
- * 릴스 화면 (KAN-167). 풀스크린 세로 피드 위에 오버레이 하단 탭을 얹는다. 상단 바는
- * 없다. KAN-567 시안이 상단 바와 일반 탭으로 바꿨다가 KAN-569에서 이 배치로 되돌렸다.
+ * 릴스 피드와 그 씨앗. 첫 페이지는 `GET /api/v1/reels`로 여기서 미리 받아 내려준다.
+ * 클라가 같은 데이터를 또 부르는 이중 페치를 막는 씨앗이고, 끝에 가까워지면 클라가
+ * 커서로 이어받는다 (KAN-276).
  *
- * 첫 페이지는 `GET /api/v1/reels`로 여기서 미리 받아 내려준다. 클라가 같은 데이터를
- * 또 부르는 이중 페치를 막는 씨앗이고, 끝에 가까워지면 클라가 커서로 이어받는다 (KAN-276).
- *
- * 첫 릴이 임베드 릴이면 트윗 데이터도 여기서 미리 받는다 (KAN-422) — LCP인 임베드
+ * 첫 릴이 임베드 릴이면 트윗 데이터도 여기서 미리 받는다 (KAN-422). LCP인 임베드
  * 이미지가 초기 HTML에 그려지고, URL을 아는 김에 preload까지 걸어 프리로드 스캐너가
  * 최우선으로 내려받게 한다.
+ *
+ * 릴스 페이지가 Suspense로 감싸 스트리밍한다 (KAN-602). 토큰을 실은 조회라 캐시를
+ * 못 타서 BE가 느리면 그대로 느린데, 그동안 탭바와 릴 뼈대는 먼저 서 있다.
  */
-export default async function ReelsPage() {
+export async function ReelsFeedSection() {
   let initial: InitialReelFeed | undefined;
   let seedTweet: ReelSeedTweet | undefined;
   try {
@@ -50,7 +39,7 @@ export default async function ReelsPage() {
   const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
 
   return (
-    <AppShell>
+    <>
       {seedImageUrl && (
         <link
           rel="preload"
@@ -60,7 +49,6 @@ export default async function ReelsPage() {
         />
       )}
       <ReelsFeed initial={initial} seedTweet={seedTweet} />
-      <TabBar variant="overlay" />
-    </AppShell>
+    </>
   );
 }

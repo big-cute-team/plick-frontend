@@ -13,10 +13,8 @@ import { useDebates } from "@/_hooks/useDebates";
 import { useViewState } from "@/_stores/view-state";
 import type { DebateTab } from "@/_types/debates";
 import { debateTabFrom, debateTabPath } from "@/_utils/debates";
+import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabs } from "./DebateTabs";
-
-/** 첫 로딩에 보여줄 자리 개수. 카드가 커서 기사 리스트보다 적게 둔다. */
-const SKELETON_COUNT = 3;
 
 /**
  * 투표 화면 본체 (KAN-418, KAN-567 리디자인). 탭 줄 + 탭별 투표 카드 리스트.
@@ -48,13 +46,7 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
       <section className="px-edge">
         <QueryBoundary
           name="DebatesFeed"
-          fallback={
-            <div>
-              {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-                <DebateCardSkeleton key={i} />
-              ))}
-            </div>
-          }
+          fallback={<DebateListSkeleton />}
           errorMessage="투표를 불러오지 못했어요"
         >
           <DebateList tab={tab} initial={initial} />
@@ -129,18 +121,4 @@ function DebateList({
 /** 마감 여부. 리스트 카드가 스스로 겹치는 판정과 같다 (KAN-436). */
 function isClosed(debate: DebateListItem): boolean {
   return debate.contentType === "FINISH" || isDebateClosed(debate.closesAt);
-}
-
-/** 투표 카드 자리 스켈레톤. 배지·질문·트랙 2개의 실루엣이다. */
-function DebateCardSkeleton() {
-  return (
-    <div className="border-border-soft border-b py-4">
-      <div className="bg-vote-card rounded-card flex animate-pulse flex-col gap-3 p-4">
-        <div className="bg-vote-track rounded-badge h-5 w-16" />
-        <div className="bg-vote-track rounded-tile h-6 w-3/4" />
-        <div className="bg-vote-track rounded-tile h-9" />
-        <div className="bg-vote-track rounded-tile h-9" />
-      </div>
-    </div>
-  );
 }
