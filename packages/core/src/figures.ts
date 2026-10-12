@@ -32,6 +32,8 @@ export interface FigureResponse {
   /** "PLAYER" | "MANAGER" | "COACH" | "OWNER" | "OTHER" */
   type: string;
   imageUrl: string | null;
+  /** 연결된 API 선수 id (KAN-590). 옛 BE 응답엔 없어 optional */
+  apiPlayerId?: number | null;
 }
 
 interface TeamProfileResponse {
@@ -56,6 +58,8 @@ interface FigureProfileResponse {
     shortName: string;
     logoUrl: string | null;
   } | null;
+  /** 연결된 API 선수 id (KAN-590). 옛 BE 응답엔 없어 optional */
+  apiPlayerId?: number | null;
 }
 
 const FIGURE_TYPES: FigureType[] = [
@@ -80,6 +84,7 @@ export function toFigureTag(r: FigureResponse): FigureTag {
     name: r.nameKo,
     type: toFigureType(r.type),
     imageUrl: r.imageUrl,
+    apiPlayerId: r.apiPlayerId ?? null,
   };
 }
 
@@ -141,5 +146,6 @@ export async function getFigureProfile(
           logoUrl: figure.team.logoUrl,
         }
       : null,
+    apiPlayerId: figure.apiPlayerId ?? null,
   };
 }

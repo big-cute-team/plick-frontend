@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import {
+  createContext,
+  Suspense,
+  use,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { ProfileSeed } from "@/_types/auth";
 
 /**
  * 로그인 여부·내 닉네임을 클라 컴포넌트로 흘려주는 컨텍스트.
@@ -32,35 +40,69 @@ const AuthContext = createContext<{
  * 로그인 여부 provider. 서버(루트 레이아웃)가 `isLoggedIn()`으로 읽은 값과 프로필의 닉네임을
  * 시드로 받아, 하위 클라 컴포넌트가 `useAuth()`로 꺼내 쓰게 한다.
  *
- * 값은 서버 렌더 시점에 박힌다. 로그인·로그아웃은 서버 액션이 redirect하며 새 렌더를 일으키므로
- * 그때 시드가 다시 뿌려진다 — 클라에서 따로 폴링하거나 갱신할 필요가 없다.
+ * 세션 유무와 게스트 여부는 쿠키로 바로 안다. 프로필(userId, 닉네임)은 BE 조회라
+ * 레이아웃이 기다리지 않고 Promise로 넘긴다 (KAN-602). 예전에는 레이아웃이 `/users/me`를
+ * 기다린 뒤에야 자식을 그려, BE가 느리면 앱 진입과 새로고침이 그만큼 흰 화면이었다.
+ * 지금은 첫 화면이 프로필 없이 뜨고, Promise가 풀리면 {@link ProfileSeedReader}가 값을
+ * 채운다. 그 사이 userId와 닉네임은 null이라 내 댓글 수정·삭제 버튼과 닉네임 표시만
+ * 잠깐 늦게 붙는다. 게스트 여부는 프로필이 오면 그 값으로 덮는다.
+ *
+ * 로그인·로그아웃은 서버 액션이 redirect하며 레이아웃을 다시 렌더하므로 그때 새
+ * Promise가 내려온다. 새 값이 올 때까지는 직전 프로필을 들고 있어 닉네임이 깜빡이지 않는다.
  *
  * @param isLoggedIn 서버가 읽은 세션 존재 여부(access 쿠키 존재). 게스트도 true다 —
  *   좋아요·투표·조회 기록처럼 게스트에게 열린 기능은 이 값만 보면 된다
- * @param isGuest 게스트 계정인가 (KAN-514). 댓글·신고·채팅처럼 소셜 전용 기능은
- *   이 값으로 갈라 "로그인"이 아니라 "계정 연동" 안내를 띄운다
- * @param userId 내 유저 id. 비로그인·프로필 조회 실패면 null —
- *   그때는 내 댓글 판별이 항상 false로 떨어져 버튼이 안 뜰 뿐 화면은 그대로 돈다
- * @param nickname 내 닉네임(표시용). null 조건은 userId와 같고 온보딩 전에도 null이다
+ * @param isGuest 게스트 마감 쿠키로 판정한 게스트 여부 (KAN-514). 프로필이 오기 전의
+ *   잠정값이다. 댓글·신고·채팅처럼 소셜 전용 기능은 이 값으로 갈라 "로그인"이 아니라
+ *   "계정 연동" 안내를 띄운다
+ * @param profile 프로필 조각 Promise. 비로그인·조회 실패면 null로 풀린다
  */
 export function AuthProvider({
   isLoggedIn,
   isGuest,
-  userId,
-  nickname,
+  profile,
   children,
 }: {
   isLoggedIn: boolean;
   isGuest: boolean;
-  userId: number | null;
-  nickname: string | null;
+  profile: Promise<ProfileSeed | null>;
   children: React.ReactNode;
 }) {
+  const [seed, setSeed] = useState<ProfileSeed | null>(null);
+  const value = {
+    isLoggedIn,
+    isGuest: isLoggedIn ? (seed?.isGuest ?? isGuest) : false,
+    userId: isLoggedIn ? (seed?.userId ?? null) : null,
+    nickname: isLoggedIn ? (seed?.nickname ?? null) : null,
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isGuest, userId, nickname }}>
+    <AuthContext.Provider value={value}>
       {children}
+      <Suspense fallback={null}>
+        <ProfileSeedReader profile={profile} onLoad={setSeed} />
+      </Suspense>
     </AuthContext.Provider>
   );
+}
+
+/**
+ * 프로필 Promise를 풀어 provider 상태로 올린다. 아무것도 그리지 않는다. 풀리기 전에는
+ * 자기 Suspense 경계 안에서만 멈추므로 형제인 화면 트리는 기다리지 않는다.
+ *
+ * @param profile 레이아웃이 넘긴 프로필 조각 Promise
+ * @param onLoad 풀린 값을 받을 setter
+ */
+function ProfileSeedReader({
+  profile,
+  onLoad,
+}: {
+  profile: Promise<ProfileSeed | null>;
+  onLoad: (seed: ProfileSeed | null) => void;
+}) {
+  const seed = use(profile);
+  useEffect(() => onLoad(seed), [seed, onLoad]);
+  return null;
 }
 
 /**

@@ -1,0 +1,80 @@
+import type { Metadata } from "next";
+import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
+import { Suspense } from "react";
+import { isDateKey, todayDateKeyKst } from "@plick/domain/live";
+import { AppShell } from "@/_components/AppShell";
+import { TabBar } from "@/_components/TabBar";
+import { TopBar } from "@/_components/TopBar";
+import { WEB_SITE_URL } from "@/_constants/site";
+import { ChatRoomBanner } from "@/live/_components/ChatRoomBanner";
+import { DateStrip } from "@/live/_components/DateStrip";
+import { LiveDatePager } from "@/live/_components/LiveDatePager";
+import { LiveMatchesSection } from "@/live/_components/LiveMatchesSection";
+import { LiveScrollArea } from "@/live/_components/LiveScrollArea";
+import { MatchListSkeleton } from "@/live/_components/MatchListSkeleton";
+import { StandingsSection } from "@/live/_components/StandingsSection";
+
+/**
+ * canonical은 날짜 쿼리와 무관하게 대응 데스크톱 `/live`다. 날짜별 URL은
+ * 같은 지면의 필터라 색인 시그널을 한 곳에 모은다(기사 목록과 같은 규약).
+ */
+export const metadata: Metadata = {
+  title: "LIVE",
+  description: PAGE_DESCRIPTIONS.live,
+  alternates: { canonical: `${WEB_SITE_URL}/live` },
+};
+
+/**
+ * LIVE 탭 (KAN-446 → KAN-452 배선, 시안 KAN-567 "LIVE 목록"). 위에서부터 채팅방
+ * 배너, 날짜 라벨과 7일 날짜 줄, 그 날짜의 경기 행, 맨 아래 순위표 20팀이다.
+ * 전에는 경기/순위 서브탭으로 두 라우트를 오갔는데 시안이 한 지면에 다 두므로
+ * 서브탭을 없애고 순위표를 목록 아래 붙였다. `/live/standings`는 그대로 남는다.
+ *
+ * 날짜는 `/live?date=YYYY-MM-DD` 쿼리로 승격돼 있고 없거나 깨졌으면 KST 오늘이다.
+ *
+ * 경기 목록({@link LiveMatchesSection})과 순위표({@link StandingsSection})는 각자
+ * Suspense 경계 안에서 받아 따로 스트리밍된다 (KAN-602). 상단바, 채팅방 배너, 날짜
+ * 줄은 기다리지 않고 바로 나간다. 같은 라우트 안의 날짜 이동은 트랜지션이라 경계가
+ * 뼈대로 돌아가지 않고 옛 목록을 들고 있다가 바뀐다.
+ *
+ * 채팅방 배너는 경기와 무관하게 늘 선다(KAN-572). 방이 언제나 열린 통합 방
+ * 하나라 전처럼 오늘 진행 중인 경기를 찾으려고 오늘 목록을 따로 받지 않는다.
+ *
+ * 목록을 좌우로 끌면 전날·다음날로 넘어가고(`LiveDatePager`), 맨 위에서 당기면
+ * 그 날짜 목록을 다시 받는다(`LiveScrollArea`, KAN-462).
+ *
+ * 스크롤 영역의 콘텐츠를 `flex min-h-full flex-col`로 열고 페이저에 `flex-1`을
+ * 줘서, 경기가 두세 개뿐인 날에도 목록 아래 빈 자리까지 전부 스와이프 영역이
+ * 되게 한다. 그 전에는 카드 상자 위에서만 제스처가 먹었다.
+ */
+export default async function LivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const { date } = await searchParams;
+  const today = todayDateKeyKst();
+  const selected = isDateKey(date) ? date : today;
+
+  return (
+    <AppShell>
+      <TopBar />
+      <LiveScrollArea
+        date={selected}
+        contentClassName="flex min-h-full flex-col pb-5.5"
+      >
+        <ChatRoomBanner />
+        <DateStrip selected={selected} today={today} />
+        <LiveDatePager date={selected} today={today} className="flex-1">
+          <Suspense fallback={<MatchListSkeleton />}>
+            <LiveMatchesSection date={selected} />
+          </Suspense>
+        </LiveDatePager>
+        <Suspense fallback={null}>
+          <StandingsSection />
+        </Suspense>
+      </LiveScrollArea>
+      <TabBar />
+    </AppShell>
+  );
+}

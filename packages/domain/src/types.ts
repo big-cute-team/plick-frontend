@@ -73,6 +73,8 @@ export interface FigureTag {
   name: string;
   type: FigureType;
   imageUrl: string | null;
+  /** 연결된 API 선수 id. 있으면 웹은 선수 프로필로 링크한다(KAN-600), 미연결이면 null */
+  apiPlayerId: number | null;
 }
 
 /**
@@ -117,6 +119,8 @@ export interface FigureProfile {
     name: string;
     logoUrl: string | null;
   } | null;
+  /** 연결된 API 선수 id. 있으면 선수 프로필로 잇는다(KAN-600), 미연결이면 null */
+  apiPlayerId: number | null;
 }
 
 /**

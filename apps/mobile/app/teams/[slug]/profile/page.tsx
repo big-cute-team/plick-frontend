@@ -1,32 +1,40 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
-import { getTeamProfile } from "@plick/core/figures";
-import { getStandings, getTeamSquad } from "@plick/core/live";
+import { getStandings } from "@plick/core/live";
+import {
+  getTeamFixtures,
+  getTeamSeasonStats,
+  getTeamSquadTable,
+  getTeamSummary,
+} from "@plick/core/team-profile";
 import {
   TEAMS,
   TEAM_BY_SLUG,
   TEAM_FULL_NAMES,
   TEAM_IDS,
 } from "@plick/domain/constants";
-import { teamHubPath } from "@plick/domain/format";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
-import { ChevronRightIcon } from "@plick/ui/icons";
-import { TeamCrest } from "@plick/ui/TeamCrest";
+import { standingsWindow, type TeamSummary } from "@plick/domain/team-profile";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
-import { ProfileFacts } from "@/_components/ProfileFacts";
-import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
-import { ProfileStats } from "@/_components/ProfileStats";
-import { TeamProfileTabs } from "./_components/TeamProfileTabs";
+import {
+  PROFILE_ISSUE_COUNT,
+  PROFILE_RECENT_COUNT,
+} from "@/_constants/profile";
+import { WEB_SITE_URL } from "@/_constants/site";
+import { TeamFixturesPanel } from "./_components/TeamFixturesPanel";
+import { TeamOverviewPanel } from "./_components/TeamOverviewPanel";
+import { TeamProfileHead } from "./_components/TeamProfileHead";
+import { TeamProfileView } from "./_components/TeamProfileView";
 
 /**
- * 팀 프로필 메타데이터 (KAN-500). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
- * 맡으므로 여기는 선수단 검색어("토트넘 선수단")를 받는 쪽으로 제목을 잡는다.
- * 모르는 slug는 빈 메타데이터로 두면 본문이 notFound()로 떨어진다.
+ * 팀 프로필 메타데이터 (KAN-500 → KAN-604). 팀 검색어의 랜딩은 팀 허브(`/teams/[slug]`)가
+ * 맡으므로 여기는 순위, 일정, 선수단 쪽으로 제목을 잡는다(웹 KAN-599와 같은 문구). canonical은
+ * 대응 데스크톱 팀 프로필이다. 모르는 slug는 빈 메타데이터로 두면 본문이 notFound()로 떨어진다.
  */
 export async function generateMetadata({
   params,
@@ -38,36 +46,31 @@ export async function generateMetadata({
   if (!code) return {};
   const fullName = TEAM_FULL_NAMES[code];
   return {
-    title: `${fullName} 선수단`,
-    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 선수단 모아보기`,
+    title: `${fullName} 팀 프로필`,
+    description: `${fullName} ${LIVE_SEASON_LABEL} 시즌 순위, 경기 일정, 선수단, 기록 모아보기`,
+    alternates: { canonical: `${WEB_SITE_URL}/teams/${slug}/profile` },
   };
 }
 
+/** allSettled 결과에서 값만 꺼낸다. 실패는 로그를 남기고 null이라 그 영역만 실패를 그린다. */
+function settled<T>(result: PromiseSettledResult<T>, label: string): T | null {
+  if (result.status === "fulfilled") return result.value;
+  console.error(`[team] ${label} 로드 실패:`, result.reason);
+  return null;
+}
+
 /**
- * 팀 프로필 (KAN-500, KAN-507에서 라이브 팀 화면을 합침, KAN-567 리디자인, 시안
- * 팀 프로필). 머리(엠블럼 60, 이름, 영문명), 숫자 상자(순위·승점·전적·득실),
- * 선수단, 관련 이슈 링크, 기본 정보를 세로로 쌓는다.
+ * 팀 프로필 (KAN-500, KAN-567 리디자인, KAN-604 시안 팀 프로필 모바일). 하위 바("팀") 아래
+ * 머리(엠블럼, 이름, 숫자 상자, 다음 경기)와 sticky 탭 줄(개요, 경기, 선수단, 기록)이다.
  *
- * 한 팀을 보는 화면이 두 장으로 갈려 있었다. 라이브 순위표에서 팀을 누르면
- * `/live/teams/[teamId]`(API-Football 선수단)로, 기사 쪽 팀 칩·로고를 누르면
- * 여기로 왔다. 같은 팀인데 어디로 들어왔느냐에 따라 다른 화면이 뜨는 게
- * 이상해서 이 한 장으로 합쳤다. 라이브 쪽 URL은 여기로 리다이렉트한다.
+ * 웹 KAN-599와 같은 BE 팀 프로필 API 넷(요약, 경기, 시즌 기록, 선수단)과 순위표, 팀 이슈를
+ * 서버에서 한 번에 받는다. 머리를 그리는 요약이 404(빅6 밖, 마스터 재시드로 id가 어긋난
+ * 경우)면 not-found다. 그 밖의 실패(외부 데이터 장애 502)는 화면을 막지 않는다. 머리는
+ * 레지스트리 이름으로 그리고 숫자 상자는 "-", 보조 블록은 뺀다. 관련 이슈는 우리 DB라
+ * 외부 장애와 무관하게 살아 있어서다. 나머지 API도 실패하면 그 영역만 다시 시도를 띄운다.
  *
- * 숫자 상자 밑은 탭이다 (KAN-574). 선수단과 팀 정보(관련 이슈 + 기본 정보)를
- * 가른다. "기사 속 인물" 탭은 KAN-576에서 뺐다. KAN-567에서 시안대로 섹션을
- * 세로로 이었더니 선수단만으로 화면 몇 장이라 되돌렸다. "선수단"은 API-Football의
- * 이번 시즌 등록 명단이고 포지션별 한 줄씩 칩을 누르면 시즌 스탯 시트가 열린다.
- * 팀 관련 기사는 이 화면에 다시 펼치지 않고 기사 목록의 팀 탭
- * (`/articles/teams/[slug]`)으로 보낸다. 같은 목록이 세 URL에 있으면 어디가
- * 원본인지 흐려진다.
- *
- * 순위 요약(KAN-514)은 `GET /standings` 20행에서 이 팀 행만 골라 숫자 상자에
- * 넣는다. 시안의 최근 5경기 폼, 감독·홈구장·창단은 팀 단위 API가 없어 뺐다.
- *
- * slug는 레지스트리로 검증하고 BE는 `TEAM_IDS`의 id로 부른다. 인물 사전이
- * 404면(마스터 재시드로 id가 어긋난 경우) 보여 줄 게 없어 not-found다. 선수단만
- * 실패하면 페이지를 죽이지 않고 그 섹션 자리에만 실패를 보여준다. 라이브 API는
- * 외부(API-Football) 의존이라 인물 사전보다 덜 미덥다.
+ * 전에는 선수단, 팀 정보 두 탭(KAN-574)이었고 선수단 칩을 누르면 시즌 스탯 시트가 열렸다.
+ * 이제 선수단 행은 선수 프로필(`/players/[playerId]`)로 간다.
  */
 export default async function TeamProfilePage({
   params,
@@ -77,111 +80,77 @@ export default async function TeamProfilePage({
   const { slug } = await params;
   const code = TEAM_BY_SLUG[slug];
   if (!code) notFound();
-
   const teamId = TEAM_IDS[code];
-  const [profileResult, squadResult, standingsResult] =
-    await Promise.allSettled([
-      getTeamProfile(teamId),
-      getTeamSquad(teamId, TEAMS[code].name),
-      getStandings(),
-    ]);
 
-  if (profileResult.status === "rejected") {
-    const error = profileResult.reason;
+  const [summaryResult, ...rest] = await Promise.allSettled([
+    getTeamSummary(teamId),
+    getTeamFixtures(teamId),
+    getTeamSeasonStats(teamId),
+    getTeamSquadTable(teamId),
+    getStandings(),
+    getArticles({ team: code, size: PROFILE_ISSUE_COUNT }),
+  ] as const);
+  const [
+    fixturesResult,
+    statsResult,
+    squadResult,
+    standingsResult,
+    issuesResult,
+  ] = rest;
+
+  if (summaryResult.status === "rejected") {
+    const error = summaryResult.reason;
     if (error instanceof ApiError && error.status === 404) notFound();
-    throw error;
+    console.error("[team] 요약 로드 실패:", error);
   }
-  const profile = profileResult.value;
-
-  const squad = squadResult.status === "fulfilled" ? squadResult.value : null;
-  if (squadResult.status === "rejected") {
-    console.error("[team] 선수단 로드 실패:", squadResult.reason);
-  }
-
-  /* 순위는 20행 중 이 팀 행만 쓴다. 못 받거나 그 팀이 없으면(승격·강등으로
-     레지스트리와 어긋난 시즌) 상자를 비운다. 부가 정보라 없는 편이 낫다 */
-  const standing =
-    standingsResult.status === "fulfilled"
-      ? (standingsResult.value.find((row) => row.team.id === teamId) ?? null)
-      : null;
-  if (standingsResult.status === "rejected") {
-    console.error("[team] 순위표 로드 실패:", standingsResult.reason);
-  }
-
-  const team = TEAMS[code];
+  const summary: TeamSummary =
+    summaryResult.status === "fulfilled"
+      ? summaryResult.value
+      : {
+          teamId,
+          name: TEAMS[code].name,
+          nameEn: "",
+          leagueName: "프리미어리그",
+          info: null,
+          nextFixture: null,
+          standing: null,
+          injuries: [],
+        };
+  const fixtures = settled(fixturesResult, "경기");
+  const stats = settled(statsResult, "기록");
+  const squad = settled(squadResult, "선수단");
+  const standings = settled(standingsResult, "순위표");
+  const issues = settled(issuesResult, "이슈");
 
   return (
     <AppShell>
       <SubTopBar title="팀" backHref="/" backBehavior="back" />
       <ScrollArea className="pb-section">
         <div className="px-edge">
-          <header className="flex items-center gap-3.5 pt-5 pb-4.5">
-            <TeamCrest team={team} size={60} />
-            <div className="min-w-0 flex-1">
-              <h1 className="text-profile tracking-title text-text-strong font-black">
-                {profile.name}
-              </h1>
-              <p className="text-label-lg text-text-3 mt-1.5 truncate">
-                {profile.nameEn
-                  ? `${profile.nameEn}, 프리미어리그`
-                  : "프리미어리그"}
-              </p>
-            </div>
-          </header>
-
-          {standing && (
-            <ProfileStats
-              items={[
-                { label: "순위", value: `${standing.rank}위` },
-                { label: "승점", value: String(standing.points) },
-                {
-                  label: "전적",
-                  value: `${standing.win}승 ${standing.draw}무 ${standing.lose}패`,
-                },
-                { label: "득실", value: formatGoalDiff(standing.goalDiff) },
-              ]}
-            />
-          )}
-
-          <TeamProfileTabs
+          <TeamProfileHead code={code} summary={summary} />
+          <TeamProfileView
+            key={slug}
             slug={slug}
-            squad={squad}
-            info={
-              <>
-                <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
-                {/* 팀 관련 기사는 홈 소식 리스트의 팀 탭(팀 허브)이 원본이다 (KAN-569) */}
-                <Link
-                  href={teamHubPath(code)}
-                  className="border-border-soft text-body text-text-strong flex items-center justify-between border-b py-3 font-bold active:opacity-70"
-                >
-                  {team.name} 이슈 모아보기
-                  <ChevronRightIcon size={16} className="text-text-4" />
-                </Link>
-
-                <ProfileSectionTitle>기본 정보</ProfileSectionTitle>
-                <ProfileFacts
-                  items={[
-                    { label: "리그", value: "프리미어리그" },
-                    ...(profile.nameEn
-                      ? [{ label: "영문명", value: profile.nameEn }]
-                      : []),
-                    ...(standing
-                      ? [{ label: "경기 수", value: `${standing.played}경기` }]
-                      : []),
-                    { label: "시즌", value: LIVE_SEASON_LABEL },
-                  ]}
-                />
-              </>
+            overview={
+              <TeamOverviewPanel
+                code={code}
+                teamId={teamId}
+                issues={issues?.items ?? null}
+                recent={
+                  fixtures?.results.slice(0, PROFILE_RECENT_COUNT) ?? null
+                }
+                standings={standings && standingsWindow(standings, teamId)}
+                info={summary.info}
+              />
             }
+            matches={<TeamFixturesPanel fixtures={fixtures} />}
+            squad={squad}
+            stats={stats}
+            injuries={summary.injuries}
           />
         </div>
       </ScrollArea>
       <TabBar />
     </AppShell>
   );
-}
-
-/** 득실차는 부호를 붙여야 읽힌다. 0은 부호 없이 그대로 둔다. */
-function formatGoalDiff(diff: number): string {
-  return diff > 0 ? `+${diff}` : String(diff);
 }

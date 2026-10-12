@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getMatches } from "@plick/core/live";
 import {
   activeMatches,
@@ -6,6 +7,7 @@ import {
   todayDateKeyKst,
   type MatchSummary,
 } from "@plick/domain/live";
+import { LIVE_SCORE_PAUSED } from "@plick/domain/live-pause";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /**
@@ -32,20 +34,37 @@ async function loadToday(): Promise<MatchSummary[]> {
  * 시안 오른쪽 끝의 "채팅방 N명 / 들어가기"는 통합 채팅방 API가 없어 뺐다(API 공백).
  *
  * 경기가 없는 날과 취소·연기만 있는 날에는 아무것도 그리지 않는다 — 빈 띠는 소음이다.
- * 목록은 여기서 직접 받는다(`getMatches`, 서버 캐시 20초). 페이지가 이미 같은
- * 목록을 받아 뒀으면 `matches`로 넘겨 이중 호출과 레이아웃 시프트를 피한다(홈).
+ * 목록은 여기서 직접 받는다(`getMatches`, 서버 캐시 20초).
  *
- * @param matches 오늘 경기 목록. 생략하면 여기서 받는다
+ * 띠 자체를 Suspense(fallback 없음)로 감싼다 (KAN-602). 경기 조회는 BE가 느릴 때
+ * 가장 오래 걸리는 호출(p90 5초 이상)인데, 띠가 페이지를 붙잡으면 본문까지 같이
+ * 멈춘다. 대가로 경기가 있는 날 조회가 늦으면 띠가 늦게 끼어들며 본문이 띠 높이만큼
+ * 밀린다. 캐시 히트면 셸과 같은 응답 안에 붙어 와 첫 페인트 전에 자리를 잡는다.
+ *
+ * 라이브 스코어를 닫아 둔 동안(KAN-644)은 조회 없이 아무것도 그리지 않는다.
+ *
  * @param currentMatchId 지금 보고 있는 경기 id. 그 칸에 강조색 밑줄을 긋는다(경기 상세)
  */
-export async function LiveStrip({
-  matches,
+export function LiveStrip({ currentMatchId }: { currentMatchId?: number }) {
+  if (LIVE_SCORE_PAUSED) return null;
+  return (
+    <Suspense fallback={null}>
+      <LiveStripContent currentMatchId={currentMatchId} />
+    </Suspense>
+  );
+}
+
+/**
+ * 띠 본체. 오늘 경기를 받아 진행 중·예정·종료 칸을 늘어놓는다.
+ *
+ * @param currentMatchId 강조할 경기 id
+ */
+async function LiveStripContent({
   currentMatchId,
 }: {
-  matches?: MatchSummary[];
   currentMatchId?: number;
 }) {
-  const today = activeMatches(matches ?? (await loadToday()));
+  const today = activeMatches(await loadToday());
   if (today.length === 0) return null;
 
   return (

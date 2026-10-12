@@ -1,4 +1,5 @@
 import type { MatchGoal } from "@plick/domain/live";
+import { PlayerLink } from "@/_components/PlayerLink";
 
 /**
  * 요약 탭의 득점자 (KAN-462 → KAN-567 시안 경기 상세 862-887행). 홈은 왼쪽, 원정은
@@ -32,9 +33,13 @@ function GoalLine({ goal, away = false }: { goal: MatchGoal; away?: boolean }) {
     <p
       className={`flex items-baseline gap-2 pb-1.75 ${away ? "flex-row-reverse" : ""}`}
     >
-      <span className="text-body text-text-strong font-bold">
+      <PlayerLink
+        playerId={goal.playerId}
+        className="text-body text-text-strong font-bold"
+        linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
+      >
         {goal.playerName}
-      </span>
+      </PlayerLink>
       <span className="text-label text-text-3">{goal.minute}</span>
       {goal.detail && (
         <span className="text-caption-lg text-text-4">{goal.detail}</span>

@@ -1,4 +1,5 @@
 import type { MatchEvent, MatchSummary } from "@plick/domain/live";
+import { PlayerLink } from "@/_components/PlayerLink";
 
 /** 이벤트 종류 라벨과 색 — 시안 규칙(골 강조색, 경고 warn, 퇴장 빨강, 나머지 보조색). */
 const KIND: Record<MatchEvent["type"], { label: string; className: string }> = {
@@ -51,14 +52,28 @@ export function TimelineCard({
                 <span className={`text-caption-lg font-bold ${kind.className}`}>
                   {kind.label}
                 </span>
-                <span
+                <PlayerLink
+                  playerId={event.playerName ? event.playerId : null}
                   className={`text-body text-text-strong ${event.type === "GOAL" ? "font-bold" : "font-medium"}`}
+                  linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
                 >
                   {name}
-                </span>
+                </PlayerLink>
                 {sub && (
                   <span className="text-caption-lg text-text-4 max-lg:hidden">
-                    {sub}
+                    {event.assist ? (
+                      <>
+                        <PlayerLink
+                          playerId={event.assist.id}
+                          linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
+                        >
+                          {event.assist.name}
+                        </PlayerLink>{" "}
+                        {event.assist.suffix}
+                      </>
+                    ) : (
+                      sub
+                    )}
                   </span>
                 )}
               </span>

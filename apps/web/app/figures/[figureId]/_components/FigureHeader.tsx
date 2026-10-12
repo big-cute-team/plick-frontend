@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FIGURE_TYPE_LABEL, TEAMS } from "@plick/domain/constants";
-import { teamProfilePath } from "@plick/domain/format";
+import { playerProfilePath, teamProfilePath } from "@plick/domain/format";
 import type { FigureProfile } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 
@@ -14,7 +14,8 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
  *
  * 사진과 소개는 시안 규칙(프로필 이미지 없음, 안내 문구 없음)대로 머리에 두지 않는다.
  * 소개는 우측 기본 정보에 있다. 레지스트리에 없는 팀이면(BE 마스터가 6팀이라 실제로는
- * 안 생긴다) 엠블럼과 링크 없이 이름만 둔다.
+ * 안 생긴다) 엠블럼과 링크 없이 이름만 둔다. API 선수 id가 연결된 인물은 "선수 프로필"
+ * 링크를 더한다(KAN-600). 기록과 경기는 선수 프로필이 맡는다.
  *
  * @param figure 인물 프로필
  */
@@ -37,7 +38,7 @@ export function FigureHeader({ figure }: { figure: FigureProfile }) {
         <h1 className="text-read-title text-text-strong tracking-title truncate leading-[1.2] font-black">
           {figure.name}
         </h1>
-        {(figure.nameEn || team) && (
+        {(figure.nameEn || team || figure.apiPlayerId !== null) && (
           <div className="flex items-center gap-2.5 pt-2.25">
             {figure.nameEn && (
               <span className="text-body text-text-3 truncate">
@@ -58,6 +59,14 @@ export function FigureHeader({ figure }: { figure: FigureProfile }) {
                   {team.name}
                 </span>
               ))}
+            {figure.apiPlayerId !== null && (
+              <Link
+                href={playerProfilePath(figure.apiPlayerId)}
+                className="text-body text-accent hover:text-accent-hover focus-visible:outline-accent shrink-0 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                선수 프로필
+              </Link>
+            )}
           </div>
         )}
       </div>

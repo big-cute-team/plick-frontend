@@ -1,9 +1,6 @@
 /**
- * @file 팀 프로필 화면 전용 타입 (KAN-574).
+ * @file 팀 프로필 화면 전용 타입 (KAN-574 → KAN-604). 도메인 타입은 `@plick/domain/team-profile`이다.
  */
 
-/**
- * 팀 프로필 본문 탭. `squad`는 API-Football 이번 시즌 등록 명단, `info`는 관련
- * 이슈 링크와 기본 정보다.
- */
-export type TeamProfileTabKey = "squad" | "info";
+/** 팀 프로필 본문 탭. URL에 올리지 않아 프로필을 열 때마다 개요로 돌아간다. */
+export type TeamProfileTabKey = "overview" | "matches" | "squad" | "stats";

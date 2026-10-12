@@ -85,6 +85,34 @@ export function figurePath(figureId: string): string {
 }
 
 /**
+ * 선수 프로필 URL (KAN-599). API-Football 선수 id(`playerId`)로 간다. id가 null인
+ * 응답은 호출부가 링크를 만들지 않는다. 도착 화면은 선수 프로필 티켓(KAN-600)이 만든다.
+ *
+ * @example
+ * playerProfilePath(5001); // "/players/5001"
+ */
+export function playerProfilePath(playerId: number): string {
+  return `/players/${playerId}`;
+}
+
+/**
+ * 태그된 인물의 도착 URL (KAN-600). API 선수 id가 연결된 인물은 선수 프로필로, 아니면 인물
+ * 프로필로 간다. 이름으로 선수를 추측하지 않는다. 선수 화면이 웹에만 있어 웹이 쓴다.
+ *
+ * @example
+ * figureHref({ id: "12", apiPlayerId: 5001 }); // "/players/5001"
+ * figureHref({ id: "12", apiPlayerId: null }); // "/figures/12"
+ */
+export function figureHref(figure: {
+  id: string;
+  apiPlayerId: number | null;
+}): string {
+  return figure.apiPlayerId !== null
+    ? playerProfilePath(figure.apiPlayerId)
+    : figurePath(figure.id);
+}
+
+/**
  * 이슈 상세 URL (KAN-523). 급상승 카드의 이슈 줄이 여기로 간다.
  *
  * @example
