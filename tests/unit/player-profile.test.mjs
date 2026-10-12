@@ -8,6 +8,7 @@ import {
   birthLabel,
   cleanSheetsIn,
   matchResultLabel,
+  matchStatLine,
   per90,
   playerStatGroups,
   teammates,
@@ -216,4 +217,29 @@ test("출전했으면 기록 없는 값을 0으로, 출전이 없거나 모르�
   assert.equal(zeroIfPlayed(3, 6), 3);
   assert.equal(zeroIfPlayed(null, 0), null);
   assert.equal(zeroIfPlayed(null, null), null);
+});
+
+test("matchStatLine은 골·도움은 있을 때만, 슈팅·패스는 값이 있으면 쓴다 (KAN-604)", () => {
+  const base = { minutes: 73, goals: 0, assists: 0, shots: 1, passes: 21 };
+  assert.equal(
+    matchStatLine({ ...base, participation: "STARTED", goals: 1 }),
+    "73', 1골, 슈팅 1, 패스 21",
+  );
+  assert.equal(
+    matchStatLine({ ...base, participation: "SUB", shots: 0 }),
+    "73', 슈팅 0, 패스 21",
+  );
+  assert.equal(matchStatLine({ ...base, participation: "ABSENT" }), "결장");
+  assert.equal(matchStatLine({ ...base, participation: "UNKNOWN" }), "-");
+  assert.equal(
+    matchStatLine({
+      participation: "STARTED",
+      minutes: null,
+      goals: null,
+      assists: null,
+      shots: null,
+      passes: null,
+    }),
+    "-",
+  );
 });

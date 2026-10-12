@@ -253,6 +253,16 @@ export function playedDateLabel(kickoffAt: string): string {
   return `${get("month")}월 ${get("day")}일`;
 }
 
+/**
+ * 킥오프 ISO 문자열 → "10.3"(KST). 모바일 선수 경기 행처럼 날짜 칸이 좁은 자리에 쓴다 (KAN-604).
+ *
+ * @example
+ * dotDateLabel("2026-10-03T23:00:00+09:00"); // "10.3"
+ */
+export function dotDateLabel(kickoffAt: string): string {
+  return playedDateLabel(kickoffAt).replace(/^(\d+)월 (\d+)일$/, "$1.$2");
+}
+
 /** 이 팀 기준 상대. */
 export function fixtureOpponent(fixture: TeamFixture): LiveTeam {
   return fixture.isHome ? fixture.away : fixture.home;

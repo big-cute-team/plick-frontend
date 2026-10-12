@@ -310,6 +310,33 @@ export function matchResultLabel(
 }
 
 /**
+ * 모바일 경기 행 아래 줄 "73', 1골, 슈팅 1, 패스 21" (KAN-604). 골과 도움은 있을 때만, 슈팅과
+ * 패스는 값이 있으면 0이어도 쓴다. 결장은 "결장", 기록 조회 실패(UNKNOWN)는 "-"다.
+ *
+ * @example
+ * matchStatLine({ participation: "SUB", minutes: 20, goals: 1, assists: 0, shots: 2, passes: 8 });
+ * // "20', 1골, 슈팅 2, 패스 8"
+ * matchStatLine({ participation: "ABSENT", ... }); // "결장"
+ */
+export function matchStatLine(
+  match: Pick<
+    PlayerMatch,
+    "participation" | "minutes" | "goals" | "assists" | "shots" | "passes"
+  >,
+): string {
+  if (match.participation === "ABSENT") return "결장";
+  if (match.participation === "UNKNOWN") return "-";
+  const parts = [
+    match.minutes !== null ? `${match.minutes}'` : null,
+    match.goals ? `${match.goals}골` : null,
+    match.assists ? `${match.assists}도움` : null,
+    match.shots !== null ? `슈팅 ${match.shots}` : null,
+    match.passes !== null ? `패스 ${match.passes}` : null,
+  ];
+  return parts.filter(Boolean).join(", ") || "-";
+}
+
+/**
  * 생년월일과 나이 "1992.07.08 (34세)". 둘 중 있는 것만 쓰고 둘 다 없으면 null.
  *
  * @example

@@ -1,11 +1,12 @@
 /**
  * @file 팀 프로필 순수 함수 테스트 (KAN-599). 라운드 문구, 순위표 창, 팀 내 순위, 포지션 묶음,
- * 이 팀 기준 스코어처럼 FE가 계산하는 값의 경계를 잡는다.
+ * 이 팀 기준 스코어처럼 FE가 계산하는 값의 경계를 잡는다. 모바일 날짜 칸(KAN-604)도 여기서 본다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   competitionOptions,
+  dotDateLabel,
   groupSquadByPosition,
   memberStats,
   placeLabel,
@@ -165,4 +166,10 @@ test("연고지와 구장은 빅6 표기만 한글로 바꾸고 모르는 값은
     "토트넘 홋스퍼 스타디움",
   );
   assert.equal(placeLabel("Villa Park"), "Villa Park");
+});
+
+test("dotDateLabel은 KST 기준 월.일이다 (KAN-604)", () => {
+  assert.equal(dotDateLabel("2026-10-03T23:00:00+09:00"), "10.3");
+  assert.equal(dotDateLabel("2026-10-03T16:00:00Z"), "10.4");
+  assert.equal(dotDateLabel("2026-12-25T12:00:00+09:00"), "12.25");
 });
