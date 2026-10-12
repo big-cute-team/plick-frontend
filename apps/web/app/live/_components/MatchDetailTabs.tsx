@@ -63,12 +63,7 @@ export function MatchDetailTabs({
   }
   if (tab === "lineups") {
     return detail.lineups ? (
-      <LineupCard
-        matchId={header.id}
-        live={header.status === "LIVE"}
-        home={detail.lineups.home}
-        away={detail.lineups.away}
-      />
+      <LineupCard home={detail.lineups.home} away={detail.lineups.away} />
     ) : (
       <EmptyBlock label={matchEmptyLabel("lineups", header.status)} />
     );

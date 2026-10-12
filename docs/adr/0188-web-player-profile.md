@@ -111,10 +111,17 @@ BE 응답 타입에는 이 필드들을 optional(`playerId?: number | null`)로 
 null이다. 모바일은 여전히 `detail` 문자열만 쓰므로 바뀌지 않는다. 웹 타임라인은 `assist`가 있으면 이름만 `PlayerLink`로, 뒤의
 "도움"과 "아웃"은 평문으로 그린다.
 
-라인업은 판단이 갈렸다. 티켓은 라인업 선수도 선수 프로필로 링크하라고 했는데, 지금 웹 라인업은 선수를 누르면 그 경기 스탯
-다이얼로그(`PlayerMatchStatsModal`)가 열린다. 클릭을 링크로 바꾸면 경기 중에 그 선수의 이번 경기 기록을 보던 흐름이 사라진다.
-그래서 클릭은 그대로 두고 다이얼로그 머리의 선수 이름을 선수 프로필 링크로 만들었다. 이 경기 기록은 한 번, 시즌 전체는 두 번 누르면
-된다.
+라인업은 판단이 갈렸다. 티켓은 라인업 선수도 선수 프로필로 링크하라고 했는데, 당시 웹 라인업은 선수를 누르면 그 경기 스탯
+다이얼로그(`PlayerMatchStatsModal`)가 열렸다. 처음엔 경기 중에 이번 경기 기록을 보던 흐름을 지키려고 클릭은 그대로 두고 다이얼로그
+머리의 이름만 프로필 링크로 만들었다. 리뷰 단계에서 사용자가 라인업 클릭도 곧장 프로필로 가게 해 달라고 해서 바꿨다. 다른 자리는
+전부 이름을 누르면 프로필인데 라인업만 한 단계를 더 거치는 게 어긋났다.
+
+피치와 벤치의 `<button onClick>`을 `<Link href={playerProfilePath(id)}>`로 바꾸자 `LineupCard`에 상태가 남지 않아 `"use client"`도
+뗐다(부모 `MatchDetailScreen`이 클라라 여전히 클라 번들에 들어가지만 이 파일 자체는 상태가 없다). 그 결과 경기 스탯 다이얼로그를
+부르는 곳이 없어져 `PlayerMatchStatsModal`과 `usePlayerMatchStats`를 지웠다. 지우다 보니 `SeasonStatsModal`(옛 팀 선수단 칩이
+열던 시즌 스탯 창)이 그 파일에서 `RetryMessage`를 빌려 쓰고 있었다. 확인해 보니 `SeasonStatsModal` 자체도 KAN-599에서 옛 선수단
+칩을 지운 뒤로 부르는 곳이 없었고, 그 둘이 쓰던 `LiveModal`, `usePlayerSeasonStats`도 마찬가지였다. 넷을 같이 지웠다. core의
+`getPlayerMatchStats`, `getPlayerSeasonStats`는 모바일 시트가 쓰므로 그대로다.
 
 인물 태그는 `figureHref(figure)`(format)를 만들어 `apiPlayerId`가 있으면 `/players/<id>`, 없으면 지금처럼 `/figures/<id>`로 보낸다.
 웹 기사 상세와 릴스 패널 두 곳이 쓴다. 모바일 `EntityChips`는 모바일에 선수 화면이 없어 손대지 않았다. 웹 인물 프로필 머리에는
@@ -141,8 +148,8 @@ mock BE(8081) 앞에 다시 고장 주입 프록시(8083)를 뒀다. mock에 선
 - 9004(첫 경기 UNKNOWN): 그 행만 출전부터 평점까지 "-", 출전 막대에서 빠져 선발 0, 교체 1, 결장 1.
 - 1(mock 404)과 `abc`: not-found.
 - 링크: 경기 상세(mock 900001)에서 득점자, 타임라인 득점과 도움(Maddison, Mbeumo), 경고 선수가 `/players/<id>`, 프리뷰(900003)
-  결장자 Saliba가 `/players/5006`. 라인업에서 손흥민을 누르면 다이얼로그 이름이 `/players/5001` 링크이고 누르면 이동하며 다이얼로그가
-  닫힌다. mock 기사에는 인물이 없어 프록시가 기사 상세에 인물 둘을 넣었다. `apiPlayerId` 있는 손흥민은 `/players/5001`, 없는
+  결장자 Saliba가 `/players/5006`. 라인업 피치 셋과 벤치 하나가 모두 `/players/<id>` 링크이고 손흥민을 누르면 선수 프로필로
+  이동한다. mock 기사에는 인물이 없어 프록시가 기사 상세에 인물 둘을 넣었다. `apiPlayerId` 있는 손흥민은 `/players/5001`, 없는
   감독은 `/figures/102`.
 - 340px: 세 탭 모두 페이지 가로 스크롤 없음. 경기 표와 시즌 표는 자기 안에서만 넘어간다.
 - 팀 프로필 회귀: 네 탭, 레일 카드 넷, 선수 링크 정상.
