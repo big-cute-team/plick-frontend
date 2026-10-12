@@ -4,16 +4,11 @@ import type { InitialDebateList } from "@plick/domain/types";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { getAccessToken } from "@/_services/session";
+import { DEBATE_TABS } from "@/_constants/debates";
 import { DebatesFeed, type DebateTab } from "./DebatesFeed";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { SideRail } from "@/_components/SideRail";
-
-/** 탭 나열 순서와 라벨 (시안 `pollTabs`). */
-const TABS: { key: DebateTab; label: string; href: string }[] = [
-  { key: "open", label: "진행 중", href: "/debates" },
-  { key: "closed", label: "마감", href: "/debates?tab=closed" },
-];
 
 /**
  * 데스크톱 투표 화면 본체 (KAN-418 → KAN-567 시안 투표 1064-1213행). GNB 아래
@@ -58,7 +53,7 @@ export async function DebatesScreen({ tab }: { tab: DebateTab }) {
               aria-label="투표 상태"
               className="border-border flex items-center gap-5 border-b"
             >
-              {TABS.map(({ key, label, href }) => {
+              {DEBATE_TABS.map(({ key, label, href }) => {
                 const on = key === tab;
                 return (
                   <Link

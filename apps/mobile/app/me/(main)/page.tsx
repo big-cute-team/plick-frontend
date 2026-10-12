@@ -16,13 +16,13 @@ import { getMyProfile } from "@/_services/profile";
 import { getAccessToken, getGuestExpiresAt } from "@/_services/session";
 import type { InitialActivity } from "@/_types/activity";
 import { activityTabFrom } from "@/_utils/activity";
-import { ActivityScrollArea } from "./_components/ActivityScrollArea";
-import { DeleteAccountButton } from "./_components/DeleteAccountButton";
-import { LogoutButton } from "./_components/LogoutButton";
-import { MeActivityFeed } from "./_components/MeActivityFeed";
-import { MeHeader } from "./_components/MeHeader";
-import { MeLinkRow } from "./_components/MeLinkRow";
-import { MeLoginNotice } from "./_components/MeLoginNotice";
+import { ActivityScrollArea } from "@/me/_components/ActivityScrollArea";
+import { DeleteAccountButton } from "@/me/_components/DeleteAccountButton";
+import { LogoutButton } from "@/me/_components/LogoutButton";
+import { MeActivityFeed } from "@/me/_components/MeActivityFeed";
+import { MeHeader } from "@/me/_components/MeHeader";
+import { MeLinkRow } from "@/me/_components/MeLinkRow";
+import { MeLoginNotice } from "@/me/_components/MeLoginNotice";
 
 /** 개인화 화면이라 색인 가치가 없다. robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
 export const metadata: Metadata = {

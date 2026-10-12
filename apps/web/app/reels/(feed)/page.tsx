@@ -5,7 +5,7 @@ import { getReels } from "@plick/core/reels";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
-import { ReelsWorkspace } from "./_components/ReelsWorkspace";
+import { ReelsWorkspace } from "@/reels/_components/ReelsWorkspace";
 
 /** 이 URL이 canonical이고 대응 모바일 릴스를 alternate로 선언한다 (KAN-346) — 홈과 같은 상호 참조. */
 export const metadata: Metadata = {

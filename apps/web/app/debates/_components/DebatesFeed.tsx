@@ -5,12 +5,10 @@ import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useDebates } from "@/_hooks/useDebates";
+import { DebateListSkeleton } from "./DebateListSkeleton";
 
 /** 투표 탭. 진행 중은 열린 토론, 마감은 contentType FINISH이거나 마감 시각이 지난 토론. */
 export type DebateTab = "open" | "closed";
-
-/** 첫 로딩에 보여줄 자리 개수. 카드가 커서 기사 리스트보다 적게 둔다. */
-const SKELETON_COUNT = 3;
 
 /**
  * 투표 목록 본체 (KAN-418 → KAN-567 시안 투표 1078-1165행). 진행 중 항목은 투표 카드
@@ -37,13 +35,7 @@ export function DebatesFeed({
   );
 
   if (isPending) {
-    return (
-      <div>
-        {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-          <DebateCardSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <DebateListSkeleton />;
   }
 
   if (isError) {
@@ -101,18 +93,4 @@ export function DebatesFeed({
 /** 마감 판정 — 기사 상태(FINISH)가 실기준이고, 마감 시각이 지난 것도 마감으로 본다. */
 function isClosed(debate: DebateListItem): boolean {
   return debate.contentType === "FINISH" || isDebateClosed(debate.closesAt);
-}
-
-/** 투표 카드 자리 스켈레톤 — 배지, 질문, 트랙 2개의 실루엣이다. */
-function DebateCardSkeleton() {
-  return (
-    <div className="border-border-soft border-b pt-5 pb-5.5">
-      <div className="bg-vote-card flex animate-pulse flex-col gap-3 p-4">
-        <div className="bg-vote-track h-5 w-14" />
-        <div className="bg-vote-track h-6 w-3/4" />
-        <div className="bg-vote-track h-9" />
-        <div className="bg-vote-track h-9" />
-      </div>
-    </div>
-  );
 }

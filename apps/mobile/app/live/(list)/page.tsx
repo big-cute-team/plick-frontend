@@ -7,12 +7,12 @@ import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
 import { WEB_SITE_URL } from "@/_constants/site";
-import { ChatRoomBanner } from "./_components/ChatRoomBanner";
-import { DateStrip } from "./_components/DateStrip";
-import { LiveDatePager } from "./_components/LiveDatePager";
-import { LiveMatchesFeed } from "./_components/LiveMatchesFeed";
-import { LiveScrollArea } from "./_components/LiveScrollArea";
-import { StandingsTable } from "./_components/StandingsTable";
+import { ChatRoomBanner } from "@/live/_components/ChatRoomBanner";
+import { DateStrip } from "@/live/_components/DateStrip";
+import { LiveDatePager } from "@/live/_components/LiveDatePager";
+import { LiveMatchesFeed } from "@/live/_components/LiveMatchesFeed";
+import { LiveScrollArea } from "@/live/_components/LiveScrollArea";
+import { StandingsTable } from "@/live/_components/StandingsTable";
 
 /**
  * canonical은 날짜 쿼리와 무관하게 대응 데스크톱 `/live`다. 날짜별 URL은

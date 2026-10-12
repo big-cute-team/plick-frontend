@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
 import { AppShell } from "@/_components/AppShell";
-import { ReelsFeed } from "./_components/ReelsFeed";
+import { ReelsFeed } from "@/reels/_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getReels } from "@plick/core/reels";

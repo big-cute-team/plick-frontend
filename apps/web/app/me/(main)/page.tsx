@@ -11,13 +11,13 @@ import {
 import { getMyProfile } from "@/_services/profile";
 import { getAccessToken, getGuestExpiresAt } from "@/_services/session";
 import type { InitialActivity } from "@/_types/activity";
-import { ActivityEmpty } from "./_components/ActivityEmpty";
-import { ActivityTabs } from "./_components/ActivityTabs";
-import { GuestLinkCard } from "./_components/GuestLinkCard";
-import { LikedArticlesList } from "./_components/LikedArticlesList";
-import { LoginPromptCard } from "./_components/LoginPromptCard";
-import { MeShell } from "./_components/MeShell";
-import { MyCommentsList } from "./_components/MyCommentsList";
+import { ActivityEmpty } from "@/me/_components/ActivityEmpty";
+import { ActivityTabs } from "@/me/_components/ActivityTabs";
+import { GuestLinkCard } from "@/me/_components/GuestLinkCard";
+import { LikedArticlesList } from "@/me/_components/LikedArticlesList";
+import { LoginPromptCard } from "@/me/_components/LoginPromptCard";
+import { MeShell } from "@/me/_components/MeShell";
+import { MyCommentsList } from "@/me/_components/MyCommentsList";
 
 /** 개인화 화면이라 색인 가치가 없다. robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
 export const metadata: Metadata = {

@@ -6,10 +6,10 @@ import type { InitialMatchList, StandingRow } from "@plick/domain/live";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { DateStrip } from "./_components/DateStrip";
-import { LiveLoadError } from "./_components/LiveLoadError";
-import { LiveMatchesFeed } from "./_components/LiveMatchesFeed";
-import { StandingsRail } from "./_components/StandingsRail";
+import { DateStrip } from "@/live/_components/DateStrip";
+import { LiveLoadError } from "@/live/_components/LiveLoadError";
+import { LiveMatchesFeed } from "@/live/_components/LiveMatchesFeed";
+import { StandingsRail } from "@/live/_components/StandingsRail";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 
