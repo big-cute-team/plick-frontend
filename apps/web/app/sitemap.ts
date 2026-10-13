@@ -37,6 +37,9 @@ const MAX_ARTICLE_URLS = 45000;
  */
 const SPLIT_REVIEW_THRESHOLD = 5000;
 
+/** 색인은 되되 콘텐츠가 아닌 안내 페이지. 로그인·회원가입은 색인 가치가 없어 뺀다 */
+const STATIC_PAGES = ["/faq", "/terms", "/privacy"] as const;
+
 /**
  * 사이트맵 (KAN-346). `/sitemap.xml`로 컴파일된다.
  *
@@ -64,6 +67,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/teams/${TEAMS[code].slug}`,
       changeFrequency: "daily" as const,
       priority: 0.9,
+    })),
+    // 팀 프로필 (KAN-599, KAN-623) — 모바일 사이트맵에만 있던 것을 canonical 도메인에도
+    // 싣는다. 인물·선수 프로필은 200명이 넘고 대부분 관련 기사가 아직 없어 싣지 않는다
+    ...TEAM_ORDER.map((code) => ({
+      url: `${SITE_URL}/teams/${TEAMS[code].slug}/profile`,
+      changeFrequency: "weekly" as const,
+      priority: 0.5,
+    })),
+    // 안내 페이지 (KAN-623) — 브랜드 검색의 사이트링크 후보라 존재는 알린다. 자주 안 바뀐다
+    ...STATIC_PAGES.map((path) => ({
+      url: `${SITE_URL}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.3,
     })),
   ];
 

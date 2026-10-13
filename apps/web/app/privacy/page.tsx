@@ -4,10 +4,16 @@ import { PrivacyPolicyBody } from "@plick/ui/PrivacyPolicyBody";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { SiteFooter } from "@/_components/SiteFooter";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 
+/** 이 URL이 canonical이고 대응 모바일 페이지를 alternate로 선언한다 (KAN-623, KAN-346 규약). */
 export const metadata: Metadata = {
   title: "개인정보처리방침",
   description: PAGE_DESCRIPTIONS.privacy,
+  alternates: {
+    canonical: "/privacy",
+    media: { [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/privacy` },
+  },
 };
 
 /**

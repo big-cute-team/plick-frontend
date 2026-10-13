@@ -10,14 +10,16 @@ import { ScrollArea } from "@/_components/ScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
 import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
+import { WEB_SITE_URL } from "@/_constants/site";
 import { FigureArticlesFeed } from "./_components/FigureArticlesFeed";
 import { FigureFacts } from "./_components/FigureFacts";
 import { FigureHeader } from "./_components/FigureHeader";
 
 /**
  * 인물별 메타데이터 (KAN-500). "손흥민 이적" 같은 인물 검색어의 랜딩이 될 수
- * 있어 title에 이름과 구분을 넣는다. 없는 인물은 빈 메타데이터로 두면 본문이
- * notFound()로 떨어진다. 익명 fetch라 본문의 같은 호출과 렌더 안에서 중복
+ * 있어 title에 이름과 구분을 넣는다. canonical은 대응 데스크톱 인물 페이지다
+ * (KAN-623) — 웹이 이쪽을 alternate로 가리키는 상호 선언의 모바일 절반이다. 없는
+ * 인물은 빈 메타데이터로 두면 본문이 notFound()로 떨어진다. 익명 fetch라 본문의 같은 호출과 렌더 안에서 중복
  * 제거된다.
  */
 export async function generateMetadata({
@@ -35,6 +37,7 @@ export async function generateMetadata({
       description:
         figure.description ??
         `${team}${role} ${figure.name}의 프리미어리그 이적 루머와 관련 기사 모아보기`,
+      alternates: { canonical: `${WEB_SITE_URL}/figures/${figureId}` },
     };
   } catch {
     return {};

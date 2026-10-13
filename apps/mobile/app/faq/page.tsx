@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
 import { PAGE_DESCRIPTIONS } from "@plick/domain/brand";
+import { faqPageJsonLd } from "@plick/domain/jsonld";
 import { FaqBody } from "@plick/ui/FaqBody";
+import { JsonLd } from "@plick/ui/JsonLd";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
+import { WEB_SITE_URL } from "@/_constants/site";
 
+/** canonical은 데스크톱 FAQ다 (KAN-623) — 모바일 홈 canonical과 같은 이유. */
 export const metadata: Metadata = {
   title: "FAQ",
   description: PAGE_DESCRIPTIONS.faq,
+  alternates: { canonical: `${WEB_SITE_URL}/faq` },
 };
 
 /**
  * FAQ (KAN-372). MY 맨 아래 링크에서 진입한다. 상단 바는 공용 `SubTopBar`고
  * 뒤로가기는 히스토리 back, 스토어 심사원처럼 URL로 직접 들어왔으면 MY로 간다(KAN-567).
  * 문안은 web과 같아야 해서 `@plick/ui`의 `FaqBody`가 단일 출처다.
+ * FAQPage JSON-LD는 데스크톱과 같은 값을 canonical URL 기준으로 싣는다 (KAN-623).
  */
 export default function FaqPage() {
   return (
     <AppShell>
+      <JsonLd data={faqPageJsonLd({ url: `${WEB_SITE_URL}/faq` })} />
       <SubTopBar title="FAQ" backHref="/me" backBehavior="back" />
 
       <ScrollArea>
