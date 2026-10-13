@@ -7,7 +7,13 @@
  *
  *   logo-horizontal.png  가로형, 높이 200 (화면 최대 사용 67px의 3배)
  *                        → apps/{mobile,web}/public/brand/, apps/web/assets/og/
- *   icon.png             512, 모서리 22% 둥글게 투명 (manifest·파비콘 링크)
+ *   logo-horizontal-{96,134,201}.webp
+ *                        화면용 webp 세 단계 (KAN-624). 앱 상단 바 32px×DPR 3, 웹 GNB 40×2,
+ *                        로그인 67×3에 맞춘 높이다. `Logo.tsx`가 srcset으로 고른다.
+ *                        PNG 200은 OG 이미지(scripts/og-image)용으로 남긴다
+ *   icon.png             512, 모서리 22% 둥글게 투명 (manifest·파비콘 링크).
+ *                        팔레트 품질 65 (KAN-624, 152KB → 38KB). 아이콘은 전 화면이
+ *                        `<link rel="icon">`으로 받는다
  *   apple-icon.png       180, 정사각 (iOS가 마스크를 직접 씌운다)
  *   favicon.ico          32·16 PNG 엔트리, 모서리 둥글게
  *
@@ -33,8 +39,13 @@ async function squareIcon(size, { rounded }) {
   if (rounded) {
     img = img.composite([{ input: roundedMask(size), blend: "dest-in" }]);
   }
-  return img.png({ palette: true }).toBuffer();
+  return img
+    .png({ palette: true, quality: 65, effort: 10, compressionLevel: 9 })
+    .toBuffer();
 }
+
+/** 화면용 webp 높이. 32×3, 67×2, 67×3 */
+const LOGO_WEBP_HEIGHTS = [96, 134, 201];
 
 /** PNG 엔트리를 담는 ICO 컨테이너 — 모든 현행 브라우저가 읽는다 */
 function ico(entries) {
@@ -68,6 +79,17 @@ const horizontal = await sharp(join(SRC, "logo-horizontal.png"))
   .png({ palette: true })
   .toBuffer();
 const { width: hw, height: hh } = await sharp(horizontal).metadata();
+const webps = await Promise.all(
+  LOGO_WEBP_HEIGHTS.map(async (height) => {
+    const buffer = await sharp(join(SRC, "logo-horizontal.png"))
+      .trim({ threshold: 8 })
+      .resize({ height })
+      .webp({ quality: 85 })
+      .toBuffer();
+    const { width } = await sharp(buffer).metadata();
+    return { height, width, buffer };
+  }),
+);
 
 const icon512 = await squareIcon(512, { rounded: true });
 const apple180 = await squareIcon(180, { rounded: false });
@@ -81,6 +103,9 @@ for (const app of APPS) {
   const brandDir = join(ROOT, "apps", app, "public/brand");
   mkdirSync(brandDir, { recursive: true });
   writeFileSync(join(brandDir, "logo-horizontal.png"), horizontal);
+  for (const { height, buffer } of webps) {
+    writeFileSync(join(brandDir, `logo-horizontal-${height}.webp`), buffer);
+  }
   writeFileSync(join(appDir, "icon.png"), icon512);
   writeFileSync(join(appDir, "apple-icon.png"), apple180);
   writeFileSync(join(appDir, "favicon.ico"), favicon);
@@ -88,5 +113,5 @@ for (const app of APPS) {
 writeFileSync(join(ROOT, "apps/web/assets/og/logo-horizontal.png"), horizontal);
 
 console.log(
-  `done: logo-horizontal ${hw}x${hh}, icon 512, apple-icon 180, favicon 32+16`,
+  `done: logo-horizontal ${hw}x${hh}, webp ${webps.map((w) => `${w.width}x${w.height}`).join(" ")}, icon 512 (${icon512.length}B), apple-icon 180, favicon 32+16`,
 );
