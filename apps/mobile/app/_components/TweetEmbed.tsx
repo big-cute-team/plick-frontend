@@ -2,12 +2,12 @@
 
 import { EmbeddedTweet, useTweet } from "react-tweet";
 import { TweetMediaImg, TweetMediaImgGrid } from "@plick/ui/TweetMediaImg";
+import type { Tweet } from "react-tweet/api";
+import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /** 사진 한 장: `small` 그대로. 두 장 이상 격자: 배율별 srcset (KAN-624) */
 const SINGLE_COMPONENTS = { MediaImg: TweetMediaImg };
 const GRID_COMPONENTS = { MediaImg: TweetMediaImgGrid };
-import type { Tweet } from "react-tweet/api";
-import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /**
  * 사진이 null인 카드의 사진 자리를 대신하는 원문 트윗 임베드 (KAN-284).

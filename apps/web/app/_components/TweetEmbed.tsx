@@ -2,11 +2,11 @@
 
 import { EmbeddedTweet, useTweet } from "react-tweet";
 import { TweetMediaImg, TweetMediaImgGrid } from "@plick/ui/TweetMediaImg";
+import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /** 사진 한 장: `small` 그대로. 두 장 이상 격자: 배율별 srcset (KAN-624) */
 const SINGLE_COMPONENTS = { MediaImg: TweetMediaImg };
 const GRID_COMPONENTS = { MediaImg: TweetMediaImgGrid };
-import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /**
  * 사진이 null인 릴의 미디어 자리를 대신하는 원문 트윗 임베드
