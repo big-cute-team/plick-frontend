@@ -15,6 +15,12 @@ npm install
 node build.mjs
 ```
 
-산출물과 쓰임은 `build.mjs` 머리말에 있다. 화면 쪽 높이 규칙(앱 상단 바 32, 웹 GNB 40,
+산출물과 쓰임은 `build.mjs` 머리말에 있다. 화면용 가로 로고 webp 세 단계(높이 100·134·201)와
+팀 크레스트 webp 두 단계(132·290, `src/teams/{code}.svg` 구단 공식 벡터에서)는
+`packages/ui/src/assets/`로 나가고 `Logo.tsx`·`TeamCrest.tsx`가 import해 srcset으로 고른다(KAN-624).
+import 자산은 Next가 `/_next/static/media/<해시>`로 묶어 CDN이 1년 캐시한다. 로고 100은 디자이너가
+내보낸 `src/logo-horizontal-100.webp`를 복사한 것이고(7.9KB, 여기서 만들면 10.8KB) 134·201은 원본
+PNG에서 만든다. PNG 200은 OG 이미지용이다. 디자이너에게 받은 "SVG"
+두 종(`가로형.svg`, `image 18.svg`)은 PNG를 base64로 감싼 것이라 벡터가 아니었다. 화면 쪽 높이 규칙(앱 상단 바 32, 웹 GNB 40,
 로그인 51·67)은 `@plick/ui` `Logo.tsx`가 받는다. OG 이미지는 `scripts/og-image`가
 `apps/web/assets/og/logo-horizontal.png` 사본을 쓴다.
