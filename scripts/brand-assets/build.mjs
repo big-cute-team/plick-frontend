@@ -7,9 +7,11 @@
  *
  *   logo-horizontal.png  가로형, 높이 200 (화면 최대 사용 67px의 3배)
  *                        → apps/{mobile,web}/public/brand/, apps/web/assets/og/
- *   logo-horizontal-{96,134,201}.webp
- *                        화면용 webp 세 단계 (KAN-624). 앱 상단 바 32px×DPR 3, 웹 GNB 40×2,
- *                        로그인 67×3에 맞춘 높이다. `Logo.tsx`가 srcset으로 고른다.
+ *   logo-horizontal-{100,134,201}.webp
+ *                        화면용 webp 세 단계 (KAN-624). 100은 디자이너가 피그마에서 내보낸
+ *                        `src/logo-horizontal-100.webp`(284×100, 7.9KB)를 그대로 복사한다.
+ *                        같은 크기를 여기서 만들면 10.8KB라 그쪽이 작다. 134·201은 원본 PNG에서
+ *                        만든다(로그인 67×2, 67×3). `Logo.tsx`가 srcset으로 고른다.
  *                        PNG 200은 OG 이미지(scripts/og-image)용으로 남긴다
  *   icon.png             512, 모서리 22% 둥글게 투명 (manifest·파비콘 링크).
  *                        팔레트 품질 65 (KAN-624, 152KB → 38KB). 아이콘은 전 화면이
@@ -19,7 +21,7 @@
  *
  * 실행: `npm install` 후 `node build.mjs` (이 폴더는 pnpm 워크스페이스 밖이다)
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
 
@@ -44,8 +46,8 @@ async function squareIcon(size, { rounded }) {
     .toBuffer();
 }
 
-/** 화면용 webp 높이. 32×3, 67×2, 67×3 */
-const LOGO_WEBP_HEIGHTS = [96, 134, 201];
+/** 원본 PNG에서 만드는 webp 높이. 67×2, 67×3. 100은 디자이너 파일을 복사한다 */
+const LOGO_WEBP_HEIGHTS = [134, 201];
 
 /** PNG 엔트리를 담는 ICO 컨테이너 — 모든 현행 브라우저가 읽는다 */
 function ico(entries) {
@@ -103,6 +105,10 @@ for (const app of APPS) {
   const brandDir = join(ROOT, "apps", app, "public/brand");
   mkdirSync(brandDir, { recursive: true });
   writeFileSync(join(brandDir, "logo-horizontal.png"), horizontal);
+  copyFileSync(
+    join(SRC, "logo-horizontal-100.webp"),
+    join(brandDir, "logo-horizontal-100.webp"),
+  );
   for (const { height, buffer } of webps) {
     writeFileSync(join(brandDir, `logo-horizontal-${height}.webp`), buffer);
   }
@@ -113,5 +119,5 @@ for (const app of APPS) {
 writeFileSync(join(ROOT, "apps/web/assets/og/logo-horizontal.png"), horizontal);
 
 console.log(
-  `done: logo-horizontal ${hw}x${hh}, webp ${webps.map((w) => `${w.width}x${w.height}`).join(" ")}, icon 512 (${icon512.length}B), apple-icon 180, favicon 32+16`,
+  `done: logo-horizontal ${hw}x${hh}, webp 284x100(copy) ${webps.map((w) => `${w.width}x${w.height}`).join(" ")}, icon 512 (${icon512.length}B), apple-icon 180, favicon 32+16`,
 );
