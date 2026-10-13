@@ -48,7 +48,8 @@ export function tweetPhotoUrl(
   } catch {
     return url;
   }
-  if (!parsed.hostname.endsWith("twimg.com")) return url;
+  const host = parsed.hostname;
+  if (host !== "twimg.com" && !host.endsWith(".twimg.com")) return url;
 
   const file = parsed.pathname.split("/").pop() ?? "";
   const dot = file.lastIndexOf(".");

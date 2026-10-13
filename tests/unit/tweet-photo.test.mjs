@@ -50,4 +50,6 @@ test("twimg 밖 주소와 깨진 문자열은 그대로 돌려준다", () => {
   const other = "https://cdn.example.com/a/b.jpg?x=1";
   assert.equal(tweetPhotoUrl(other, "small", "webp"), other);
   assert.equal(tweetPhotoUrl("not a url", "small"), "not a url");
+  const fake = "https://fake-twimg.com/media/AbC.jpg";
+  assert.equal(tweetPhotoUrl(fake, "small", "webp"), fake);
 });
