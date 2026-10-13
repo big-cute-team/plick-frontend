@@ -3,7 +3,7 @@ import type { InitialReelFeed } from "@plick/domain/types";
 import { getAccessToken } from "@/_services/session";
 import { getReelSeedTweet } from "@/_services/tweet";
 import type { ReelSeedTweet } from "@/_types/reels";
-import { tweetImageUrl } from "@/_utils/tweet";
+import { tweetImageSrcSet, tweetImageUrl } from "@/_utils/tweet";
 import { ReelsFeed } from "./ReelsFeed";
 
 /**
@@ -37,6 +37,7 @@ export async function ReelsFeedSection() {
      Data Cache 히트 요청에서 head에 실리지 않는 일이 있었다(콜드 요청만 방출).
      트리에 렌더한 <link rel="preload">는 React가 요청마다 head로 호이스팅한다 */
   const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
+  const seedImageSrcSet = seedTweet ? tweetImageSrcSet(seedTweet.tweet) : null;
 
   return (
     <>
@@ -45,6 +46,7 @@ export async function ReelsFeedSection() {
           rel="preload"
           as="image"
           href={seedImageUrl}
+          imageSrcSet={seedImageSrcSet ?? undefined}
           fetchPriority="high"
         />
       )}

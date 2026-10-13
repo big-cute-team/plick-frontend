@@ -1,7 +1,11 @@
 "use client";
 
 import { EmbeddedTweet, useTweet } from "react-tweet";
-import { TweetMediaImg } from "@plick/ui/TweetMediaImg";
+import { TweetMediaImg, TweetMediaImgGrid } from "@plick/ui/TweetMediaImg";
+
+/** 사진 한 장: `small` 그대로. 두 장 이상 격자: 배율별 srcset (KAN-624) */
+const SINGLE_COMPONENTS = { MediaImg: TweetMediaImg };
+const GRID_COMPONENTS = { MediaImg: TweetMediaImgGrid };
 import type { Tweet } from "react-tweet/api";
 import { tweetIdFromUrl } from "@/_utils/tweet";
 
@@ -62,7 +66,14 @@ export function TweetEmbed({
 
   if (data)
     return (
-      <EmbeddedTweet tweet={data} components={{ MediaImg: TweetMediaImg }} />
+      <EmbeddedTweet
+        tweet={data}
+        components={
+          (data.mediaDetails?.length ?? 0) > 1
+            ? GRID_COMPONENTS
+            : SINGLE_COMPONENTS
+        }
+      />
     );
   /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
   if (!id || error || data === null) {
