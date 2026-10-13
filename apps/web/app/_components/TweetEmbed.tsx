@@ -1,6 +1,7 @@
 "use client";
 
 import { EmbeddedTweet, useTweet } from "react-tweet";
+import { TweetMediaImg } from "@plick/ui/TweetMediaImg";
 import { tweetIdFromUrl } from "@/_utils/tweet";
 
 /**
@@ -35,7 +36,10 @@ export function TweetEmbed({ url }: { url: string }) {
     id ? `/api/tweet/${id}` : undefined,
   );
 
-  if (data) return <EmbeddedTweet tweet={data} />;
+  if (data)
+    return (
+      <EmbeddedTweet tweet={data} components={{ MediaImg: TweetMediaImg }} />
+    );
   /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
   if (!id || error || data === null) {
     return (

@@ -19,8 +19,9 @@ node render.mjs
 ## team-logos.mjs
 
 동적 OG(KAN-351)용 팀 로고 PNG 변환 도구다. satori(next/og)가 webp를 못 읽어서
-`apps/web/public/teams/*.webp`를 512x512 투명 캔버스 contain PNG로 바꿔
-`apps/web/assets/og/teams/`에 커밋한다. 로고 원본이 바뀔 때만 다시 돌린다.
+`scripts/brand-assets/src/teams/{code}.svg`(구단 공식 벡터, KAN-624)를 512x512 투명 캔버스
+contain PNG로 바꿔 `apps/web/assets/og/teams/`에 커밋한다. 전에는 160px webp를 키워 썼다.
+로고 원본이 바뀔 때만 다시 돌린다.
 
 ```bash
 cd scripts/og-image
