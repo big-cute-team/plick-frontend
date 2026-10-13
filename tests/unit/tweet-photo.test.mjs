@@ -4,7 +4,10 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { tweetPhotoUrl } from "../../packages/domain/src/tweet-photo.ts";
+import {
+  tweetPhotoSrcSet,
+  tweetPhotoUrl,
+} from "../../packages/domain/src/tweet-photo.ts";
 
 const RAW = "https://pbs.twimg.com/media/HUXzRRXXUAEspVd.jpg";
 const VARIANT =
@@ -52,4 +55,25 @@ test("twimg 밖 주소와 깨진 문자열은 그대로 돌려준다", () => {
   assert.equal(tweetPhotoUrl("not a url", "small"), "not a url");
   const fake = "https://fake-twimg.com/media/AbC.jpg";
   assert.equal(tweetPhotoUrl(fake, "small", "webp"), fake);
+});
+
+test("배율별 srcset은 변형 주소에서 name만 바꿔 배율을 붙인다", () => {
+  const webp = "https://pbs.twimg.com/media/AbC?format=webp&name=small";
+  assert.equal(
+    tweetPhotoSrcSet(webp, [
+      ["240x240", 1],
+      ["360x360", 2],
+      ["small", 3],
+    ]),
+    "https://pbs.twimg.com/media/AbC?format=webp&name=240x240 1x, " +
+      "https://pbs.twimg.com/media/AbC?format=webp&name=360x360 2x, " +
+      "https://pbs.twimg.com/media/AbC?format=webp&name=small 3x",
+  );
+});
+
+test("twimg 밖 주소에는 srcset을 만들지 않는다", () => {
+  assert.equal(
+    tweetPhotoSrcSet("https://cdn.example.com/a.jpg", [["small", 1]]),
+    null,
+  );
 });

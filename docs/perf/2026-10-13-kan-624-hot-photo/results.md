@@ -86,3 +86,8 @@ after 리포트가 "이미지 크기 적절하게"에 189KiB를 더 남긴 건 �
 prod 실측(2026-10-13): `/_next/static/*` max-age 1년 immutable, CloudFront Hit. `/teams/*`·`/brand/*` `public, max-age=0` Miss.
 `/icon.png` `max-age=0, must-revalidate`. 로고·크레스트 webp는 `@plick/ui` import 자산으로 옮겨 `/_next/static/media/<해시>`(S3+CloudFront 1년 immutable)로 나간다.
 `/icon.png`·`/apple-icon.png`만 두 앱 `next.config.js` `headers()`로 `max-age=86400, stale-while-revalidate=604800`.
+
+# 배율 srcset (병합 뒤 추가)
+
+트위터 `name=240x240`·`360x360`은 안에 맞춤(크롭 아님). LCP 사진 기준 240×173 8.7KB, 360×260 18.9KB, small 680×491 69.5KB.
+모바일 카드 `240x240 1x, 360x360 2x, small 3x`, 웹 카드 `360x360 1x, small 2x`. Lighthouse 기본 에뮬레이션(DPR 1.75)은 360을 받는다.

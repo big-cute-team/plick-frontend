@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import { formatCount, teamProfilePath } from "@plick/domain/format";
+import { tweetPhotoSrcSet } from "@plick/domain/tweet-photo";
 import type { HotArticle } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
+
+/** 170 CSS px 카드의 배율별 후보. 배율 3은 `small`(680)이 510px 필요를 채운다 */
+const HERO_SRCSET = (url: string) =>
+  tweetPhotoSrcSet(url, [
+    ["240x240", 1],
+    ["360x360", 2],
+    ["small", 3],
+  ]) ?? undefined;
 
 /**
  * 핫이슈 사진 카드 (시안 KAN-567) — 6:5 사진 위 왼쪽 위 순위 배지(21px, 강조색),
@@ -16,7 +25,8 @@ import { ArticleLink } from "@/_components/ArticleLink";
  * 스크롤 한계 밖이라 크롬이 스냅 후보에서 빼 버려 마지막 카드까지 못 간다.
  *
  * 사진은 `imageUrl`을 쓰고, 홈 서버 컴포넌트가 `withTweetPhotos`로 원문 게시물의
- * 제일 큰 사진을 뽑아 채운다(KAN-484). 그것도 못 구한 카드는 홈이 아예 빼므로
+ * 제일 큰 사진을 `small` webp로 채운다(KAN-484, KAN-624). 카드는 170 CSS px이라 배율별
+ * `srcset`(240·360·680)을 달아 배율 2 이하 기기는 360짜리를 받는다. 그것도 못 구한 카드는 홈이 아예 빼므로
  * (KAN-569) 여기 오는 카드는 늘 사진이 있다. 원문 임베드 폴백(KAN-514)은 걷었다.
  *
  * 카드 전체가 기사 세부로 가는 링크고 팀 이름만 팀 프로필로 간다.
@@ -43,6 +53,7 @@ export function HotHeroCard({
           // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유)
           <img
             src={article.imageUrl}
+            srcSet={HERO_SRCSET(article.imageUrl)}
             alt=""
             loading="eager"
             fetchPriority={fetchPriority}
