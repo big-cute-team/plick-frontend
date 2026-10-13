@@ -30,6 +30,20 @@ export type TweetPhotoFormat = "jpg" | "png" | "webp";
  */
 export const TWEET_PHOTO_SIZE: TweetPhotoSize = "small";
 
+/**
+ * react-tweet 임베드가 사진을 두 장 이상 격자로 그릴 때의 배율별 후보 (KAN-624).
+ * 격자 칸은 임베드 폭의 절반(모바일 약 211 CSS px)이라 배율 1은 240, 1.75(Moto G 계열,
+ * Lighthouse 기본 에뮬레이션)는 360(369 필요, 9px 모자람은 눈에 안 띈다), 2 이상은 680이다.
+ * 한 장짜리는 임베드 폭 전체(약 377 CSS px)라 배율 1.75부터 680이 필요해 `small` 그대로 둔다.
+ */
+export const TWEET_GRID_SRCSET: ReadonlyArray<
+  readonly [TweetPhotoSize, number]
+> = [
+  ["240x240", 1],
+  ["360x360", 1.75],
+  ["small", 2],
+];
+
 /** 트위터 CDN(`twimg.com`과 그 서브도메인) 사진 주소인지. 깨진 문자열은 false. */
 export function isTweetPhotoUrl(url: string): boolean {
   return parseTweetPhotoUrl(url) !== null;

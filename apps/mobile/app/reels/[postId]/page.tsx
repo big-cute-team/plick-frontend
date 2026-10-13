@@ -10,7 +10,7 @@ import { TabBar } from "@/_components/TabBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getAccessToken } from "@/_services/session";
 import { getReelSeedTweet } from "@/_services/tweet";
-import { tweetImageUrl } from "@/_utils/tweet";
+import { tweetImageSrcSet, tweetImageUrl } from "@/_utils/tweet";
 import type { ReelSeedTweet } from "@/_types/reels";
 
 /**
@@ -100,6 +100,7 @@ export default async function ReelDeepLinkPage({
 
   /* 탭 피드와 같은 이유로 preload()가 아니라 <link> 렌더 (reels/page.tsx 주석) */
   const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
+  const seedImageSrcSet = seedTweet ? tweetImageSrcSet(seedTweet.tweet) : null;
 
   return (
     <AppShell>
@@ -108,6 +109,7 @@ export default async function ReelDeepLinkPage({
           rel="preload"
           as="image"
           href={seedImageUrl}
+          imageSrcSet={seedImageSrcSet ?? undefined}
           fetchPriority="high"
         />
       )}
