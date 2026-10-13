@@ -64,6 +64,26 @@ const nextConfig = {
    * 빈 문자열로 넘긴다. `??`면 빈 문자열이 그대로 통과해 destination이 `/:path*`가
    * 되고, `/be/*`가 자기 자신으로 되도는 리라이트가 만들어진다.
    */
+  /**
+   * 앱 아이콘(메타데이터 파일 컨벤션)의 브라우저 캐시 (KAN-624). 로고·크레스트는
+   * `@plick/ui`가 import해 `/_next/static/media/<해시>`로 나가니 CDN이 1년 immutable로
+   * 받지만, `app/icon.png`·`apple-icon.png`는 Next가 고정 경로로 직접 서빙하며
+   * `max-age=0, must-revalidate`를 붙여 전 화면이 매번 다시 요청했다(304라도 왕복은
+   * 그대로). 하루 캐시에 stale-while-revalidate 일주일이면 재방문 요청이 사라지고,
+   * 파일이 바뀌어도 하루 안에 따라온다.
+   */
+  async headers() {
+    const cached = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=86400, stale-while-revalidate=604800",
+      },
+    ];
+    return [
+      { source: "/icon.png", headers: cached },
+      { source: "/apple-icon.png", headers: cached },
+    ];
+  },
   async rewrites() {
     const base = process.env.API_BASE_URL || "http://localhost:8080";
     return [{ source: "/be/:path*", destination: `${base}/:path*` }];

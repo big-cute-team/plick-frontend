@@ -129,3 +129,27 @@ after 리포트의 "이미지 전송" 항목에서 트위터 묶음이 사라지
 아이콘은 `sharp`의 `png({ palette: true })`가 기본 품질 100이라 512px에 152KB였다. 팔레트 양자화 품질을 100·80·65·50으로 바꿔 보니 152·59·38·34KB였고, 65에서 눈으로 차이가 없어 그걸 골랐다. 같은 함수를 쓰는 apple-icon(22→7KB)과 favicon도 같이 줄었다. 전 화면이 `<link rel="icon" href="/icon.png">`로 이 파일을 받으니 페이지마다 114KB가 빠진다. 블로그 글에는 이 둘을 "같은 리포트에서 눈에 띈 김에 같이 치운 것"으로 짧게 붙인다.
 
 webp 세 단계를 만든 직후 사용자가 디자이너한테 받은 `가로형.webp`(284×100, 7.9KB)를 보내며 "이게 더 작으면 이걸 써"라고 했다. 같은 크기를 sharp 품질 85로 만들면 10.8KB, 품질 65까지 내려야 8.9KB라 그쪽이 작았다. 피그마 내보내기의 압축이 더 공격적인데 평면 색 로고라 눈으로는 차이가 없다. 그래서 제일 작은 단계는 그 파일을 `src/`에 두고 복사하고(높이 100, 284w) 134·201만 원본 PNG에서 만든다. 상단 바 32px은 DPR 3에서 96px이 필요하니 100짜리가 그 자리를 맡고, 전에 40KB였던 자리가 8KB가 됐다.
+
+## 크레스트도 벡터에서 두 단계로
+
+크레스트는 처음에 뺐다. 160px 한 장을 13px 칩부터 팀 프로필 머리 88px까지 다 쓰는데, 작은 자리 기준으로 줄이면 큰 자리가 흐려지고 원본이 160px webp뿐이라 큰 판을 만들 수도 없었다. 그런데 사용자가 "이번에 할 수 있을 때 최대한 다 하자"며 구단 공식 SVG 여섯 개를 가져왔다. 열어 보니 이번엔 진짜 벡터였다(`<path>` 21~120개, `<image>` 0개). 다만 SVG를 그대로 서빙하는 건 답이 아니다. 리버풀이 446KB, 첼시 62KB라 webp보다 훨씬 크다. 벡터는 원본으로 두고 거기서 webp를 뽑는 게 맞다.
+
+크기는 자리에서 거꾸로 계산했다. 크레스트는 `rem(size)`로 그려서 `html { font-size: 110% }` 배율이 곱해지니 시안 40px은 실제 44 CSS px이고 DPR 3에서 132px이 필요하다. 프로필 머리 88px은 같은 계산으로 290px이다. 그래서 `{code}.webp`를 132px, `{code}-290.webp`를 290px로 두 장 만들고 `TeamCrest`가 `srcset`에 `132w, 290w`로 두고 `sizes`에 `size × 1.1`px을 준다. 홈 목록의 40px 크레스트는 DPR 3에서도 132짜리(4~10KB, 전 5~14KB)로 끝나고, 프로필 머리는 전보다 선명한 290짜리를 받는다. 13px 칩용으로 더 작은 단계(66px)도 생각했지만, 홈이 칩과 목록에서 같은 팀을 그리면 두 파일을 다 받게 돼 요청만 는다. 두 단계에서 멈췄다.
+
+sharp가 SVG를 읽을 때 `density: 300`을 줘야 작은 viewBox(첼시 209)가 290px로 늘어날 때 계단이 안 생긴다. OG 이미지용 512px PNG(`scripts/og-image/team-logos.mjs`)도 전에는 160px webp를 키워 만들던 것을 벡터에서 바로 만들게 바꿨다. 84~117KB이던 PNG가 16~41KB로 줄고 더 선명해졌다. 세 스크립트(`brand-assets`, `og-image`)의 원본은 이제 전부 `scripts/brand-assets/src/`에 모였다.
+
+## public 폴더는 CDN도 브라우저도 캐시하지 않았다
+
+사용자가 "이 이미지들은 S3에 올라가고 CloudFront가 캐시하는 거 맞지?"라고 물어서 prod 헤더를 받아 봤다. 아니었다. `/_next/static/*`은 `max-age=31536000, immutable`에 `x-cache: Hit from cloudfront`인데, `/teams/mun.webp`와 `/brand/logo-horizontal.png`는 `public, max-age=0`에 매번 `Miss from cloudfront`, `/icon.png`는 `max-age=0, must-revalidate`였다. ADR 0081과 `docs/deploy-v3-cdn.md` 6절에 적힌 대로 `public/`은 파일명에 해시가 없어 S3 이전에서 일부러 뺐고, CloudFront 기본 비헤이비어는 ALB로 흘려보내기만 한다. 그리고 Next는 `public/` 파일에 `max-age=0`을 붙인다. ETag로 304는 받지만 페이지마다 로고·아이콘·크레스트 여섯 개 요청이 EC2까지 왕복했다.
+
+두 앱 `next.config.js`에 `headers()`를 추가해 `/brand/*`, `/teams/*`, `/icon.png`, `/apple-icon.png`에 `public, max-age=86400, stale-while-revalidate=604800`을 준다. 하루는 브라우저가 묻지 않고 쓰고, 그 뒤 일주일은 옛 것을 먼저 보여 주며 뒤에서 새로 받는다. 파일이 바뀌어도 하루 안에 따라오니 해시 없는 이름으로도 안전하다. CloudFront 쪽 캐시는 기본 비헤이비어 정책을 바꿔야 해서(인프라) 이번엔 안 건드렸고, 브라우저 캐시만으로 재방문 요청이 사라진다. Next가 `public/` 파일과 메타데이터 라우트(`/icon.png`)의 `Cache-Control`을 `headers()`로 덮게 두는지는 빌드해서 `next start`로 확인해야 한다.
+
+## public이 아니라 import로
+
+캐시 헤더를 붙이고 나니 사용자가 다시 물었다. "그럼 저 로고들을 `public/`에 안 두고 정적 파일로 들어가게 하면 안 되나?" 맞는 말이었다. `public/`은 이름이 고정된 파일(robots, 파비콘, OG) 자리고, 앱이 쓰는 그림은 코드에서 `import`하면 Next가 `/_next/static/media/<이름>.<해시>.webp`로 묶는다. 폰트가 이미 그렇게 나가고 있었고, 그 폴더는 deploy.yml이 S3로 올려 CloudFront가 1년 immutable로 캐시한다. 이름에 해시가 붙으니 "같은 이름으로 바꾸면 하루 옛 그림" 걱정도 없다. `public/`에 둔 건 `@plick/ui`가 Next에 의존하지 않는 패키지라 경로 문자열로 가리킨 것뿐이었다.
+
+webp 열다섯 장(로고 3, 크레스트 12)을 `packages/ui/src/assets/`로 옮기고 `Logo.tsx`와 `TeamCrest.tsx`가 import한다. Turbopack이 워크스페이스 패키지 소스를 같이 번들하니 이미지 import도 같은 규칙으로 처리되고, import 결과에 `width`가 오니 `srcset`의 너비 서술자를 파일에서 읽어 쓴다. `@plick/ui`의 `tsc --noEmit`은 Next의 `next/image-types/global`을 모르므로 `assets.d.ts`에 `*.webp` 모듈 선언을 뒀다. 앱 쪽 타입 검사는 Next 것을 쓰고 둘이 같은 모양이라 충돌하지 않는다.
+
+`public/brand/`와 `public/teams/`는 두 앱에서 지웠다. 그러자 `apps/web/public`이 비어 git이 폴더를 못 남기는데, deploy.yml의 "Assemble standalone"이 `cp -r apps/$APP/public`을 하니 폴더가 없으면 배포가 깨진다. README 한 줄을 넣어 폴더를 살렸다. `next.config.js`의 `headers()`는 `/icon.png`·`/apple-icon.png`만 남았다. 이 둘은 Next 메타데이터 파일 컨벤션이 고정 경로로 직접 서빙해 import로 못 옮긴다. 로컬 `next start`에서 네 경로 다 `max-age=86400, stale-while-revalidate=604800`이 붙는 걸 봤고(`favicon.ico`만 Next가 `must-revalidate`를 고집한다), 이제는 그중 아이콘 둘만 해당한다.
+
+빌드해서 `next start`로 띄워 보니 홈 HTML의 로고 `srcset`이 `/_next/static/media/logo-horizontal-100.06ayrpa61g2g~.webp 284w, …134…389w, …201…584w`로 나가고, 크레스트도 `/_next/static/media/mun.0wjfbc14w.2eh.webp`처럼 해시가 붙었다. 그 경로의 응답 헤더는 `Cache-Control: public, max-age=31536000, immutable`이다. 배포되면 CDN이 받는다. 홈 Lighthouse 요청 목록은 폰트 321KiB, 트윗 사진 세 장 170KiB, 로고 8KiB, 크레스트 세 장 23KiB, 아이콘 38KiB가 됐다. 첫 감사 때 이 자리에 있던 건 트윗 사진 955KiB, 로고 39KiB, 크레스트 31KiB, 아이콘 153KiB였다.

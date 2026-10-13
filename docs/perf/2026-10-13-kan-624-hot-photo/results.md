@@ -69,3 +69,20 @@ after 리포트가 "이미지 크기 적절하게"에 189KiB를 더 남긴 건 �
 | `/favicon.ico`                                |          | 1.9KiB                                                       |
 
 디자이너가 준 SVG 두 종은 PNG를 base64로 감싼 것이라 벡터 전환은 불가. 크레스트(158×160)는 팀 프로필 88px 자리가 있어 그대로.
+
+# 크레스트 (구단 공식 SVG에서)
+
+| 팀  | 전 160px | 후 132px (`{code}.webp`) | 후 290px (`{code}-290.webp`) | OG PNG 512 전 → 후 |
+| --- | -------- | ------------------------ | ---------------------------- | ------------------ |
+| ars | 7.0KB    | 5.8KB                    | 14.8KB                       | 84KB → 26KB        |
+| che | 13.5KB   | 8.0KB                    | 21.6KB                       | 101KB → 37KB       |
+| liv | 10.4KB   | 8.1KB                    | 24.7KB                       | 92KB → 41KB        |
+| mci | 8.9KB    | 7.8KB                    | 21.4KB                       | 117KB → 34KB       |
+| mun | 11.2KB   | 9.6KB                    | 24.7KB                       | 108KB → 40KB       |
+| tot | 5.0KB    | 4.0KB                    | 10.4KB                       | 32KB → 16KB        |
+
+# public 캐시 헤더
+
+prod 실측(2026-10-13): `/_next/static/*` max-age 1년 immutable, CloudFront Hit. `/teams/*`·`/brand/*` `public, max-age=0` Miss.
+`/icon.png` `max-age=0, must-revalidate`. 로고·크레스트 webp는 `@plick/ui` import 자산으로 옮겨 `/_next/static/media/<해시>`(S3+CloudFront 1년 immutable)로 나간다.
+`/icon.png`·`/apple-icon.png`만 두 앱 `next.config.js` `headers()`로 `max-age=86400, stale-while-revalidate=604800`.
