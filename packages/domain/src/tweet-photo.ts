@@ -30,23 +30,6 @@ export type TweetPhotoFormat = "jpg" | "png" | "webp";
  */
 export const TWEET_PHOTO_SIZE: TweetPhotoSize = "small";
 
-/**
- * 트윗 사진 주소에 크기·포맷 변형을 붙인다.
- *
- * 입력은 신디케이션이 주는 변형 없는 원본 경로(`…/ID.jpg`)든, react-tweet이 만든
- * 변형 주소(`…/ID?format=jpg&name=small`)든 받는다. 확장자는 경로에서 떼어 `format`으로
- * 옮긴다(react-tweet `getMediaUrl`과 같은 모양). `format`을 안 주면 원래 확장자(또는 이미
- * 붙어 있던 `format`)를 유지한다. 영상 포스터처럼 react-tweet이 직접 그리는 주소와 글자까지
- * 같아야 할 때 그렇게 쓴다.
- *
- * `twimg.com` 밖 주소(BE 대표 이미지 등)는 손대지 않고 돌려준다.
- *
- * @param url 사진 주소
- * @param size CDN 크기 변형
- * @param format 바꿀 포맷. 생략하면 원래 포맷
- * @example tweetPhotoUrl("https://pbs.twimg.com/media/AbC.jpg", "small", "webp")
- *   // "https://pbs.twimg.com/media/AbC?format=webp&name=small"
- */
 /** 트위터 CDN(`twimg.com`과 그 서브도메인) 사진 주소인지. 깨진 문자열은 false. */
 export function isTweetPhotoUrl(url: string): boolean {
   return parseTweetPhotoUrl(url) !== null;
@@ -89,6 +72,23 @@ export function tweetPhotoSrcSet(
     .join(", ");
 }
 
+/**
+ * 트윗 사진 주소에 크기·포맷 변형을 붙인다.
+ *
+ * 입력은 신디케이션이 주는 변형 없는 원본 경로(`…/ID.jpg`)든, react-tweet이 만든
+ * 변형 주소(`…/ID?format=jpg&name=small`)든 받는다. 확장자는 경로에서 떼어 `format`으로
+ * 옮긴다(react-tweet `getMediaUrl`과 같은 모양). `format`을 안 주면 원래 확장자(또는 이미
+ * 붙어 있던 `format`)를 유지한다. 영상 포스터처럼 react-tweet이 직접 그리는 주소와 글자까지
+ * 같아야 할 때 그렇게 쓴다.
+ *
+ * `twimg.com` 밖 주소(BE 대표 이미지 등)는 손대지 않고 돌려준다.
+ *
+ * @param url 사진 주소
+ * @param size CDN 크기 변형
+ * @param format 바꿀 포맷. 생략하면 원래 포맷
+ * @example tweetPhotoUrl("https://pbs.twimg.com/media/AbC.jpg", "small", "webp")
+ *   // "https://pbs.twimg.com/media/AbC?format=webp&name=small"
+ */
 export function tweetPhotoUrl(
   url: string,
   size: TweetPhotoSize = TWEET_PHOTO_SIZE,
