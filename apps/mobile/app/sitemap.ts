@@ -37,6 +37,9 @@ const MAX_ARTICLE_URLS = 45000;
  */
 const SPLIT_REVIEW_THRESHOLD = 5000;
 
+/** 색인은 되되 콘텐츠가 아닌 안내 페이지. 로그인·회원가입은 색인 가치가 없어 뺀다 */
+const STATIC_PAGES = ["/faq", "/terms", "/privacy"] as const;
+
 /**
  * 사이트맵 (KAN-346). `/sitemap.xml`로 컴파일된다.
  *
@@ -55,6 +58,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
     // 라이브 스코어 (KAN-452) — 경기 상세는 시즌 단위로 바뀌는 임시 URL이라 목록만 싣는다
     { url: `${SITE_URL}/live`, changeFrequency: "hourly", priority: 0.7 },
+    // 토론 리스트 (KAN-418, KAN-623) — 웹 사이트맵에만 있던 것을 맞춘다. 탐색 진입점으로만 싣는다
+    { url: `${SITE_URL}/debates`, changeFrequency: "daily", priority: 0.6 },
     // 팀 허브 (KAN-350) — 팀 검색어의 랜딩이라 기사 개별 페이지보다 우선순위를 높인다
     ...TEAM_ORDER.map((code) => ({
       url: `${SITE_URL}/teams/${TEAMS[code].slug}`,
@@ -67,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/teams/${TEAMS[code].slug}/profile`,
       changeFrequency: "weekly" as const,
       priority: 0.5,
+    })),
+    // 안내 페이지 (KAN-623) — 웹 사이트맵과 같은 몫. canonical은 데스크톱이지만 존재는 알린다
+    ...STATIC_PAGES.map((path) => ({
+      url: `${SITE_URL}${path}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.3,
     })),
   ];
 

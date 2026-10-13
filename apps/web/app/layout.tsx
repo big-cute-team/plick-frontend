@@ -42,7 +42,7 @@ const notoSansKr = localFont({
 
 /**
  * 전 라우트 공통 메타데이터 (KAN-346). 하위 페이지는 title 문자열만 export하면
- * template이 "… | 플릭 PLick"으로 감싼다. og:image·og:image:alt는 `app/`의
+ * template이 "… | 해축이모"로 감싼다. og:image·og:image:alt는 `app/`의
  * `opengraph-image.png` 파일 컨벤션이 자동으로 낸다(ADR 0070). canonical은
  * 페이지마다 경로가 달라 여기 두지 않고 각 페이지가 선언한다 — 이 앱이
  * canonical 도메인이고(ADR 0070 A안) 대응 모바일 페이지를 alternate로 단다.
