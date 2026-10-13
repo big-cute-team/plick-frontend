@@ -60,13 +60,16 @@ const CREST_SIZES = [132, 290];
 
 /** 크레스트 SVG → 정사각 투명 캔버스에 contain으로 앉힌 webp */
 async function crest(code, size) {
-  return sharp(join(SRC, "teams", `${code}.svg`), { density: 300 })
-    .resize(size, size, {
-      fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .webp({ quality: 85 })
-    .toBuffer();
+  return (
+    sharp(join(SRC, "teams", `${code}.svg`), { density: 300 })
+      .resize(size, size, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      /* 평면 색 로고라 품질 60·알파 50에서도 3배 확대로 차이가 없다. 85 대비 1/3 작다 (KAN-624) */
+      .webp({ quality: 60, alphaQuality: 50, effort: 6 })
+      .toBuffer()
+  );
 }
 
 /** 원본 PNG에서 만드는 webp 높이. 67×2, 67×3. 100은 디자이너 파일을 복사한다 */
