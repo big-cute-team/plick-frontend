@@ -11,7 +11,17 @@
  * 고르고 webp도 준다(같은 사진 small 기준 jpg 대비 2~30% 작다).
  */
 
-export type TweetPhotoSize = "thumb" | "small" | "medium" | "large";
+/**
+ * CDN 크기 변형. `thumb`는 150 정사각 크롭, `240x240`·`360x360`은 그 안에 맞춤(크롭 아님,
+ * 1179×852 → 360×260), `small` 680, `medium` 1200, `large` 2048.
+ */
+export type TweetPhotoSize =
+  | "thumb"
+  | "240x240"
+  | "360x360"
+  | "small"
+  | "medium"
+  | "large";
 export type TweetPhotoFormat = "jpg" | "png" | "webp";
 
 /**
@@ -19,6 +29,48 @@ export type TweetPhotoFormat = "jpg" | "png" | "webp";
  * 290 × 2 = 580px이라 `small`(680)이면 어느 화면에서도 1:1 이상이다.
  */
 export const TWEET_PHOTO_SIZE: TweetPhotoSize = "small";
+
+/** 트위터 CDN(`twimg.com`과 그 서브도메인) 사진 주소인지. 깨진 문자열은 false. */
+export function isTweetPhotoUrl(url: string): boolean {
+  return parseTweetPhotoUrl(url) !== null;
+}
+
+function parseTweetPhotoUrl(url: string): URL | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname;
+  if (host !== "twimg.com" && !host.endsWith(".twimg.com")) return null;
+  return parsed;
+}
+
+/**
+ * 배율별 후보를 묶은 `srcset`. 카드가 CSS px로 작고 고정이라 너비 서술자 대신 배율 서술자를
+ * 쓴다. 너비 서술자는 사진마다 변형의 실제 너비(가로 680, 세로 510)를 알아야 하지만 배율
+ * 서술자는 "이 배율엔 이 변형"만 적으면 돼 세로·가로 사진에 같은 규칙이 통한다 (KAN-624).
+ *
+ * 모바일 핫이슈 카드 170 CSS px: `240x240 1x, 360x360 2x, small 3x`. Lighthouse 기본 에뮬레이션
+ * (DPR 1.75)과 배율 2 기기는 360(약 19KB)을, 배율 3 기기는 680(약 60KB)을 받는다.
+ * 전부 `small`만 주면 1.75~2 기기에 2배 과해 "이미지 크기" 항목에 잡힌다.
+ *
+ * `twimg.com` 밖 주소면 null. 그때는 `srcset`을 달지 않는다.
+ *
+ * @param url 사진 주소 (원본 경로든 변형 주소든)
+ * @param candidates `[변형, 배율]` 목록
+ * @example tweetPhotoSrcSet(url, [["360x360", 1], ["small", 2]])
+ */
+export function tweetPhotoSrcSet(
+  url: string,
+  candidates: ReadonlyArray<readonly [TweetPhotoSize, number]>,
+): string | null {
+  if (!isTweetPhotoUrl(url)) return null;
+  return candidates
+    .map(([size, density]) => `${tweetPhotoUrl(url, size)} ${density}x`)
+    .join(", ");
+}
 
 /**
  * 트윗 사진 주소에 크기·포맷 변형을 붙인다.
@@ -42,14 +94,8 @@ export function tweetPhotoUrl(
   size: TweetPhotoSize = TWEET_PHOTO_SIZE,
   format?: TweetPhotoFormat,
 ): string {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return url;
-  }
-  const host = parsed.hostname;
-  if (host !== "twimg.com" && !host.endsWith(".twimg.com")) return url;
+  const parsed = parseTweetPhotoUrl(url);
+  if (!parsed) return url;
 
   const file = parsed.pathname.split("/").pop() ?? "";
   const dot = file.lastIndexOf(".");

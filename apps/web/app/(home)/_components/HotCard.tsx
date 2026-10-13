@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime, teamProfilePath } from "@plick/domain/format";
+import { tweetPhotoSrcSet } from "@plick/domain/tweet-photo";
 import type { HotArticle } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { ArticleLink } from "@/_components/ArticleLink";
+
+/** 약 290 CSS px 카드의 배율별 후보. 배율 1(데스크톱 대부분)은 360, 레티나는 `small`(680) */
+const CARD_SRCSET = (url: string) =>
+  tweetPhotoSrcSet(url, [
+    ["360x360", 1],
+    ["small", 2],
+  ]) ?? undefined;
 
 /**
  * 핫이슈 카드 (KAN-567, 시안 "핫이슈" 3열) — 위에 16:10 사진, 아래 순위 11/900 강조색
@@ -47,6 +55,7 @@ export function HotCard({
           // eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴·MediaThumb과 같은 이유)
           <img
             src={article.imageUrl}
+            srcSet={CARD_SRCSET(article.imageUrl)}
             alt=""
             loading="eager"
             fetchPriority={fetchPriority}
