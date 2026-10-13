@@ -9,6 +9,7 @@
  * 렌더는 `@plick/ui` JsonLd 컴포넌트가 맡는다.
  */
 import { BRAND_DESCRIPTION, BRAND_NAME_EN, BRAND_NAME_KO } from "./brand";
+import { FAQ_ITEMS, faqAnswerText } from "./faq";
 import type { ArticleCard, ArticleDetail } from "./types";
 
 /** Organization 노드의 안정 식별자 — 페이지끼리 같은 발행 주체를 가리키게 한다 */
@@ -159,5 +160,33 @@ export function teamCollectionJsonLd({
         })),
       },
     }),
+  };
+}
+
+/**
+ * FAQ 페이지의 FAQPage — 질문·답을 `Question`/`Answer`로 선언한다 (KAN-623).
+ *
+ * 구글은 2023년부터 정부·의료 사이트가 아니면 FAQ 리치 결과를 보여 주지 않아 검색
+ * 결과 모양이 바뀌진 않는다. 그래도 답을 평문 구조로 내 주면 AI 검색과 다른 엔진이
+ * "해축이모는 어떤 서비스인가"를 본문 파싱 없이 가져간다. 문안은 화면(`FaqBody`)과
+ * 같은 `FAQ_ITEMS`라 어긋날 수 없고, 링크 조각은 글자만 남긴다.
+ *
+ * @param url FAQ 페이지 canonical 절대 URL (데스크톱 `/faq`)
+ */
+export function faqPageJsonLd({
+  url,
+}: {
+  url: string;
+}): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    url,
+    inLanguage: "ko",
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: faqAnswerText(item) },
+    })),
   };
 }

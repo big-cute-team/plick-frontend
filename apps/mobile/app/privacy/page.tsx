@@ -4,10 +4,13 @@ import { PrivacyPolicyBody } from "@plick/ui/PrivacyPolicyBody";
 import { AppShell } from "@/_components/AppShell";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
+import { WEB_SITE_URL } from "@/_constants/site";
 
+/** canonical은 데스크톱 개인정보처리방침이다 (KAN-623) — 모바일 홈 canonical과 같은 이유. */
 export const metadata: Metadata = {
   title: "개인정보처리방침",
   description: PAGE_DESCRIPTIONS.privacy,
+  alternates: { canonical: `${WEB_SITE_URL}/privacy` },
 };
 
 /**

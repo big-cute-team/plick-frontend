@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { HTML_LIMITED_BOTS } from "@plick/core/html-limited-bots";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,6 +15,14 @@ const isBuild = process.env.NODE_ENV === "production";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /**
+   * 메타데이터를 head에 넣어 줘야 하는 봇 (KAN-623, KAN-641). Next는 `generateMetadata`가
+   * 비동기인 라우트의 메타 태그를 body로 스트리밍하고, 이 정규식에 맞는 UA에만 기다려
+   * head에 넣는다. 설정하면 기본 목록을 대체하므로 기본 목록을 포함한 공용 상수를 쓴다.
+   * 카카오톡 미리보기와 AI 크롤러가 덧붙은 몫이다.
+   */
+  htmlLimitedBots: HTML_LIMITED_BOTS,
+
   /**
    * EC2 배포용 산출물. 빌드가 실제로 쓰인 파일만 추려 `.next/standalone`에
    * 런타임까지 통째로 담아 준다. 이게 없으면 `.next`만 복사해도 서버가 못 뜬다.

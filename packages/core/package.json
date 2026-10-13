@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./html-limited-bots": "./src/html-limited-bots.mjs",
     "./*": "./src/*.ts"
   },
   "scripts": {
