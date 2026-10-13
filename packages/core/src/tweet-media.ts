@@ -12,8 +12,13 @@
  *
  * 서버에서만 부른다 — 신디케이션 API를 브라우저가 직접 부르면 공용 rate limit을
  * 탄다(각 앱 `/api/tweet/[id]` 프록시를 둔 것과 같은 이유).
+ *
+ * 사진 크기는 카드가 그릴 만큼만 받는다 (KAN-624). 처음엔 "제일 큰 판" `name=large`
+ * (2048px)를 붙였는데, 카드가 전폭 한 장에서 두 장 소형(170 CSS px)으로 바뀌는 동안
+ * 이 쪽은 그대로여서 홈 LCP가 7.7초였다. 변형 규칙은 `@plick/domain/tweet-photo` 하나다.
  */
 import { getTweet } from "react-tweet/api";
+import { tweetPhotoUrl, TWEET_PHOTO_SIZE } from "@plick/domain/tweet-photo";
 import type { HotArticle } from "@plick/domain/types";
 
 /** x.com·twitter.com 게시물 URL에서 숫자 id를 뽑는 패턴. */
@@ -24,12 +29,6 @@ const TWEET_URL = /(?:twitter\.com|x\.com)\/[^/]+\/status(?:es)?\/(\d+)/;
  * 신디케이션에 물어보면 첫 바이트가 그만큼 늦어진다.
  */
 const TWEET_REVALIDATE_SECONDS = 86_400;
-
-/**
- * 사진 URL에 붙이는 크기 변형. 신디케이션이 주는 `media_url_https`는 변형이 없는
- * 원본 경로라 `name=large`를 붙여야 큰 판을 받는다.
- */
-const LARGE_VARIANT = "name=large";
 
 /** 게시물 URL → 트윗 id. 트윗 링크가 아니거나 null이면 null. */
 export function tweetIdFrom(url: string | null): string | null {
@@ -71,16 +70,17 @@ export async function largestTweetPhoto(
     const biggest = photos.reduce((best, media) =>
       area(media.original_info) > area(best.original_info) ? media : best,
     );
-    return withLargeVariant(biggest.media_url_https);
+    return tweetPhotoUrl(biggest.media_url_https, TWEET_PHOTO_SIZE, "webp");
   }
 
   /* `mediaDetails`가 없는 옛 응답 형태의 폴백. 여기 url은 이미 변형이 붙어 있을
-     수 있어 그대로 쓴다 */
+     수 있는데 `tweetPhotoUrl`이 그 모양도 받는다 */
   const fallback = tweet.photos ?? [];
   if (fallback.length === 0) return null;
-  return fallback.reduce((best, photo) =>
+  const largest = fallback.reduce((best, photo) =>
     photo.width * photo.height > best.width * best.height ? photo : best,
-  ).url;
+  );
+  return tweetPhotoUrl(largest.url, TWEET_PHOTO_SIZE, "webp");
 }
 
 /**
@@ -105,9 +105,4 @@ export async function withTweetPhotos(
 
 function area(info: { width: number; height: number }): number {
   return info.width * info.height;
-}
-
-/** 변형이 없는 원본 경로에만 `name=large`를 붙인다. */
-function withLargeVariant(url: string): string {
-  return url.includes("?") ? url : `${url}?${LARGE_VARIANT}`;
 }

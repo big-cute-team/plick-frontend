@@ -1,6 +1,7 @@
 "use client";
 
 import { EmbeddedTweet, useTweet } from "react-tweet";
+import { TweetMediaImg } from "@plick/ui/TweetMediaImg";
 import type { Tweet } from "react-tweet/api";
 import { tweetIdFromUrl } from "@/_utils/tweet";
 
@@ -31,6 +32,9 @@ import { tweetIdFromUrl } from "@/_utils/tweet";
  * 바로 발견된다. useTweet은 id와 apiUrl이 둘 다 없으면 swr 키가 null이라 요청
  * 자체가 나가지 않는다.
  *
+ * 사진은 `TweetMediaImg`로 갈아 끼워 webp로 받는다 (KAN-624). preload 주소
+ * (`tweetImageUrl`)와 같은 함수로 만들어 글자까지 같다.
+ *
  * `defer`가 켜져 있으면 fetch를 미룬다 (KAN-429) — 화면에서 먼 릴의 임베드가
  * 마운트 즉시 트윗을 받아 LCP인 첫 릴 이미지와 pbs.twimg.com 대역폭을 나누는 걸
  * 막는 게이트다. swr 키를 null로 둬 요청 자체가 안 나가고, 꺼지면 그때 받는다.
@@ -56,7 +60,10 @@ export function TweetEmbed({
   );
   const data = seedTweet ?? fetched;
 
-  if (data) return <EmbeddedTweet tweet={data} />;
+  if (data)
+    return (
+      <EmbeddedTweet tweet={data} components={{ MediaImg: TweetMediaImg }} />
+    );
   /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
   if (!id || error || data === null) {
     return (
