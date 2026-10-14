@@ -13,11 +13,13 @@ import type {
   InitialCommentPage,
 } from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
+import { AdSlot } from "@/_components/AdSlot";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { PageContainer } from "@/_components/PageContainer";
 import { SideRail } from "@/_components/SideRail";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { SkyscraperAd } from "@/_components/SkyscraperAd";
 import {
   MOBILE_ALTERNATE_MEDIA,
   MOBILE_SITE_URL,
@@ -186,14 +188,19 @@ export default async function ArticleDetailPage({
       <LiveStrip />
       <main>
         <PageContainer className="grid grid-cols-1 items-start gap-8.5 pt-5.5 pb-8.5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <ArticleMain
-            article={articleResult.value}
-            related={related}
-            initialComments={initialComments}
-            debate={debate}
-          />
+          <div className="min-w-0">
+            <ArticleMain
+              article={articleResult.value}
+              related={related}
+              initialComments={initialComments}
+              debate={debate}
+            />
+            {/* 광고 (KAN-652) — 댓글 아래, 푸터 위 가로 배너 */}
+            <AdSlot placement="bottomBanner" className="mt-8.5" />
+          </div>
           <SideRail />
         </PageContainer>
+        <SkyscraperAd />
         <SiteFooter />
       </main>
     </>

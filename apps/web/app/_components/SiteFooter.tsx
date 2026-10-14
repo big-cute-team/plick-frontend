@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { homeIntroCopy } from "@plick/domain/brand";
+import { copyrightNotice, homeIntroCopy } from "@plick/domain/brand";
 
 /** 푸터 링크 — 색인 가치가 있는 정적 페이지만 싣는다(로그인·MY는 noindex라 뺀다). */
 const FOOTER_LINKS = [
@@ -45,6 +45,8 @@ export function SiteFooter({ intro }: { intro?: ReactNode }) {
             ))}
           </ul>
         </nav>
+        {/* 카피라이트 (KAN-652). 문구는 `@plick/domain/brand`가 모바일과 단일 출처다 */}
+        <p className="text-caption text-text-4 mt-3.5">{copyrightNotice()}</p>
       </div>
     </footer>
   );
