@@ -40,9 +40,9 @@ export interface MyProfile {
   nicknameChangeableAt: string | null;
   myTeams: TeamCode[];
   /**
-   * 게스트 계정인가 (KAN-514). 소셜 연동 전이면 true — 댓글·신고·채팅이 막히고
-   * 화면은 로그인이 아니라 "계정 연동" 안내로 분기한다. 토큰에도 같은 표식이
-   * 있지만 FE는 토큰을 해석하지 않고 이 값만 본다.
+   * 게스트 계정인가 (KAN-514). 소셜 연동 전이면 true. 게스트에게 막힌 건 신고뿐이고
+   * (댓글·채팅은 KAN-657부터 게스트도 된다) 신고에서만 화면이 로그인이 아니라 "계정 연동"
+   * 안내로 분기한다. 토큰에도 같은 표식이 있지만 FE는 토큰을 해석하지 않고 이 값만 본다.
    */
   isGuest: boolean;
 }
