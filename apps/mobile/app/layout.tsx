@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
-import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import {
   BRAND_DESCRIPTION,
@@ -158,6 +157,13 @@ export default async function RootLayout({
         {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
             미리 열어 둔다 (KAN-421) */}
         <link rel="preconnect" href="https://pbs.twimg.com" />
+        {/* 애드센스 로더 (KAN-652) — live 모드(prod, 앱 셸 밖)에만 붙는다. `next/script`의
+            afterInteractive는 HTML에 preload 링크만 남기고 태그는 하이드레이션 뒤 브라우저가
+            만들어서, JS를 돌리지 않는 애드센스 크롤러가 "코드 없음"으로 봤다. 구글이 주는
+            스니펫 그대로 head에 async 태그로 둔다. async라 파싱과 첫 페인트를 막지 않는다. 이 태그가 head에 있는 것으로 사이트 소유 확인과 심사가 된다 */}
+        {adsMode === "live" && (
+          <script async src={ADSENSE_SCRIPT_URL} crossOrigin="anonymous" />
+        )}
       </head>
       <body className="bg-canvas text-text">
         <QueryProvider>
@@ -180,15 +186,6 @@ export default async function RootLayout({
             스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
             LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}
         {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
-        {/* 애드센스 로더 (KAN-652) — live 모드(prod, 앱 셸 밖)에만 붙는다. GA와 같은 이유로
-            afterInteractive다. 이 스크립트가 head에 있는 것으로 사이트 소유 확인도 된다 */}
-        {adsMode === "live" && (
-          <Script
-            src={ADSENSE_SCRIPT_URL}
-            strategy="afterInteractive"
-            crossOrigin="anonymous"
-          />
-        )}
       </body>
     </html>
   );
