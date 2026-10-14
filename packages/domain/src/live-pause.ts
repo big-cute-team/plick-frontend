@@ -6,11 +6,14 @@
  * 준비중 화면(`LIVE_PAUSED_PATH`)으로 rewrite하고, 다른 화면에 끼는 오늘 경기 띠는 조회를
  * 건너뛴다. 복구되면 `LIVE_SCORE_PAUSED`만 false로 돌린다.
  *
+ * 2026-10-14 KAN-657에서 다시 열었다. 깃발과 준비중 라우트는 상류가 또 죽을 때
+ * 한 줄로 닫을 수 있게 남겨 둔다.
+ *
  * 프록시(edge 번들)가 읽으므로 다른 모듈을 import하지 않는다.
  */
 
-/** 라이브 스코어 화면을 닫아 두는지. */
-export const LIVE_SCORE_PAUSED: boolean = true;
+/** 라이브 스코어 화면을 닫아 두는지. 다시 닫으려면 true로 바꿔 배포한다. */
+export const LIVE_SCORE_PAUSED: boolean = false;
 
 /** 준비중 화면 라우트. 프록시가 닫힌 경로를 이리로 rewrite해 주소는 그대로 남는다. */
 export const LIVE_PAUSED_PATH = "/live-paused";

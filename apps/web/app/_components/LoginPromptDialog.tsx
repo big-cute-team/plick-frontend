@@ -7,7 +7,9 @@ import { useAuth } from "./AuthProvider";
 
 /**
  * 로그인 유도 팝업 (KAN-303, web 이식 KAN-329, 시안 KAN-567 다이얼로그) — 비로그인
- * 사용자가 댓글·좋아요·투표에 손대면 띄운다. `ConfirmDialog`와 같은 각진 상자에
+ * 사용자가 댓글·좋아요·투표에 손대면 띄운다. 게스트에게는 `description` 대신 연동
+ * 안내를 보여준다. KAN-657부터 게스트도 댓글과 채팅을 쓰므로 게스트가 이 팝업을
+ * 보는 건 신고를 누를 때뿐이라 문구는 신고 기준이다. `ConfirmDialog`와 같은 각진 상자에
  * 테두리 "취소"와 강조색 채운 면 "로그인 하러 가기"를 둔다. 상단 X는 시안
  * 다이얼로그에 없어 뺐다.
  *
@@ -57,7 +59,7 @@ export function LoginPromptDialog({
         </p>
         <p className="text-label-lg text-text-3 mt-2 text-center leading-[1.6]">
           {isGuest
-            ? "댓글과 신고, 채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요"
+            ? "신고는 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요"
             : description}
         </p>
 

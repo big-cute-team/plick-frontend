@@ -16,15 +16,16 @@ import type { BouncedMessage } from "@/_types/live";
  * 언제나 열려 있다(BE KAN-571). 경기 상세 채팅 탭과 라이브 목록 배너로 들어가는
  * `/live/chat` 화면이 같은 방을 본다. 경기 상태나 킥오프 시각으로 거르지 않는다.
  *
- * 접속 전에 화면이 먼저 거르는 것은 비로그인, 게스트, 닉네임 없음(온보딩 미완료,
- * 서버 403)뿐이고 안내 지면으로 끝낸다. 그 밖에는 붙어서 목록과 입력바를 그린다.
+ * 접속 전에 화면이 먼저 거르는 것은 비로그인과 닉네임 없음(온보딩 미완료, 서버 403)
+ * 뿐이고 안내 지면으로 끝낸다. 그 밖에는 붙어서 목록과 입력바를 그린다.
  *
  * 비로그인 처리(티켓 확인 항목): 탭은 보이되 안에서 로그인을 권한다. 서버가
- * 읽기도 로그인을 요구하므로 미리보기 없이 안내만 있다. 게스트도 같은 자리에서
- * 막히지만(서버가 403 `AUTH_GUEST_FORBIDDEN`) 문구는 연동 안내로 갈린다 (KAN-514).
+ * 읽기도 로그인을 요구하므로 미리보기 없이 안내만 있다. 게스트는 KAN-514에서 같은
+ * 자리에서 연동 안내로 막았는데, BE KAN-656이 게스트 접속을 열어 KAN-657에서 그
+ * 분기를 지웠다. 게스트 행은 생성 때 닉네임이 있어 닉네임 게이트도 지나간다.
  */
 export function LiveChatPanel() {
-  const { isLoggedIn, isGuest, nickname } = useAuth();
+  const { isLoggedIn, nickname } = useAuth();
 
   if (!isLoggedIn) {
     return (
@@ -33,17 +34,6 @@ export function LiveChatPanel() {
         body="해축 팬들과 실시간으로 이야기하려면 로그인하세요"
         href="/login"
         cta="로그인 하러 가기"
-      />
-    );
-  }
-  /* 게스트는 세션이 있어도 채팅 접속이 403이다. 연동으로 안내한다 (KAN-514) */
-  if (isGuest) {
-    return (
-      <Gate
-        title="계정 연동이 필요해요"
-        body="채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요"
-        href="/login"
-        cta="계정 연동하러 가기"
       />
     );
   }
@@ -267,7 +257,7 @@ function Composer({
           보내기
         </button>
       </form>
-      {error && <p className="text-caption text-danger px-1">{error}</p>}
+      {error && <p className="text-caption text-danger-strong px-1">{error}</p>}
     </div>
   );
 }

@@ -66,7 +66,7 @@ export function NavItem({
       }}
       className={`text-body focus-visible:outline-accent flex h-9.5 shrink-0 items-center gap-1.25 border-b-2 px-3 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
         live
-          ? `text-danger font-bold ${active ? "border-danger" : "border-transparent"}`
+          ? `text-danger-strong font-bold ${active ? "border-danger" : "border-transparent"}`
           : active
             ? "text-text-strong border-accent font-bold"
             : "text-text-3 hover:text-text-strong border-transparent font-medium"

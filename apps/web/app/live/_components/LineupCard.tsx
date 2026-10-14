@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LiveCrest } from "@plick/ui/LiveCrest";
 import { TEAMS } from "@plick/domain/constants";
 import { playerProfilePath } from "@plick/domain/format";
 import {
@@ -19,7 +20,7 @@ import {
  * API 선수 id라 그대로 쓴다.
  *
  * 시안의 "선수별 스탯" 표(출전, 슈팅, 패스, 평점)는 선수 전원의 경기 스탯을 한 번에
- * 주는 API가 없어 벤치 표로 대신한다(번호, 선수, 팀, 포지션, 평점).
+ * 주는 API가 없어 팀별 벤치 표로 대신한다(번호, 선수, 포지션, 평점).
  *
  * @param home 홈 라인업
  * @param away 원정 라인업
@@ -66,57 +67,66 @@ export function LineupCard({
         </div>
       </div>
 
-      {(home.bench.length > 0 || away.bench.length > 0) && (
-        <>
-          <p className="text-body-md text-text-strong pt-5 pb-2.5 font-black">
-            벤치
-          </p>
-          <div className="border-border-table text-micro-lg text-text-4 grid h-7 grid-cols-[1.5rem_minmax(0,1fr)_3.875rem_2.625rem_2.625rem] items-center gap-2 border-b">
-            <span className="text-center">#</span>
-            <span>선수</span>
-            <span>팀</span>
-            <span className="text-center">포지션</span>
-            <span className="text-center">평점</span>
-          </div>
-          {[home, away].map((lineup) =>
-            lineup.bench.map((bench) => {
-              const tone = ratingTone(bench.rating);
-              return (
-                <Link
-                  key={`${lineup.team.shortName}-${bench.id}`}
-                  href={playerProfilePath(bench.id)}
-                  className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[1.5rem_minmax(0,1fr)_3.875rem_2.625rem_2.625rem] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
-                >
-                  <span className="text-caption-lg text-text-4 text-center">
-                    {bench.number ?? "-"}
-                  </span>
-                  <span className="text-body text-text-strong min-w-0 truncate font-bold">
-                    {bench.name}
-                  </span>
-                  <span className="text-caption-lg text-text-3 truncate">
-                    {lineup.team.shortName}
-                  </span>
-                  <span className="text-caption-lg text-text-3 text-center">
-                    {bench.position}
-                  </span>
-                  <span
-                    className={`text-label-lg text-center font-black ${
-                      tone === "accent"
-                        ? "text-accent"
-                        : tone === "warn"
-                          ? "text-warn"
-                          : "text-text-3"
-                    }`}
-                  >
-                    {bench.rating === null ? "-" : bench.rating.toFixed(1)}
-                  </span>
-                </Link>
-              );
-            }),
-          )}
-        </>
-      )}
+      <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-2">
+        {[home, away].map((lineup) => (
+          <BenchTable
+            key={lineup.team.id ?? lineup.team.name}
+            lineup={lineup}
+          />
+        ))}
+      </div>
     </div>
+  );
+}
+
+/** 팀명과 엠블럼 아래 한 팀의 벤치 선수만 표시한다. */
+function BenchTable({ lineup }: { lineup: TeamLineup }) {
+  if (lineup.bench.length === 0) return null;
+
+  return (
+    <section className="min-w-0">
+      <h3 className="text-body-md text-text-strong flex items-center gap-2 pt-5 pb-2.5 font-black">
+        <LiveCrest team={lineup.team} size={20} />
+        <span>{lineup.team.name} 벤치</span>
+      </h3>
+      <div className="border-border-table text-micro-lg text-text-4 grid h-7 grid-cols-[1.5rem_minmax(0,1fr)_2.625rem_2.625rem] items-center gap-2 border-b">
+        <span className="text-center">#</span>
+        <span>선수</span>
+        <span className="text-center">포지션</span>
+        <span className="text-center">평점</span>
+      </div>
+      {lineup.bench.map((bench) => {
+        const tone = ratingTone(bench.rating);
+        return (
+          <Link
+            key={bench.id}
+            href={playerProfilePath(bench.id)}
+            className="border-border-soft hover:bg-elevate-2 focus-visible:outline-accent grid h-8.5 w-full grid-cols-[1.5rem_minmax(0,1fr)_2.625rem_2.625rem] items-center gap-2 border-b text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+          >
+            <span className="text-caption-lg text-text-4 text-center">
+              {bench.number ?? "-"}
+            </span>
+            <span className="text-body text-text-strong min-w-0 truncate font-bold">
+              {bench.name}
+            </span>
+            <span className="text-caption-lg text-text-3 text-center">
+              {bench.position}
+            </span>
+            <span
+              className={`text-label-lg text-center font-black ${
+                tone === "accent"
+                  ? "text-accent"
+                  : tone === "warn"
+                    ? "text-warn"
+                    : "text-text-3"
+              }`}
+            >
+              {bench.rating === null ? "-" : bench.rating.toFixed(1)}
+            </span>
+          </Link>
+        );
+      })}
+    </section>
   );
 }
 

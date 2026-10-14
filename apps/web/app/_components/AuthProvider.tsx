@@ -26,6 +26,7 @@ import type { ProfileSeed } from "@/_types/auth";
  * `isGuest`는 KAN-514에서 붙었다. 게스트 로그인을 깔면서 "비로그인"이 사실상 사라져
  * `isLoggedIn`만으로는 댓글을 막을 근거가 없어졌다 — 게스트도 세션이 있기 때문이다.
  * 그래서 "세션이 있는가"(`isLoggedIn`)와 "소셜 계정인가"(`!isGuest`)를 따로 들고 다닌다.
+ * BE KAN-656(FE KAN-657)부터 게스트도 댓글·채팅을 쓰므로 `isGuest`로 막는 건 신고뿐이다.
  *
  * 기본값 `null`은 "provider 밖"을 뜻한다(로그인 안 함 `false`와 구분해 실수 사용을 잡는다).
  */

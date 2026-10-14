@@ -8,7 +8,7 @@ const KIND_LABEL: Record<
   GOAL: { label: "골", className: "text-accent" },
   SUB: { label: "교체", className: "text-text-3" },
   CARD: { label: "경고", className: "text-warn" },
-  RED_CARD: { label: "퇴장", className: "text-danger" },
+  RED_CARD: { label: "퇴장", className: "text-danger-strong" },
   VAR: { label: "VAR", className: "text-text-3" },
 };
 

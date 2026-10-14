@@ -71,7 +71,9 @@ function Absentees({ preview }: { preview: MatchPreview }) {
               </span>
               <span
                 className={`text-caption-lg font-bold ${
-                  absentee.kind === "SUSPENSION" ? "text-danger" : "text-warn"
+                  absentee.kind === "SUSPENSION"
+                    ? "text-danger-strong"
+                    : "text-warn"
                 }`}
               >
                 {absentee.reason}
@@ -104,7 +106,7 @@ function HeadToHead({ preview }: { preview: MatchPreview }) {
               game.result === "W"
                 ? "text-accent"
                 : game.result === "L"
-                  ? "text-danger"
+                  ? "text-danger-strong"
                   : "text-text-4"
             }`}
           >

@@ -70,7 +70,9 @@ export function ConfirmDialog({
           {description}
         </p>
         {error && (
-          <p className="text-caption text-danger mt-2 text-center">{error}</p>
+          <p className="text-caption text-danger-strong mt-2 text-center">
+            {error}
+          </p>
         )}
 
         <div className="mt-4.5 flex gap-2.25">

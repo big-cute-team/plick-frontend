@@ -318,7 +318,10 @@ function CommentOwnerActions({
  * 그대로 두어 그 중간 팝업을 없앴다.
  *
  * 비로그인이면 팝업 대신 로그인 유도를 띄운다(좋아요 버튼과 같은 관용 —
- * 버튼은 보여주되 요청 없이 막는다). 내 댓글에는 이 버튼들이 아예 안 그려지므로
+ * 버튼은 보여주되 요청 없이 막는다). 게스트는 신고만 막힌다(BE KAN-656, FE KAN-657).
+ * 신고 버튼은 숨기지 않고 누르면 연동 안내를 띄워 연동을 유도하고, 요청이 나가
+ * 403 `AUTH_GUEST_FORBIDDEN`이 와도 팝업이 같은 안내로 돌린다. 차단은 BE가 세션만
+ * 요구해 게스트도 바로 연다. 내 댓글에는 이 버튼들이 아예 안 그려지므로
  * (mine 분기) 셀프 신고·차단은 화면에서 성립하지 않고, 오판은 BE가
  * 400(`COMMENT_SELF_REPORT`·`USER_BLOCK_SELF`)으로 막는다.
  *
@@ -337,7 +340,8 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
   const block = useBlockUser();
 
   function open(next: "report" | "block") {
-    if (!isLoggedIn || isGuest) {
+    /* 신고는 소셜 사용자 전용(KAN-656)이라 게스트는 연동 안내로, 차단은 세션만 있으면 된다 */
+    if (!isLoggedIn || (next === "report" && isGuest)) {
       setNeedsLogin(true);
       return;
     }
@@ -455,7 +459,9 @@ function CommentLikeButton({
         aria-pressed={comment.liked}
         aria-label={comment.liked ? "좋아요 취소" : "좋아요"}
         className={`text-caption-lg focus-visible:outline-accent inline-flex items-center gap-1 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          comment.liked ? "text-danger" : "text-text-3 hover:text-danger"
+          comment.liked
+            ? "text-danger-strong"
+            : "text-text-3 hover:text-danger-strong"
         }`}
       >
         <HeartMiniIcon size={13} filled={comment.liked} />

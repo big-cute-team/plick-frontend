@@ -95,7 +95,7 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
       {error && (
         <p
           role="status"
-          className="text-caption-lg text-danger mt-2.5 text-center"
+          className="text-caption-lg text-danger-strong mt-2.5 text-center"
         >
           {error}
         </p>

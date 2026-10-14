@@ -93,7 +93,7 @@ export function DateStrip({
               <span
                 className={`text-caption font-bold ${
                   weekday === "일"
-                    ? "text-danger"
+                    ? "text-danger-strong"
                     : on
                       ? "text-accent"
                       : "text-text-4"

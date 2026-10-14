@@ -42,7 +42,7 @@ export function DeleteAccountButton() {
           setError(null);
           setOpen(true);
         }}
-        className="text-label-lg text-text-3 hover:text-danger focus-visible:outline-accent py-1.75 text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="text-label-lg text-text-3 hover:text-danger-strong focus-visible:outline-accent py-1.75 text-left focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         회원 탈퇴
       </button>

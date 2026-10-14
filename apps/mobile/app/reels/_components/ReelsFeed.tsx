@@ -249,6 +249,7 @@ export function ReelsFeed({
             slide.kind === "ad" ? (
               <ReelAdSlide
                 key={slide.id}
+                active={i === activeIndex}
                 inWindow={Math.abs(i - activeIndex) <= REELS_DOM_WINDOW}
               />
             ) : (

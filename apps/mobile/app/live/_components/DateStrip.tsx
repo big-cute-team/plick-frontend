@@ -155,7 +155,11 @@ export function DateStrip({
             >
               <span
                 className={`text-caption font-bold ${
-                  sunday ? "text-danger" : on ? "text-accent" : "text-text-4"
+                  sunday
+                    ? "text-danger-strong"
+                    : on
+                      ? "text-accent"
+                      : "text-text-4"
                 }`}
               >
                 {dateKey === today ? "오늘" : weekday}
