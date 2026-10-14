@@ -193,3 +193,17 @@ dev BE가 403이라 prod BE로 읽기 검증을 하는 환경의 한계다(ADR 0
   `plick_app` 분기를 푼다. 옛 앱 버전이 남으니 UA의 버전으로 문턱을 두는 편이 안전하다.
 - 다른 페이지(프로필·선수·LIVE 레일) 확장은 노출 지표를 본 뒤 별도 PR이다.
 - E2E 릴스 spec이 슬라이드 수를 세지는 않아 그대로 돈다. dev는 placeholder라 점선 상자가 보인다.
+
+## 덧. 소유 확인이 코드 스니펫으로는 안 됐다
+
+배포 뒤 사용자가 애드센스에서 "애드센스 코드 스니펫"으로 사이트 확인을 눌렀더니 "사이트를 확인할 수
+없습니다"가 떴다. prod HTML을 curl로 뜯어 보니 로더는 `<link rel="preload" as="script">`와 RSC 페이로드
+안의 문자열로만 있었다. `next/script`의 `afterInteractive`는 서버 HTML에 실제 `<script src>` 태그를 쓰지
+않고 하이드레이션 뒤 브라우저가 태그를 만든다. 애드센스 크롤러(Mediapartners-Google)는 JS를 돌리지 않고
+head의 태그를 찾으니 "코드 없음"이었다. ads.txt 방식으로 바꿔 누르니 바로 통과했고 검토 요청까지 됐다.
+
+소유 확인은 끝났지만 심사 중에도 크롤러가 페이지에서 광고 코드를 찾는다고 해서 태그를 진짜로 바꿨다.
+`next/script`를 버리고 구글이 주는 스니펫 그대로 `<script async src crossOrigin="anonymous">`를 head에 둔다.
+async라 파싱과 첫 페인트를 막지 않는 건 같다. 잃는 건 Next가 넣어 주던 preload 링크 하나다. 로컬에서
+`NEXT_PUBLIC_ADS_MODE=live`로 띄워(launch.json `web-ads-live`·`mobile-ads-live`) Mediapartners-Google UA로
+curl하니 두 앱 다 head에 태그가 있고, `PlickApp/` UA로는 태그도 자리도 없었다.
