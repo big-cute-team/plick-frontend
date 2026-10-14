@@ -267,7 +267,7 @@ function Composer({
           보내기
         </button>
       </form>
-      {error && <p className="text-caption text-danger px-1">{error}</p>}
+      {error && <p className="text-caption text-danger-strong px-1">{error}</p>}
     </div>
   );
 }

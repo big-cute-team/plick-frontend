@@ -39,7 +39,7 @@ export function TrendDeltaBadge({ item }: { item: TrendItem }) {
   const cell = "text-caption w-6.5 shrink-0 text-right font-bold";
 
   if (delta.kind === "new") {
-    return <span className={`${cell} text-danger`}>NEW</span>;
+    return <span className={`${cell} text-danger-strong`}>NEW</span>;
   }
 
   if (delta.kind === "same") {

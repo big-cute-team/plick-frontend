@@ -8,7 +8,7 @@ import { LiveCrest } from "@plick/ui/LiveCrest";
 
 /** 상태 칸 첫 줄의 톤 → 색 토큰(시안: 진행 중 빨강, 종료 회색, 예정 본문 보조색). */
 const TONE_TEXT: Record<MatchStatusTone, string> = {
-  live: "text-danger",
+  live: "text-danger-strong",
   scheduled: "text-text-2",
   finished: "text-text-4",
   postponed: "text-warn",
@@ -46,7 +46,7 @@ export function MatchRow({ match }: { match: MatchSummary }) {
         <ScoreText match={match} side="home" />
         <ScoreText match={match} side="away" />
       </span>
-      <span className="text-caption-lg text-danger tracking-live w-16 shrink-0 text-right font-bold max-lg:hidden">
+      <span className="text-caption-lg text-danger-strong tracking-live w-16 shrink-0 text-right font-bold max-lg:hidden">
         {match.status === "LIVE" ? "LIVE" : ""}
       </span>
     </Link>

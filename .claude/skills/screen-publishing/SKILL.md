@@ -20,9 +20,10 @@ description: >-
 - 면: `bg-bg`(흰) `bg-canvas`(셸 밖) `bg-elevate`(배너) `bg-elevate-2`(핫이슈 상자) `bg-chip`(태그 칩) `bg-input`(입력창)
   `bg-avatar`(회색 원) `bg-vote-card`/`bg-vote-track`(투표 카드) `bg-pitch`(라인업) `bg-muted` `bg-dim`/`bg-dim-strong`(딤)
 - 선: `border-border`(섹션) `border-border-soft`(목록 행) `border-border-table`(표 머리) `border-border-strong`(레일·테두리 버튼)
-- 글자: `text-text-strong`(제목) `text-text`(본문) `text-text-2` `text-text-3`(보조) `text-text-4`(메타, 회색 하한)
+- 글자: `text-text-strong`(제목) `text-text`(본문) `text-text-2` `text-text-3`(보조) `text-text-4`(메타, 회색 하한. 흰 배경 기준이라 회색 면 위에서는 `text-text-3`부터)
 - 강조: `text-accent`/`bg-accent`(딥 그린) `hover:text-accent-hover` `text-accent-bright`(어두운 면 위) `text-on-accent`
-  빨강 `text-danger`/`bg-danger`는 댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만. 경고 `text-warn`
+  빨강은 댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만. 글자는 `text-danger-strong`(4.5:1 대비, KAN-627),
+  면·점·테두리는 `bg-danger`/`border-danger`. 경고 `text-warn`
 - 글자 크기(시안 px 그대로): `text-micro`(10) `text-micro-lg`(10.5) `text-caption`(11) `text-caption-lg`(11.5) `text-label`(12)
   `text-label-lg`(12.5) `text-body`(13.5) `text-body-md`(14) `text-body-lg`(15) `text-title`(17) `text-reel`(19) `text-hero`(21)
   `text-section`(22) `text-profile`(23) `text-headline`(24) `text-score`(38)

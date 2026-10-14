@@ -47,7 +47,7 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
           {article.title}
         </span>
         {article.commentCount > 0 && (
-          <span className="text-label-lg text-danger shrink-0 font-black">
+          <span className="text-label-lg text-danger-strong shrink-0 font-black">
             [{article.commentCount}]
           </span>
         )}
@@ -65,7 +65,7 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
         type="button"
         onClick={like.toggle}
         disabled={like.isPending}
-        className="text-caption-lg text-text-3 hover:text-danger focus-visible:outline-accent text-right focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+        className="text-caption-lg text-text-3 hover:text-danger-strong focus-visible:outline-accent text-right focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
       >
         해제
       </button>

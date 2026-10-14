@@ -82,7 +82,7 @@ function RailAction({
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       className={`${
-        active ? "text-danger" : "text-text-strong"
+        active ? "text-danger-strong" : "text-text-strong"
       } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}

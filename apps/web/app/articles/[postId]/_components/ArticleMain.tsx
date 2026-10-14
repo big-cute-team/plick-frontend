@@ -106,7 +106,7 @@ export function ArticleMain({
             <VsMark size="md" />
             <span
               className={`text-caption-lg font-bold ${
-                closed ? "text-text-3" : "text-danger"
+                closed ? "text-text-3" : "text-danger-strong"
               }`}
             >
               {closed ? "투표 마감" : "투표 진행 중"}
@@ -240,7 +240,7 @@ export function ArticleMain({
                     {item.title}
                   </span>
                   {item.commentCount > 0 && (
-                    <span className="text-label text-danger shrink-0 font-bold">
+                    <span className="text-label text-danger-strong shrink-0 font-bold">
                       [{formatCount(item.commentCount)}]
                     </span>
                   )}

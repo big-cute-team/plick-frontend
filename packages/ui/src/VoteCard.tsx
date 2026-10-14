@@ -141,7 +141,7 @@ export function VoteCard({
       </div>
 
       {/* 마감 시각 표기도 렌더 시각 파생이라 위와 같은 이유 */}
-      <p suppressHydrationWarning className="text-caption text-text-4">
+      <p suppressHydrationWarning className="text-caption text-text-3">
         {closed
           ? `${total.toLocaleString()}명 참여, 마감`
           : showResults && debate.closesAt

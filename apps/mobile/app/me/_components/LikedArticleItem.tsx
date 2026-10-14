@@ -50,7 +50,7 @@ export function LikedArticleItem({ article }: { article: ArticleCard }) {
         onClick={toggle}
         disabled={isPending}
         aria-label="좋아요 해제"
-        className="border-border-soft text-danger flex w-11 shrink-0 items-center justify-center border-b active:opacity-60 disabled:opacity-50"
+        className="border-border-soft text-danger-strong flex w-11 shrink-0 items-center justify-center border-b active:opacity-60 disabled:opacity-50"
       >
         <HeartMiniIcon filled size={20} />
       </button>

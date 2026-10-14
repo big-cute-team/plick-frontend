@@ -22,12 +22,12 @@ export function MyCommentRow({ comment }: { comment: MyComment }) {
           {comment.content}
         </p>
         <div className="flex items-center gap-2.5">
-          <span className="text-caption-lg text-danger flex items-center gap-1 font-bold">
+          <span className="text-caption-lg text-danger-strong flex items-center gap-1 font-bold">
             <HeartMiniIcon filled />
             {formatCount(comment.likeCount)}
           </span>
           {comment.isBlinded && (
-            <span className="text-micro-lg text-danger font-black">
+            <span className="text-micro-lg text-danger-strong font-black">
               블라인드
             </span>
           )}

@@ -9,7 +9,7 @@ export function VsMark({ size = "sm" }: { size?: "sm" | "md" }) {
   return (
     <span
       aria-label="투표 진행"
-      className={`text-danger tracking-vs shrink-0 leading-none font-black ${
+      className={`text-danger-strong tracking-vs shrink-0 leading-none font-black ${
         size === "sm" ? "text-micro" : "text-caption"
       }`}
     >

@@ -99,7 +99,7 @@ function AdPlaceholder({ unit }: { unit: AdUnit }) {
   return (
     <div
       aria-hidden
-      className="border-border-strong bg-elevate text-caption text-text-4 flex items-center justify-center border border-dashed"
+      className="border-border-strong bg-elevate text-caption text-text-3 flex items-center justify-center border border-dashed"
       style={{
         width: unit.width ?? "100%",
         height: unit.height ?? "100%",

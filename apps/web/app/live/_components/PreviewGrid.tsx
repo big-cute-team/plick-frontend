@@ -70,7 +70,9 @@ function Absentees({ preview }: { preview: MatchPreview }) {
               </PlayerLink>
               <span
                 className={`text-caption-lg font-bold ${
-                  absentee.kind === "SUSPENSION" ? "text-danger" : "text-warn"
+                  absentee.kind === "SUSPENSION"
+                    ? "text-danger-strong"
+                    : "text-warn"
                 }`}
               >
                 {absentee.reason}

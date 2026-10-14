@@ -138,7 +138,7 @@ export function CommentComposer({
         </button>
       </form>
 
-      {error && <p className="text-caption text-danger px-1">{error}</p>}
+      {error && <p className="text-caption text-danger-strong px-1">{error}</p>}
 
       {showLogin && <LoginPromptDialog onClose={() => setShowLogin(false)} />}
     </div>

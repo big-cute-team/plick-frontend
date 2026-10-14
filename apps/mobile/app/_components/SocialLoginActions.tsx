@@ -59,7 +59,10 @@ export function SocialLoginActions({
         onClick={() => loginWith("APPLE")}
       />
       {error && (
-        <p className="text-caption-lg text-danger text-center" role="alert">
+        <p
+          className="text-caption-lg text-danger-strong text-center"
+          role="alert"
+        >
           {error}
         </p>
       )}

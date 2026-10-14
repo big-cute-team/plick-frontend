@@ -161,7 +161,7 @@ export function ReportCommentDialog({
             </div>
 
             {error && (
-              <p className="text-caption text-danger mt-2 text-center">
+              <p className="text-caption text-danger-strong mt-2 text-center">
                 {error}
               </p>
             )}

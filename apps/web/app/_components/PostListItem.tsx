@@ -104,7 +104,7 @@ export function PostListItem({
           </ArticleLink>
         </Title>
         {post.commentCount > 0 && (
-          <span className="text-label-lg text-danger shrink-0 font-black">
+          <span className="text-label-lg text-danger-strong shrink-0 font-black">
             [{formatCount(post.commentCount)}]
           </span>
         )}

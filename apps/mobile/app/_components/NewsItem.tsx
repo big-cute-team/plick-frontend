@@ -88,7 +88,7 @@ export function NewsItem({
             </ArticleLink>
           </h3>
           {article.commentCount > 0 && (
-            <span className="text-body text-danger shrink-0 font-bold">
+            <span className="text-body text-danger-strong shrink-0 font-bold">
               [{formatCount(article.commentCount)}]
             </span>
           )}

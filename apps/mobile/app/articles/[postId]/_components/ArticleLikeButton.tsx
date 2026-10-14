@@ -63,7 +63,7 @@ export function ArticleLikeButton({
         aria-pressed={state.liked}
         aria-label={state.liked ? "좋아요 취소" : "좋아요"}
         className={`${
-          state.liked ? "text-danger" : "text-text-2"
+          state.liked ? "text-danger-strong" : "text-text-2"
         } text-body flex items-center gap-1.5 font-bold active:opacity-60`}
       >
         <LikeIcon size={18} filled={state.liked} />

@@ -20,7 +20,7 @@ export function NicknameCheckNotice({
 
   if ("error" in result) {
     return (
-      <p className="text-label text-danger flex items-center gap-1.5 px-1 font-semibold">
+      <p className="text-label text-danger-strong flex items-center gap-1.5 px-1 font-semibold">
         {result.error}
       </p>
     );
@@ -36,7 +36,7 @@ export function NicknameCheckNotice({
   }
 
   return (
-    <p className="text-label text-danger flex items-center gap-1.5 px-1 font-semibold">
+    <p className="text-label text-danger-strong flex items-center gap-1.5 px-1 font-semibold">
       <CloseIcon size={14} />
       이미 사용 중이거나 쓸 수 없는 닉네임이에요
     </p>

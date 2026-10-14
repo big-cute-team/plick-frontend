@@ -81,7 +81,7 @@ export function HotHeroCard({
           {article.title}
         </h3>
         {article.commentCount > 0 && (
-          <span className="text-label-lg text-danger shrink-0 leading-[1.38] font-bold">
+          <span className="text-label-lg text-danger-strong shrink-0 leading-[1.38] font-bold">
             [{formatCount(article.commentCount)}]
           </span>
         )}

@@ -72,7 +72,7 @@ async function LiveStripContent({
       <div className="max-w-page no-scrollbar mx-auto flex h-14 w-full items-stretch overflow-x-auto">
         <div className="pl-gutter flex shrink-0 items-center gap-2 pr-5">
           <span aria-hidden className="bg-danger h-4 w-0.75" />
-          <span className="text-caption tracking-live text-danger font-black">
+          <span className="text-caption tracking-live text-danger-strong font-black">
             LIVE
           </span>
         </div>
@@ -123,7 +123,7 @@ function MatchCell({
       </span>
       <LiveCrest team={match.away} size={22} />
       {live ? (
-        <span className="text-caption-lg text-danger font-bold">
+        <span className="text-caption-lg text-danger-strong font-bold">
           {status.primary}
         </span>
       ) : match.status === "FINISHED" ? (
