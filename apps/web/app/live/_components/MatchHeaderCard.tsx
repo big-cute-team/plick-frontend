@@ -60,7 +60,7 @@ function StatusLine({ header }: { header: MatchSummary }) {
   if (header.status === "LIVE") {
     const { primary, secondary } = matchStatusLabel(header);
     return (
-      <span className="text-label text-danger flex items-center gap-1.5 font-bold">
+      <span className="text-label text-danger-strong flex items-center gap-1.5 font-bold">
         <span aria-hidden className="bg-danger size-1.25 rounded-full" />
         {secondary} {primary}
       </span>

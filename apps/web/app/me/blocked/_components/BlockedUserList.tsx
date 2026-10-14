@@ -75,7 +75,7 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
               type="button"
               onClick={() => handleUnblock(user.userId)}
               disabled={isPending}
-              className="text-label-lg text-text-3 hover:text-danger focus-visible:outline-accent shrink-0 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
+              className="text-label-lg text-text-3 hover:text-danger-strong focus-visible:outline-accent shrink-0 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40"
             >
               {isPending && variables === user.userId ? "해제 중" : "차단 해제"}
             </button>
@@ -84,7 +84,7 @@ export function BlockedUserList({ initial }: { initial: BlockedUser[] }) {
       </ul>
 
       {error && (
-        <p role="status" className="text-caption text-danger mt-2.5">
+        <p role="status" className="text-caption text-danger-strong mt-2.5">
           {error}
         </p>
       )}

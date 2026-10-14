@@ -453,7 +453,7 @@ function CommentLikeButton({
         aria-pressed={comment.liked}
         aria-label={comment.liked ? "좋아요 취소" : "좋아요"}
         className={`${
-          comment.liked ? "text-danger" : "text-text-3"
+          comment.liked ? "text-danger-strong" : "text-text-3"
         } text-caption-lg flex items-center gap-1 font-bold active:opacity-60`}
       >
         <HeartMiniIcon size={13} filled={comment.liked} />

@@ -35,7 +35,7 @@ export function MatchHeaderBlock({ header }: { header: MatchSummary }) {
         {live ? (
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="bg-danger size-1.25 rounded-full" />
-            <span className="text-label text-danger font-bold">
+            <span className="text-label text-danger-strong font-bold">
               {matchStatusText(header)}
             </span>
           </span>

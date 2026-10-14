@@ -10,7 +10,7 @@ import { scoreTone, type ScoreTone } from "@/_utils/live";
 
 /** 상태 칸 첫 줄의 톤 → 색 토큰. 시안 `toneColor`(라이브 빨강, 종료 회색, 예정 본문) */
 const TONE_TEXT: Record<MatchStatusTone, string> = {
-  live: "text-danger",
+  live: "text-danger-strong",
   scheduled: "text-text-2",
   finished: "text-text-4",
   postponed: "text-warn",

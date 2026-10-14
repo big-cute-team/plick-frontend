@@ -19,7 +19,7 @@ export function CommentsHeader({
       <h2 className="text-body-lg text-text-strong font-black tracking-tight">
         댓글
       </h2>
-      <span className="text-body-lg text-danger font-black">
+      <span className="text-body-lg text-danger-strong font-black">
         {formatCount(count)}
       </span>
     </div>

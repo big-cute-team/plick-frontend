@@ -119,7 +119,7 @@ function RailAction({
       onClick={onClick}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
-      className={`${active ? "text-danger" : "text-text"} group flex flex-col items-center gap-1.25`}
+      className={`${active ? "text-danger-strong" : "text-text"} group flex flex-col items-center gap-1.25`}
     >
       <span
         className={`bg-avatar group-hover:bg-chip group-focus-visible:outline-accent grid size-12 place-items-center rounded-full transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2`}

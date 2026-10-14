@@ -83,7 +83,7 @@ export function HotCard({
           {article.title}
         </h3>
         {article.commentCount > 0 && (
-          <span className="text-body text-danger shrink-0 font-black">
+          <span className="text-body text-danger-strong shrink-0 font-black">
             {article.commentCount}
           </span>
         )}

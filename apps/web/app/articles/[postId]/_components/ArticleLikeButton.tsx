@@ -54,7 +54,9 @@ export function ArticleLikeButton({
         aria-pressed={state.liked}
         aria-label={state.liked ? "좋아요 취소" : "좋아요"}
         className={`text-body-md focus-visible:outline-accent inline-flex items-center gap-1.5 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          state.liked ? "text-danger" : "text-text-3 hover:text-danger"
+          state.liked
+            ? "text-danger-strong"
+            : "text-text-3 hover:text-danger-strong"
         }`}
       >
         <HeartMiniIcon size={17} filled={state.liked} />

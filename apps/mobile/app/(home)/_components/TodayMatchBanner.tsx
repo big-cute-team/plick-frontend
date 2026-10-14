@@ -38,7 +38,7 @@ export function TodayMatchBanner({ matches }: { matches: MatchSummary[] }) {
       className="bg-elevate rounded-card flex items-center gap-2.25 p-3 active:opacity-80"
     >
       <span aria-hidden className="bg-danger h-3.5 w-0.75 shrink-0" />
-      <span className="text-micro-lg tracking-live text-danger shrink-0 font-black">
+      <span className="text-micro-lg tracking-live text-danger-strong shrink-0 font-black">
         LIVE
       </span>
       <LiveCrest team={featured.home} size={17} />
@@ -47,7 +47,7 @@ export function TodayMatchBanner({ matches }: { matches: MatchSummary[] }) {
       </span>
       <LiveCrest team={featured.away} size={17} />
       {live ? (
-        <span className="text-caption text-danger font-bold">
+        <span className="text-caption text-danger-strong font-bold">
           {status.primary}
         </span>
       ) : (

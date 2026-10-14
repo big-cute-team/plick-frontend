@@ -38,7 +38,7 @@ export function ConfirmDialog({
       <p className="text-body text-text-3 mt-2 leading-relaxed">
         {description}
       </p>
-      {error && <p className="text-caption text-danger mt-2">{error}</p>}
+      {error && <p className="text-caption text-danger-strong mt-2">{error}</p>}
       <SheetActions
         onCancel={onClose}
         onConfirm={onConfirm}

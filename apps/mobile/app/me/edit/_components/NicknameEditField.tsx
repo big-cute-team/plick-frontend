@@ -86,7 +86,10 @@ export function NicknameEditField({
       </div>
 
       {locked && changeableAt !== null ? (
-        <p className="text-label text-danger px-1 font-semibold" role="alert">
+        <p
+          className="text-label text-danger-strong px-1 font-semibold"
+          role="alert"
+        >
           {formatChangeableAt(changeableAt)}까지는 닉네임을 바꿀 수 없어요
         </p>
       ) : (
