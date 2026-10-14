@@ -170,8 +170,8 @@ function num(value: number | null): string {
 }
 
 /**
- * 기록 탭 묶음. 골키퍼는 골키핑, 패스, 규율이고 나머지는 공격, 패스, 드리블과 경합, 수비,
- * 규율이다. 각 행은 합계와 90분당이고 비율과 클린시트 행은 90분당을 비운다.
+ * 기록 탭 묶음. 골키퍼는 골키핑, 패스, 파울이고 나머지는 공격, 패스, 드리블과 경합, 수비,
+ * 파울이다. 각 행은 합계와 90분당이고 비율과 클린시트 행은 90분당을 비운다.
  *
  * @param stats 선택된 대회 기록
  * @param isKeeper 골키퍼 구성 여부(`positionCode`가 GK)
@@ -196,7 +196,7 @@ export function playerStatGroups(
   const goals = zeroIfPlayed(stats.goals, stats.appearances);
   const assists = zeroIfPlayed(stats.assists, stats.appearances);
   const discipline: StatGroup = {
-    label: "규율",
+    label: "파울",
     rows: [
       row("파울", stats.foulsCommitted),
       row("피파울", stats.foulsDrawn),

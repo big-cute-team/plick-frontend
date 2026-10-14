@@ -10,6 +10,7 @@
  */
 
 import type { MatchStatus, Position } from "@plick/domain/live";
+import { mergeSquadMembers } from "@plick/domain/team-profile";
 import type {
   MatchResult,
   TeamCompetitionStats,
@@ -298,7 +299,7 @@ export async function getTeamSquadTable(teamId: number): Promise<{
       })),
     };
   });
-  return { players, competitions };
+  return { players: mergeSquadMembers(players), competitions };
 }
 
 /* ---------- 경계 변환 ---------- */

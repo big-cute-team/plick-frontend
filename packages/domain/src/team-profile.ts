@@ -363,6 +363,45 @@ export function memberStats(
 }
 
 /**
+ * 같은 선수 id의 응답 행을 하나로 합친다. 대회별 기록은 합산하지 않고 첫 유효 값을
+ * 유지한다. 뒤 행에만 있는 대회와 누락된 필드는 보충하고 원본 응답은 바꾸지 않는다.
+ */
+export function mergeSquadMembers(
+  players: TeamSquadMember[],
+): TeamSquadMember[] {
+  const members = new Map<number, TeamSquadMember>();
+  for (const player of players) {
+    const previous = members.get(player.playerId);
+    const competitions = new Map<number, SquadCompetitionStats>();
+    for (const stats of [
+      ...(previous?.competitions ?? []),
+      ...player.competitions,
+    ]) {
+      const existing = competitions.get(stats.competitionId);
+      competitions.set(stats.competitionId, {
+        competitionId: stats.competitionId,
+        appearances: existing?.appearances ?? stats.appearances,
+        goals: existing?.goals ?? stats.goals,
+        assists: existing?.assists ?? stats.assists,
+        rating: existing?.rating ?? stats.rating,
+      });
+    }
+    members.set(player.playerId, {
+      playerId: player.playerId,
+      name: previous?.name ?? player.name,
+      number: previous?.number ?? player.number,
+      position: previous?.position ?? player.position,
+      photo: previous?.photo ?? player.photo,
+      age: previous?.age ?? player.age,
+      nationality: previous?.nationality ?? player.nationality,
+      injured: (previous?.injured ?? false) || player.injured,
+      competitions: [...competitions.values()],
+    });
+  }
+  return [...members.values()];
+}
+
+/**
  * 팀 내 순위. 선택한 대회의 골이나 도움으로 내림차순 정렬해 상위 `limit`명을 고른다. 0이나
  * 기록 없음은 뺀다. 같으면 서버 순서(번호순)를 지킨다.
  *

@@ -9,6 +9,7 @@ import {
   dotDateLabel,
   groupSquadByPosition,
   memberStats,
+  mergeSquadMembers,
   placeLabel,
   playedDateLabel,
   profileRatingTone,
@@ -17,6 +18,7 @@ import {
   teamLeaders,
   teamScoreLabel,
 } from "../../packages/domain/src/team-profile.ts";
+import { teammates } from "../../packages/domain/src/player-profile.ts";
 
 const row = (rank, id = null) => ({
   rank,
@@ -48,6 +50,58 @@ const epl = (goals, assists, rating = null) => ({
   goals,
   assists,
   rating,
+});
+
+test("중복 선수는 한 명으로 합치고 선수단, 순위, 동료 목록에 한 번씩만 나온다", () => {
+  const striker = member(1, 9, "FW", [epl(6, 0, 7.6)]);
+  const players = [striker, striker, striker, member(2, 1, "GK", [epl(0, 0)])];
+  const before = structuredClone(players);
+  const merged = mergeSquadMembers(players);
+  assert.deepEqual(
+    merged.map((p) => p.playerId),
+    [1, 2],
+  );
+  assert.deepEqual(
+    groupSquadByPosition(merged)
+      .flatMap((g) => g.players)
+      .map((p) => p.playerId),
+    [2, 1],
+  );
+  assert.deepEqual(teamLeaders(merged, 39, "goals"), [
+    { playerId: 1, name: "선수1", value: 6 },
+  ]);
+  assert.deepEqual(
+    teammates(merged, 2).map((p) => p.playerId),
+    [1],
+  );
+  assert.deepEqual(players, before);
+});
+
+test("중복 행의 누락 필드와 다른 대회는 보충하고 같은 대회 수치는 더하지 않는다", () => {
+  const players = [
+    member(1, null, null, [{ ...epl(0, null), appearances: null }]),
+    {
+      ...member(1, 9, "FW", [
+        epl(6, 3, 7.6),
+        { ...epl(2, 1, 8), competitionId: 2 },
+      ]),
+      age: 26,
+      injured: true,
+    },
+    { ...member(2, 9, "FW"), name: "선수1" },
+  ];
+  const merged = mergeSquadMembers(players);
+  assert.equal(merged.length, 2);
+  assert.equal(merged[0].number, 9);
+  assert.equal(merged[0].position, "FW");
+  assert.equal(merged[0].age, 26);
+  assert.equal(merged[0].injured, true);
+  assert.deepEqual(merged[0].competitions, [
+    epl(0, 3, 7.6),
+    { ...epl(2, 1, 8), competitionId: 2 },
+  ]);
+  assert.deepEqual(mergeSquadMembers(merged), merged);
+  assert.deepEqual(mergeSquadMembers([]), []);
 });
 
 test("라운드 원문을 화면 문구로 바꾸고 모르는 형식은 비운다", () => {
