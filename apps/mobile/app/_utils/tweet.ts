@@ -6,7 +6,12 @@
  */
 
 import type { Tweet } from "react-tweet/api";
-import { tweetPhotoUrl, TWEET_PHOTO_SIZE } from "@plick/domain/tweet-photo";
+import {
+  tweetPhotoSrcSet,
+  tweetPhotoUrl,
+  TWEET_GRID_SRCSET,
+  TWEET_PHOTO_SIZE,
+} from "@plick/domain/tweet-photo";
 
 /* 도메인 앞 경계는 시작·`/`(스킴 뒤)·`.`(서브도메인)만 허용해 fakex.com류를 거른다 */
 const TWEET_URL_PATTERN =
@@ -43,4 +48,18 @@ export function tweetImageUrl(tweet: Tweet): string | null {
     TWEET_PHOTO_SIZE,
     media.type === "photo" ? "webp" : undefined,
   );
+}
+
+/**
+ * preload `<link imagesrcset>`에 줄 후보. 임베드가 격자(사진 두 장 이상)면 `TweetMediaImgGrid`가
+ * 배율별 `srcset`을 달므로 preload도 같은 후보를 줘야 브라우저가 같은 파일을 고른다 (KAN-624).
+ * 한 장이거나 영상이면 null이라 `href`만 간다.
+ *
+ * @param tweet 서버에서 받아 둔 트윗 데이터
+ */
+export function tweetImageSrcSet(tweet: Tweet): string | null {
+  const media = tweet.mediaDetails ?? [];
+  if (media.length < 2 || media[0]?.type !== "photo") return null;
+  const src = tweetImageUrl(tweet);
+  return src ? tweetPhotoSrcSet(src, TWEET_GRID_SRCSET) : null;
 }

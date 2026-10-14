@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import {
   tweetPhotoSrcSet,
   tweetPhotoUrl,
+  TWEET_GRID_SRCSET,
 } from "../../packages/domain/src/tweet-photo.ts";
 
 const RAW = "https://pbs.twimg.com/media/HUXzRRXXUAEspVd.jpg";
@@ -75,5 +76,15 @@ test("twimg 밖 주소에는 srcset을 만들지 않는다", () => {
   assert.equal(
     tweetPhotoSrcSet("https://cdn.example.com/a.jpg", [["small", 1]]),
     null,
+  );
+});
+
+test("임베드 격자 후보는 배율 1·1.75·2에 240·360·small을 준다", () => {
+  const webp = "https://pbs.twimg.com/media/AbC?format=webp&name=small";
+  assert.equal(
+    tweetPhotoSrcSet(webp, TWEET_GRID_SRCSET),
+    "https://pbs.twimg.com/media/AbC?format=webp&name=240x240 1x, " +
+      "https://pbs.twimg.com/media/AbC?format=webp&name=360x360 1.75x, " +
+      "https://pbs.twimg.com/media/AbC?format=webp&name=small 2x",
   );
 });
