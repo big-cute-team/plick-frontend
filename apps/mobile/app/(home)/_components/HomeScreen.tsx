@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { TEAM_FULL_NAMES } from "@plick/domain/constants";
 import type { Filter } from "@plick/domain/types";
+import { AdSlot } from "@/_components/AdSlot";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
@@ -50,9 +51,15 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           <HotSection />
         </Suspense>
 
+        {/* 광고 (KAN-652) — 핫이슈와 새 이슈 사이, 기사 더 보기 아래. PC를 참고해
+            최소화한 두 자리다. 자리는 미리 잡혀 광고가 늦게 와도 목록이 밀리지 않는다 */}
+        <AdSlot placement="homeFeed" className="px-edge mt-5" />
+
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection team={team} />
         </Suspense>
+
+        <AdSlot placement="homeBottom" className="px-edge mt-6" />
 
         {/* 크롤러블 서비스 소개 (KAN-384) */}
         <HomeIntro />

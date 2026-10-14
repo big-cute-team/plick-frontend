@@ -1,0 +1,107 @@
+/**
+ * @file 광고(구글 애드센스) 공용 로직 (KAN-652). 게시자 ID, 스크립트 주소, ads.txt 본문,
+ * 노출 모드 판정, 릴스 전면광고 끼워 넣기. 슬롯 번호와 자리별 크기는 앱마다 광고 단위가
+ * 달라 각 앱 `_constants/ads.ts`에 둔다.
+ */
+
+import type { BrowserKind } from "./analytics";
+
+/**
+ * 애드센스 게시자 ID. 브라우저에 그대로 노출되는 공개 값이라 env로 감추지 않는다.
+ * 두 도메인(plick.co.kr, m.plick.co.kr)이 한 계정이다.
+ */
+export const ADSENSE_CLIENT = "ca-pub-1989769587706531";
+
+/** 애드센스 로더. 사이트 소유 확인도 이 스크립트가 `<head>`에 있는 것으로 한다. */
+export const ADSENSE_SCRIPT_URL = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+
+/**
+ * `/ads.txt` 본문. 애드센스가 요구하는 한 줄이고 마지막 값은 구글의 고정 인증 ID다.
+ * 도메인 루트마다 있어야 해서 두 앱이 같은 본문을 라우트로 낸다.
+ */
+export function adsTxt(): string {
+  return `google.com, ${ADSENSE_CLIENT.replace(/^ca-/, "")}, DIRECT, f08c47fec0942fa0\n`;
+}
+
+/**
+ * 광고 노출 모드.
+ * - `live`: 실제 애드센스 단위. prod 빌드만.
+ * - `placeholder`: 자리에 점선 상자만 그린다. dev·로컬에서 레이아웃과 E2E를 보는 용도.
+ *   미승인 도메인에 실광고를 걸면 정책 위반이라 dev는 이 모드로 고정이다.
+ * - `off`: 자리 자체를 안 그린다. 앱 셸(RN WebView)이 여기다.
+ */
+export type AdsMode = "live" | "placeholder" | "off";
+
+/** `AdsMode` 문자열인지. env 오버라이드 값을 거를 때 쓴다. */
+export function isAdsMode(value: string | undefined): value is AdsMode {
+  return value === "live" || value === "placeholder" || value === "off";
+}
+
+/**
+ * 이번 요청의 광고 모드. 앱 셸 안이면 끈다. 애드센스는 WebView 노출을 금지하고(앱은
+ * 모바일 광고 SDK로 WebView를 등록해야 허용) 그 등록은 plick-AppShell 쪽 별도 작업이라,
+ * 그때까지 앱에서는 자리를 아예 안 그린다.
+ *
+ * @param base 빌드가 정한 기본 모드(prod는 live, 그 밖은 placeholder)
+ * @param browser 프록시가 UA로 가른 `X-Plick-Browser` 값. 없으면 외부 브라우저로 본다
+ */
+export function resolveAdsMode(
+  base: AdsMode,
+  browser: string | null | undefined,
+): AdsMode {
+  const kind = browser as BrowserKind | null | undefined;
+  return kind === "plick_app" ? "off" : base;
+}
+
+/** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
+export const REELS_AD_INTERVAL = 8;
+
+/**
+ * 릴스 피드의 슬라이드 하나. 릴이거나 광고다. 광고 슬라이드는 릴 사이에만 들어가고,
+ * `reelIndex`는 릴 배열 안 순번이라 조회 기록의 `rank`와 프리페치 계산이 이 값을 쓴다.
+ */
+export type ReelSlide<T> =
+  | { kind: "reel"; reel: T; reelIndex: number }
+  | { kind: "ad"; id: string };
+
+/**
+ * 릴 배열에 `interval`장마다 광고 슬라이드를 끼운다. 광고는 릴과 릴 사이에만 들어가서
+ * 맨 끝이 광고로 끝나지 않는다. 다음 페이지가 붙으면 끼울 자리가 생겨 그때 들어간다.
+ *
+ * @param reels 릴 배열(페이지를 평탄화한 것)
+ * @param interval 몇 장마다 끼우나. `null`이면 광고 없이 릴만 감싼다(모드 off)
+ * @example interleaveReelAds([a,b,c], 2) // [reel a, reel b, ad-1, reel c]
+ */
+export function interleaveReelAds<T>(
+  reels: readonly T[],
+  interval: number | null,
+): ReelSlide<T>[] {
+  const slides: ReelSlide<T>[] = [];
+  let ads = 0;
+  reels.forEach((reel, reelIndex) => {
+    if (interval !== null && reelIndex > 0 && reelIndex % interval === 0) {
+      ads += 1;
+      slides.push({ kind: "ad", id: `ad-${ads}` });
+    }
+    slides.push({ kind: "reel", reel, reelIndex });
+  });
+  return slides;
+}
+
+/**
+ * 슬라이드 순번이 가리키는 릴 순번. 광고 슬라이드면 바로 앞 릴의 순번이다. "지금까지
+ * 몇 번째 릴까지 봤나"라 프리페치 남은 수와 조회 기록이 이 값을 쓴다.
+ *
+ * @param slides `interleaveReelAds` 결과
+ * @param index 활성 슬라이드 순번
+ */
+export function reelIndexAt<T>(
+  slides: readonly ReelSlide<T>[],
+  index: number,
+): number {
+  for (let i = Math.min(index, slides.length - 1); i >= 0; i -= 1) {
+    const slide = slides[i];
+    if (slide?.kind === "reel") return slide.reelIndex;
+  }
+  return 0;
+}

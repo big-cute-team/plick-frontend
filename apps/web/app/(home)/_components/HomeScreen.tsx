@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import { TEAM_FULL_NAMES } from "@plick/domain/constants";
 import type { Filter } from "@plick/domain/types";
+import { AdSlot } from "@/_components/AdSlot";
 import { FeedPullRefresh } from "@/_components/FeedPullRefresh";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { PageContainer } from "@/_components/PageContainer";
 import { SideRail } from "@/_components/SideRail";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { SkyscraperAd } from "@/_components/SkyscraperAd";
 import { HomeIntro } from "./HomeIntro";
 import { HotSection } from "./HotSection";
 import { HotSectionSkeleton } from "./HotSectionSkeleton";
@@ -53,14 +55,21 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                 <HotSection />
               </Suspense>
 
+              {/* 광고 (KAN-652) — 핫이슈와 새 이슈 사이 가로 배너, 목록 끝 푸터 위 가로 배너.
+                  자리는 미리 잡혀 있어 광고가 늦게 와도 목록이 밀리지 않는다 */}
+              <AdSlot placement="feedBanner" className="mt-6.5" />
+
               <Suspense fallback={<NewsSectionSkeleton />}>
                 <NewsSection team={team} />
               </Suspense>
+
+              <AdSlot placement="bottomBanner" className="mt-8.5" />
             </div>
 
             <SideRail chat />
           </PageContainer>
         </FeedPullRefresh>
+        <SkyscraperAd />
 
         {/* 푸터 — 당겨서 새로고침 transform 밖에 둬 풀 제스처에 딸려 움직이지
             않는다. 소개문은 팀 탭을 따라가야 해서 클라 조각을 넘긴다 (KAN-384) */}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND_NAME_KO } from "@plick/domain/brand";
+import { copyrightNotice } from "@plick/domain/brand";
 import { TEAM_FULL_NAMES, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 
@@ -48,9 +48,8 @@ export function HomeFooter() {
         </ul>
       </nav>
 
-      <p className="text-micro text-text-4 mt-4">
-        © {new Date().getFullYear()} {BRAND_NAME_KO}
-      </p>
+      {/* 카피라이트 (KAN-652). 문구는 `@plick/domain/brand`가 웹과 단일 출처다 */}
+      <p className="text-micro text-text-4 mt-4">{copyrightNotice()}</p>
     </footer>
   );
 }
