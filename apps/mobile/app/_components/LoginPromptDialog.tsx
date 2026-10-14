@@ -8,6 +8,9 @@ import { BottomSheet } from "./BottomSheet";
  * 로그인(또는 게스트 계정 연동)이 필요할 때 올라오는 시트. 댓글·좋아요·투표·신고가
  * 같이 쓴다. 시안(KAN-567)대로 팝업이 아니라 바텀 시트다.
  *
+ * 게스트에게는 `description` 대신 연동 안내를 보여준다. KAN-657부터 게스트도 댓글과
+ * 채팅을 쓰므로 게스트가 이 시트를 보는 건 신고를 누를 때뿐이라 문구는 신고 기준이다.
+ *
  * @param onClose - 시트 닫기
  * @param description - 어떤 행동에 로그인이 필요한지
  */
@@ -27,7 +30,7 @@ export function LoginPromptDialog({
       </p>
       <p className="text-body text-text-3 mt-2 leading-relaxed">
         {isGuest
-          ? "댓글과 신고, 채팅은 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요."
+          ? "신고는 소셜 계정을 연동해야 쓸 수 있어요. 지금까지 기록은 그대로 이어져요."
           : description}
       </p>
       <div className="mt-4.5 flex gap-2.25">
