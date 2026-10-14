@@ -78,11 +78,11 @@ test("90분당은 합계/출전 분 x 90이고 출전 분이 없거나 0이면 '
   assert.equal(per90(null, 520), "-");
 });
 
-test("필드 선수는 다섯 묶음이고 골키퍼는 골키핑, 패스, 규율로 바뀐다", () => {
+test("필드 선수는 다섯 묶음이고 골키퍼는 골키핑, 패스, 파울로 바뀐다", () => {
   const field = playerStatGroups(stats(), false, null);
   assert.deepEqual(
     field.map((g) => g.label),
-    ["공격", "패스", "드리블, 경합", "수비", "규율"],
+    ["공격", "패스", "드리블, 경합", "수비", "파울"],
   );
   assert.deepEqual(field[0].rows[0], { label: "골", total: "4", per90: "0.7" });
   const accuracy = field[1].rows.find((r) => r.label === "패스 성공률");
@@ -95,7 +95,7 @@ test("필드 선수는 다섯 묶음이고 골키퍼는 골키핑, 패스, 규�
   const keeper = playerStatGroups(stats({ saves: 18, conceded: 5 }), true, 2);
   assert.deepEqual(
     keeper.map((g) => g.label),
-    ["골키핑", "패스", "규율"],
+    ["골키핑", "패스", "파울"],
   );
   assert.deepEqual(
     keeper[0].rows.map((r) => [r.label, r.total, r.per90]),
