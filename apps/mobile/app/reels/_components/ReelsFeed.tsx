@@ -4,6 +4,11 @@ import type { EntryPoint } from "@plick/core/analytics";
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  REELS_AD_INTERVAL,
+  interleaveReelAds,
+  reelIndexAt,
+} from "@plick/core/ads";
 import { ApiError } from "@plick/core/client";
 import { trackScreenViewed } from "@plick/core/events";
 import {
@@ -11,6 +16,7 @@ import {
   REELS_EMBED_FETCH_AHEAD,
   REELS_PREFETCH_AHEAD,
 } from "@/_constants/reels";
+import { useAdsMode } from "@/_hooks/useAdsMode";
 import { useAsyncError } from "@/_hooks/useAsyncError";
 import { useBackToClose } from "@/_hooks/useBackToClose";
 import { useReelDetailMotion } from "@/_hooks/useReelDetailMotion";
@@ -21,6 +27,7 @@ import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
 import type { ReelSeedTweet } from "@/_types/reels";
+import { ReelAdSlide } from "./ReelAdSlide";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";
 import { ReelSkeleton } from "./ReelSkeleton";
@@ -127,19 +134,31 @@ export function ReelsFeed({
   } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
+  /* 8장마다 전면광고 슬라이드를 끼운다 (KAN-652). 캐러셀 인덱스는 전부 슬라이드 순번이고
+     릴 순번이 필요한 곳(조회 기록 rank, 남은 장수)만 `reelIndexAt`으로 환산한다.
+     보던-릴 복귀 순번(`useViewState.reelsIndex`)도 슬라이드 순번이다 */
+  const adsMode = useAdsMode();
+  const slides = interleaveReelAds(
+    reels,
+    adsMode === "off" ? null : REELS_AD_INTERVAL,
+  );
   /* 조회 기록의 진입 화면 (KAN-584). 주소로 정하면 릴을 넘기며 `/reels/{id}`로 바뀐 뒤부터
      탭 피드도 딥링크로 보이므로, 들어온 길을 아는 여기서 고정한다 */
   const entry: EntryPoint = anchorId ? "reels_deeplink" : "reels";
   /** 릴 뒤에 붙는 자리(스피너 또는 재시도)도 슬라이드 한 장이다 */
   const trailingSlide = isFetchNextPageError || hasNextPage;
   const { viewportRef, activeIndex } = useReelsCarousel(
-    reels.length + (trailingSlide ? 1 : 0),
+    slides.length + (trailingSlide ? 1 : 0),
     /* 딥링크는 진입 릴(0번)에서 시작 — 탭 피드의 보던-릴 순번을 읽지도 쓰지도 않는다 */
     !anchorId,
   );
-  useReelUrlSync(reels[activeIndex]?.id);
+  const activeSlide = slides[activeIndex];
+  /* 광고 슬라이드가 활성이면 주소는 직전 릴에 머문다 */
+  useReelUrlSync(
+    activeSlide?.kind === "reel" ? activeSlide.reel.id : undefined,
+  );
   /** 지금 보고 있는 릴 뒤로 남은 장수 */
-  const remaining = reels.length - 1 - activeIndex;
+  const remaining = reels.length - 1 - reelIndexAt(slides, activeIndex);
 
   /**
    * `isFetchingNextPage`가 아니라 `isFetching`으로 막는다 — 다음 페이지뿐 아니라
@@ -226,36 +245,47 @@ export function ReelsFeed({
       >
         {/* 슬라이드 컨테이너 — Embla가 이 요소를 translate 해서 릴을 넘긴다 */}
         <div className="flex h-full flex-col">
-          {reels.map((reel, i) => (
-            <ReelItem
-              key={reel.id}
-              reel={reel}
-              rank={i}
-              entry={entry}
-              active={i === activeIndex}
-              nearActive={Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD}
-              /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —
-                 시트는 활성 릴에서만 열리지만 목록이 갈려 인덱스가 밀려도 안전하게 */
-              inWindow={
-                Math.abs(i - activeIndex) <= REELS_DOM_WINDOW ||
-                (motion.mounted && detail?.reel.id === reel.id)
-              }
-              seedTweet={
-                seedTweet?.reelId === reel.id ? seedTweet.tweet : undefined
-              }
-              onOpenDetail={openDetail}
-              titleMotion={
-                motion.mounted && detail?.reel.id === reel.id
-                  ? {
-                      lift: detail.lift,
-                      shown: motion.shown,
-                      dragging: motion.dragging,
-                      dragTargetRef: motion.dragTargetRef,
-                    }
-                  : null
-              }
-            />
-          ))}
+          {slides.map((slide, i) =>
+            slide.kind === "ad" ? (
+              <ReelAdSlide
+                key={slide.id}
+                inWindow={Math.abs(i - activeIndex) <= REELS_DOM_WINDOW}
+              />
+            ) : (
+              <ReelItem
+                key={slide.reel.id}
+                reel={slide.reel}
+                rank={slide.reelIndex}
+                entry={entry}
+                active={i === activeIndex}
+                nearActive={
+                  Math.abs(i - activeIndex) <= REELS_EMBED_FETCH_AHEAD
+                }
+                /* 창 밖 릴은 내용을 비운다 (KAN-431). 세부 시트가 붙은 릴은 예외 —
+                   시트는 활성 릴에서만 열리지만 목록이 갈려 인덱스가 밀려도 안전하게 */
+                inWindow={
+                  Math.abs(i - activeIndex) <= REELS_DOM_WINDOW ||
+                  (motion.mounted && detail?.reel.id === slide.reel.id)
+                }
+                seedTweet={
+                  seedTweet?.reelId === slide.reel.id
+                    ? seedTweet.tweet
+                    : undefined
+                }
+                onOpenDetail={openDetail}
+                titleMotion={
+                  motion.mounted && detail?.reel.id === slide.reel.id
+                    ? {
+                        lift: detail.lift,
+                        shown: motion.shown,
+                        dragging: motion.dragging,
+                        dragTargetRef: motion.dragTargetRef,
+                      }
+                    : null
+                }
+              />
+            ),
+          )}
 
           {/* 끝에 다음 릴 자리를 미리 잡아 둔다. 실패했으면 같은 자리가 재시도로 바뀐다.
               넘겨야 보이는 자리라 지금 보고 있는 릴을 가리지 않는다 */}

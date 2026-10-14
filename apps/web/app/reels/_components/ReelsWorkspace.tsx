@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { InitialReelFeed } from "@plick/domain/types";
+import {
+  REELS_AD_INTERVAL,
+  interleaveReelAds,
+  reelIndexAt,
+} from "@plick/core/ads";
 import { ApiError } from "@plick/core/client";
 import { trackScreenViewed } from "@plick/core/events";
 import { reelKeys } from "@plick/core/reelKeys";
@@ -12,6 +17,7 @@ import {
   REELS_PREFETCH_AHEAD,
 } from "@/_constants/reels";
 import { useActiveReel } from "@/_hooks/useActiveReel";
+import { useAdsMode } from "@/_hooks/useAdsMode";
 import { useArticleView } from "@/_hooks/useArticleView";
 import { useReelUrlSync } from "@/_hooks/useReelUrlSync";
 import { useReelsFeed } from "@/_hooks/useReelsFeed";
@@ -79,10 +85,21 @@ export function ReelsWorkspace({
   } = useReelsFeed(initial, anchorId);
 
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
-  const activeReel = reels[activeIndex];
+  /* 8장마다 전면광고 슬라이드를 끼운다 (KAN-652). 이 아래 인덱스는 전부 슬라이드 순번이고
+     릴 순번이 필요한 곳(조회 기록 rank, 남은 장수)만 `reelIndexAt`으로 환산한다.
+     광고 슬라이드가 활성이면 activeReel은 없다 — 주소와 조회 기록은 직전 릴에 머문다 */
+  const adsMode = useAdsMode();
+  const slides = interleaveReelAds(
+    reels,
+    adsMode === "off" ? null : REELS_AD_INTERVAL,
+  );
+  const activeSlide = slides[activeIndex];
+  const activeReel =
+    activeSlide?.kind === "reel" ? activeSlide.reel : undefined;
+  const activeReelIndex = reelIndexAt(slides, activeIndex);
   useReelUrlSync(activeReel?.id);
   /** 지금 보고 있는 릴 뒤로 남은 장수 */
-  const remaining = reels.length - 1 - activeIndex;
+  const remaining = reels.length - 1 - activeReelIndex;
 
   /* 활성 릴이 되면 조회로 기록한다 (KAN-332). 모바일은 릴마다 active prop을 이미
      들고 있어 ReelItem에서 부르지만, 웹은 활성 릴을 여기(useActiveReel)만 알므로
@@ -91,7 +108,7 @@ export function ReelsWorkspace({
   useArticleView(
     activeReel?.id ?? "",
     activeReel !== undefined,
-    activeIndex,
+    activeReelIndex,
     anchorId ? "reels_deeplink" : "reels",
   );
 
@@ -160,7 +177,7 @@ export function ReelsWorkspace({
         </main>
       ) : (
         <ReelViewer
-          reels={reels}
+          slides={slides}
           activeIndex={activeIndex}
           onOpenDetail={() => {
             setDetailOpen(true);

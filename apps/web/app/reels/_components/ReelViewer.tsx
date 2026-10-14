@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, type ReactNode, type Ref } from "react";
+import type { ReelSlide } from "@plick/core/ads";
 import type { ReelCard } from "@plick/domain/types";
+import { ReelAdSlide } from "./ReelAdSlide";
 import { ReelItem } from "./ReelItem";
 
 /**
@@ -20,8 +22,12 @@ import { ReelItem } from "./ReelItem";
  *
  * 데이터와 상태는 전부 `ReelsWorkspace`가 들고 있고 여기는 배치만 맡는다.
  *
- * @param reels - 표시할 릴 목록
- * @param activeIndex - 지금 보고 있는 릴 인덱스. 화살표가 이웃을 계산한다
+ * 슬라이드는 릴이거나 전면광고다 (KAN-652). 광고 칸도 같은 섹션 껍데기와
+ * `data-reel-index`를 달아 활성 판정과 화살표 이동이 릴과 똑같이 돈다. 인덱스는 전부
+ * 슬라이드 순번이고 릴 순번으로의 환산은 `ReelsWorkspace`가 한다.
+ *
+ * @param slides - 표시할 슬라이드 목록(릴과 광고)
+ * @param activeIndex - 지금 보고 있는 슬라이드 인덱스. 화살표가 이웃을 계산한다
  * @param onOpenDetail - 제목, 댓글 클릭 시 세부 패널을 여는 콜백. 패널이 어떤 릴을
  *   그릴지는 지금 보고 있는 릴로 정해지므로(`useActiveReel`) 인자가 없다
  * @param registerReel - 각 릴 섹션에 달 ref 콜백(`useActiveReel`이 만든다).
@@ -29,13 +35,13 @@ import { ReelItem } from "./ReelItem";
  * @param trailing - 마지막 릴 뒤에 붙는 자리(다음 페이지 로딩, 재시도). 없으면 생략
  */
 export function ReelViewer({
-  reels,
+  slides,
   activeIndex,
   onOpenDetail,
   registerReel,
   trailing,
 }: {
-  reels: ReelCard[];
+  slides: ReelSlide<ReelCard>[];
   activeIndex: number;
   onOpenDetail: () => void;
   registerReel: Ref<HTMLElement>;
@@ -54,26 +60,30 @@ export function ReelViewer({
       ref={viewerRef}
       className="bg-chip min-w-0 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-contain"
     >
-      {reels.map((reel, i) => (
+      {slides.map((slide, i) => (
         <section
-          key={reel.id}
+          key={slide.kind === "reel" ? slide.reel.id : slide.id}
           ref={registerReel}
           data-reel-index={i}
           className="lg:pl-gutter flex h-full snap-start items-center justify-center px-4 py-4"
         >
-          <ReelItem
-            reel={reel}
-            onOpenDetail={onOpenDetail}
-            onPrev={
-              i === activeIndex && i > 0 ? () => scrollTo(i - 1) : undefined
-            }
-            onNext={
-              i === activeIndex && i < reels.length - 1
-                ? () => scrollTo(i + 1)
-                : undefined
-            }
-            eager={i === 0}
-          />
+          {slide.kind === "reel" ? (
+            <ReelItem
+              reel={slide.reel}
+              onOpenDetail={onOpenDetail}
+              onPrev={
+                i === activeIndex && i > 0 ? () => scrollTo(i - 1) : undefined
+              }
+              onNext={
+                i === activeIndex && i < slides.length - 1
+                  ? () => scrollTo(i + 1)
+                  : undefined
+              }
+              eager={i === 0}
+            />
+          ) : (
+            <ReelAdSlide />
+          )}
         </section>
       ))}
 

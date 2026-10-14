@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
+import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import {
   BRAND_DESCRIPTION,
@@ -7,10 +9,13 @@ import {
   BRAND_TITLE,
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
-import { deviceSyncScript } from "@plick/core/analytics";
+import { ADSENSE_SCRIPT_URL, resolveAdsMode } from "@plick/core/ads";
+import { ANALYTICS_HEADERS, deviceSyncScript } from "@plick/core/analytics";
+import { AdsProvider } from "@/_components/AdsProvider";
 import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GuestNoticeToast } from "@/_components/GuestNoticeToast";
+import { ADS_BASE_MODE } from "@/_constants/ads";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
@@ -109,6 +114,12 @@ export default async function RootLayout({
   /* 기다리지 않는다. 쿠키만 읽고 바로 자식을 그리기 시작해야 BE가 느려도 첫 바이트가
      나간다 (KAN-602). 프로필은 AuthProvider가 Suspense 안에서 풀어 채운다 */
   const profile = loggedIn ? getProfileSeed() : Promise.resolve(null);
+  /* 광고 모드 (KAN-652). 프록시가 UA로 가른 브라우저 종류를 읽어 앱 셸이면 끈다.
+     애드센스는 WebView 노출을 금지해서다 */
+  const adsMode = resolveAdsMode(
+    ADS_BASE_MODE,
+    (await headers()).get(ANALYTICS_HEADERS.browser),
+  );
 
   return (
     <html lang="ko" data-theme="light" className={notoSansKr.variable}>
@@ -131,7 +142,7 @@ export default async function RootLayout({
                 여기가 유일한 전역 자리다. sticky 헤더 위에 흐름으로 얹으므로
                 스크롤하면 배너는 올라가고 헤더가 상단에 붙는다 */}
             <SwitchToMobileBanner />
-            {children}
+            <AdsProvider mode={adsMode}>{children}</AdsProvider>
           </AuthProvider>
         </QueryProvider>
         {/* 게스트 발급·연동 결과 안내 (KAN-514) — fixed라 트리 어디든 되지만,
@@ -143,6 +154,15 @@ export default async function RootLayout({
             스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
             LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}
         {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {/* 애드센스 로더 (KAN-652) — live 모드(prod, 앱 셸 밖)에만 붙는다. GA와 같은 이유로
+            afterInteractive다. 이 스크립트가 head에 있는 것으로 사이트 소유 확인도 된다 */}
+        {adsMode === "live" && (
+          <Script
+            src={ADSENSE_SCRIPT_URL}
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+          />
+        )}
       </body>
     </html>
   );

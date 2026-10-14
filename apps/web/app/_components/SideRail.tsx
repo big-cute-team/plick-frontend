@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { CHAT_ENABLED } from "@plick/core/chat";
+import { AdSlot } from "@/_components/AdSlot";
+import { RAIL_MEDIA_QUERY } from "@/_constants/ads";
 import { LiveChatPanel } from "@/_components/LiveChatPanel";
 import { TrendingRail } from "@/_components/TrendingRail";
 import { TrendingRailSkeleton } from "@/_components/TrendingRailSkeleton";
@@ -39,7 +41,11 @@ export function SideRail({
       <Suspense fallback={<TrendingRailSkeleton />}>
         <TrendingRail />
       </Suspense>
+      {/* 광고 (KAN-652) — 급상승 아래 소형 배너, 레일 맨 아래 사각형. 레일은 lg 미만에서
+          숨겨지므로 같은 문턱을 media로 넘겨 보일 때만 상자를 마운트한다 */}
+      <AdSlot placement="railBanner" media={RAIL_MEDIA_QUERY} />
       {chat && CHAT_ENABLED && <LiveChatPanel compact />}
+      <AdSlot placement="railRect" media={RAIL_MEDIA_QUERY} />
     </aside>
   );
 }

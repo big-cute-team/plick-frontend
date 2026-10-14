@@ -13,6 +13,7 @@ import type {
 } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
+import { AdSlot } from "@/_components/AdSlot";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { EntityChips } from "@/_components/EntityChips";
@@ -162,6 +163,10 @@ export function ArticleBody({
             관련 기사·댓글은 본문이 아니라 그 위에 둔다 */}
         <ReadEndSentinel articleId={article.id} />
       </div>
+
+      {/* 광고 (KAN-652) — 본문 끝 표식 뒤, 함께 보면 좋은 기사 위. 본문이 아니라
+          읽기 종료 판정에 들지 않는다 */}
+      <AdSlot placement="article" className="px-edge mt-6.5" />
 
       <SuggestedArticles articles={suggested} />
 

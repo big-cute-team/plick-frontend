@@ -96,3 +96,16 @@ export function articlesOutroCopy(teamFullName?: string): string {
   }
   return "프리미어리그 팀별 이적 루머와 이슈를 모은 페이지입니다.";
 }
+
+/**
+ * 푸터 카피라이트 한 줄 (KAN-652). 두 앱 푸터가 같은 문구를 낸다. 서비스명은 한글
+ * 브랜드가 아니라 법인·저작권 표기용 `Plick`이다.
+ *
+ * @param year 표기 연도. 서버 컴포넌트가 렌더 시점 연도를 넣는다
+ * @example copyrightNotice(2026) // "Copyright ⓒ 2026 Plick. All rights reserved."
+ */
+export function copyrightNotice(
+  year: number = new Date().getFullYear(),
+): string {
+  return `Copyright ⓒ ${year} Plick. All rights reserved.`;
+}
