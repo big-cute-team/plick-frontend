@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { RESTORE_MAX_FRAMES } from "@/_constants/app";
 import { useViewState } from "@/_stores/view-state";
 import type { ScreenKey } from "@/_types/app";
+import { isBackForwardLanding } from "@/_utils/navigation";
 
 /**
  * 스크롤 영역이 떠났다 돌아와도 보던 자리를 되돌려 준다 (KAN-314).
@@ -32,8 +33,14 @@ import type { ScreenKey } from "@/_types/app";
  * 저장은 rAF로 한 프레임에 한 번만 한다. scroll 이벤트는 프레임보다 잦게 와서
  * 그대로 받으면 스토어 갱신이 헛돈다. 언마운트 때 마지막 위치를 한 번 더 확정한다.
  *
+ * 이름이 없는 화면(기사 세부처럼 매번 새로 여는 화면)도 한 가지는 되돌린다 (KAN-632). 원문(x.com)에
+ * 나갔다 뒤로가기로 돌아오면 `no-store` 화면은 bfcache 대신 서버에서 새로 받아져 스토어가 비고,
+ * 읽던 자리를 잃었다. 그래서 위치를 `sessionStorage`에도 주소별로 적어 두고, 이 문서가 뒤로가기로
+ * 받아진 것이면(`isBackForwardLanding`) 거기서 되돌린다. 앱 안에서 같은 기사를 다시 여는 건 전처럼
+ * 맨 위다. 되돌린 값은 한 번 쓰고 지운다. 같은 문서에서 그 주소로 다시 와도 또 뛰지 않게.
+ *
  * @param ref 스크롤되는 엘리먼트
- * @param key 이 화면의 이름. 없으면 아무것도 하지 않는다(복원이 필요 없는 화면).
+ * @param key 이 화면의 이름. 없으면 세션 복원(앱 안 왕복)은 하지 않고 뒤로가기 재로드만 되돌린다.
  */
 export function useScrollRestore(
   ref: RefObject<HTMLElement | null>,
@@ -41,9 +48,12 @@ export function useScrollRestore(
 ) {
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || !key) return;
+    if (!el) return;
 
-    const saved = useViewState.getState().scrollTops[key] ?? 0;
+    const storageKey = `scroll:${location.pathname}`;
+    const saved = key
+      ? (useViewState.getState().scrollTops[key] ?? 0)
+      : takeLandingScrollTop(storageKey);
     const restore = () => {
       if (el.scrollTop !== saved) el.scrollTop = saved;
     };
@@ -78,12 +88,16 @@ export function useScrollRestore(
     el.addEventListener("touchstart", stopRetry, { passive: true, once: true });
     el.addEventListener("wheel", stopRetry, { passive: true, once: true });
 
+    const save = (top: number) => {
+      if (key) useViewState.getState().setScrollTop(key, top);
+      else writeScrollTop(storageKey, top);
+    };
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
-        useViewState.getState().setScrollTop(key, el.scrollTop);
+        save(el.scrollTop);
       });
     };
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -92,7 +106,7 @@ export function useScrollRestore(
       cancelAnimationFrame(retry);
       cancelAnimationFrame(frame);
       el.removeEventListener("scroll", onScroll);
-      useViewState.getState().setScrollTop(key, el.scrollTop);
+      save(el.scrollTop);
     };
   }, [ref, key]);
 
@@ -118,4 +132,31 @@ export function useScrollRestore(
     if (key) useViewState.getState().setScrollTop(key, 0);
     ref.current?.scrollTo({ top: 0 });
   }, [tick, key, ref]);
+}
+
+/**
+ * 뒤로가기로 받아진 문서면 이 주소에 적어 둔 위치를 꺼내고 지운다. 아니면 0이다.
+ * `sessionStorage`는 사생활 보호 모드 등에서 던질 수 있어 실패하면 0으로 본다.
+ */
+function takeLandingScrollTop(storageKey: string): number {
+  try {
+    if (!isBackForwardLanding()) return 0;
+    const raw = sessionStorage.getItem(storageKey);
+    if (raw === null) return 0;
+    sessionStorage.removeItem(storageKey);
+    const top = Number(raw);
+    return Number.isFinite(top) && top > 0 ? top : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** 주소별 스크롤 위치를 적는다. 0이면 지워 쓸모없는 키가 쌓이지 않게 한다. */
+function writeScrollTop(storageKey: string, top: number): void {
+  try {
+    if (top > 0) sessionStorage.setItem(storageKey, String(Math.round(top)));
+    else sessionStorage.removeItem(storageKey);
+  } catch {
+    /* 저장 못 해도 화면 동작에는 영향이 없다 */
+  }
 }
