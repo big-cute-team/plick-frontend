@@ -11,15 +11,6 @@ import {
 } from "@/_constants/api";
 
 /**
- * 로그인 여부 — accessToken 쿠키의 존재만으로 판단한다(BE 호출 없이 요청 컨텍스트에서).
- * 토큰 유효성 검증은 보호 API를 붙일 때 그 호출이 겸한다. 지금은 화면 분기용 신호만 필요하다.
- */
-export async function isLoggedIn(): Promise<boolean> {
-  const jar = await cookies();
-  return jar.has(AUTH_COOKIES.access);
-}
-
-/**
  * 서버 렌더 중 access 토큰을 꺼낸다 — 읽기 fetch에 Bearer로 실을 때 쓴다(KAN-308).
  *
  * 기사·릴스 조회는 토큰 없이도 200이 오는 공개 API지만, 토큰이 있으면 응답의

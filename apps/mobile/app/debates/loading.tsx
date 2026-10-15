@@ -12,7 +12,7 @@ export default function DebatesLoading() {
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <DebatesFeedSkeleton />
       </ScrollArea>
       <TabBar />

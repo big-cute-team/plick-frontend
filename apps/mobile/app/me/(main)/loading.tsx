@@ -19,7 +19,7 @@ export default function MyLoading() {
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <div aria-hidden className="px-edge animate-pulse pt-5 pb-4">
           <div className="bg-elevate rounded-pill h-7 w-32" />
           <div className="bg-elevate rounded-pill mt-2.5 h-3.5 w-40" />

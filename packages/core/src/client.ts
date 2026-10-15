@@ -12,6 +12,8 @@
  * 요청 헤더에서 옮겨 싣는다(KAN-542). 호출부가 같은 이름을 직접 넘기면 그쪽이 우선이다.
  */
 
+import { sharesDataCache, usesDefaultCache } from "./fetch-cache";
+
 /**
  * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
  *
@@ -254,33 +256,15 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
   const authorized = headers.has("Authorization");
-  const isGet = (init?.method ?? "GET").toUpperCase() === "GET";
-  const cacheConfigured = init?.cache !== undefined || init?.next !== undefined;
-  const cacheable = !authorized && isGet && !cacheConfigured;
-  /**
-   * 데이터 캐시를 거쳐 사용자끼리 나눠 쓰는 호출인가. 위 `cacheable`(기본 60초를 붙일 대상)에
-   * 더해, 호출부가 `next.revalidate`로 직접 캐시 수명을 준 익명 GET도 여기 든다.
-   * `cache: "no-store"`나 `revalidate: 0`은 매번 BE를 도는 호출이라 제외한다.
-   */
-  const shared =
-    !authorized &&
-    isGet &&
-    init?.cache !== "no-store" &&
-    init?.next?.revalidate !== 0;
+  const cacheable = usesDefaultCache(init, authorized);
 
   /**
    * 분석 헤더는 서버에서만, 그리고 사용자끼리 나눠 쓰지 않는 호출에만 싣는다 (KAN-542, KAN-632).
-   * 브라우저 fetch는 프록시가 `/be` 요청에 붙인다.
-   *
-   * 공유 캐시를 타는 익명 GET에 안 싣는 이유: 그 응답은 데이터 캐시로 모든 사용자가 나눠 쓰므로
-   * 기기·유입 경로 같은 사람별 헤더를 실어도 첫 요청자 것이 캐시에 박힐 뿐이다. 그리고 제공자는
-   * 요청 헤더를 `headers()`로 읽는데, 그 호출 하나가 라우트를 동적 렌더로 판정하게 한다.
-   * 홈·프로필처럼 익명 데이터만 받는 화면이 정적(ISR)으로 굳으려면 이 경로에서 요청을
-   * 읽지 않아야 한다(ADR 0199). 처음에는 `cacheable`로만 갈랐는데, 라이브 띠와 팀·선수
-   * 프로필처럼 `next.revalidate`를 직접 준 호출이 빠져 ISR 재생성 때 "Page changed from static
-   * to dynamic at runtime, reason: headers"가 났다. 그래서 기준을 `shared`로 넓혔다.
+   * 브라우저 fetch는 프록시가 `/be` 요청에 붙인다. 판정과 그 이유는 `fetch-cache.ts`의
+   * `sharesDataCache`에 있다. 요지는 제공자가 읽는 `headers()`가 라우트를 동적 렌더로 만들어
+   * 홈·프로필 같은 익명 화면의 ISR을 깬다는 것이다(ADR 0199).
    */
-  if (typeof window === "undefined" && !shared) {
+  if (typeof window === "undefined" && !sharesDataCache(init, authorized)) {
     await applyProvidedHeaders(headers);
   }
 

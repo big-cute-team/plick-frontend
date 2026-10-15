@@ -7,7 +7,7 @@ export default function ProfileEditLoading() {
   return (
     <AppShell>
       <SubTopBar title="계정" backHref="/me" />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <div className="px-edge animate-pulse pt-1.5">
           {Array.from({ length: 3 }, (_, i) => (
             <div

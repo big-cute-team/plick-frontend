@@ -43,7 +43,9 @@ export function isAdsMode(value: string | undefined): value is AdsMode {
  * 그때까지 앱에서는 자리를 아예 안 그린다.
  *
  * @param base 빌드가 정한 기본 모드(prod는 live, 그 밖은 placeholder)
- * @param browser 프록시가 UA로 가른 `X-Plick-Browser` 값. 없으면 외부 브라우저로 본다
+ * @param browser UA로 가른 브라우저 종류(`resolveBrowserKind`). 전에는 레이아웃이 프록시의
+ *   `X-Plick-Browser` 헤더를 읽어 넘겼고, KAN-632부터는 `AdsProvider`가 브라우저에서
+ *   `navigator.userAgent`로 판정해 넘긴다. 없으면 외부 브라우저로 본다
  */
 export function resolveAdsMode(
   base: AdsMode,

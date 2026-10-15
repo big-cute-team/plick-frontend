@@ -44,12 +44,18 @@ import { isBackForwardLanding } from "@/_utils/navigation";
  * 0을 덮어 써 본문 인스턴스가 받을 값이 없어졌다(실측). 그래서 "되돌리는 데 성공한 인스턴스"가
  * 끝났다고 표시하고, 한 번도 스크롤되지 않은 인스턴스의 정리는 저장값을 건드리지 않는다.
  *
+ * 뼈대(`loading.tsx`)의 스크롤 영역은 `landing`을 꺼서 이 복원에서 뺀다. 저장값이 뼈대 높이 안에
+ * 들면 뼈대가 "되돌리는 데 성공"으로 표시해 본문 인스턴스가 복원을 건너뛴다(헤드리스 리뷰 지적).
+ * 뼈대인지 본문인지는 훅이 알 수 없어 호출부가 말해 준다.
+ *
  * @param ref 스크롤되는 엘리먼트
  * @param key 이 화면의 이름. 없으면 세션 복원(앱 안 왕복)은 하지 않고 뒤로가기 재로드만 되돌린다.
+ * @param landing 키 없는 화면의 뒤로가기 착지 복원을 할지. 뼈대는 false
  */
 export function useScrollRestore(
   ref: RefObject<HTMLElement | null>,
   key?: ScreenKey,
+  landing = true,
 ) {
   useLayoutEffect(() => {
     const el = ref.current;
@@ -58,7 +64,9 @@ export function useScrollRestore(
     const storageKey = `scroll:${location.pathname}`;
     const saved = key
       ? (useViewState.getState().scrollTops[key] ?? 0)
-      : peekLandingScrollTop(storageKey);
+      : landing
+        ? peekLandingScrollTop(storageKey)
+        : 0;
     const restore = () => {
       if (el.scrollTop !== saved) el.scrollTop = saved;
       if (!key && saved > 0 && el.scrollTop === saved) {
@@ -125,7 +133,7 @@ export function useScrollRestore(
       /* 이름 없는 화면의 뼈대처럼 한 번도 스크롤되지 않은 인스턴스는 저장값을 덮지 않는다 */
       if (key || scrolled) save(el.scrollTop);
     };
-  }, [ref, key]);
+  }, [ref, key, landing]);
 
   /**
    * 하단 탭에서 지금 있는 탭을 한 번 더 누르면 맨 위로 올라간다. 신호는 스토어의

@@ -17,7 +17,7 @@ export default function HomeLoading() {
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <HotSectionSkeleton />
         <NewsSectionSkeleton />
       </ScrollArea>

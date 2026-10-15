@@ -12,7 +12,7 @@ export default function PlayerProfileLoading() {
   return (
     <AppShell>
       <SubTopBar title="선수" backHref="/" backBehavior="back" />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <div aria-hidden className="px-edge animate-pulse">
           <div className="flex items-center gap-4 pt-5 pb-4.5">
             <div className="bg-chip rounded-card size-24 shrink-0" />

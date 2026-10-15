@@ -23,8 +23,7 @@ import { readCookie } from "@/_utils/cookie";
  *
  * 그리고 **읽은 즉시 지운다**. 안 지우면 표식이 살아 있는 동안 화면을 옮길 때마다 같은
  * 안내가 다시 뜬다. 쿠키를 JS로 지우려면 HttpOnly가 아니어야 해서, 이 표식만 예외로
- * HttpOnly를 뺐다(`GUEST_NOTICE_COOKIE` 주석 참고). 마감 시각은 표식이 아니라 서버가
- * 읽어 내려준 `guestExpiresAt`을 쓴다 — 쿠키 값은 브라우저에서 고칠 수 있기 때문이다.
+ * HttpOnly를 뺐다(`GUEST_NOTICE_COOKIE` 주석 참고).
  *
  * 마운트 뒤에만 읽는 이유는 `document`가 서버 렌더에 없어서다. 첫 페인트보다 한 박자
  * 늦게 뜨지만, 안내는 첫 프레임에 있어야 할 정보가 아니다.
