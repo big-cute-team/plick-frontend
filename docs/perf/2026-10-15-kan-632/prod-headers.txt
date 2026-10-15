@@ -1,0 +1,79 @@
+=== GET https://m.plick.co.kr/
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU0NyIsImlhdCI6MTc5MjA0MTQxNCwiZXhwIjoxNzkyMDQ1MDE0LCJndWVzdCI6dHJ1ZX0.z8PLfS7hbf9LGeTRwmIy8eMVSuN_al56Fkq3vBI4cU0; Path=/; Expires=Thu, 15 Oct 2026 06:11:54 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=NDmpbYrw_xY8lPCFQJ5gJv0TKNGdvYw-7HagQKwYlKs; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A54%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:54 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=cef37311-7a52-448f-bfc1-7ac9b2ee4e09; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/faq
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU0OCIsImlhdCI6MTc5MjA0MTQxNCwiZXhwIjoxNzkyMDQ1MDE0LCJndWVzdCI6dHJ1ZX0.-QB59fA0Q0PWOXPVBgTAkeOYNn-UHcX8ccfTMJ5nyEw; Path=/; Expires=Thu, 15 Oct 2026 06:11:54 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=HU6LTL4PFCLlTM2KvI5lOzE1RBYeq9caEtPYBGiaUSA; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A54%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:54 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=de6af06b-2592-4b7a-877d-3059ac7c3bbd; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/terms
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU0OSIsImlhdCI6MTc5MjA0MTQxNCwiZXhwIjoxNzkyMDQ1MDE0LCJndWVzdCI6dHJ1ZX0.8lBRL2Bs6VWTaPcvWa7z7d9AIpQ6H3ygWNX4JamREc4; Path=/; Expires=Thu, 15 Oct 2026 06:11:54 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=Oe9qhK6kYD8FK06uGAarJ4Xq2YFwMcYFOaubZC9SNGE; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A54%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:54 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=7d1539d1-179c-44d0-ae63-96d2df60dfd3; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/reels
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU1MCIsImlhdCI6MTc5MjA0MTQxNCwiZXhwIjoxNzkyMDQ1MDE0LCJndWVzdCI6dHJ1ZX0.MRphXR08OMAwTj8ju3C0Tape3AfkrJKDJHs33K05UZY; Path=/; Expires=Thu, 15 Oct 2026 06:11:54 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=jce3YxkpF2zHRJmkc6LSElan-q1yS2_qlWbgoyWxDtc; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A54%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:54 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=af6a5c3f-9f1f-4b90-8ed5-719cc14f2e22; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/articles/7595
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU1MSIsImlhdCI6MTc5MjA0MTQxNCwiZXhwIjoxNzkyMDQ1MDE0LCJndWVzdCI6dHJ1ZX0.4vaedZKZQbzYuLt9JIkdkCfFdh-e5S2U29Mm4oxnTQ8; Path=/; Expires=Thu, 15 Oct 2026 06:11:54 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=ktVcKOg4jtZ5QjeNiN-Mfu-xaG67gDS1BKnNSDehW9g; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A54%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:54 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:54 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=e82d418a-3e53-49a7-91ec-254cb413cd03; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:54 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/debates
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNzU1MiIsImlhdCI6MTc5MjA0MTQxNSwiZXhwIjoxNzkyMDQ1MDE1LCJndWVzdCI6dHJ1ZX0.SzWOBb2-VEfz9aqNCUvMYSSw6gplF9R8X-H3kCZvKrE; Path=/; Expires=Thu, 15 Oct 2026 06:11:55 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=n6KUblSDRjOvvpkl7FHEy8hbZ01tI3FWrkC-GjDQEmM; Path=/; Expires=Thu, 29 Oct 2026 05:16:55 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-10-29T14%3A16%3A55%2B09%3A00; Path=/; Expires=Thu, 29 Oct 2026 05:16:55 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Thu, 15 Oct 2026 05:21:55 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=6ba522ee-4310-4ff7-bcb9-c00b05041e09; Path=/; Expires=Fri, 19 Nov 2027 05:16:55 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:55 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/login
+HTTP/2 200 
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+set-cookie: plick_did=060c1efa-fec3-40ea-8f9b-f6ffb1d2e906; Path=/; Expires=Fri, 19 Nov 2027 05:16:55 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Fri, 19 Nov 2027 05:16:55 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-cache: Miss from cloudfront

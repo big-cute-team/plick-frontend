@@ -4,7 +4,7 @@
  * 달라 각 앱 `_constants/ads.ts`에 둔다.
  */
 
-import type { BrowserKind } from "./analytics";
+import { type BrowserKind, PLICK_APP_UA_PATTERN } from "./analytics";
 
 /**
  * 애드센스 게시자 ID. 브라우저에 그대로 노출되는 공개 값이라 env로 감추지 않는다.
@@ -43,7 +43,9 @@ export function isAdsMode(value: string | undefined): value is AdsMode {
  * 그때까지 앱에서는 자리를 아예 안 그린다.
  *
  * @param base 빌드가 정한 기본 모드(prod는 live, 그 밖은 placeholder)
- * @param browser 프록시가 UA로 가른 `X-Plick-Browser` 값. 없으면 외부 브라우저로 본다
+ * @param browser UA로 가른 브라우저 종류(`resolveBrowserKind`). 전에는 레이아웃이 프록시의
+ *   `X-Plick-Browser` 헤더를 읽어 넘겼고, KAN-632부터는 `AdsProvider`가 브라우저에서
+ *   `navigator.userAgent`로 판정해 넘긴다. 없으면 외부 브라우저로 본다
  */
 export function resolveAdsMode(
   base: AdsMode,
@@ -54,6 +56,27 @@ export function resolveAdsMode(
 }
 
 /** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
+/**
+ * 앱 셸에서 애드센스 광고 요청을 막는 head 인라인 스크립트 본문 (KAN-632).
+ *
+ * 전에는 레이아웃이 `headers()`로 프록시가 가른 브라우저 종류를 읽어 앱 셸이면 로더 태그 자체를
+ * 안 넣었다. 레이아웃이 요청을 읽지 않게 되면서(전 라우트 동적 렌더의 원인) 서버는 UA를 모르고,
+ * 로더 태그는 애드센스 크롤러가 HTML에서 봐야 해서 JS로 늦게 넣을 수도 없다. 그래서 로더는
+ * 항상 넣되, 로더보다 먼저 도는 이 동기 스크립트가 앱 셸 UA면 `adsbygoogle.pauseAdRequests = 1`을
+ * 세운다. 애드센스가 동의 관리용으로 제공하는 스위치라 자동 광고를 포함해 광고 요청이 나가지
+ * 않는다. 광고 단위를 안 그리는 건 `AdsProvider`가 브라우저에서 모드를 `off`로 정해 맡는다.
+ *
+ * @returns `<script>` 안에 그대로 넣을 JS. 실패해도 아무것도 안 하게 try로 감싼다
+ */
+export function adsPauseScript(): string {
+  return (
+    "(function(){try{" +
+    `if(/${PLICK_APP_UA_PATTERN.source}/.test(navigator.userAgent)){` +
+    "(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1" +
+    "}}catch(e){}})()"
+  );
+}
+
 export const REELS_AD_INTERVAL = 8;
 
 /**

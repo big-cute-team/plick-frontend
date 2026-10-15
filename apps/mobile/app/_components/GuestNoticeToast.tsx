@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { guestLinkNotice } from "@plick/domain/format";
-import { GUEST_NOTICE, GUEST_NOTICE_COOKIE } from "@/_constants/api";
+import {
+  GUEST_EXPIRES_COOKIE,
+  GUEST_NOTICE,
+  GUEST_NOTICE_COOKIE,
+} from "@/_constants/api";
 import { GUEST_NOTICE_DURATION_MS } from "@/_constants/feedback";
 import { readCookie } from "@/_utils/cookie";
 
@@ -19,25 +23,23 @@ import { readCookie } from "@/_utils/cookie";
  *
  * 그리고 **읽은 즉시 지운다**. 안 지우면 표식이 살아 있는 동안 화면을 옮길 때마다 같은
  * 안내가 다시 뜬다. 쿠키를 JS로 지우려면 HttpOnly가 아니어야 해서, 이 표식만 예외로
- * HttpOnly를 뺐다(`GUEST_NOTICE_COOKIE` 주석 참고). 마감 시각은 표식이 아니라 서버가
- * 읽어 내려준 `guestExpiresAt`을 쓴다 — 쿠키 값은 브라우저에서 고칠 수 있기 때문이다.
+ * HttpOnly를 뺐다(`GUEST_NOTICE_COOKIE` 주석 참고).
  *
  * 마운트 뒤에만 읽는 이유는 `document`가 서버 렌더에 없어서다. 첫 페인트보다 한 박자
  * 늦게 뜨지만, 안내는 첫 프레임에 있어야 할 정보가 아니다.
  *
- * @param guestExpiresAt 서버가 쿠키에서 읽어 넘긴 게스트 마감 시각. 소셜이면 null
+ * 마감 시각도 브라우저에서 쿠키로 읽는다 (KAN-632). 전에는 레이아웃이 서버에서 읽어 prop으로
+ * 넘겼는데 그 `cookies()` 호출이 전 라우트를 동적 렌더로 만들었다. 마감 쿠키는 그 뒤 HttpOnly를
+ * 뺐다(`GUEST_EXPIRES_COOKIE` 주석). 브라우저에서 고친 값이면 안내 문구만 틀릴 뿐이다.
  */
-export function GuestNoticeToast({
-  guestExpiresAt,
-}: {
-  guestExpiresAt: string | null;
-}) {
+export function GuestNoticeToast() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const kind = readNoticeCookie();
     if (!kind) return;
     clearNoticeCookie();
+    const guestExpiresAt = readCookie(GUEST_EXPIRES_COOKIE);
 
     setMessage(
       kind === GUEST_NOTICE.existing
@@ -48,7 +50,7 @@ export function GuestNoticeToast({
     );
     const timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [guestExpiresAt]);
+  }, []);
 
   if (!message) return null;
 

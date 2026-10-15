@@ -16,7 +16,7 @@ export default function ArticleDetailLoading() {
   return (
     <AppShell>
       <ArticleTopBar />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <div className="px-edge flex animate-pulse flex-col gap-3.5 pt-4.5">
           {/* 팀 줄 — 엠블럼 + 팀명 */}
           <div className="flex items-center gap-1.75">

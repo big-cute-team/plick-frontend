@@ -2,21 +2,30 @@
 
 import {
   createContext,
-  Suspense,
-  use,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
 } from "react";
-import type { ProfileSeed } from "@/_types/auth";
+import { usePathname } from "next/navigation";
+import {
+  SESSION_KIND,
+  SESSION_KIND_COOKIE,
+  type SessionKind,
+} from "@/_constants/api";
+import { useProfileSeed } from "@/_queries/useProfileSeed";
+import { readCookie } from "@/_utils/cookie";
 
 /**
  * 로그인 여부·내 닉네임을 클라 컴포넌트로 흘려주는 컨텍스트.
  *
- * 왜 컨텍스트가 필요한가: access 토큰은 HttpOnly 쿠키라 브라우저 JS가 못 읽고(`document.cookie`에
- * 안 보임), 로그인 여부를 읽는 `isLoggedIn()`은 `next/headers`라 서버 전용이다. 그래서 좋아요·댓글
- * 같은 클라 아일랜드는 스스로 로그인 여부를 알 수 없다 — **서버가 판단해 내려줘야** 한다. 그 값을
- * 여러 화면(피드·릴스·상세)에 흩어진 아일랜드마다 prop으로 내리지 않게, 루트에서 한 번 시드해 둔다.
+ * 왜 컨텍스트가 필요한가: 좋아요·댓글 같은 클라 아일랜드가 화면마다 흩어져 있어, 로그인 여부를
+ * 아일랜드마다 prop으로 내리지 않게 루트에서 한 번 정해 둔다.
+ *
+ * 전에는 그 값을 **서버가** 정했다. access 토큰이 HttpOnly 쿠키라 브라우저 JS가 못 읽으니 루트
+ * 레이아웃이 `cookies()`로 판단해 prop으로 내려줬다. 그 한 줄이 레이아웃을 동적 렌더로 만들고,
+ * 레이아웃은 모든 페이지의 부모라 전 라우트가 `no-store`로 나갔다(KAN-632, ADR 0199). 지금은
+ * 프록시가 토큰 옆에 심는 표식 쿠키 `sessionKind`(HttpOnly 아님)를 **브라우저가** 읽는다.
  *
  * userId는 내 댓글 판별(KAN-333 수정·삭제 버튼)과 차단 셀프 가드(KAN-411)에 쓴다.
  * 원래는 댓글 응답에 작성자 식별 필드가 없어 닉네임 대조가 유일한 수단이었는데, KAN-411에서
@@ -38,72 +47,67 @@ const AuthContext = createContext<{
 } | null>(null);
 
 /**
- * 로그인 여부 provider. 서버(루트 레이아웃)가 `isLoggedIn()`으로 읽은 값과 프로필의 닉네임을
- * 시드로 받아, 하위 클라 컴포넌트가 `useAuth()`로 꺼내 쓰게 한다.
+ * 로그인 여부 provider (KAN-632).
  *
- * 세션 유무와 게스트 여부는 쿠키로 바로 안다. 프로필(userId, 닉네임)은 BE 조회라
- * 레이아웃이 기다리지 않고 Promise로 넘긴다 (KAN-602). 예전에는 레이아웃이 `/users/me`를
- * 기다린 뒤에야 자식을 그려, BE가 느리면 앱 진입과 새로고침이 그만큼 흰 화면이었다.
- * 지금은 첫 화면이 프로필 없이 뜨고, Promise가 풀리면 {@link ProfileSeedReader}가 값을
- * 채운다. 그 사이 userId와 닉네임은 null이라 내 댓글 수정·삭제 버튼과 닉네임 표시만
+ * 서버 렌더와 하이드레이션은 세션을 **모르는** 상태(`undefined`)로 그린다. 서버는 쿠키를 읽지
+ * 않기로 했고, 브라우저가 쿠키를 읽은 값으로 그리면 서버 HTML과 달라져 하이드레이션 불일치가
+ * 난다. 그래서 둘 다 같은 "모름"으로 그리고, `useLayoutEffect`에서 표식 쿠키를 읽어 state로
+ * 올린다. 레이아웃 이펙트는 브라우저가 첫 프레임을 그리기 전에 돌고 그 안의 setState는 동기
+ * 재렌더를 일으키므로, 사용자는 "모름" 상태를 한 프레임도 보지 않는다. `<head>` 동기
+ * 스크립트로 `<html>`에 값을 박는 방법도 생각했는데, 하이드레이션 첫 패스는 어차피 서버
+ * 스냅샷으로 그려야 해서 이득이 없었다.
+ *
+ * 쿠키는 pathname이 바뀔 때마다 다시 읽는다. 로그인·로그아웃·연동은 서버 액션이 쿠키를 바꾸고
+ * `redirect`로 화면을 옮기는데, 그 소프트 내비게이션에서 레이아웃은 다시 그려지지 않고 이
+ * provider만 pathname으로 깨어난다. bfcache에서 복원됐을 때(`pageshow`의 `persisted`)도 다시
+ * 읽는다. 떠나 있는 동안 다른 탭에서 로그인했을 수 있어서다.
+ *
+ * 프로필(userId, 닉네임)은 BE 조회라 `useProfileSeed`가 뒤에 채운다(KAN-602 때부터 기다리지
+ * 않는 구조다). 그 사이 userId와 닉네임은 null이라 내 댓글 수정·삭제 버튼과 닉네임 표시만
  * 잠깐 늦게 붙는다. 게스트 여부는 프로필이 오면 그 값으로 덮는다.
- *
- * 로그인·로그아웃은 서버 액션이 redirect하며 레이아웃을 다시 렌더하므로 그때 새
- * Promise가 내려온다. 새 값이 올 때까지는 직전 프로필을 들고 있어 닉네임이 깜빡이지 않는다.
- *
- * @param isLoggedIn 서버가 읽은 세션 존재 여부(access 쿠키 존재). 게스트도 true다 —
- *   좋아요·투표·조회 기록처럼 게스트에게 열린 기능은 이 값만 보면 된다
- * @param isGuest 게스트 마감 쿠키로 판정한 게스트 여부 (KAN-514). 프로필이 오기 전의
- *   잠정값이다. 댓글·신고·채팅처럼 소셜 전용 기능은 이 값으로 갈라 "로그인"이 아니라
- *   "계정 연동" 안내를 띄운다
- * @param profile 프로필 조각 Promise. 비로그인·조회 실패면 null로 풀린다
  */
-export function AuthProvider({
-  isLoggedIn,
-  isGuest,
-  profile,
-  children,
-}: {
-  isLoggedIn: boolean;
-  isGuest: boolean;
-  profile: Promise<ProfileSeed | null>;
-  children: React.ReactNode;
-}) {
-  const [seed, setSeed] = useState<ProfileSeed | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  /* undefined = 아직 안 읽음(서버·하이드레이션), null = 세션 없음(쿠키 없음) */
+  const [sessionKind, setSessionKind] = useState<
+    SessionKind | null | undefined
+  >(undefined);
+
+  useLayoutEffect(() => {
+    setSessionKind(readSessionKind());
+  }, [pathname]);
+
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setSessionKind(readSessionKind());
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  const seed = useProfileSeed(sessionKind ?? null);
+  const isLoggedIn = sessionKind !== undefined && sessionKind !== null;
   const value = {
     isLoggedIn,
-    isGuest: isLoggedIn ? (seed?.isGuest ?? isGuest) : false,
+    isGuest: isLoggedIn
+      ? (seed?.isGuest ?? sessionKind === SESSION_KIND.guest)
+      : false,
     userId: isLoggedIn ? (seed?.userId ?? null) : null,
     nickname: isLoggedIn ? (seed?.nickname ?? null) : null,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-      <Suspense fallback={null}>
-        <ProfileSeedReader profile={profile} onLoad={setSeed} />
-      </Suspense>
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /**
- * 프로필 Promise를 풀어 provider 상태로 올린다. 아무것도 그리지 않는다. 풀리기 전에는
- * 자기 Suspense 경계 안에서만 멈추므로 형제인 화면 트리는 기다리지 않는다.
- *
- * @param profile 레이아웃이 넘긴 프로필 조각 Promise
- * @param onLoad 풀린 값을 받을 setter
+ * 표식 쿠키를 읽는다. 아는 값이 아니면 세션 없음으로 본다. 브라우저에서 고친 값을 그대로
+ * 믿지 않는 건 `GuestNoticeToast`와 같은 이유다.
  */
-function ProfileSeedReader({
-  profile,
-  onLoad,
-}: {
-  profile: Promise<ProfileSeed | null>;
-  onLoad: (seed: ProfileSeed | null) => void;
-}) {
-  const seed = use(profile);
-  useEffect(() => onLoad(seed), [seed, onLoad]);
-  return null;
+function readSessionKind(): SessionKind | null {
+  const value = readCookie(SESSION_KIND_COOKIE);
+  return value === SESSION_KIND.guest || value === SESSION_KIND.user
+    ? value
+    : null;
 }
 
 /**

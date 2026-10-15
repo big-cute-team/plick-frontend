@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { getDebates } from "@plick/core/debates";
 import { getMatches } from "@plick/core/live";
 import { todayDateKeyKst } from "@plick/domain/live";
@@ -24,10 +25,13 @@ export async function HomeBanners() {
 
   const matches = matchResult.status === "fulfilled" ? matchResult.value : [];
   if (matchResult.status === "rejected") {
+    /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-632) */
+    unstable_rethrow(matchResult.reason);
     console.error("[home] 오늘 경기 로드 실패:", matchResult.reason);
   }
   const debates = debateResult.status === "fulfilled" ? debateResult.value : [];
   if (debateResult.status === "rejected") {
+    unstable_rethrow(debateResult.reason);
     console.error("[home] 토론 리스트 로드 실패:", debateResult.reason);
   }
 

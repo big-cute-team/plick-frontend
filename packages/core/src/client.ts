@@ -12,6 +12,8 @@
  * 요청 헤더에서 옮겨 싣는다(KAN-542). 호출부가 같은 이름을 직접 넘기면 그쪽이 우선이다.
  */
 
+import { sharesDataCache, usesDefaultCache } from "./fetch-cache";
+
 /**
  * 브라우저 fetch가 쓰는 same-origin BE 프록시 경로 (KAN-271).
  *
@@ -253,15 +255,18 @@ export async function apiFetch<T>(
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  /* 서버에서만. 브라우저 fetch는 프록시가 `/be` 요청에 붙인다(KAN-542) */
-  if (typeof window === "undefined") {
+  const authorized = headers.has("Authorization");
+  const cacheable = usesDefaultCache(init, authorized);
+
+  /**
+   * 분석 헤더는 서버에서만, 그리고 사용자끼리 나눠 쓰지 않는 호출에만 싣는다 (KAN-542, KAN-632).
+   * 브라우저 fetch는 프록시가 `/be` 요청에 붙인다. 판정과 그 이유는 `fetch-cache.ts`의
+   * `sharesDataCache`에 있다. 요지는 제공자가 읽는 `headers()`가 라우트를 동적 렌더로 만들어
+   * 홈·프로필 같은 익명 화면의 ISR을 깬다는 것이다(ADR 0199).
+   */
+  if (typeof window === "undefined" && !sharesDataCache(init, authorized)) {
     await applyProvidedHeaders(headers);
   }
-
-  const authorized = headers.has("Authorization");
-  const isGet = (init?.method ?? "GET").toUpperCase() === "GET";
-  const cacheConfigured = init?.cache !== undefined || init?.next !== undefined;
-  const cacheable = !authorized && isGet && !cacheConfigured;
 
   const method = (init?.method ?? "GET").toUpperCase();
   const startedAt = Date.now();

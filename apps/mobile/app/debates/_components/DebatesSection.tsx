@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { getDebates } from "@plick/core/debates";
 import type { InitialDebateList } from "@plick/domain/types";
 import { getAccessToken } from "@/_services/session";
@@ -20,6 +21,9 @@ export async function DebatesSection() {
       fetchedAt: Date.now(),
     };
   } catch (error) {
+    /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-632). 삼키면 빌드
+       로그에 "로드 실패"로 찍히고 라우트 판정을 가로챌 수 있다 */
+    unstable_rethrow(error);
     // 서버에서 못 받아도 클라가 다시 받아 리스트 자리에만 에러와 재시도를 보여준다
     console.error("[debates] 투표 리스트 초기 로드 실패:", error);
   }
