@@ -1,11 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import type { InitialCommentPage } from "@plick/domain/types";
 import { CommentComposer } from "@/_components/CommentComposer";
-import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
+import { CommentListSkeleton } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
 import { QueryBoundary } from "@/_components/QueryBoundary";
+
+/**
+ * 댓글 목록은 브라우저에서만 그린다 (KAN-664). 페이지가 익명 ISR이 되면서 서버 씨앗이 없어졌는데,
+ * 그대로 두면 suspense 쿼리가 서버 렌더(ISR 생성) 중에 토큰 없이 댓글을 받아 HTML에 굳힌다.
+ * 댓글은 내 좋아요와 차단 가림이 섞인 사람마다 다른 응답이라 캐시된 HTML에 들어가면 안 되고,
+ * 브라우저 캐시에는 그 데이터가 없어 하이드레이션에서 다시 받으며 어긋난다. 서버와 하이드레이션은
+ * 뼈대로 그리고 마운트 뒤 목록이 받는다.
+ */
+const CommentList = dynamic(
+  () => import("@/_components/CommentList").then((m) => m.CommentList),
+  { ssr: false, loading: () => <CommentListSkeleton /> },
+);
 
 /**
  * 기사 세부의 댓글 섹션 (KAN-303) — 헤더 카운트·입력바·목록을 묶는 클라 경계.
@@ -18,17 +30,13 @@ import { QueryBoundary } from "@/_components/QueryBoundary";
  *
  * @param articleId 기사 id
  * @param initialCount 서버가 받은 댓글 수 (대댓글 포함, 삭제 제외)
- * @param initialComments 서버가 미리 받아 둔 첫 페이지. 서버 fetch가 실패했으면
- *   없이 들어오고, 그때는 목록이 클라에서 직접 받는다.
  */
 export function ArticleComments({
   articleId,
   initialCount,
-  initialComments,
 }: {
   articleId: string;
   initialCount: number;
-  initialComments?: InitialCommentPage;
 }) {
   const [added, setAdded] = useState(0);
   const bump = () => setAdded((n) => n + 1);
@@ -44,12 +52,7 @@ export function ArticleComments({
         fallback={<CommentListSkeleton />}
         errorMessage="댓글을 불러오지 못했어요."
       >
-        <CommentList
-          articleId={articleId}
-          initial={initialComments}
-          onPosted={bump}
-          onDeleted={drop}
-        />
+        <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
       </QueryBoundary>
     </>
   );

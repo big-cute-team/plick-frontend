@@ -1,7 +1,6 @@
 import { unstable_rethrow } from "next/navigation";
 import { getReels } from "@plick/core/reels";
 import type { InitialReelFeed } from "@plick/domain/types";
-import { getAccessToken } from "@/_services/session";
 import { getReelSeedTweet } from "@/_services/tweet";
 import type { ReelSeedTweet } from "@/_types/reels";
 import { tweetImageSrcSet, tweetImageUrl } from "@/_utils/tweet";
@@ -16,16 +15,21 @@ import { ReelsFeed } from "./ReelsFeed";
  * 이미지가 초기 HTML에 그려지고, URL을 아는 김에 preload까지 걸어 프리로드 스캐너가
  * 최우선으로 내려받게 한다.
  *
- * 릴스 페이지가 Suspense로 감싸 스트리밍한다 (KAN-602). 토큰을 실은 조회라 캐시를
- * 못 타서 BE가 느리면 그대로 느린데, 그동안 탭바와 릴 뼈대는 먼저 서 있다.
+ * 토큰 없이 받는다 (KAN-664, ADR 0200). 로그인 세션이면 BE가 안 본 릴을 먼저 주는
+ * 개인화가 있는데, 첫 페이지는 그걸 포기하고 누구에게나 같은 최신순을 캐시에서 내보낸다.
+ * 다음 페이지부터는 브라우저가 프록시를 거쳐 토큰을 실어 받으므로 개인화가 다시 붙는다.
+ * 하트는 카드의 `liked`가 아니라 내 상태 캐시가 그린다.
+ *
+ * 릴스 페이지가 Suspense로 감싸 스트리밍한다 (KAN-602). ISR이 된 뒤에는 캐시된 HTML이
+ * 통째로 나가 기다릴 일이 거의 없고, 재생성 중에만 의미가 있다.
  */
 export async function ReelsFeedSection() {
   let initial: InitialReelFeed | undefined;
   let seedTweet: ReelSeedTweet | undefined;
   try {
     // 받은 시각을 함께 넘긴다 — 클라 캐시가 이 씨앗의 신선도를 재는 기준이 된다.
-    // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다 (KAN-308)
-    const page = await getReels({ accessToken: await getAccessToken() });
+    // ISR이라 이 시각은 페이지가 생성된 시각이고 최대 60초 전일 수 있다
+    const page = await getReels();
     initial = { page, fetchedAt: Date.now() };
     seedTweet = await getReelSeedTweet(page.items[0]);
   } catch (e) {

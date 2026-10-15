@@ -153,6 +153,7 @@ export function ReelDetailSheet({
             <div className="pt-4.5">
               <DebateVoteCard
                 key={reel.id}
+                articleId={reel.id}
                 debate={reel.debate}
                 closed={reel.contentType === "FINISH"}
               />

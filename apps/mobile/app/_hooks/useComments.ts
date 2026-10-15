@@ -4,14 +4,15 @@ import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { commentKeys } from "@plick/core/commentKeys";
 import { getComments } from "@plick/core/comments";
-import type { InitialCommentPage } from "@plick/domain/types";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
  * 댓글 목록 (KAN-303). 기사 세부·릴 세부 시트 공용.
  *
- * suspense 훅이다 (KAN-447) — 씨앗이 있으면 그대로 그리고, 없으면(릴 시트)
- * 받는 동안 suspend돼 감싼 QueryBoundary의 fallback이 보인다. 실패는 throw로
+ * suspense 훅이다 (KAN-447) — 받는 동안 suspend돼 감싼 QueryBoundary의 fallback이
+ * 보인다. 전에는 기사 세부가 서버에서 받은 첫 페이지를 씨앗으로 심었는데, 페이지가 익명
+ * ISR이 되면서(KAN-664) 사람마다 다른 댓글 응답을 서버에서 받지 않게 돼 씨앗이 없어졌다.
+ * 두 화면 모두 브라우저에서만 이 훅을 부른다. 실패는 throw로
  * 같은 경계에 잡힌다. 호출부는 로딩·에러 분기 없이 데이터만 그린다.
  *
  * 피드(`useReelsFeed`)와 같은 커서 규약이다 — `nextCursor`가 null인지로만 끝을
@@ -21,23 +22,13 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
  * `FEED_FRESH_MS` 주석 참고.
  *
  * @param articleId 기사(릴) id
- * @param initial 서버 컴포넌트가 미리 받아 둔 첫 페이지와 그 시각(기사 세부).
- *   릴 시트는 클라에서 열리므로 씨앗 없이 들어와 마운트 때 받는다.
  */
-export function useComments(articleId: string, initial?: InitialCommentPage) {
+export function useComments(articleId: string) {
   return useSuspenseInfiniteQuery({
     queryKey: commentKeys.list(articleId),
     queryFn: ({ pageParam }) => getComments(articleId, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-    initialData: initial
-      ? { pages: [initial.page], pageParams: [null] }
-      : undefined,
-    // 씨앗의 신선도를 서버가 받은 시각으로 못박는다. 기기 시계가 뒤처져 미래로
-    // 보이면 영영 신선해지므로 지금으로 깎는다 (useReelsFeed와 같은 이유)
-    initialDataUpdatedAt: initial
-      ? () => Math.min(initial.fetchedAt, Date.now())
-      : undefined,
     staleTime: FEED_FRESH_MS,
     gcTime: FEED_FRESH_MS,
     // 4xx는 다시 보내도 같은 답이다(없는 기사 404, 상한 커서 400). 순단만 재시도
