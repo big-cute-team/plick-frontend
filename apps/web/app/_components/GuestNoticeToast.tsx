@@ -8,7 +8,8 @@ import { readCookie } from "@/_utils/cookie";
 
 /**
  * 게스트 안내 토스트 (KAN-514) — 게스트를 방금 발급했거나, 연동했더니 기존 계정이었을 때
- * 하단에 한 번 띄운다. 루트 레이아웃에 한 번만 마운트한다. 모양은 시안(KAN-567)의
+ * 하단에 한 번 띄운다. 로그아웃으로 게스트가 됐을 때도 같은 자리다 (KAN-658).
+ * 루트 레이아웃에 한 번만 마운트한다. 모양은 시안(KAN-567)의
  * 각진 다이얼로그 상자(`border-strong` + `shadow-dialog`)를 작게 쓴 것이다.
  *
  * 왜 쿠키를 신호로 쓰나: 안내는 "발급이 일어난 그 순간"에만 떠야 하는데, 발급은 edge에서
@@ -41,7 +42,9 @@ export function GuestNoticeToast({
     setMessage(
       kind === GUEST_NOTICE.existing
         ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요"
-        : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
+        : kind === GUEST_NOTICE.loggedOut
+          ? "로그아웃했어요. 로그인 없이 계속 둘러볼 수 있어요"
+          : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
     );
     const timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
     return () => clearTimeout(timer);
@@ -65,7 +68,9 @@ export function GuestNoticeToast({
 /** 표식 쿠키를 읽는다. 아는 값이 아니면 null — 브라우저에서 고친 값을 그대로 믿지 않는다. */
 function readNoticeCookie(): string | null {
   const value = readCookie(GUEST_NOTICE_COOKIE);
-  return value === GUEST_NOTICE.issued || value === GUEST_NOTICE.existing
+  return value === GUEST_NOTICE.issued ||
+    value === GUEST_NOTICE.existing ||
+    value === GUEST_NOTICE.loggedOut
     ? value
     : null;
 }

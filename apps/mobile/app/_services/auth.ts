@@ -3,11 +3,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@plick/core/client";
+import { type GuestResponse, issueGuest } from "@plick/core/guest";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
   AUTH_COOKIES,
   GUEST_EXPIRES_COOKIE,
+  GUEST_FROM_LOGOUT_COOKIE,
   GUEST_NOTICE,
   GUEST_NOTICE_COOKIE,
   GUEST_NOTICE_MAX_AGE,
@@ -105,8 +107,9 @@ export async function login(
     ...AUTH_COOKIE_BASE,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
-  /* 연동이 아니라 별도 로그인이므로 게스트 표식은 버린다 (KAN-514) */
+  /* 연동이 아니라 별도 로그인이므로 게스트 표식은 버린다 (KAN-514, KAN-658) */
   jar.delete(GUEST_EXPIRES_COOKIE);
+  jar.delete(GUEST_FROM_LOGOUT_COOKIE);
 
   redirect("/");
 }
@@ -133,6 +136,10 @@ interface LinkResponse {
  * 응답 토큰은 어느 갈래든 소셜 사용자의 것이라(게스트 표식 없음) 마감 쿠키를 지운다.
  * 그 소셜 계정으로 이미 가입한 사용자가 있으면 BE가 기존 계정으로 로그인시키고
  * `linked=false`를 준다 — 게스트 기록은 안 넘어오므로 안내 토스트 표식을 심는다.
+ * 단 로그아웃이 발급한 게스트(`GUEST_FROM_LOGOUT_COOKIE`)면 심지 않는다 (KAN-658).
+ * 그 사람은 방금 로그아웃한 사용자가 다시 로그인한 것이라 "기록이 이어지지 않았어요"가
+ * 틀린 말이고, 로그아웃 뒤 게스트로 쌓은 게 있더라도 자기 계정으로 돌아가는 쪽이 뜻에 맞다.
+ * 연동 자체는 그대로 탄다. 새 소셜 계정이면 `linked=true`로 그 기록이 이어지기 때문이다.
  *
  * 게스트가 아닌 토큰으로 부르면 BE가 400 `AUTH_LINK_NOT_GUEST`를 준다. 화면이 `isGuest`로
  * 버튼을 가르니 정상 흐름에선 안 나오지만, 마감 쿠키와 실제 토큰이 어긋난 경우(수동 삭제,
@@ -185,7 +192,9 @@ export async function linkSocial(
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
   jar.delete(GUEST_EXPIRES_COOKIE);
-  if (!data.linked) {
+  const fromLogout = jar.has(GUEST_FROM_LOGOUT_COOKIE);
+  jar.delete(GUEST_FROM_LOGOUT_COOKIE);
+  if (!data.linked && !fromLogout) {
     jar.set(GUEST_NOTICE_COOKIE, GUEST_NOTICE.existing, {
       ...AUTH_COOKIE_BASE,
       httpOnly: false,
@@ -197,21 +206,76 @@ export async function linkSocial(
 }
 
 /**
- * 로그아웃 서버 액션 — BE에 로그아웃을 알리고 토큰 쿠키를 지운 뒤 로그인 화면으로 보낸다(KAN-300).
- * BE 호출이 실패해도 로컬 세션은 반드시 끊는다(쿠키 삭제) — 로그아웃을 못 하는 상태에 갇히지 않게.
+ * 로그아웃 서버 액션 (KAN-300) — BE에 로그아웃을 알리고 소셜 토큰 쿠키를 지운 뒤,
+ * **새 게스트로 전환해** 홈으로 보낸다 (KAN-658).
+ *
+ * 전에는 쿠키만 지우고 로그인 화면으로 보냈다. 그런데 프록시는 `/login`에서 게스트를
+ * 발급하지 않으므로(직접 들어온 소셜 사용자 보호), 로그아웃한 사람은 게스트도 아닌
+ * 완전 비로그인이 됐다. 게스트가 비로그인의 기본값인 이상 로그아웃의 도착점도 게스트다.
+ *
+ * 홈으로 보내고 프록시에 맡겨도 게스트는 생긴다. 그래도 여기서 직접 발급하는 이유는
+ * 둘이다. 프록시 발급은 "지금부터 기록이 쌓여요" 첫 진입 안내를 심는데 로그아웃 직후엔
+ * "로그아웃했어요"가 맞고, 이 게스트가 로그아웃 출신이라는 표식(`GUEST_FROM_LOGOUT_COOKIE`)을
+ * 같이 심어야 로그인 화면과 연동 액션이 재로그인을 연동으로 오해하지 않는다. 발급은
+ * 프록시와 같은 `issueGuest`(같은 1.5초 상한)다. 분석 헤더는 서버 측 `apiFetch` 제공자가
+ * 요청 헤더에서 옮겨 싣는다.
+ *
+ * BE 로그아웃은 refresh 토큰을 **본문**으로 받아 무효화한다(`RefreshRequest`, 멱등). 전에는
+ * 본문 없이 불러 400을 삼키고 있었고 refresh는 서버에 산 채로 남았다. 호출이 실패해도
+ * 로컬 세션은 반드시 끊는다(쿠키 삭제) — 로그아웃을 못 하는 상태에 갇히지 않게. 게스트 발급이 실패하면(BE 다운, 429, 타임아웃) 토큰 없이 홈으로
+ * 보낸다. 그 홈 요청에서 프록시가 다시 발급을 시도하므로 비로그인은 한 번뿐이다.
  * 토큰은 HttpOnly라 브라우저 JS로 못 지우므로, login과 대칭으로 삭제도 서버에서 한다.
  */
 export async function logout(): Promise<void> {
-  try {
-    await apiFetch("/api/v1/auth/logout", { method: "POST" });
-  } catch {
-    // BE가 죽어도 아래에서 쿠키를 지워 로그아웃은 성립시킨다
+  const jar = await cookies();
+  const refreshToken = jar.get(AUTH_COOKIES.refresh)?.value;
+  if (refreshToken) {
+    try {
+      await apiFetch("/api/v1/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch (e) {
+      // BE가 죽어도 아래에서 쿠키를 지워 로그아웃은 성립시킨다
+      console.error("[logout] BE 로그아웃 실패:", e);
+    }
   }
 
-  const jar = await cookies();
   jar.delete(AUTH_COOKIES.access);
   jar.delete(AUTH_COOKIES.refresh);
   jar.delete(GUEST_EXPIRES_COOKIE);
+  jar.delete(GUEST_FROM_LOGOUT_COOKIE);
 
-  redirect("/login");
+  let guest: GuestResponse;
+  try {
+    guest = await issueGuest();
+  } catch (e) {
+    console.error("[logout] 게스트 발급 실패:", e);
+    redirect("/");
+  }
+
+  jar.set(AUTH_COOKIES.access, guest.accessToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  });
+  jar.set(AUTH_COOKIES.refresh, guest.refreshToken, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+  jar.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt, {
+    ...AUTH_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+  jar.set(GUEST_FROM_LOGOUT_COOKIE, "1", {
+    ...AUTH_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+  /* 토스트 표식은 HttpOnly가 아니다 — 띄운 쪽(브라우저)이 지운다 (`GUEST_NOTICE_COOKIE` 참고) */
+  jar.set(GUEST_NOTICE_COOKIE, GUEST_NOTICE.loggedOut, {
+    ...AUTH_COOKIE_BASE,
+    httpOnly: false,
+    maxAge: GUEST_NOTICE_MAX_AGE,
+  });
+
+  redirect("/");
 }
