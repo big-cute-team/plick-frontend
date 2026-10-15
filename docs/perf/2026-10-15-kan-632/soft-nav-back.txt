@@ -1,0 +1,4 @@
+홈 → (Link 클릭) 기사 /articles/8107 → 브라우저 뒤로가기 → 홈
+performance.getEntriesByType('navigation')[0].type = "navigate"  (문서는 한 번도 안 바뀜)
+뒤로가기 뒤 새로 나간 요청: 팀 크레스트 webp 3건, /be/api/v1/events POST 1건
+홈 RSC 재요청(/?_rsc=) 0건 → Next 라우터 캐시가 홈을 복원

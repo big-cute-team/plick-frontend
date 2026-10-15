@@ -100,8 +100,15 @@ export type BrowserKind = (typeof BROWSER_KINDS)[number];
  * 라인은 `Line/14.x`다. 인스타 UA에 `FBAN`이 같이 붙는 빌드가 있어 인스타를 먼저 본다.
  * 우리 앱 셸은 `PlickApp/x.y`를 UA 끝에 단다(plick-AppShell `USER_AGENT_SUFFIX`).
  */
+/**
+ * 우리 앱 셸(RN WebView)의 UA 표식 (KAN-610). `BROWSER_KIND_RULES`의 첫 규칙이자, 레이아웃이
+ * 서버에서 UA를 읽지 않게 된 뒤(KAN-632) head 인라인 스크립트가 브라우저에서 같은 판정을
+ * 내릴 때 쓰는 원본이다(`adsPauseScript`).
+ */
+export const PLICK_APP_UA_PATTERN = /\bPlickApp(\/|\b)/;
+
 const BROWSER_KIND_RULES: readonly (readonly [BrowserKind, RegExp])[] = [
-  ["plick_app", /\bPlickApp(\/|\b)/],
+  ["plick_app", PLICK_APP_UA_PATTERN],
   ["instagram", /\bInstagram\b/i],
   ["facebook", /\bFB(AN|AV|_IAB)\b/],
   ["kakaotalk", /\bKAKAOTALK\b/i],
