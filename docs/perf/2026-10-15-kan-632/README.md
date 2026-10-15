@@ -8,3 +8,9 @@
 - `alb-sim-timeline.txt`: iOS 시뮬레이터 Safari가 x.com에 다녀온 뒤 `/reels/8294`를 다시 받은 ALB 로그
 
 스크린샷(라이트하우스 bf-cache, 시뮬레이터 3장)은 저장소 밖 `_workspace/2026-10-15-kan-632/blog-assets/`에 있다.
+
+## 개선 후 (로컬 standalone, 브랜치 빌드)
+
+- `headers-after-local.txt`: 라우트별 두 번 요청한 `Cache-Control`·`x-nextjs-cache`
+- `build-after-routes.txt`: 브랜치 `next build` 라우트 표
+- `lighthouse-after-local.tsv`: 홈·FAQ·기사·팀 프로필의 성능 점수, bf-cache 점수, LCP (1회)

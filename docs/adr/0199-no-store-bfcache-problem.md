@@ -171,3 +171,72 @@ bfcache는 문서 간 이동(cross-document navigation)에만 관여한다. 앱 
 ## 다음 글에서 볼 것
 
 풀 수 있는 길이 둘로 갈린다. 하나는 유저별 데이터가 없는 화면을 레이아웃의 쿠키 읽기에서 떼어 내 정적으로 돌리는 것이다. 그러면 `no-store`가 사라지고 CDN도 탈 수 있다. 다른 하나는 홈이나 기사처럼 유저별 값이 섞인 화면의 `no-store`를 `private, no-cache`로 낮추는 것이다. `private`면 CDN은 저장하지 않고 브라우저만 저장하니 bfcache는 들어가되 남에게 새는 건 없다. 대신 bfcache로 돌아온 화면은 떠날 때 상태 그대로라 좋아요나 조회수 같은 유저별 값은 `pageshow`에서 다시 받아야 한다. 그리고 그 결정을 하기 전에 프록시(`proxy.ts`)가 정적 응답에도 게스트 쿠키를 심을 수 있는지, CloudFront가 문서를 캐시하지 않는지, 릴스 피드의 `restartFeedQuery` 경로가 복원 뒤에도 깨지지 않는지를 봐야 한다.
+
+## 구현: 로그인 확인을 서버 렌더에서 브라우저로 옮기다
+
+문제를 다시 정의한 뒤 방안을 다섯으로 놓고 골랐다. 레이아웃 분리(A), 부분 프리렌더(B), 헤더만 완화(C), 증상만 가리기(D), 그리고 원인 제거(E). E는 레이아웃이 쿠키를 읽는 이유 자체를 없앤다. "게스트다/소셜이다"는 비밀이 아니니 프록시가 토큰 옆에 읽을 수 있는 표식 쿠키를 심고, `AuthProvider`가 서버 시드 없이 브라우저에서 그걸 읽어 시작하면 레이아웃은 요청을 읽을 일이 없다. A는 E에 흡수되고, B는 Next 실험 기능에 앱 전체를 걸어야 해서 뺐으며, C는 BE 분리가 끝나면 떼야 할 임시 처방인데 복원 뒤 갱신 코드와 CloudFront 확인이 따라붙어 수지가 안 맞았다. 기사·릴스·투표처럼 페이지가 토큰을 실어 `likedByMe`를 받는 화면은 BE 일괄 조회 API(KAN-663)가 생긴 뒤 KAN-664에서 ISR로 돌리기로 하고, 이번에는 레이아웃과 익명 화면까지로 범위를 잡았다.
+
+### 착수 전에 새로 안 것
+
+레이아웃만 고치면 끝이 아니었다. 서버 `apiFetch`가 분석 헤더(`X-Plick-*`)를 BE에 옮겨 싣느라 `getAnalyticsHeaders()`가 `headers()`를 부른다. 서버에서 데이터를 받는 페이지는 이것 때문에 레이아웃과 무관하게 동적이 된다. 익명 GET은 어차피 데이터 캐시로 모든 사용자가 한 응답을 나눠 쓰니(첫 요청자의 헤더가 캐시에 박힐 뿐) 사람별 헤더를 실을 의미가 없다. 그래서 공유 캐시를 타는 익명 GET에는 제공자를 부르지 않게 했다.
+
+`useAuth`를 쓰는 7곳 중 렌더 시점에 로그인 여부로 모양이 갈리는 건 라이브 채팅 패널 하나였다. 나머지(댓글 작성, 좋아요, 투표, 로그인 유도)는 클릭 시점에만 본다. 그래서 첫 페인트 전에 값을 올리기만 하면 깜빡임 걱정이 없었다.
+
+로그인 화면은 `getMyProfile()`로 세션 유효성을 확인해 소셜 사용자를 홈으로 돌려보내므로 동적으로 남긴다. 티켓에 "로그인·회원가입 ○"라고 썼지만 회원가입만 해당한다.
+
+### 표식 쿠키와 AuthProvider
+
+`sessionKind` 쿠키(값 `guest`|`user`, HttpOnly 아님, 수명은 refresh와 같은 14일)를 토큰을 심는 자리 전부에 같이 심었다. 프록시의 첫 진입 게스트 발급과 access 만료 뒤 재발급, 서버 액션의 소셜 로그인·연동·로그아웃. 지우는 자리도 같다. 발급 실패, 재발급 2회 실패로 로그인 리다이렉트, 로그아웃 초입, 탈퇴. `guestExpiresAt`도 HttpOnly를 풀어 토스트가 브라우저에서 마감 문구를 만든다.
+
+`AuthProvider`는 서버 prop을 전부 버리고 `useState(undefined)`로 "모름"에서 시작한다. 서버 HTML은 쿠키를 모르는 상태로 그려야 하고(서버가 안 읽기로 했으니) 하이드레이션 첫 패스도 같은 "모름"이어야 불일치가 없다. 그 다음 `useLayoutEffect`에서 쿠키를 읽어 state로 올린다. 레이아웃 이펙트는 브라우저가 첫 프레임을 그리기 전에 돌고 그 안의 setState는 동기 재렌더라 사용자는 "모름"을 한 프레임도 보지 않는다. 처음엔 `<head>` 동기 스크립트로 `<html>`에 값을 박아 둘 생각이었는데, 하이드레이션 첫 패스는 어차피 서버 스냅샷으로 그려야 해서 미리 박아 둔 값을 쓸 수 없었다. `useSyncExternalStore`도 봤지만 서버 스냅샷과 다를 때의 교정이 passive effect에서 일어나 페인트 뒤가 될 수 있어 버렸다. pathname이 바뀔 때마다 다시 읽어 서버 액션 로그인·로그아웃의 `redirect` 뒤를 따라가고, bfcache 복원(`pageshow`의 `persisted`)에도 다시 읽는다.
+
+프로필(닉네임·userId)은 `useProfileSeed`가 `/be/api/v1/users/me`를 TanStack Query로 받는다. 토큰은 프록시가 Bearer로 옮겨 싣는다. 쿼리 키에 세션 종류가 들어 있어 로그인·로그아웃 뒤 자동으로 다시 받고, 그 전까지 직전 값을 들고 있어 닉네임이 깜빡이지 않는다.
+
+`readCookie`에 `decodeURIComponent`를 넣었다. Next가 쿠키 값을 인코딩해 적어서 마감 시각의 `:`·`+`가 `%3A`·`%2B`로 읽혔다.
+
+### 광고 모드
+
+레이아웃이 `headers()`로 읽던 앱 셸 여부는 `AdsProvider`가 `navigator.userAgent`로 브라우저에서 정한다. 서버 렌더는 `off`다. 애드센스 로더 `<script>`는 크롤러가 HTML에서 봐야 해서 JS로 늦게 넣을 수 없고, 서버가 UA를 모르니 앱 셸에서만 뺄 수도 없다. 그래서 prod면 항상 넣되 그 앞의 동기 스크립트(`adsPauseScript`)가 앱 셸 UA면 `adsbygoogle.pauseAdRequests = 1`을 세운다. 애드센스가 동의 관리용으로 제공하는 스위치라 자동 광고까지 요청이 안 나간다. 프록시 판정과 같은 정규식을 쓰려고 `PLICK_APP_UA_PATTERN`을 `@plick/core/analytics`에서 export했고 단위 테스트에 앱 셸·사파리·인스타 세 UA를 넣었다.
+
+### 빌드 표가 바뀌는 걸 보기까지
+
+첫 빌드에서 홈이 `○` Revalidate 20s, FAQ·약관·개인정보·회원가입·라이브 채팅이 `○`로 바뀌었다. 20초는 홈 띠의 라이브 경기 fetch revalidate를 따라간 값이다.
+
+빌드 로그에 `/debates`·`/reels`가 "Dynamic server usage: couldn't be rendered statically because it used cookies"를 "초기 로드 실패"로 찍고 있었다. 섹션 catch가 Next의 정적 생성 중단 예외를 삼킨 것이다. 라우트 판정은 맞게 됐지만 로그가 오해를 부르고 Next 문서가 `unstable_rethrow`를 권해서 릴스·투표·홈 섹션 catch에 넣었다.
+
+인물·선수·팀 프로필은 `ƒ`로 남았다. 팀은 slug 6개가 고정이라 `generateStaticParams`를 넣어 `●`(빌드 때 전부 생성, ISR)로 바꿨다. 인물·선수는 수가 많아 빈 배열만 선언했다. Next는 이 함수가 아예 없는 동적 세그먼트를 요청마다 렌더로 다루고, 있으면 목록 밖 값도 첫 요청에 그려 fetch revalidate만큼 캐시한다. 그 뒤 둘 다 `●`가 됐다.
+
+### standalone을 띄우지 않았으면 배포 뒤에 봤을 것
+
+빌드 산출물을 로컬에서 띄워(`node .next/standalone/apps/mobile/server.js`, prod BE) 헤더를 찍었다. 첫 실행 로그에 "Page changed from static to dynamic at runtime /teams/arsenal/profile, reason: headers"가 떴다. 분석 헤더 제공자 건너뛰기 조건을 "기본 60초 캐시를 붙일 대상"(`cacheable`)으로만 잡아서, 라이브 띠(`revalidate: 20`)와 팀·선수 프로필처럼 호출부가 직접 캐시 수명을 준 익명 GET은 여전히 제공자를 불렀고 그 안의 `headers()`가 ISR 재생성 중에 터진 것이다. 빌드 때는 통과하고 런타임 재생성 때만 나는 에러다. 조건을 "익명 GET이고 `no-store`·`revalidate: 0`이 아니면"(`shared`)으로 넓혔다.
+
+CloudFront는 모바일·웹·admin 배포 모두 기본 비헤이비어 캐시 정책이 Managed-CachingDisabled였다. `s-maxage`가 나가도 CDN은 문서를 저장하지 않으니 프록시가 정적 응답에 심는 게스트 토큰이 남에게 나갈 길은 없다. CDN 문서 캐시는 게스트 발급을 페이지 응답에서 뗀 뒤(KAN-665) 연다.
+
+### 조회수 중복과 읽던 자리
+
+둘 다 "이 문서가 뒤로가기로 다시 받아진 것인가"를 알아야 해서 `isBackForwardLanding()` 하나로 가른다. `performance.getEntriesByType("navigation")[0]`의 `type`이 `back_forward`이고 그 항목의 `name`(문서 첫 주소)이 지금 `location.href`와 같을 때다. 이 타이밍 항목은 문서에 하나라 `pushState`·`replaceState`로 주소가 바뀌어도 `type`이 그대로다. 주소까지 대조해야 뒤로가기로 받은 문서 안에서 다른 기사로 옮긴 새 열람을 걸러내지 않는다. 릴스는 스와이프마다 `replaceState`로 주소를 바꾸니 첫 릴만 걸린다.
+
+`useArticleView`는 뒤로가기 착지면 조회 POST를 건너뛴다. `useScrollRestore`는 복원 키가 없는 기사 세부도 `sessionStorage`에 주소별로 위치를 적고, 뒤로가기 착지면 되돌린다. 여기서 두 번 막혔다.
+
+하나는 저장 시점이다. rAF에 맡긴 저장은 사용자가 스크롤 직후 바로 떠나면 아직 안 돌았을 수 있다. 브라우저 패널이 숨겨져 rAF가 멈춘 상태에서 재현됐는데, 실제 사용자에게도 같은 구멍이다. `pagehide`에서 동기로 한 번 더 적는다.
+
+다른 하나는 기사 세부의 `loading.tsx`다. 뼈대도 같은 `ScrollArea`라 뼈대 인스턴스가 저장값을 먼저 가져가 짧은 문서에서 되돌리다 실패하고, 언마운트 정리에서 0을 덮어 써 본문 인스턴스가 받을 값이 없었다. 읽을 때 지우지 않고 "되돌리는 데 성공한 인스턴스"가 끝났다고 표시하게 바꿨고, 한 번도 스크롤되지 않은 인스턴스의 정리는 저장값을 건드리지 않는다.
+
+### 전후
+
+| 항목                           | 전                                                                | 후                                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 빌드 표 페이지 라우트          | 24개 전부 ƒ                                                       | ○ 8(홈·FAQ·약관·개인정보·회원가입·라이브 채팅·준비중·404), ● 4(팀 허브·팀 프로필·인물·선수), ƒ 12                      |
+| 응답 `Cache-Control`           | 전 화면 `private, no-cache, no-store, max-age=0, must-revalidate` | FAQ·회원가입 `s-maxage=31536000`, 홈·팀 허브 `s-maxage=20`, 팀 프로필 `s-maxage=60`, 기사·릴스·투표·로그인·MY는 그대로 |
+| Lighthouse `bf-cache`          | 18/18 실패                                                        | 홈·FAQ·팀 프로필 통과, 기사 실패(동적, KAN-664)                                                                        |
+| 뒤로가기 재로드 때 조회수 POST | 한 번 더                                                          | 없음                                                                                                                   |
+| 기사에서 원문 보고 돌아올 때   | 맨 위                                                             | 읽던 자리                                                                                                              |
+| `layout.tsx`의 요청 읽기       | `cookies()` 2회, `headers()` 1회                                  | 0                                                                                                                      |
+
+로컬 standalone 헤더는 `docs/perf/2026-10-15-kan-632/headers-after-local.txt`, 빌드 표는 `build-after-routes.txt`, Lighthouse는 `lighthouse-after-local.tsv`에 있다. prod 배포 뒤 1편과 같은 방법(라이트하우스 3회 중앙값, 시뮬레이터에서 x.com 다녀온 뒤 ALB 로그)으로 다시 잰다.
+
+### 남긴 것
+
+- 홈이 빌드 때 BE를 불러 미리 그려진다. CI 빌드 환경에서 BE에 닿지 않으면 첫 20초(revalidate)까지 빈 섹션이 나간다. dev 배포에서 확인할 몫이다.
+- 기사·릴스·투표의 ISR은 KAN-663(BE 일괄 조회)과 KAN-664. 게스트 발급 분리와 CDN 문서 캐시는 KAN-665. 웹 이식은 KAN-643.
+- 로컬 http에서 iOS 시뮬레이터 Safari로 FAQ를 열면 "너무 많은 재이동"이 났다. 프록시의 refresh 재시도 리다이렉트 쿠키(`refreshRetry`, `Secure`)를 Safari가 http://127.0.0.1에선 저장하지 않아 같은 URL로 도는 것으로 보인다. prod(https)에는 없는 조건이고 이번 변경과 무관해 범위에서 뺐다.

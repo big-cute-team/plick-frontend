@@ -1,0 +1,46 @@
+20:┌ ○ /                                20s      1y
+21:├ ○ /_not-found
+22:├ ○ /ads.txt
+23:├ ƒ /api/client-error
+24:├ ƒ /api/health
+25:├ ƒ /api/tweet/[id]
+26:├ ○ /apple-icon.png
+27:├ ƒ /articles/[postId]
+28:├ ƒ /debates
+29:├ ○ /faq
+30:├ ● /figures/[figureId]
+31:├ ○ /icon.png
+32:├ ƒ /live
+33:├ ○ /live-paused
+34:├ ○ /live/chat
+35:├ ƒ /live/chat/session
+36:├ ƒ /live/matches/[matchId]
+37:├ ƒ /live/standings
+38:├ ƒ /live/teams/[teamId]
+39:├ ○ /llms.txt
+40:├ ƒ /login
+41:├ ○ /manifest.webmanifest
+42:├ ƒ /me
+43:├ ƒ /me/activity
+44:├ ƒ /me/blocked
+45:├ ƒ /me/edit
+46:├ ƒ /oauth/callback
+47:├ ○ /opengraph-image.png
+48:├ ● /players/[playerId]
+49:├ ○ /privacy
+50:├ ƒ /reels
+51:├ ƒ /reels/[postId]
+52:├ ○ /robots.txt
+53:├ ○ /signup
+54:├ ƒ /sitemap.xml
+55:├ ● /teams/[slug]                    20s      1y
+56:│ ├ /teams/liverpool                 20s      1y
+57:│ ├ /teams/tottenham                 20s      1y
+58:│ ├ /teams/arsenal                   20s      1y
+59:│ └ [+3 more paths]
+60:├ ● /teams/[slug]/profile             1m      1y
+61:│ ├ /teams/liverpool/profile          1m      1y
+62:│ ├ /teams/tottenham/profile          1m      1y
+63:│ ├ /teams/arsenal/profile            1m      1y
+64:│ └ [+3 more paths]
+65:└ ○ /terms
