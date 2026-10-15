@@ -37,7 +37,12 @@ import { isBackForwardLanding } from "@/_utils/navigation";
  * 나갔다 뒤로가기로 돌아오면 `no-store` 화면은 bfcache 대신 서버에서 새로 받아져 스토어가 비고,
  * 읽던 자리를 잃었다. 그래서 위치를 `sessionStorage`에도 주소별로 적어 두고, 이 문서가 뒤로가기로
  * 받아진 것이면(`isBackForwardLanding`) 거기서 되돌린다. 앱 안에서 같은 기사를 다시 여는 건 전처럼
- * 맨 위다. 되돌린 값은 한 번 쓰고 지운다. 같은 문서에서 그 주소로 다시 와도 또 뛰지 않게.
+ * 맨 위다. 한 번 되돌린 주소는 이 문서 안에서 다시 되돌리지 않는다(`restoredPaths`).
+ *
+ * 저장값을 읽을 때 지우지 않는 이유: 기사 세부는 `loading.tsx`가 먼저 뜨고 그 뼈대도 같은
+ * `ScrollArea`다. 뼈대 인스턴스가 값을 가져가 짧은 문서에서 되돌리다 실패하고, 언마운트 정리에서
+ * 0을 덮어 써 본문 인스턴스가 받을 값이 없어졌다(실측). 그래서 "되돌리는 데 성공한 인스턴스"가
+ * 끝났다고 표시하고, 한 번도 스크롤되지 않은 인스턴스의 정리는 저장값을 건드리지 않는다.
  *
  * @param ref 스크롤되는 엘리먼트
  * @param key 이 화면의 이름. 없으면 세션 복원(앱 안 왕복)은 하지 않고 뒤로가기 재로드만 되돌린다.
@@ -53,9 +58,12 @@ export function useScrollRestore(
     const storageKey = `scroll:${location.pathname}`;
     const saved = key
       ? (useViewState.getState().scrollTops[key] ?? 0)
-      : takeLandingScrollTop(storageKey);
+      : peekLandingScrollTop(storageKey);
     const restore = () => {
       if (el.scrollTop !== saved) el.scrollTop = saved;
+      if (!key && saved > 0 && el.scrollTop === saved) {
+        restoredPaths.add(storageKey);
+      }
     };
     restore();
 
@@ -92,8 +100,10 @@ export function useScrollRestore(
       if (key) useViewState.getState().setScrollTop(key, top);
       else writeScrollTop(storageKey, top);
     };
+    let scrolled = false;
     let frame = 0;
     const onScroll = () => {
+      scrolled = true;
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
@@ -112,7 +122,8 @@ export function useScrollRestore(
       cancelAnimationFrame(frame);
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("pagehide", onPageHide);
-      save(el.scrollTop);
+      /* 이름 없는 화면의 뼈대처럼 한 번도 스크롤되지 않은 인스턴스는 저장값을 덮지 않는다 */
+      if (key || scrolled) save(el.scrollTop);
     };
   }, [ref, key]);
 
@@ -140,16 +151,18 @@ export function useScrollRestore(
   }, [tick, key, ref]);
 }
 
+/** 이 문서 안에서 이미 되돌린 주소. 같은 주소로 다시 와도 또 뛰지 않게 한다. */
+const restoredPaths = new Set<string>();
+
 /**
- * 뒤로가기로 받아진 문서면 이 주소에 적어 둔 위치를 꺼내고 지운다. 아니면 0이다.
- * `sessionStorage`는 사생활 보호 모드 등에서 던질 수 있어 실패하면 0으로 본다.
+ * 뒤로가기로 받아진 문서면 이 주소에 적어 둔 위치를 읽는다. 아니거나 이미 되돌렸으면 0이다.
+ * 지우지는 않는다(위 JSDoc). `sessionStorage`는 사생활 보호 모드 등에서 던질 수 있어 실패하면 0으로 본다.
  */
-function takeLandingScrollTop(storageKey: string): number {
+function peekLandingScrollTop(storageKey: string): number {
   try {
-    if (!isBackForwardLanding()) return 0;
+    if (restoredPaths.has(storageKey) || !isBackForwardLanding()) return 0;
     const raw = sessionStorage.getItem(storageKey);
     if (raw === null) return 0;
-    sessionStorage.removeItem(storageKey);
     const top = Number(raw);
     return Number.isFinite(top) && top > 0 ? top : 0;
   } catch {
