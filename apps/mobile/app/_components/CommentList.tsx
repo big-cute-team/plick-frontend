@@ -1,6 +1,5 @@
 "use client";
 
-import type { InitialCommentPage } from "@plick/domain/types";
 import { useComments } from "@/_hooks/useComments";
 import { CommentThread } from "./CommentThread";
 
@@ -20,18 +19,15 @@ import { CommentThread } from "./CommentThread";
  * 버튼(h 44, radius 14, 12.5/700)으로 둔다.
  *
  * @param articleId 기사(릴) id
- * @param initial 서버가 미리 받아 둔 첫 페이지(기사 세부). 릴 시트는 없이 들어온다.
  * @param onPosted 답글 등록 성공 시 호출 — 호출부가 헤더 카운트를 올리는 데 쓴다
  * @param onDeleted 댓글(답글) 삭제 성공 시 호출 — 호출부가 헤더 카운트를 내리는 데 쓴다
  */
 export function CommentList({
   articleId,
-  initial,
   onPosted,
   onDeleted,
 }: {
   articleId: string;
-  initial?: InitialCommentPage;
   onPosted?: () => void;
   onDeleted?: () => void;
 }) {
@@ -41,7 +37,7 @@ export function CommentList({
     isFetchNextPageError,
     hasNextPage,
     fetchNextPage,
-  } = useComments(articleId, initial);
+  } = useComments(articleId);
 
   const comments = data.pages.flatMap((page) => page.items);
 

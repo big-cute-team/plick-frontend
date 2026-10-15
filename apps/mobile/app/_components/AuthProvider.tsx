@@ -8,6 +8,9 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { syncArticleStateMemoOwner } from "@plick/core/article-state-memo";
+import { articleStateKeys } from "@plick/core/articleStateKeys";
 import {
   SESSION_KIND,
   SESSION_KIND_COOKIE,
@@ -62,28 +65,45 @@ const AuthContext = createContext<{
  * provider만 pathname으로 깨어난다. bfcache에서 복원됐을 때(`pageshow`의 `persisted`)도 다시
  * 읽는다. 떠나 있는 동안 다른 탭에서 로그인했을 수 있어서다.
  *
+ * 내 기사 상태(좋아요·투표 여부, KAN-664)도 세션에 묶인 값이라 여기서 같이 관리한다. 세션 종류가
+ * 바뀌면(로그인·로그아웃) 이전 세션의 캐시와 브라우저 기억을 지우고, bfcache에서 복원되면 떠나 있던
+ * 사이 다른 기기나 탭에서 누른 게 있을 수 있어 다시 묻는다. 복원된 화면의 나머지(본문, 좋아요 수)는
+ * 누구에게나 같은 캐시 값이라 그대로 둔다.
+ *
  * 프로필(userId, 닉네임)은 BE 조회라 `useProfileSeed`가 뒤에 채운다(KAN-602 때부터 기다리지
  * 않는 구조다). 그 사이 userId와 닉네임은 null이라 내 댓글 수정·삭제 버튼과 닉네임 표시만
  * 잠깐 늦게 붙는다. 게스트 여부는 프로필이 오면 그 값으로 덮는다.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   /* undefined = 아직 안 읽음(서버·하이드레이션), null = 세션 없음(쿠키 없음) */
   const [sessionKind, setSessionKind] = useState<
     SessionKind | null | undefined
   >(undefined);
 
   useLayoutEffect(() => {
-    setSessionKind(readSessionKind());
-  }, [pathname]);
+    const kind = readSessionKind();
+    if (syncArticleStateMemoOwner(kind)) {
+      queryClient.removeQueries({ queryKey: articleStateKeys.all });
+    }
+    setSessionKind(kind);
+  }, [pathname, queryClient]);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) setSessionKind(readSessionKind());
+      if (!e.persisted) return;
+      const kind = readSessionKind();
+      if (syncArticleStateMemoOwner(kind)) {
+        queryClient.removeQueries({ queryKey: articleStateKeys.all });
+      } else {
+        void queryClient.invalidateQueries({ queryKey: articleStateKeys.all });
+      }
+      setSessionKind(kind);
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
-  }, []);
+  }, [queryClient]);
 
   const seed = useProfileSeed(sessionKind ?? null);
   const isLoggedIn = sessionKind !== undefined && sessionKind !== null;

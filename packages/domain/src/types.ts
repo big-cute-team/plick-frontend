@@ -692,6 +692,18 @@ export interface LikeState {
 }
 
 /**
+ * 기사 한 건에 대한 내 상태 (KAN-664, `GET /api/v1/users/me/article-states`).
+ *
+ * 기사·릴스·투표 화면은 익명으로 받아 캐시하고(누구에게나 같은 본문·좋아요 수·집계),
+ * 사람마다 다른 이 두 값만 페이지가 뜬 뒤 따로 받아 얹는다. 기본값은 "안 누름"이다.
+ */
+export interface ArticleState {
+  liked: boolean;
+  /** 이 기사 토론에 내가 고른 쪽. 토론이 없거나 투표 안 했으면 null. */
+  vote: VoteOption | null;
+}
+
+/**
  * 좋아요 등록·취소 서버 액션의 결과. 값으로 돌려주는 이유는
  * {@link CreateCommentResult}와 같다.
  *

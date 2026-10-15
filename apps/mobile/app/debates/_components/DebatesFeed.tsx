@@ -10,6 +10,7 @@ import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { DEBATE_EMPTY_COPY } from "@/_constants/debates";
 import { useDebates } from "@/_hooks/useDebates";
+import { useMyArticleState } from "@/_hooks/useMyArticleState";
 import { useViewState } from "@/_stores/view-state";
 import type { DebateTab } from "@/_types/debates";
 import { debateTabFrom, debateTabPath } from "@/_utils/debates";
@@ -96,13 +97,17 @@ function DebateList({
       {items.map((debate) => (
         <li key={debate.id} className="border-border-soft border-b pt-4 pb-4.5">
           {tab === "open" ? (
-            <DebateVoteCard debate={debate} size="md" />
+            <DebateVoteCard
+              articleId={debate.articleId}
+              debate={debate}
+              size="md"
+            />
           ) : (
             <ArticleLink
               articleId={debate.articleId}
               className="block active:opacity-70"
             >
-              <VoteCard debate={debate} closed size="sm" />
+              <ClosedVoteCard debate={debate} />
             </ArticleLink>
           )}
           <ArticleLink
@@ -121,4 +126,15 @@ function DebateList({
 /** 마감 여부. 리스트 카드가 스스로 겹치는 판정과 같다 (KAN-436). */
 function isClosed(debate: DebateListItem): boolean {
   return debate.contentType === "FINISH" || isDebateClosed(debate.closesAt);
+}
+
+/**
+ * 마감 탭의 표시 전용 카드. 리스트는 익명 ISR이라 `myVote`가 늘 null이어서 내 표만
+ * 내 상태 캐시에서 얹는다 (KAN-664).
+ *
+ * @param debate 리스트 항목
+ */
+function ClosedVoteCard({ debate }: { debate: DebateListItem }) {
+  const { vote } = useMyArticleState(debate.articleId);
+  return <VoteCard debate={{ ...debate, myVote: vote }} closed size="sm" />;
 }
