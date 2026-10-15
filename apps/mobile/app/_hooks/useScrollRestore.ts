@@ -101,11 +101,17 @@ export function useScrollRestore(
       });
     };
     el.addEventListener("scroll", onScroll, { passive: true });
+    /* 문서를 떠날 때(다른 주소로 이동, bfcache 진입) 마지막 위치를 동기로 한 번 더 적는다 (KAN-632).
+       rAF에 맡긴 저장은 떠나는 순간 아직 안 돌았을 수 있고, 언마운트 정리는 문서 단위 이동에서는
+       돌지 않는다. `sessionStorage` 복원이 기대는 자리라 빠지면 맨 위에서 다시 시작한다 */
+    const onPageHide = () => save(el.scrollTop);
+    window.addEventListener("pagehide", onPageHide);
 
     return () => {
       cancelAnimationFrame(retry);
       cancelAnimationFrame(frame);
       el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", onPageHide);
       save(el.scrollTop);
     };
   }, [ref, key]);
