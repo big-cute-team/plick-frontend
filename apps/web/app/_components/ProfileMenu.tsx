@@ -15,6 +15,11 @@ const LINK =
  * "가입" 두 텍스트 링크이고 로그인이면 닉네임, "MY", "로그아웃"이다. 아바타 원과
  * 드롭다운은 시안에 없어 걷어냈고(프로필 이미지는 없다는 시안 규칙), 항목은 같다.
  *
+ * 게스트는 비로그인 갈래다 (KAN-658). 게스트도 세션이 있어 `isLoggedIn`이 true지만,
+ * 게스트는 비로그인의 기본값이지 로그인 상태가 아니다. 소셜 갈래를 그리면 자동 부여
+ * 닉네임(plick123456)과 로그아웃이 떠서, 로그아웃을 누르면 기본값인 게스트마저 끊긴다.
+ * "로그인" 링크가 가는 `/login`은 게스트 세션이면 연동 화면으로 열리므로 목적지도 맞다.
+ *
  * 로그인 상태는 루트 레이아웃이 `AuthProvider`로 시드한 값을 `useAuth()`로 읽는다 —
  * 헤더가 직접 fetch하지 않는다. 값은 서버 렌더 시점에 박히고 로그인·로그아웃 서버
  * 액션의 redirect가 새 렌더를 일으키므로 따로 갱신할 필요가 없다. 온보딩 전이라
@@ -30,7 +35,8 @@ const LINK =
 export function ProfileMenu({ className = "" }: { className?: string }) {
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
-  const { isLoggedIn, nickname } = useAuth();
+  const { isLoggedIn, isGuest, nickname } = useAuth();
+  const isSocial = isLoggedIn && !isGuest;
 
   const handleLogout = () => {
     queryClient.clear();
@@ -39,7 +45,7 @@ export function ProfileMenu({ className = "" }: { className?: string }) {
 
   return (
     <div className={`flex items-center gap-4 ${className}`}>
-      {isLoggedIn ? (
+      {isSocial ? (
         <>
           {nickname && (
             <span className="text-label-lg text-text-strong max-w-32 truncate font-bold">

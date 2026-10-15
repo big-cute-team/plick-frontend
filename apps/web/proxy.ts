@@ -66,6 +66,7 @@ import {
   AUTH_COOKIES,
   CRAWLER_UA_PATTERN,
   GUEST_EXPIRES_COOKIE,
+  GUEST_FROM_LOGOUT_COOKIE,
   GUEST_NOTICE,
   GUEST_NOTICE_COOKIE,
   GUEST_NOTICE_MAX_AGE,
@@ -249,12 +250,16 @@ function forward(
  * 게스트를 발급할 자리가 아닌 경로 (KAN-514).
  *
  * `/oauth`는 콜백이 직접 새 토큰 쿠키를 심는 구간이라 건드리면 Set-Cookie가 겹친다.
- * `/login`·`/signup`을 빼는 이유는 따로다 — 이 화면에 토큰 없이 닿는 사람은 방금
- * 로그아웃했거나 로그인하러 직접 들어온 **기존 소셜 사용자**다. 여기서 게스트를
- * 쥐어 주면 소셜 버튼이 연동(`/auth/link`) 갈래로 가고, 기록이 빈 새 게스트를 옛
- * 계정에 붙이려다 `EXISTING_ACCOUNT`로 떨어져 "이미 가입된 계정이라 활동이 이어지지
- * 않아요"라는 엉뚱한 안내를 보게 된다. 앱 안에서 넘어온 게스트는 이미 토큰이 있어
- * 이 분기에 닿지 않으므로 연동 갈래가 그대로 유지된다.
+ * `/login`·`/signup`을 빼는 이유는 따로다 — 이 화면에 토큰 없이 닿는 사람은 주소로
+ * 로그인하러 직접 들어온 **기존 소셜 사용자**다. 여기서 게스트를 쥐어 주면 소셜
+ * 버튼이 연동(`/auth/link`) 갈래로 가고, 기록이 빈 새 게스트를 옛 계정에 붙이려다
+ * `EXISTING_ACCOUNT`로 떨어져 "이미 가입된 계정이라 활동이 이어지지 않아요"라는
+ * 엉뚱한 안내를 보게 된다. 앱 안에서 넘어온 게스트는 이미 토큰이 있어 이 분기에
+ * 닿지 않으므로 연동 갈래가 그대로 유지된다.
+ *
+ * 방금 로그아웃한 사람은 더는 여기 오지 않는다 (KAN-658). 로그아웃 액션이 새 게스트를
+ * 직접 발급하고 로그아웃 출신 표식(`GUEST_FROM_LOGOUT_COOKIE`)을 심어 홈으로 보내므로,
+ * 그 사람의 `/login`은 표식을 읽어 "로그인" 문구로 열리고 연동 액션은 토스트를 건너뛴다.
  */
 function skipsGuestIssue(pathname: string): boolean {
   return (
@@ -291,6 +296,7 @@ async function startGuestSession(
     failed.cookies.delete(AUTH_COOKIES.access);
     failed.cookies.delete(AUTH_COOKIES.refresh);
     failed.cookies.delete(GUEST_EXPIRES_COOKIE);
+    failed.cookies.delete(GUEST_FROM_LOGOUT_COOKIE);
     failed.cookies.delete(REFRESH_RETRY_COOKIE);
     return failed;
   }
@@ -299,6 +305,9 @@ async function startGuestSession(
   request.cookies.set(AUTH_COOKIES.refresh, guest.refreshToken);
   request.cookies.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt);
   request.cookies.delete(REFRESH_RETRY_COOKIE);
+  /* 자연 발급한 게스트는 로그아웃 출신이 아니다 (KAN-658). 마감된 로그아웃 게스트를
+     갈아끼우는 길이면 옛 표식이 남아 있으므로 지운다 */
+  request.cookies.delete(GUEST_FROM_LOGOUT_COOKIE);
 
   const response = forward(request, analytics);
   response.cookies.set(AUTH_COOKIES.access, guest.accessToken, {
@@ -320,6 +329,7 @@ async function startGuestSession(
     maxAge: GUEST_NOTICE_MAX_AGE,
   });
   response.cookies.delete(REFRESH_RETRY_COOKIE);
+  response.cookies.delete(GUEST_FROM_LOGOUT_COOKIE);
   return response;
 }
 
