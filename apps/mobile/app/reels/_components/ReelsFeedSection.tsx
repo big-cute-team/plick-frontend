@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { getReels } from "@plick/core/reels";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { getAccessToken } from "@/_services/session";
@@ -28,6 +29,9 @@ export async function ReelsFeedSection() {
     initial = { page, fetchedAt: Date.now() };
     seedTweet = await getReelSeedTweet(page.items[0]);
   } catch (e) {
+    /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-632). 삼키면 빌드
+       로그에 "로드 실패"로 찍히고 라우트 판정을 가로챌 수 있다 */
+    unstable_rethrow(e);
     // 서버에서 못 받아도 페이지 전체를 에러로 떨어뜨리지 않는다.
     // 클라가 다시 받아 릴 자리에 에러와 재시도 버튼을 보여준다.
     console.error("[reels] 릴스 피드 초기 로드 실패:", e);
