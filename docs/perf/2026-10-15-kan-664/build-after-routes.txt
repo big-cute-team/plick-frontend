@@ -1,0 +1,55 @@
+Route (app)                   Revalidate  Expire
+┌ ○ /                                20s      1y
+├ ○ /_not-found
+├ ○ /ads.txt
+├ ƒ /api/client-error
+├ ƒ /api/health
+├ ƒ /api/tweet/[id]
+├ ○ /apple-icon.png
+├ ● /articles/[postId]
+├ ○ /debates                          1m      1y
+├ ○ /faq
+├ ● /figures/[figureId]
+├ ○ /icon.png
+├ ƒ /live
+├ ○ /live-paused
+├ ○ /live/chat
+├ ƒ /live/chat/session
+├ ƒ /live/matches/[matchId]
+├ ƒ /live/standings
+├ ƒ /live/teams/[teamId]
+├ ○ /llms.txt
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /me
+├ ƒ /me/activity
+├ ƒ /me/blocked
+├ ƒ /me/edit
+├ ƒ /oauth/callback
+├ ○ /opengraph-image.png
+├ ● /players/[playerId]
+├ ○ /privacy
+├ ○ /reels                            1m      1y
+├ ● /reels/[postId]
+├ ○ /robots.txt
+├ ○ /signup
+├ ƒ /sitemap.xml
+├ ● /teams/[slug]                    20s      1y
+│ ├ /teams/liverpool                 20s      1y
+│ ├ /teams/tottenham                 20s      1y
+│ ├ /teams/arsenal                   20s      1y
+│ └ [+3 more paths]
+├ ● /teams/[slug]/profile             1m      1y
+│ ├ /teams/liverpool/profile          1m      1y
+│ ├ /teams/tottenham/profile          1m      1y
+│ ├ /teams/arsenal/profile            1m      1y
+│ └ [+3 more paths]
+└ ○ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
