@@ -9,6 +9,7 @@ import {
 } from "@plick/core/client";
 import type { LikeState, ToggleLikeResult } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
+import { SESSION_UNAVAILABLE } from "@/_constants/session";
 
 /**
  * 좋아요 토글의 공통 뼈대 (KAN-308에서 기사·릴용으로 짜고 KAN-309에서 댓글이
@@ -30,10 +31,10 @@ import { useAuth } from "@/_components/AuthProvider";
  * 뒤집혀도 서버 상태는 망가지지 않지만, 늦게 온 응답의 카운트가 화면을 덮으면
  * 표시가 튄다.
  *
- * 로그인하지 않았으면 요청을 보내지 않고 로그인 유도 팝업을 띄운다. 로그인 여부는
- * 서버가 심어 준 `AuthProvider`로 읽는다 — 쿠키가 HttpOnly라 클라가 직접 못 본다.
- * 쿠키는 있는데 토큰이 만료된 경우는 401 `AUTH_REQUIRED`로 드러나므로 같은 팝업으로
- * 받는다(댓글 입력바와 같은 방식).
+ * 세션이 없으면 게스트를 받아 온 뒤 보낸다 (KAN-665). 처음 온 사람은 화면이 뜬 뒤 브라우저가
+ * 게스트를 받아 오는데, 그 전에 누를 수 있다. 하트는 누르는 즉시 채우고(`onMutate`), 요청만
+ * `ensureSession`을 기다린다. 받아 오지 못하면 401 `AUTH_REQUIRED`로 보고 로그인 유도 팝업을
+ * 띄운다. 쿠키는 있는데 토큰이 만료된 경우도 같은 401로 드러나 같은 팝업으로 받는다.
  *
  * BE가 바쁘다는 503 `COMMON_SERVICE_BUSY`(KAN-527, BE KAN-526)는 순간 상한이라 1초
  * 뒤 한 번만 더 보낸다. 뮤테이션의 `retry`로 걸어 두면 그동안 낙관적 값과 `isPending`이
@@ -60,11 +61,12 @@ export function useLikeToggle({
   state: LikeState;
   onChange: (next: LikeState) => void;
 }) {
-  const { isLoggedIn } = useAuth();
+  const { ensureSession } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (liked: boolean) => {
+      if (!(await ensureSession())) throw SESSION_UNAVAILABLE;
       const result = await toggle(liked);
       if (!result.ok) {
         throw new ApiError(result.status, result.code, result.message);
@@ -95,15 +97,11 @@ export function useLikeToggle({
   return {
     /** 하트를 눌렀을 때. 응답 대기 중이면 무시한다 */
     toggle: () => {
-      if (!isLoggedIn) {
-        setNeedsLogin(true);
-        return;
-      }
       if (isPending) return;
       mutate(!state.liked);
     },
     isPending,
-    /** 로그인 유도 팝업을 띄워야 하는가 (비로그인 탭 또는 401) */
+    /** 로그인 유도 팝업을 띄워야 하는가 (게스트를 못 받았거나 401) */
     needsLogin,
     dismissLogin: () => setNeedsLogin(false),
   };

@@ -2,22 +2,29 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import { DEFAULT_ARTICLE_STATE } from "@plick/core/article-state-batch";
 import { syncArticleStateMemoOwner } from "@plick/core/article-state-memo";
 import { articleStateKeys } from "@plick/core/articleStateKeys";
+import { requestGuestSession } from "@/_apis/guest-session";
 import {
+  CRAWLER_UA_PATTERN,
+  GUEST_ISSUED_EVENT,
   SESSION_KIND,
   SESSION_KIND_COOKIE,
   type SessionKind,
 } from "@/_constants/api";
 import { useProfileSeed } from "@/_queries/useProfileSeed";
 import { readCookie } from "@/_utils/cookie";
+import { skipsGuestIssue } from "@/_utils/guest-issue";
+import { runWhenIdle } from "@/_utils/idle";
 
 /**
  * 로그인 여부·내 닉네임을 클라 컴포넌트로 흘려주는 컨텍스트.
@@ -40,14 +47,25 @@ import { readCookie } from "@/_utils/cookie";
  * 그래서 "세션이 있는가"(`isLoggedIn`)와 "소셜 계정인가"(`!isGuest`)를 따로 들고 다닌다.
  * BE KAN-656(FE KAN-657)부터 게스트도 댓글·채팅을 쓰므로 `isGuest`로 막는 건 신고뿐이다.
  *
+ * `ensureSession`과 `isSessionPending`은 KAN-665에서 붙었다. 게스트 발급이 페이지 응답에서 브라우저로
+ * 옮겨 와, 처음 온 사람은 화면이 뜬 뒤 잠깐 세션이 없다. 그 사이에 누른 좋아요는 로그인 팝업이 아니라
+ * 발급을 기다렸다가 나가야 하고, 채팅처럼 세션이 있어야 그리는 화면은 그동안 "로그인하세요"를 띄우면 안 된다.
+ *
  * 기본값 `null`은 "provider 밖"을 뜻한다(로그인 안 함 `false`와 구분해 실수 사용을 잡는다).
  */
-const AuthContext = createContext<{
+const AuthContext = createContext<Auth | null>(null);
+
+/** `useAuth`가 돌려주는 값. */
+interface Auth {
   isLoggedIn: boolean;
   isGuest: boolean;
   userId: number | null;
   nickname: string | null;
-} | null>(null);
+  /** 세션이 없으면 게스트를 받아 온다. 세션이 생겼으면(원래 있었거나 방금 받았으면) true */
+  ensureSession: () => Promise<boolean>;
+  /** 세션을 아직 모르거나 게스트를 받아 오는 중인가. 세션이 필요한 화면은 이 동안 안내를 미룬다 */
+  isSessionPending: boolean;
+}
 
 /**
  * 로그인 여부 provider (KAN-632).
@@ -73,6 +91,12 @@ const AuthContext = createContext<{
  * 프로필(userId, 닉네임)은 BE 조회라 `useProfileSeed`가 뒤에 채운다(KAN-602 때부터 기다리지
  * 않는 구조다). 그 사이 userId와 닉네임은 null이라 내 댓글 수정·삭제 버튼과 닉네임 표시만
  * 잠깐 늦게 붙는다. 게스트 여부는 프로필이 오면 그 값으로 덮는다.
+ *
+ * 게스트 발급(KAN-665): 세션이 없으면 브라우저가 한가할 때 게스트를 받아 온다. 들어온 사람은 모두
+ * 게스트로 시작한다는 KAN-514의 약속은 그대로고, 받는 자리만 페이지 응답에서 이 POST로 옮겼다.
+ * `/login`·`/signup`·`/oauth`와 크롤러 UA는 받지 않는다(`skipsGuestIssue`). 발급 전에 좋아요를
+ * 누르면 `ensureSession`이 같은 요청을 기다린다. 방금 받은 게스트는 누른 게 하나도 없으니 내 기사
+ * 상태를 묻지 않고 "안 누름"으로 채운다. 물으면 그 응답이 막 누른 좋아요의 낙관적 값을 덮을 수 있다.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -82,6 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     SessionKind | null | undefined
   >(undefined);
 
+  const [issuing, setIssuing] = useState(false);
+
   useLayoutEffect(() => {
     const kind = readSessionKind();
     if (syncArticleStateMemoOwner(kind)) {
@@ -89,6 +115,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setSessionKind(kind);
   }, [pathname, queryClient]);
+
+  const ensureSession = useCallback(async () => {
+    if (readSessionKind()) return true;
+    setIssuing(true);
+    const result = await requestGuestSession();
+    setIssuing(false);
+    const kind = readSessionKind();
+    if (!kind) return false;
+    if (result === "issued") adoptFreshGuest(queryClient, kind);
+    else if (syncArticleStateMemoOwner(kind)) {
+      queryClient.removeQueries({ queryKey: articleStateKeys.all });
+    }
+    setSessionKind(kind);
+    if (result === "issued")
+      window.dispatchEvent(new Event(GUEST_ISSUED_EVENT));
+    return true;
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (sessionKind !== null || skipsGuestIssue(pathname)) return;
+    if (CRAWLER_UA_PATTERN.test(navigator.userAgent)) return;
+    return runWhenIdle(() => void ensureSession());
+  }, [sessionKind, pathname, ensureSession]);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -107,16 +156,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const seed = useProfileSeed(sessionKind ?? null);
   const isLoggedIn = sessionKind !== undefined && sessionKind !== null;
-  const value = {
+  const value: Auth = {
     isLoggedIn,
     isGuest: isLoggedIn
       ? (seed?.isGuest ?? sessionKind === SESSION_KIND.guest)
       : false,
     userId: isLoggedIn ? (seed?.userId ?? null) : null,
     nickname: isLoggedIn ? (seed?.nickname ?? null) : null,
+    ensureSession,
+    isSessionPending: sessionKind === undefined || issuing,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/**
+ * 방금 받은 게스트로 세션을 넘긴다 (KAN-665). 새 게스트는 누른 기사가 없으므로 아직 값이 없는 내 기사
+ * 상태 캐시를 "안 누름"으로 채운다. `staleTime`이 무한이라 채운 캐시는 다시 묻지 않는다. 발급을
+ * 기다리던 좋아요가 낙관적으로 적어 둔 값은 이미 들어 있어 건드리지 않는다. 브라우저 기억의 주인도
+ * 새 게스트로 바꾼다. 세션이 없던 자리라 지울 기억이 없으니 캐시를 비우지 않는다.
+ *
+ * @param queryClient 앱 쿼리 클라이언트
+ * @param kind 방금 읽은 세션 종류
+ */
+function adoptFreshGuest(queryClient: QueryClient, kind: SessionKind): void {
+  syncArticleStateMemoOwner(kind);
+  for (const query of queryClient
+    .getQueryCache()
+    .findAll({ queryKey: articleStateKeys.all })) {
+    if (query.state.data === undefined) {
+      queryClient.setQueryData(query.queryKey, DEFAULT_ARTICLE_STATE);
+    }
+  }
 }
 
 /**
@@ -136,14 +207,9 @@ function readSessionKind(): SessionKind | null {
  * 컨텍스트·provider와 한 몸이라(서로의 private 컨텍스트 객체를 공유) 훅을 이 파일에 함께 둔다 —
  * 별도 `useXxx.ts`로 떼면 컨텍스트를 밖으로 export해야 해서 오히려 캡슐화가 샌다.
  *
- * @returns `{ isLoggedIn, isGuest, userId, nickname }` — 유저 정보가 더 붙으면 이 객체를 넓힌다.
+ * @returns 세션 값과 `ensureSession`. 유저 정보가 더 붙으면 {@link Auth}를 넓힌다.
  */
-export function useAuth(): {
-  isLoggedIn: boolean;
-  isGuest: boolean;
-  userId: number | null;
-  nickname: string | null;
-} {
+export function useAuth(): Auth {
   const auth = useContext(AuthContext);
   if (auth === null) {
     throw new Error("useAuth는 AuthProvider 안에서만 쓸 수 있다.");

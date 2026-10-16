@@ -341,7 +341,7 @@ function CommentOwnerActions({
  * 관용). 차단 성공 시 캐시 반영은 `useBlockUser`가 한다.
  */
 function CommentReportBlockActions({ comment }: { comment: ArticleComment }) {
-  const { isLoggedIn, isGuest } = useAuth();
+  const { isLoggedIn, isGuest, ensureSession } = useAuth();
   const [dialog, setDialog] = useState<"none" | "report" | "block">("none");
   const [needsLogin, setNeedsLogin] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
@@ -381,8 +381,9 @@ function CommentReportBlockActions({ comment }: { comment: ArticleComment }) {
       </button>
       <button
         type="button"
-        onClick={() => {
-          if (!isLoggedIn) {
+        onClick={async () => {
+          /* 처음 온 사람은 게스트를 받기 전일 수 있다 (KAN-665) */
+          if (!isLoggedIn && !(await ensureSession())) {
             setNeedsLogin(true);
             return;
           }

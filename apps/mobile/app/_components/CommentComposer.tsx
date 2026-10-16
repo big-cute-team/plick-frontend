@@ -25,9 +25,9 @@ const LoginPromptDialog = dynamic(
  * (`CommentThread`), 마운트되자마자 포커스를 받고 취소 버튼이 붙는다. 등록 성공도
  * `onCancel`로 입력줄을 접는다.
  *
- * 비로그인 게이트(KAN-303 티켓 요구): 인풋에 포커스가 오거나 제출하려 하면
- * 로그인 유도 팝업을 띄우고 입력 자체를 막는다. 로그인 여부는 서버가 심어 준
- * `AuthProvider` 컨텍스트로 읽는다 — 쿠키가 HttpOnly라 클라가 직접 못 본다.
+ * 세션 게이트(KAN-303, KAN-665): 세션이 없으면 인풋에 포커스가 오거나 제출할 때 게스트를
+ * 받아 온다. 처음 온 사람은 화면이 뜬 뒤 브라우저가 게스트를 받아 오는데 그보다 먼저 입력창을
+ * 누를 수 있어서다. 받아 오지 못했을 때만 로그인 유도 팝업을 띄우고 입력을 막는다.
  * 쿠키는 있는데 토큰이 만료된 경우는 제출 때 401 `AUTH_REQUIRED`로 드러나므로
  * 같은 팝업으로 받는다. 게스트는 막지 않는다 — BE KAN-656부터 게스트도 댓글을
  * 쓸 수 있어 `isGuest`를 보지 않는다(KAN-657). 옛 BE가 아직 403
@@ -56,7 +56,7 @@ export function CommentComposer({
   onPosted?: () => void;
   className?: string;
 }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, ensureSession } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -70,14 +70,14 @@ export function CommentComposer({
     if (isReply) inputRef.current?.focus();
   }, [isReply]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoggedIn) {
+    const content = value.trim();
+    if (!content || isPending) return;
+    if (!isLoggedIn && !(await ensureSession())) {
       setShowLogin(true);
       return;
     }
-    const content = value.trim();
-    if (!content || isPending) return;
 
     setError(null);
     mutate(
@@ -113,10 +113,13 @@ export function CommentComposer({
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           onFocus={(e) => {
-            if (!isLoggedIn) {
-              e.currentTarget.blur();
+            if (isLoggedIn) return;
+            const input = e.currentTarget;
+            void ensureSession().then((ok) => {
+              if (ok) return;
+              input.blur();
               setShowLogin(true);
-            }
+            });
           }}
           placeholder={isReply ? "답글 입력" : "댓글 입력"}
           className="bg-input text-label-lg text-text placeholder:text-text-4 rounded-control h-10.5 min-w-0 flex-1 px-3.25 focus-visible:outline-none"

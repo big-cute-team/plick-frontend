@@ -25,8 +25,10 @@ import type { BouncedMessage } from "@/_types/live";
  * 분기를 지웠다. 게스트 행은 생성 때 닉네임이 있어 닉네임 게이트도 지나간다.
  */
 export function LiveChatPanel() {
-  const { isLoggedIn, nickname } = useAuth();
+  const { isLoggedIn, isSessionPending, nickname } = useAuth();
 
+  /* 처음 온 사람은 화면이 뜬 뒤 게스트를 받아 온다(KAN-665). 그동안 로그인 안내를 띄우면 곧바로 방으로 바뀌어 깜빡인다 */
+  if (!isLoggedIn && isSessionPending) return null;
   if (!isLoggedIn) {
     return (
       <Gate
