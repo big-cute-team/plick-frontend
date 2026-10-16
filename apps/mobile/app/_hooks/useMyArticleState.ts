@@ -54,6 +54,9 @@ export function useMyArticleState(articleId: string): ArticleState {
     gcTime: MY_STATE_GC_MS,
     placeholderData: () => readArticleStateMemo(articleId),
     retry: false,
+    /* 앱 기본값은 데이터 없는 실패를 에러 경계로 던진다(QueryProvider). 하트 하나 때문에 기사 화면 전체가
+       "문제가 생겼어요"로 바뀌면 안 되므로 여기서는 끈다 (KAN-665에서 발견) */
+    throwOnError: false,
   });
 
   return isLoggedIn ? (data ?? DEFAULT_ARTICLE_STATE) : DEFAULT_ARTICLE_STATE;
