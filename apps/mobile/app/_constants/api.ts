@@ -180,6 +180,20 @@ export const GUEST_NOTICE = {
 } as const;
 
 /**
+ * 브라우저가 게스트를 받아 가는 자리 (KAN-665). 전에는 프록시가 쿠키 없는 페이지 요청마다
+ * 발급해 그 페이지 응답에 토큰을 심었다. 정적·ISR 문서에 `Set-Cookie`가 실리면 CDN이 그 응답을
+ * 저장할 수 없어서(한 사람의 토큰이 다음 사람에게 나간다), 발급을 이 POST로 옮겼다.
+ * `/api`는 프록시 matcher 밖이라 이 라우트가 쿠키를 직접 심는다.
+ */
+export const GUEST_SESSION_PATH = "/api/session/guest";
+
+/**
+ * 브라우저가 게스트를 새로 받았다는 window 이벤트 (KAN-665). `GuestNoticeToast`는
+ * `AuthProvider` 밖에 있어 세션 값을 못 보니, 발급 직후 이 이벤트로 표식 쿠키를 다시 읽게 한다.
+ */
+export const GUEST_ISSUED_EVENT = "plick:guest-issued";
+
+/**
  * 게스트를 발급하지 않을 크롤러 User-Agent (KAN-514).
  *
  * 게스트는 users 행 하나라 방문 한 번에 계정 하나가 생긴다. 검색 크롤러는 사이트를
