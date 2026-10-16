@@ -54,8 +54,8 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
  * 거르는 요청:
  * - 크롤러 UA: 프록시가 발급하던 때와 같은 규칙이다(`CRAWLER_UA_PATTERN`). JS를 돌리는 구글봇도
  *   브라우저 쪽 발급을 부를 수 있어 여기서도 막는다.
- * - 다른 사이트에서 온 POST: `Sec-Fetch-Site`가 `same-origin`이 아니면 거절한다. 남의 페이지가
- *   폼으로 이 주소를 때려 방문자 브라우저에 게스트를 심는 걸 막는다.
+ * - 다른 사이트에서 온 POST: 같은 출처가 아니면 거절한다(`isSameOrigin`). 남의 페이지가 폼으로
+ *   이 주소를 때려 방문자 브라우저에 게스트를 심는 걸 막는다.
  * - 이미 세션이 있는 요청: 발급하지 않고 `issued: false`로 답한다. 다른 탭이 먼저 받아 간 경우거나,
  *   세션 표식(`sessionKind`)이 생기기 전(KAN-632 이전)에 받은 세션이다. 뒤의 경우는 표식만 심어 준다.
  *
@@ -65,8 +65,7 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
 export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? "";
   const isCrawler = CRAWLER_UA_PATTERN.test(userAgent);
-  const site = request.headers.get("sec-fetch-site");
-  if (isCrawler || (site !== null && site !== "same-origin")) {
+  if (isCrawler || !isSameOrigin(request)) {
     return new NextResponse(null, { status: 403, headers: NO_STORE });
   }
   if (
@@ -174,4 +173,23 @@ function analyticsHeaders(
     headers[ANALYTICS_HEADERS.bot] = BOT_HEADER_VALUE;
   }
   return headers;
+}
+
+/**
+ * 같은 출처에서 온 요청인가. `Sec-Fetch-Site`가 있으면 그것을 믿고, 없는 옛 브라우저·웹뷰면 `Origin`의
+ * 호스트를 요청 `Host`와 맞춘다. 브라우저는 POST fetch에 `Origin`을 늘 싣는다. 둘 다 없으면 거절한다.
+ * `Host`는 CloudFront가 오리진 요청 정책(AllViewer)으로 그대로 넘긴다.
+ *
+ * @param request 이번 요청
+ */
+function isSameOrigin(request: NextRequest): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  if (site !== null) return site === "same-origin";
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
 }

@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
@@ -106,7 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     SessionKind | null | undefined
   >(undefined);
 
-  const [issuing, setIssuing] = useState(false);
+  /* 이 화면에서 게스트 발급이 실패했는가. 화면을 옮기면 다시 시도한다 */
+  const [issueFailed, setIssueFailed] = useState(false);
+  /* 날아가는 중인 `ensureSession`. 한가할 때의 발급과 탭이 겹쳐도 뒤처리(캐시 채우기, 이벤트)는 한 번이다 */
+  const pending = useRef<Promise<boolean> | null>(null);
 
   useLayoutEffect(() => {
     const kind = readSessionKind();
@@ -114,30 +118,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       queryClient.removeQueries({ queryKey: articleStateKeys.all });
     }
     setSessionKind(kind);
+    setIssueFailed(false);
   }, [pathname, queryClient]);
 
-  const ensureSession = useCallback(async () => {
-    if (readSessionKind()) return true;
-    setIssuing(true);
-    const result = await requestGuestSession();
-    setIssuing(false);
-    const kind = readSessionKind();
-    if (!kind) return false;
-    if (result === "issued") adoptFreshGuest(queryClient, kind);
-    else if (syncArticleStateMemoOwner(kind)) {
-      queryClient.removeQueries({ queryKey: articleStateKeys.all });
-    }
-    setSessionKind(kind);
-    if (result === "issued")
-      window.dispatchEvent(new Event(GUEST_ISSUED_EVENT));
-    return true;
+  const ensureSession = useCallback(() => {
+    if (readSessionKind()) return Promise.resolve(true);
+    pending.current ??= (async () => {
+      const result = await requestGuestSession();
+      const kind = readSessionKind();
+      if (!kind) {
+        setIssueFailed(true);
+        return false;
+      }
+      if (result === "issued") adoptFreshGuest(queryClient, kind);
+      else if (syncArticleStateMemoOwner(kind)) {
+        queryClient.removeQueries({ queryKey: articleStateKeys.all });
+      }
+      setSessionKind(kind);
+      if (result === "issued") {
+        window.dispatchEvent(new Event(GUEST_ISSUED_EVENT));
+      }
+      return true;
+    })().finally(() => {
+      pending.current = null;
+    });
+    return pending.current;
   }, [queryClient]);
 
+  /* 세션이 없고 이 화면에서 게스트를 받을 사람인가. 받기로 정해진 순간부터 끝날 때까지가 "대기"다 */
+  const awaitsGuest =
+    sessionKind === null &&
+    !issueFailed &&
+    !skipsGuestIssue(pathname) &&
+    !CRAWLER_UA_PATTERN.test(navigator.userAgent);
+
   useEffect(() => {
-    if (sessionKind !== null || skipsGuestIssue(pathname)) return;
-    if (CRAWLER_UA_PATTERN.test(navigator.userAgent)) return;
+    if (!awaitsGuest) return;
     return runWhenIdle(() => void ensureSession());
-  }, [sessionKind, pathname, ensureSession]);
+  }, [awaitsGuest, ensureSession]);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -164,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userId: isLoggedIn ? (seed?.userId ?? null) : null,
     nickname: isLoggedIn ? (seed?.nickname ?? null) : null,
     ensureSession,
-    isSessionPending: sessionKind === undefined || issuing,
+    isSessionPending: sessionKind === undefined || awaitsGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

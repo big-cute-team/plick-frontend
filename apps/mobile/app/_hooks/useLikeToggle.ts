@@ -9,7 +9,7 @@ import {
 } from "@plick/core/client";
 import type { LikeState, ToggleLikeResult } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
-import { SESSION_UNAVAILABLE } from "@/_constants/session";
+import { sessionUnavailableError } from "@/_apis/guest-session";
 
 /**
  * 좋아요 토글의 공통 뼈대 (KAN-308에서 기사·릴용으로 짜고 KAN-309에서 댓글이
@@ -66,7 +66,7 @@ export function useLikeToggle({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (liked: boolean) => {
-      if (!(await ensureSession())) throw SESSION_UNAVAILABLE;
+      if (!(await ensureSession())) throw sessionUnavailableError();
       const result = await toggle(liked);
       if (!result.ok) {
         throw new ApiError(result.status, result.code, result.message);

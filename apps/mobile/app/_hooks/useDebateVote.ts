@@ -6,7 +6,7 @@ import { ApiError } from "@plick/core/client";
 import { syncDebateVote } from "@plick/core/debate-sync";
 import type { Debate, DebateVoteState, VoteOption } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
-import { SESSION_UNAVAILABLE } from "@/_constants/session";
+import { sessionUnavailableError } from "@/_apis/guest-session";
 import { voteDebate } from "@/_services/debate-actions";
 
 /**
@@ -20,7 +20,8 @@ import { voteDebate } from "@/_services/debate-actions";
  * 낙관적 갱신은 누르는 즉시 내 표를 옮긴다 — 처음이면 고른 쪽 +1, 입장 변경이면
  * 이전 쪽 -1에 새 쪽 +1. 응답이 오면 BE 집계로 덮는다(그 사이 다른 사람 표까지
  * 반영). 실패하면 누르기 직전 값으로 되돌리고, 게스트를 못 받았거나 만료(401)면 로그인
- * 유도 팝업으로 받는다. 세션이 없으면 게스트를 받아 온 뒤 보낸다(KAN-665, `useLikeToggle`과 같다). 같은 선택지를 또 누르는 건 보내지 않는다 — 멱등이라 서버는
+ * 유도 팝업으로 받는다. 세션이 없으면 게스트를 받아 온 뒤 보낸다
+ * (KAN-665, `useLikeToggle`과 같다). 같은 선택지를 또 누르는 건 보내지 않는다 — 멱등이라 서버는
  * 무해하지만 왕복할 이유가 없다.
  *
  * @param debate 지금 보고 있는 토론(원본에서 읽은 값)
@@ -47,7 +48,7 @@ export function useDebateVote({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (option: VoteOption) => {
-      if (!(await ensureSession())) throw SESSION_UNAVAILABLE;
+      if (!(await ensureSession())) throw sessionUnavailableError();
       const result = await voteDebate(debate.id, option);
       if (!result.ok) {
         throw new ApiError(result.status, result.code, result.message);

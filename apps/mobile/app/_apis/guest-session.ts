@@ -2,6 +2,7 @@
  * @file 브라우저에서 게스트 세션을 받아 오는 요청 (KAN-665).
  */
 
+import { ApiError } from "@plick/core/client";
 import { GUEST_SESSION_PATH } from "@/_constants/api";
 
 /**
@@ -36,4 +37,17 @@ export function requestGuestSession(): Promise<GuestSessionResult> {
       inflight = null;
     });
   return inflight;
+}
+
+/**
+ * 게스트를 받아 오지 못해 요청을 보낼 수 없을 때 뮤테이션이 던지는 에러를 만든다. BE가 토큰 없는
+ * 요청에 주는 401 `AUTH_REQUIRED`와 같은 모양이라, 호출부는 하던 대로 그 코드를 보고 로그인 유도
+ * 팝업을 띄운다. 던지는 자리의 스택이 남게 매번 새로 만든다.
+ */
+export function sessionUnavailableError(): ApiError {
+  return new ApiError(
+    401,
+    "AUTH_REQUIRED",
+    "세션을 시작하지 못했어요. 잠시 후 다시 시도해 주세요",
+  );
 }
