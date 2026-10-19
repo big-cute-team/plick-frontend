@@ -85,8 +85,17 @@ test.describe("기사", () => {
     const articles = page.getByRole("article");
     await expect(articles.first()).toBeVisible();
     const before = await articles.count();
-    await page.getByRole("button", { name: "기사 더 보기" }).click();
-    await expect.poll(() => articles.count()).toBeGreaterThan(before);
+    /* 홈이 CDN·ISR 캐시에서 묵은 채 오면(dev는 전날 E2E 런 때 구운 페이지) 씨앗이 30분을 넘어
+       마운트 직후 1페이지 재요청이 걸리고, 그동안 버튼이 disabled로 잠긴다. SSR HTML의 활성
+       버튼을 보고 바로 누른 클릭이 그 잠금에 떨어지면 삼켜져 다음 페이지가 안 온다. 그래서
+       클릭과 개수 확인을 한 묶음으로 두고 개수가 안 늘면 다시 누른다 (KAN-666) */
+    const loadMore = page.getByRole("button", { name: "기사 더 보기" });
+    await expect(async () => {
+      await loadMore.click();
+      await expect
+        .poll(() => articles.count(), { timeout: 3_000 })
+        .toBeGreaterThan(before);
+    }).toPass({ timeout: 15_000 });
     await expect(page).toHaveURL(/\/$/);
   });
 
