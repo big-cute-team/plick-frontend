@@ -65,7 +65,8 @@ export function ArticleLikeButton({
         type="button"
         onClick={like.toggle}
         aria-pressed={state.liked}
-        aria-label={state.liked ? "좋아요 취소" : "좋아요"}
+        /* 이름에 보이는 수를 담는다. 눌린 상태는 aria-pressed가 읽는다 (KAN-670) */
+        aria-label={`좋아요 ${formatCount(state.likeCount)}`}
         className={`${
           state.liked ? "text-danger-strong" : "text-text-2"
         } text-body flex items-center gap-1.5 font-bold active:opacity-60`}

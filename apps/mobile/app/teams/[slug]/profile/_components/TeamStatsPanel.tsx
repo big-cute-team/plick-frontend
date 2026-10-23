@@ -160,13 +160,26 @@ function StatsBody({
             role="row"
             className={`border-border-table text-micro-lg text-text-4 grid h-7 items-center border-b ${COLS}`}
           >
-            <span />
-            <span className="text-center">경기</span>
-            <span className="text-center">승</span>
-            <span className="text-center">무</span>
-            <span className="text-center">패</span>
-            <span className="text-center">득점</span>
-            <span className="text-center">실점</span>
+            {/* role="table" 아래 행은 셀 역할을 채워야 표로 읽힌다 (aria-required-children, KAN-670) */}
+            <span role="columnheader" aria-label="구분" />
+            <span role="columnheader" className="text-center">
+              경기
+            </span>
+            <span role="columnheader" className="text-center">
+              승
+            </span>
+            <span role="columnheader" className="text-center">
+              무
+            </span>
+            <span role="columnheader" className="text-center">
+              패
+            </span>
+            <span role="columnheader" className="text-center">
+              득점
+            </span>
+            <span role="columnheader" className="text-center">
+              실점
+            </span>
           </div>
           {rows.map(({ label, record }) => (
             <div
@@ -174,15 +187,30 @@ function StatsBody({
               role="row"
               className={`border-border-soft grid h-11 items-center border-b ${COLS}`}
             >
-              <span className="text-body text-text-strong font-bold">
+              <span
+                role="rowheader"
+                className="text-body text-text-strong font-bold"
+              >
                 {label}
               </span>
-              <span className={cell}>{record.played ?? "-"}</span>
-              <span className={cell}>{record.win ?? "-"}</span>
-              <span className={cell}>{record.draw ?? "-"}</span>
-              <span className={cell}>{record.lose ?? "-"}</span>
-              <span className={cell}>{record.goalsFor ?? "-"}</span>
-              <span className={cell}>{record.goalsAgainst ?? "-"}</span>
+              <span role="cell" className={cell}>
+                {record.played ?? "-"}
+              </span>
+              <span role="cell" className={cell}>
+                {record.win ?? "-"}
+              </span>
+              <span role="cell" className={cell}>
+                {record.draw ?? "-"}
+              </span>
+              <span role="cell" className={cell}>
+                {record.lose ?? "-"}
+              </span>
+              <span role="cell" className={cell}>
+                {record.goalsFor ?? "-"}
+              </span>
+              <span role="cell" className={cell}>
+                {record.goalsAgainst ?? "-"}
+              </span>
             </div>
           ))}
         </div>

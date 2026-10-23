@@ -52,7 +52,7 @@ export function StandingsWindowCard({
                   {row.rank}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.75">
-                  <LiveCrest team={row.team} size={18} />
+                  <LiveCrest team={row.team} size={18} decorative />
                   <span
                     className={`text-body text-text-strong truncate ${self ? "font-black" : "font-bold"}`}
                   >

@@ -6,6 +6,7 @@ import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useDebates } from "@/_hooks/useDebates";
+import { DEBATE_LIST_HEADING } from "@/_constants/debates";
 import { debateTabFrom } from "@/_utils/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 
@@ -62,29 +63,32 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   }
 
   return (
-    <ul>
-      {debates.map((debate) => (
-        <li
-          key={debate.id}
-          className={`border-border-soft border-b ${tab === "closed" ? "py-4.5" : "pt-5 pb-5.5"}`}
-        >
-          <DebateVoteCard
-            articleId={debate.articleId}
-            debate={debate}
-            closed={debate.contentType === "FINISH"}
-            size={tab === "closed" ? "sm" : "md"}
-          />
-          <div className="flex justify-end pt-2.5">
-            <ArticleLink
+    <>
+      <h2 className="sr-only">{DEBATE_LIST_HEADING[tab]}</h2>
+      <ul>
+        {debates.map((debate) => (
+          <li
+            key={debate.id}
+            className={`border-border-soft border-b ${tab === "closed" ? "py-4.5" : "pt-5 pb-5.5"}`}
+          >
+            <DebateVoteCard
               articleId={debate.articleId}
-              className="text-label text-accent hover:text-accent-hover font-bold"
-            >
-              기사 보기
-            </ArticleLink>
-          </div>
-        </li>
-      ))}
-    </ul>
+              debate={debate}
+              closed={debate.contentType === "FINISH"}
+              size={tab === "closed" ? "sm" : "md"}
+            />
+            <div className="flex justify-end pt-2.5">
+              <ArticleLink
+                articleId={debate.articleId}
+                className="text-label text-accent hover:text-accent-hover font-bold"
+              >
+                기사 보기
+              </ArticleLink>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

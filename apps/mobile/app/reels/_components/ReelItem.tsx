@@ -314,7 +314,7 @@ export const ReelItem = memo(function ReelItem({
                   href={teamProfilePath(team.code)}
                   className="pointer-events-auto flex items-center gap-2 active:opacity-60"
                 >
-                  <TeamCrest team={team} size={28} />
+                  <TeamCrest team={team} size={28} decorative />
                   <span className="text-body-lg text-text-strong font-bold">
                     {team.name}
                   </span>

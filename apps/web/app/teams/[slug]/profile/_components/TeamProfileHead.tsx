@@ -30,7 +30,7 @@ export function TeamProfileHead({
 
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-4 pb-6.5">
-      <TeamCrest team={TEAMS[code]} size={88} className="shrink-0" />
+      <TeamCrest team={TEAMS[code]} size={88} className="shrink-0" decorative />
       <div className="min-w-0 flex-1 basis-60">
         <h1 className="text-text-strong truncate text-[2.25rem] leading-[1.15] font-black tracking-[-0.05em]">
           {summary.name}

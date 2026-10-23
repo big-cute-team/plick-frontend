@@ -19,21 +19,29 @@ import { rem } from "@plick/domain/format";
  *
  * @param team - 경기·순위 데이터의 팀 참조
  * @param size - 한 변 px (기본 24)
+ * @param decorative - 옆에 팀명 텍스트가 있으면 true. 이름을 비워 두 번 읽지 않게 한다 (KAN-670)
  */
 export function LiveCrest({
   team,
   size = 24,
   className = "",
+  decorative = false,
 }: {
   team: LiveTeam;
   size?: number;
   className?: string;
+  decorative?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
 
   if (team.code) {
     return (
-      <TeamCrest team={TEAMS[team.code]} size={size} className={className} />
+      <TeamCrest
+        team={TEAMS[team.code]}
+        size={size}
+        className={className}
+        decorative={decorative}
+      />
     );
   }
   if (team.logo && !failed) {
@@ -41,7 +49,7 @@ export function LiveCrest({
       /* CDN 로고 호스트가 외부라 next/image 대신 일반 img로 그린다 (TeamCrest·MediaThumb과 같은 이유) */
       <img
         src={team.logo}
-        alt={team.name}
+        alt={decorative ? "" : team.name}
         width={size}
         height={size}
         loading="lazy"
@@ -53,7 +61,8 @@ export function LiveCrest({
   }
   return (
     <span
-      aria-label={team.name}
+      aria-label={decorative ? undefined : team.name}
+      aria-hidden={decorative || undefined}
       className={`bg-avatar text-text-4 grid shrink-0 place-items-center rounded-full font-bold ${className}`}
       style={{
         width: rem(size),

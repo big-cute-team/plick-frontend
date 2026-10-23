@@ -110,7 +110,7 @@ export function ProfileEditForm({
                 key={code}
                 className="bg-chip rounded-pill flex h-8.5 items-center gap-1.5 pr-3.25 pl-2.25"
               >
-                <TeamCrest team={TEAMS[code]} size={20} />
+                <TeamCrest team={TEAMS[code]} size={20} decorative />
                 <span className="text-label-lg text-text-strong font-bold">
                   {TEAMS[code].name}
                 </span>

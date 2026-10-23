@@ -64,7 +64,7 @@ export function ReelActionRail({
         label={formatCount(reel.likeCount)}
         onClick={onLike}
         active={liked}
-        ariaLabel={liked ? "좋아요 취소" : "좋아요"}
+        ariaLabel="좋아요"
         ariaPressed={liked}
       />
       <RailAction
@@ -98,7 +98,8 @@ export function ReelActionRail({
  * 레일 버튼 하나 — 원 아이콘 칩 + 라벨.
  *
  * @param active - 켜진 토글이면 하트와 숫자를 빨강으로 (시안: 눌린 하트만 빨강, KAN-567)
- * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다
+ * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다. 보이는 숫자를
+ *   뒤에 붙여 이름에 담는다(음성 명령은 보이는 글자로 부른다, label-content-name-mismatch, KAN-670)
  * @param ariaPressed - 토글 버튼이면 눌린 상태
  */
 function RailAction({
@@ -120,7 +121,7 @@ function RailAction({
     <button
       type="button"
       onClick={onClick}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel && `${ariaLabel} ${label}`}
       aria-pressed={ariaPressed}
       className={`${active ? "text-danger-strong" : "text-text"} group flex flex-col items-center gap-1.25`}
     >

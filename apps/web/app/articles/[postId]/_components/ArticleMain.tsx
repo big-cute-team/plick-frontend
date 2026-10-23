@@ -85,7 +85,7 @@ export function ArticleMain({
               href={teamProfilePath(team.code)}
               className="text-label text-text-3 hover:text-accent flex items-center gap-1.75"
             >
-              <TeamCrest team={team} size={15} />
+              <TeamCrest team={team} size={15} decorative />
               {team.name}
             </Link>
           </>
