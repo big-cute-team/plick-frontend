@@ -1,25 +1,22 @@
 import { unstable_rethrow } from "next/navigation";
 import { getDebates } from "@plick/core/debates";
 import type { InitialDebateList } from "@plick/domain/types";
-import { getAccessToken } from "@/_services/session";
-import type { DebateTab } from "@/_types/debates";
 import { DebatesFeed } from "./DebatesFeed";
 
 /**
- * 투표 목록과 그 씨앗. 첫 리스트는 서버에서 받아 씨앗으로 내려준다. `myVote`(내가
- * 투표한 카드 표시)가 유저별 값이라 토큰을 실어 부른다. 기사 상세와 같은 규약이다.
+ * 투표 목록과 그 씨앗. 첫 리스트는 서버에서 받아 씨앗으로 내려준다. 토큰 없이 받아
+ * 페이지를 익명 ISR로 캐시한다 (KAN-667, 모바일 KAN-664·ADR 0200). 내가 투표한 쪽
+ * (`myVote`)은 카드가 내 상태 캐시에서 얹는다. 기사 상세와 같은 규약이다. 탭은 목록이
+ * 브라우저에서 URL로 읽는다.
  *
- * `DebatesScreen`이 Suspense로 감싸 스트리밍한다 (KAN-602). 토큰을 실은 조회라
- * 캐시를 못 타서 BE가 느리면 그대로 느린데, 그동안 제목과 탭 줄은 먼저 서 있다.
- *
- * @param tab 지금 탭
+ * `DebatesScreen`이 Suspense로 감싸 스트리밍한다 (KAN-602). ISR이 된 뒤에는 재생성
+ * 중에만 의미가 있다.
  */
-export async function DebatesSection({ tab }: { tab: DebateTab }) {
+export async function DebatesSection() {
   let initial: InitialDebateList | undefined;
   try {
-    const accessToken = await getAccessToken();
     initial = {
-      items: await getDebates(accessToken ? { accessToken } : undefined),
+      items: await getDebates(),
       fetchedAt: Date.now(),
     };
   } catch (error) {
@@ -30,5 +27,5 @@ export async function DebatesSection({ tab }: { tab: DebateTab }) {
     console.error("[debates] 토론 리스트 초기 로드 실패:", error);
   }
 
-  return <DebatesFeed initial={initial} tab={tab} />;
+  return <DebatesFeed initial={initial} />;
 }

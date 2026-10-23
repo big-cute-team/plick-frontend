@@ -6,6 +6,13 @@ import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { ReelsFeedSection } from "@/reels/_components/ReelsFeedSection";
 import { ReelsWorkspaceSkeleton } from "@/reels/_components/ReelsWorkspaceSkeleton";
 
+/**
+ * 익명 ISR (KAN-667, 모바일 KAN-664·ADR 0200). 내 좋아요·투표는 화면이 뜬 뒤 내 상태 캐시가
+ * 얹고, 이 페이지는 누구에게나 같은 것만 서버에서 받는다. 피드의 데이터 fetch가 익명 60초
+ * 캐시라 같은 주기다.
+ */
+export const revalidate = 60;
+
 /** 이 URL이 canonical이고 대응 모바일 릴스를 alternate로 선언한다 (KAN-346) — 홈과 같은 상호 참조. */
 export const metadata: Metadata = {
   title: "릴스",

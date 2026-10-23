@@ -196,6 +196,7 @@ export function ReelItem({
         {/* 좁은 폭 전용: 레일을 카드 안 우측 하단에 오버레이 */}
         <ReelActionRail
           reel={reel}
+          liked={like.liked}
           onLike={like.toggle}
           onOpenComments={onOpenDetail}
           onShare={() => setShareOpen(true)}
@@ -206,6 +207,7 @@ export function ReelItem({
       {/* 데스크톱 전용: 카드 밖 오른쪽 레일 */}
       <ReelActionRail
         reel={reel}
+        liked={like.liked}
         navigable
         onLike={like.toggle}
         onOpenComments={onOpenDetail}

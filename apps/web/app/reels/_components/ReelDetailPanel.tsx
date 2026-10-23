@@ -149,6 +149,7 @@ export function ReelDetailPanel({
               <div className="px-5.5 pb-4.5">
                 <DebateVoteCard
                   key={rendered.id}
+                  articleId={rendered.id}
                   debate={rendered.debate}
                   closed={rendered.contentType === "FINISH"}
                 />

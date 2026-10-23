@@ -1,45 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import type { Debate, DebateVoteState } from "@plick/domain/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { setMyArticleState } from "@plick/core/article-states";
+import type { Debate } from "@plick/domain/types";
 import { VoteCard } from "@plick/ui/VoteCard";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { VOTE_LOGIN_PROMPT } from "@/_constants/debates";
 import { useDebateVote } from "@/_hooks/useDebateVote";
+import { useMyArticleState } from "@/_hooks/useMyArticleState";
 
 /**
  * 투표 가능한 투표 카드 (KAN-418, 시안 W14·W15) — 표시 전용 `VoteCard`에
- * 뮤테이션·로그인 게이트를 묶은 클라 경계. 기사 세부와 릴 세부 패널이 같이
- * 쓴다. 모바일 `DebateVoteCard`의 웹 이식이다 — 로그인 게이트·서버 액션이
+ * 뮤테이션·로그인 게이트를 묶은 클라 경계. 기사 세부와 릴 세부 패널, 투표 목록이
+ * 같이 쓴다. 모바일 `DebateVoteCard`의 웹 이식이다 — 로그인 게이트·서버 액션이
  * 앱 로컬이라 컴포넌트째 복제한다(댓글과 같은 판단).
  *
- * 집계 상태를 여기 state로 든다 — 기사 세부는 서버가 준 props가 원본이라 이
+ * 집계(표 수)를 여기 state로 든다 — 기사 세부는 서버가 준 props가 원본이라 이
  * state가 곧 화면이다(좋아요 `ArticleLikeButton`과 같은 판단). 릴 패널은 피드
  * 캐시가 원본이지만 훅이 `syncDebateVote`로 캐시를 함께 맞춰 같은 값을 유지한다.
  *
+ * 내 표는 다르다 (KAN-667, 모바일 KAN-664). 세 화면 모두 익명 ISR이라 받은 토론의 `myVote`는
+ * 늘 null이고, 내 상태 캐시(`useMyArticleState`)가 원본이다. 투표하면 그 캐시에 바로 적는다.
+ * 결과 공개가 이 값에 걸려 있어 응답 전에는 투표 전 모양으로 보이다가 내 표가 오면 결과로 바뀐다.
+ * 마감 카드도 같은 길이다. 내 표 표시만 캐시에서 얹고 투표는 막혀 있다.
+ *
+ * @param articleId 토론이 붙은 기사 id. 내 표를 이 기사로 찾는다
  * @param debate 서버(또는 피드 캐시)가 내려준 최초 토론 상태
  * @param closed 마감된 토론인가(기사 `contentType === "FINISH"`)
  * @param size `VoteCard` 크기 — 기사 세부는 md(기본)
  */
 export function DebateVoteCard({
+  articleId,
   debate: initial,
   closed = false,
   size,
 }: {
+  articleId: string;
   debate: Debate;
   closed?: boolean;
   size?: "md" | "sm";
 }) {
-  const [voteState, setVoteState] = useState<DebateVoteState>({
+  const queryClient = useQueryClient();
+  const [counts, setCounts] = useState({
     voteCountA: initial.voteCountA,
     voteCountB: initial.voteCountB,
-    myVote: initial.myVote,
   });
-  const debate: Debate = { ...initial, ...voteState };
+  const { vote: myVote } = useMyArticleState(articleId);
+  const debate: Debate = { ...initial, ...counts, myVote };
   const { vote, isPending, needsLogin, dismissLogin, closedByServer } =
     useDebateVote({
       debate,
-      onChange: setVoteState,
+      onChange: ({ voteCountA, voteCountB, myVote: next }) => {
+        setCounts({ voteCountA, voteCountB });
+        setMyArticleState(queryClient, articleId, { vote: next });
+      },
     });
 
   return (

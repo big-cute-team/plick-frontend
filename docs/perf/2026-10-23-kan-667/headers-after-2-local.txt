@@ -1,0 +1,48 @@
+# 2단계 뒤 로컬 standalone 응답 헤더 (2026-10-23, curl UA라 게스트 발급 없음, API_BASE_URL=prod BE)
+
+== GET /articles/9679
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /debates
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /debates?tab=closed
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /reels
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /reels/9679
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /faq
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /login
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /me
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /articles/9679 두 번째 (캐시 적중)
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980

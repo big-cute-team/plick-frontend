@@ -44,3 +44,42 @@
 ISR 페이지(팀 프로필, 인물, 선수, 이슈)를 요청한 뒤 서버 로그에 ADR 0199에서 본 "Page changed from static to dynamic at runtime"는 없었다. 그 함정은 `@plick/core/client.ts`에서 이미 고쳐진 채로 웹에 와 있었다.
 
 빌드 표와 헤더는 `docs/perf/2026-10-23-kan-667/`의 `build-before-routes.txt`·`headers-before-local.txt`·`build-after-1-routes.txt`·`headers-after-1-local.txt`다. 기사·릴스·투표가 `ƒ`로 남은 것은 페이지가 아직 토큰을 실어 받기 때문이고 2단계(KAN-664 이식)가 다룬다.
+
+## 2단계: 기사·릴스·투표를 익명 ISR로, 내 상태는 오버레이로 (KAN-664 이식)
+
+1단계 뒤에도 기사 상세·릴 상세·릴스 피드·투표 목록은 `ƒ`였다. 페이지가 `getAccessToken()`으로 토큰을 실어 데이터를 받고 응답의 `likedByMe`·`myVote`를 그리기 때문이다. ADR 0200의 설계를 그대로 옮겼다. 로더·브라우저 기억·쿼리 키·`setMyArticleState`·`syncLikeIntoFeeds`의 내 상태 갱신은 전부 `@plick/core`에 있어서 웹은 `useAuth`에 묶이는 훅 `useMyArticleState` 하나만 앱에 두면 됐다.
+
+- 네 화면의 서버 fetch에서 토큰을 뺐다. 기사 상세의 `loadArticle`은 인자가 postId 하나로 줄었고, `[postId]` 두 라우트에 `revalidate = 60`과 빈 `generateStaticParams`를, 릴스 피드와 투표 목록 페이지에 `revalidate = 60`을 두었다. 릴 딥링크의 catch에는 `unstable_rethrow`를 넣었다.
+- `ArticleLikeButton`은 좋아요 수만 state로 들고 눌렀는가는 훅에서 읽는다. `useReelLike`는 릴스 피드 캐시를 손으로 고치던 코드를 `syncLikeIntoFeeds`로 바꿨다. 모바일이 KAN-495에서 한 걸 웹은 안 했었는데, 이번에 내 상태 캐시까지 한 함수가 고치게 되면서 같이 맞췄다. `ReelActionRail`은 `liked` prop을 받는다.
+- `DebateVoteCard`는 표 수만 state로 들고 내 표는 훅에서 읽으며 `articleId` prop이 생겼다. 기사 상세, 릴 세부 패널, 투표 목록 세 곳이 넘긴다. 웹의 투표 목록은 마감 탭도 같은 카드를 `closed`로 쓰고 있어서 모바일의 `ClosedVoteCard`는 만들지 않았다.
+- `AuthProvider`가 세션 종류가 바뀌면 내 상태 캐시와 브라우저 기억을 지우고, bfcache 복원이면 내 상태 쿼리만 다시 묻는다.
+
+### 댓글은 웹이 더 단순했다
+
+모바일은 댓글 목록 훅이 suspense 쿼리라, 서버 씨앗을 빼면 ISR 생성 중에 서버가 토큰 없이 댓글을 받아 HTML에 굳히는 문제가 있어 `next/dynamic`의 `ssr: false`로 감쌌다. 웹의 `useComments`는 suspense가 아닌 `useInfiniteQuery`이고 `CommentList`는 `isPending`이면 아무것도 그리지 않는다. 서버 렌더에서는 쿼리가 돌지 않아 목록이 빈 채로 나가고, 마운트 뒤 프록시를 거쳐 토큰을 실어 받는다. 그래서 씨앗(`initial`)과 서버의 `getComments` 호출만 지우면 됐다. `useComments`·`CommentList`·`ArticleComments`·`ArticleMain`·페이지에서 `InitialCommentPage`가 사라졌다.
+
+### 투표 탭이 페이지를 동적으로 붙들고 있었다
+
+투표 페이지에 `revalidate = 60`을 두고 빌드했는데 `/debates`가 그대로 `ƒ`였다. 웹은 `?tab=closed`를 페이지가 `searchParams`로 읽어 `DebatesScreen`에 prop으로 내려주고 있었다. `searchParams`를 읽는 것도 `cookies()`처럼 요청을 읽는 것이라 그 라우트는 요청마다 렌더가 된다. 모바일은 처음부터 `DebatesFeed`가 `useSearchParams`로 브라우저에서 읽는 구조였다.
+
+같은 모양으로 바꿨다. 페이지는 쿼리를 읽지 않고, 탭 줄은 클라이언트 컴포넌트 `DebateTabs`가, 목록은 `DebatesFeed`가 각각 `useSearchParams`로 읽는다. `useSearchParams`는 정적으로 그려지는 페이지에서 가장 가까운 Suspense 경계까지를 클라이언트 렌더로 미루므로 둘 다 Suspense 안에 두어야 한다. 목록은 이미 `DebatesSection`의 Suspense 안이었고, 탭 줄은 새로 감쌌다. fallback에 처음엔 `DebateTabs` 자신을 넣었다가 그것도 쿼리를 읽는다는 걸 알고, 쿼리를 읽지 않는 표시 전용 `DebateTabBar`를 떼어 기본 탭으로 둔 fallback을 만들었다. 서버 HTML은 늘 "진행 중" 탭 모양이고 브라우저가 쿼리를 읽어 맞춘다. 마감 탭을 새로고침하면 한 프레임 안에 바뀌는 정도라 자리는 흔들리지 않는다.
+
+### 2단계 전후와 검증
+
+prod BE를 보는 standalone으로 빌드 표와 헤더를 찍었다. 기사 상세·릴 상세가 `●`, 릴스 피드·투표 목록이 `○`가 됐고 `ƒ`는 15개(MY·로그인·라이브·OG·API 라우트)만 남았다. 기사 상세 응답은 `s-maxage=20`이다. 페이지에 `revalidate = 60`을 적어도 그 라우트 fetch 중 가장 짧은 값이 이기는데, 기사 상세에도 라이브 띠(20초)가 있어서다. 모바일은 띠가 없어 60초였다. 투표 목록도 같은 이유로 20초다.
+
+| 항목                               | 1단계 뒤        | 2단계 뒤                       |
+| ---------------------------------- | --------------- | ------------------------------ |
+| 빌드 표 페이지 라우트              | ○ 14, ● 5, ƒ 19 | ○ 16, ● 7, ƒ 15                |
+| 기사 상세·릴 상세                  | ƒ, `no-store`   | ●, `s-maxage=20`·`s-maxage=60` |
+| 릴스 피드·투표 목록                | ƒ, `no-store`   | ○, `s-maxage=60`·`s-maxage=20` |
+| 네 화면 서버 fetch의 Authorization | 있음            | 없음                           |
+
+내 상태 API는 prod BE에 아직 없다. 토큰 없이 부르면 401이 와서 있는 줄 알았는데, 인증 필터가 라우팅보다 먼저 막은 것이었고 게스트 토큰을 실으니 404였다. 그래서 동작 검증은 dev BE로 했다. 브라우저 `/be` 리라이트 대상은 빌드 때 굳어 standalone을 다시 빌드해야 해서, 기능은 dev BE를 보는 dev 서버(`web-dev-remote`, 3050)에서 봤다. 전에 dev BE가 로컬 요청을 403으로 막던 것은 이번엔 GET에 한해 열려 있었다. POST(조회 기록, 분석 이벤트)는 여전히 403이라 그 둘의 콘솔 에러는 환경 탓이다.
+
+확인한 것은 이렇다.
+
+- 기사 상세(8757): 하이드레이션 경고 없음. `article-states?ids=8757` 한 번. 댓글은 브라우저에서 받아 7개가 떴다. 좋아요를 누르면 즉시 79·눌림이 되고 서버 액션 POST가 200, 새로고침하면 BE 응답이 `liked: true`라 하트가 찬 채로 열리고 수는 익명 캐시의 78이다(ADR 0200이 적은 절충). `localStorage`의 `plick:myArticleStates:v1`에 `{"8757":{"liked":true,"vote":null}}`이 남았다.
+- 릴스 피드: 열 장의 내 상태가 `ids` 10개짜리 요청 한 번으로 왔고 방금 누른 8757만 두 레일(데스크톱·좁은 폭) 다 하트가 찼다.
+- 투표 목록: `?tab=closed`로 열면 마감 탭이 선택돼 있고 마감 카드 4건의 내 표가 `ids` 4개 요청 한 번으로 왔다. 탭을 바꾸면 소프트 내비게이션으로 URL과 선택이 따라온다. 전환 중 한순간 DOM에 탭 줄이 둘 보였는데 Suspense fallback이 빠지기 전 스냅샷이었고 바로 하나가 됐다.
+- 투표 쓰기는 못 눌러 봤다. dev에 지금 열린 투표가 없고, 8757에도 토론이 안 붙어 있다. `DebateVoteCard`는 모바일에서 검증된 카드를 prop 하나(`articleId`) 추가로 그대로 옮긴 것이라 타입 검사로 갈음한다. dev 배포 뒤 E2E `debates.spec`이 다시 본다.
