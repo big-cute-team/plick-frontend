@@ -651,6 +651,26 @@ export function matchSummaryLine(match: MatchSummary): string {
 }
 
 /**
+ * 똑같이 겹쳐 온 결장자를 걷어낸다 (KAN-668). BE 프리뷰가 결장자 목록 전체를 두 번
+ * 이어 붙여 내려 화면에 한 명이 두 줄로 섰다. 식별은 팀(`shortName`) 안에서 `playerId`,
+ * 없으면 이름이고, 사유까지 같아야 겹침으로 본다. 한 선수가 부상과 징계로 따로 오면
+ * 둘 다 남긴다. 먼저 온 항목을 남겨 홈·원정 정렬이 흔들리지 않는다.
+ *
+ * @param absentees - 프리뷰 결장자 목록(겹침 가능)
+ * @example
+ * dedupeAbsentees([a, b, a]) // → [a, b]
+ */
+export function dedupeAbsentees(absentees: Absentee[]): Absentee[] {
+  const seen = new Set<string>();
+  return absentees.filter((absentee) => {
+    const key = `${absentee.team.shortName}:${absentee.playerId ?? absentee.playerName}:${absentee.reason}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * 결장자를 팀별로 묶는다 (KAN-459). 그룹 순서는 배열에 처음 등장한 팀 순이라
  * 경계 변환이 홈·원정 순으로 정렬해 주면 그대로 홈 그룹이 먼저다. 빅6 밖 팀은
  * `id`가 null이라 팀 식별은 `shortName`으로 한다.
