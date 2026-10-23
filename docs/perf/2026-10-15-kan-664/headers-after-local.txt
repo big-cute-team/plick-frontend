@@ -1,0 +1,10 @@
+/articles/7077           #1 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: MISS set-cookie: 0
+/articles/7077           #2 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/reels                   #1 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/reels                   #2 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/reels/8372              #1 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: MISS set-cookie: 0
+/reels/8372              #2 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/debates                 #1 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/debates                 #2 HTTP/1.1 200 OK Cache-Control: s-maxage=60, stale-while-revalidate=31535940 x-nextjs-cache: HIT set-cookie: 0
+/me                      #1 HTTP/1.1 200 OK Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate x-nextjs-cache:  set-cookie: 0
+/me                      #2 HTTP/1.1 200 OK Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate x-nextjs-cache:  set-cookie: 0

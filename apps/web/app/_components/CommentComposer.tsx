@@ -54,7 +54,7 @@ export function CommentComposer({
   onPosted?: () => void;
   className?: string;
 }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, ensureSession } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -68,14 +68,15 @@ export function CommentComposer({
     if (isReply) inputRef.current?.focus();
   }, [isReply]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoggedIn) {
+    const content = value.trim();
+    if (!content || isPending) return;
+    /* 처음 온 사람은 게스트를 받기 전일 수 있다 (KAN-667). 받아 오지 못했을 때만 팝업이다 */
+    if (!isLoggedIn && !(await ensureSession())) {
       setShowLogin(true);
       return;
     }
-    const content = value.trim();
-    if (!content || isPending) return;
 
     setError(null);
     mutate(
@@ -116,10 +117,13 @@ export function CommentComposer({
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           onFocus={(e) => {
-            if (!isLoggedIn) {
-              e.currentTarget.blur();
+            if (isLoggedIn) return;
+            const input = e.currentTarget;
+            void ensureSession().then((ok) => {
+              if (ok) return;
+              input.blur();
               setShowLogin(true);
-            }
+            });
           }}
           placeholder={
             isReply

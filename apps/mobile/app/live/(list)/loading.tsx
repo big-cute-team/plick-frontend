@@ -22,7 +22,7 @@ export default function LiveLoading() {
   return (
     <AppShell>
       <TopBar />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <ChatRoomBanner />
         <div aria-hidden className="px-edge animate-pulse pt-4">
           <div className="bg-elevate rounded-pill mb-2 h-3.5 w-20" />

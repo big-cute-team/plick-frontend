@@ -355,6 +355,7 @@ export const ReelItem = memo(function ReelItem({
 
       <ReelActionRail
         reel={reel}
+        liked={like.liked}
         onLike={like.toggle}
         onComment={handleOpen}
         onShare={() => setShareOpen(true)}

@@ -1,11 +1,12 @@
 /**
  * @file `@plick/core/ads` 회귀 테스트 (KAN-652). 릴스 전면광고 끼워 넣기와 순번 환산,
- * 앱 셸 끄기, ads.txt 한 줄.
+ * 앱 셸 끄기, ads.txt 한 줄, 앱 셸에서 광고 요청을 멈추는 head 스크립트(KAN-632).
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   ADSENSE_CLIENT,
+  adsPauseScript,
   adsTxt,
   interleaveReelAds,
   isAdsMode,
@@ -76,5 +77,30 @@ test("ads.txt는 게시자 ID에서 ca- 접두어를 뗀 한 줄이다", () => {
   assert.equal(
     adsTxt(),
     "google.com, pub-1989769587706531, DIRECT, f08c47fec0942fa0\n",
+  );
+});
+
+test("앱 셸 UA에서만 pauseAdRequests를 세우는 head 스크립트", () => {
+  const script = adsPauseScript();
+  const run = (userAgent) => {
+    const window = {};
+    new Function("navigator", "window", script)({ userAgent }, window);
+    return window.adsbygoogle?.pauseAdRequests ?? null;
+  };
+  assert.equal(
+    run(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 PlickApp/1.2",
+    ),
+    1,
+  );
+  assert.equal(
+    run(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
+    ),
+    null,
+  );
+  assert.equal(
+    run("Mozilla/5.0 (Linux; Android 14) Instagram 320.0.0.0.0 Android"),
+    null,
   );
 });

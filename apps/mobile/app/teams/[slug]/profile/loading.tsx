@@ -12,7 +12,7 @@ export default function TeamProfileLoading() {
   return (
     <AppShell>
       <SubTopBar title="팀" backHref="/" backBehavior="back" />
-      <ScrollArea>
+      <ScrollArea restoreLanding={false}>
         <div aria-hidden className="px-edge animate-pulse">
           <div className="flex items-center gap-4 pt-5 pb-4">
             <div className="bg-avatar size-16 shrink-0 rounded-full" />

@@ -92,7 +92,7 @@ test("형식이 깨진 localStorage 값은 못 믿고, 유효한 쿠키로 덮�
   assert.equal(env.localStorage.getItem(DEVICE_ID_STORAGE_KEY), OLD);
 });
 
-test("둘 다 없으면 아무것도 안 한다. 프록시가 다음 응답에서 새로 만든다", () => {
+test("옵션 없이 둘 다 없으면 아무것도 안 한다. 만들기는 issue 옵션의 몫이다", () => {
   const env = run({});
   assert.equal(env.writes.length, 0);
   assert.equal(env.localStorage.map.size, 0);

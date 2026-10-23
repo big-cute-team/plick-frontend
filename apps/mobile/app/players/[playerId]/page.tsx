@@ -42,6 +42,15 @@ function settled<T>(result: PromiseSettledResult<T>, label: string): T | null {
 }
 
 /**
+ * 빈 목록이어도 선언해 둔다 (KAN-632). Next는 `generateStaticParams`가 아예 없는 동적 세그먼트를
+ * 요청마다 렌더(ƒ)로 다루고, 있으면(목록 밖 값 포함) 첫 요청에 그려 fetch의 revalidate만큼 캐시한다.
+ * 인물은 수가 많고 늘어나서 빌드 때 전부 그리지는 않는다.
+ */
+export function generateStaticParams(): { playerId: string }[] {
+  return [];
+}
+
+/**
  * 선수 프로필 메타데이터 (KAN-604). 프로필 fetch는 본문과 같은 URL, 같은 캐시 옵션이라 Next
  * 데이터 캐시에서 한 번만 나간다. 실패하면(404, 502) 빈 메타데이터로 두고 본문이 처리한다.
  * canonical은 대응 데스크톱 선수 프로필(KAN-600)이다.

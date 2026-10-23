@@ -331,7 +331,7 @@ function CommentOwnerActions({
  * 성공 시 캐시 반영은 `useBlockUser`가 한다.
  */
 function CommentMoreActions({ comment }: { comment: ArticleComment }) {
-  const { isLoggedIn, isGuest } = useAuth();
+  const { isLoggedIn, isGuest, ensureSession } = useAuth();
   const [dialog, setDialog] = useState<"none" | "report" | "block" | "blocked">(
     "none",
   );
@@ -339,9 +339,14 @@ function CommentMoreActions({ comment }: { comment: ArticleComment }) {
   const [blockError, setBlockError] = useState<string | null>(null);
   const block = useBlockUser();
 
-  function open(next: "report" | "block") {
-    /* 신고는 소셜 사용자 전용(KAN-656)이라 게스트는 연동 안내로, 차단은 세션만 있으면 된다 */
-    if (!isLoggedIn || (next === "report" && isGuest)) {
+  async function open(next: "report" | "block") {
+    /* 처음 온 사람은 게스트를 받기 전일 수 있다 (KAN-667). 차단은 게스트 세션으로도 된다 */
+    if (!isLoggedIn && !(await ensureSession())) {
+      setNeedsLogin(true);
+      return;
+    }
+    /* 신고는 소셜 사용자 전용(KAN-656)이라 게스트는 연동 안내다. 방금 받은 게스트도 마찬가지다 */
+    if (next === "report" && (isGuest || !isLoggedIn)) {
       setNeedsLogin(true);
       return;
     }

@@ -15,6 +15,15 @@ import { FigureHeader } from "./_components/FigureHeader";
 import { SiteFooter } from "@/_components/SiteFooter";
 
 /**
+ * 빈 목록이어도 선언해 둔다 (KAN-667, 모바일 KAN-632). Next는 `generateStaticParams`가 아예 없는
+ * 동적 세그먼트를 요청마다 렌더(ƒ)로 다루고, 있으면(목록 밖 값 포함) 첫 요청에 그려 fetch의
+ * revalidate만큼 캐시한다. 인물은 수가 많고 늘어나서 빌드 때 전부 그리지는 않는다.
+ */
+export function generateStaticParams(): { figureId: string }[] {
+  return [];
+}
+
+/**
  * 인물별 메타데이터 (KAN-501) — "손흥민 이적" 같은 인물 검색어의 랜딩이 될 수
  * 있어 title에 이름과 구분을 넣는다. 이 URL이 canonical이고 대응 모바일 인물
  * 페이지를 alternate로 선언한다(KAN-346과 같은 규약). 없는 인물은 빈

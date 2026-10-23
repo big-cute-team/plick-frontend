@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { getArticles } from "@plick/core/articles";
 import { TEAMS, TEAM_FULL_NAMES } from "@plick/domain/constants";
 import { teamCollectionJsonLd } from "@plick/domain/jsonld";
@@ -25,6 +26,9 @@ export async function NewsSection({ team }: { team: Filter }) {
     // 받은 시각을 함께 넘긴다. 클라 캐시가 이 씨앗의 신선도를 재는 기준이 된다
     initial = { page: await getArticles({ team }), fetchedAt: Date.now() };
   } catch (error) {
+    /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-632). 삼키면 빌드
+       로그에 "로드 실패"로 찍히고 라우트 판정을 가로챌 수 있다 */
+    unstable_rethrow(error);
     // 서버에서 못 받아도 클라가 다시 받아 리스트 자리에만 에러와 재시도를 보여준다
     console.error("[home] 기사 피드 초기 로드 실패:", error);
   }

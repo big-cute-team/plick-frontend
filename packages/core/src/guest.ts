@@ -2,18 +2,20 @@
  * @file 게스트 발급 fetcher (KAN-514). 토큰 없이 `POST /api/v1/auth/guest`를 불러
  * 게스트 계정과 토큰 쌍을 받아온다.
  *
- * `refresh.ts`와 같은 이유로 `"use server"`가 아니다 — 유일한 소비자가 edge에서 도는
- * 각 앱 `proxy.ts`라서, 쿠키 심기와 리다이렉트는 프록시가 자기 API로 하고 이 파일은
- * BE 호출과 봉투 해제만 하는 순수 함수로 남긴다. 두 앱(mobile·web)이 같은 계약을
+ * `refresh.ts`와 같은 이유로 `"use server"`가 아니다 — 쿠키 심기는 부르는 쪽이 자기 API로 하고
+ * 이 파일은 BE 호출과 봉투 해제만 하는 순수 함수로 남긴다. 부르는 쪽은 두 앱의 게스트 발급 라우트
+ * (`/api/session/guest`, 모바일 KAN-665·웹 KAN-667)와 로그아웃 액션이다. 두 앱이 같은 계약을
  * 쓰므로 처음부터 여기 둔다(ADR 0011 게이트 C).
  */
 
 import { apiFetch } from "./client";
 
 /**
- * 게스트 발급을 기다리는 상한(ms) (KAN-602). 발급은 프록시에서 돌아 페이지 응답의 첫
- * 바이트보다 앞선다. BE가 느리면 첫 진입이 통째로 흰 화면이 되므로, 넘기면 끊고
- * 익명으로 통과시킨다. 다음 네비게이션이 다시 시도한다.
+ * 게스트 발급을 기다리는 상한(ms) (KAN-602). 처음엔 발급이 프록시에서 돌아 페이지 응답의 첫
+ * 바이트보다 앞섰고, BE가 느리면 첫 진입이 통째로 흰 화면이 되므로 넘기면 끊고 익명으로
+ * 통과시켰다. 지금은 두 앱 모두 화면이 뜬 뒤 브라우저가 부르므로(모바일 KAN-665, 웹 KAN-667)
+ * 화면을 막지는 않지만, 발급을 기다리는 첫 좋아요가 이 상한에서 끊긴다. 로그아웃 액션의 발급도
+ * 같은 상한이다.
  */
 export const GUEST_ISSUE_TIMEOUT_MS = 1_500;
 
@@ -38,7 +40,7 @@ export interface GuestResponse {
  *   있어야 한다. 프록시는 요청 컨텍스트 밖이라 `apiFetch`의 헤더 제공자가 닿지 않는다
  * @returns 토큰 쌍과 게스트 마감 시각
  * @throws {ApiError} BE가 2xx가 아닐 때 — 특히 같은 IP 분당 60회를 넘기면 429
- *   `COMMON_RATE_LIMITED`. 호출부(proxy)는 실패를 삼키고 익명으로 통과시킨다
+ *   `COMMON_RATE_LIMITED`. 호출부는 실패를 삼키고 익명으로 둔다
  * @throws {DOMException} {@link GUEST_ISSUE_TIMEOUT_MS} 안에 응답이 없을 때(`TimeoutError`).
  *   호출부는 BE 실패와 똑같이 삼킨다. 끊긴 요청을 BE가 끝까지 처리해 게스트가 하나
  *   생겼다면 그 계정은 쓰이지 않고 마감으로 정리된다

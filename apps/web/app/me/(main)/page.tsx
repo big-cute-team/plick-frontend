@@ -16,6 +16,7 @@ import { ActivityTabs } from "@/me/_components/ActivityTabs";
 import { GuestLinkCard } from "@/me/_components/GuestLinkCard";
 import { LikedArticlesList } from "@/me/_components/LikedArticlesList";
 import { LoginPromptCard } from "@/me/_components/LoginPromptCard";
+import { MeSessionGate } from "@/me/_components/MeSessionGate";
 import { MeShell } from "@/me/_components/MeShell";
 import { MyCommentsList } from "@/me/_components/MyCommentsList";
 
@@ -43,6 +44,10 @@ export const metadata: Metadata = {
  * 내 투표 목록 API가 없어 빈 상태만 둔다. 활동 조회가 401이면 토큰이 무효한 것이라
  * 비로그인과 같이 다루고, 그 밖의 실패는 씨앗 없이 넘겨 클라가 다시 받는다.
  *
+ * 비로그인 안내는 `MeSessionGate`로 감싼다 (KAN-667). 게스트 발급이 브라우저로 옮겨 가면서 첫
+ * 방문이 곧장 MY면 서버는 세션 없이 그리고 그 뒤에 게스트가 생기는데, 게이트가 세션이 생기면
+ * 화면을 한 번 다시 받아 연동 안내로 바꾼다.
+ *
  * @param searchParams `tab` 쿼리. 없거나 모르는 값이면 내 댓글 탭
  */
 export default async function MyPage({
@@ -58,7 +63,9 @@ export default async function MyPage({
   if (!profile) {
     return (
       <MeShell nav={false}>
-        <LoginPromptCard />
+        <MeSessionGate>
+          <LoginPromptCard />
+        </MeSessionGate>
       </MeShell>
     );
   }
@@ -95,7 +102,9 @@ export default async function MyPage({
       if (error instanceof ApiError && error.status === 401) {
         return (
           <MeShell nav={false}>
-            <LoginPromptCard />
+            <MeSessionGate>
+              <LoginPromptCard />
+            </MeSessionGate>
           </MeShell>
         );
       }

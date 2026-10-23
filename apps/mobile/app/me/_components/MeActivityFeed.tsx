@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/_components/AuthProvider";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import { useViewState } from "@/_stores/view-state";
 import type { ActivityTab, InitialActivity } from "@/_types/activity";
@@ -24,7 +25,8 @@ import { MyVotesList } from "./MyVotesList";
  * (KAN-386 때 기사 목록이 만난 것과 같은 함정). 탭별 스크롤 자리는 기억하지 않는다.
  *
  * 비로그인이면 목록 대신 짧은 로그인 안내다. 쿠키는 있는데 토큰이 무효(401)인
- * 경우는 서버가 같은 값으로 넘겨준다.
+ * 경우는 서버가 같은 값으로 넘겨준다. 브라우저가 게스트를 받아 오는 동안은 안내를 숨긴다(KAN-665).
+ * 받고 나면 `MeSessionGate`가 화면을 다시 받아 목록으로 바뀐다.
  *
  * @param initial 서버가 미리 받아 둔 개수와 지금 탭의 첫 페이지. 서버 fetch가
  *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다
@@ -38,6 +40,7 @@ export function MeActivityFeed({
   needsLogin?: boolean;
 }) {
   const searchParams = useSearchParams();
+  const { isSessionPending } = useAuth();
   const tab = activityTabFrom(searchParams.get("tab"));
   /* 탭은 `?tab=`이라 pathname이 안 바뀐다. 라우트 추적이 못 보니 여기서 센다 (KAN-543) */
   useScreenTabView("me_activity", tab);
@@ -52,7 +55,7 @@ export function MeActivityFeed({
     <>
       <ActivityTabs value={tab} onChange={handleChange} />
       {needsLogin ? (
-        <ActivityLoginPrompt />
+        !isSessionPending && <ActivityLoginPrompt />
       ) : tab === "likes" ? (
         <LikedArticlesList
           initial={

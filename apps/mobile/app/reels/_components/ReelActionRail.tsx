@@ -13,17 +13,20 @@ import type { ReelCard } from "@plick/domain/types";
  * 비로그인 시트는 부모 층이 그린다. 레일에 필터나 transform이 걸리면 화면 전체
  * 오버레이의 기준 상자가 레일이 돼 시트가 레일만 덮는다.
  *
+ * @param liked - 내가 좋아요를 눌렀는가. 카드가 아니라 내 상태 캐시 값이다 (KAN-664)
  * @param onLike - 하트 탭 시 호출
  * @param onComment - 댓글 아이콘 탭 시 호출 (세부 시트 열기)
  * @param onShare - 공유 아이콘 탭 시 호출 (링크 공유 시트 열기, KAN-312)
  */
 export function ReelActionRail({
   reel,
+  liked,
   onLike,
   onComment,
   onShare,
 }: {
   reel: ReelCard;
+  liked: boolean;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
@@ -31,12 +34,12 @@ export function ReelActionRail({
   return (
     <div className="absolute right-3.5 bottom-27 flex flex-col items-center gap-5.5">
       <RailAction
-        icon={<LikeIcon size={34} filled={reel.liked} />}
+        icon={<LikeIcon size={34} filled={liked} />}
         label={formatCount(reel.likeCount)}
         onClick={onLike}
-        active={reel.liked}
-        ariaLabel={reel.liked ? "좋아요 취소" : "좋아요"}
-        ariaPressed={reel.liked}
+        active={liked}
+        ariaLabel={liked ? "좋아요 취소" : "좋아요"}
+        ariaPressed={liked}
       />
       <RailAction
         icon={<ChatIcon size={33} />}

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { AuthScreen } from "@/_components/AuthScreen";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getMyProfile } from "@/_services/profile";
-import { getGuestExpiresAt } from "@/_services/session";
+import { getGuestExpiresAt, isGuestFromLogout } from "@/_services/session";
 
 /** canonical은 데스크톱 로그인이다 (KAN-346) — 모바일 홈 canonical과 같은 이유. */
 export const metadata: Metadata = {
@@ -26,6 +26,10 @@ export const metadata: Metadata = {
  * 게스트가 로그인 화면에 못 들어온다. 그래서 소셜 사용자만 되돌려 보낸다. 게스트에게는
  * 마감 안내를 띄우고 버튼 문구를 "연동"으로 바꾼다 — 소셜 버튼이 무엇을 부르는지(연동이냐
  * 로그인이냐)는 화면이 아니라 콜백이 마감 쿠키로 가른다.
+ *
+ * 로그아웃이 발급한 게스트는 예외다 (KAN-658). 방금 로그아웃한 사람에게 "카카오로 연동"과
+ * 마감 안내는 틀린 말이라 비로그인과 같은 "로그인" 화면을 준다. 콜백은 그래도 연동 갈래를
+ * 타고(새 계정이면 기록이 이어진다), 기존 계정이면 `linkSocial`이 토스트 없이 로그인시킨다.
  */
 export default async function LoginPage({
   searchParams,
@@ -37,7 +41,7 @@ export default async function LoginPage({
     redirect("/");
   }
 
-  const isGuest = profile?.isGuest ?? false;
+  const isGuest = (profile?.isGuest ?? false) && !(await isGuestFromLogout());
   const { error, until } = await searchParams;
 
   return (

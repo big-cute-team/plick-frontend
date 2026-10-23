@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { headers } from "next/headers";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import {
   BRAND_DESCRIPTION,
@@ -8,14 +7,16 @@ import {
   BRAND_TITLE,
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
-import { ADSENSE_SCRIPT_URL, resolveAdsMode } from "@plick/core/ads";
-import { ANALYTICS_HEADERS, deviceSyncScript } from "@plick/core/analytics";
+import { ADSENSE_SCRIPT_URL, adsPauseScript } from "@plick/core/ads";
+import { deviceSyncScript } from "@plick/core/analytics";
+import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { AdsProvider } from "@/_components/AdsProvider";
 import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GuestNoticeToast } from "@/_components/GuestNoticeToast";
 import { ErrorToast } from "@/_components/ErrorToast";
 import { ADS_BASE_MODE } from "@/_constants/ads";
+import { CRAWLER_UA_PATTERN } from "@/_constants/api";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { QueryProvider } from "@/_queries/QueryProvider";
 import {
@@ -23,8 +24,6 @@ import {
   NAVER_SITE_VERIFICATION,
   SITE_URL,
 } from "@/_constants/site";
-import { getProfileSeed } from "@/_services/profile";
-import { getGuestExpiresAt, isLoggedIn } from "@/_services/session";
 import "./globals.css";
 
 /**
@@ -102,32 +101,23 @@ export const viewport: Viewport = {
 };
 
 /**
- * 루트 레이아웃 — 서버에서 로그인 여부와 내 프로필을 읽어 `AuthProvider`로 클라 트리에
- * 시드한다. refresh 프록시(`proxy.ts`)가 이보다 먼저 돌아 쿠키를 정리하므로, 여기서 읽는 값은
- * 항상 재발급 반영 후다.
+ * 루트 레이아웃. 요청을 읽지 않는다 (KAN-632).
  *
- * 레이아웃은 트리의 뿌리라 여기서 `await`하는 시간만큼 `loading.tsx`도 페이지도 못 나간다.
- * 그래서 쿠키로 아는 값(세션 유무, 게스트 여부)만 읽고, BE를 부르는 프로필은 Promise로
- * 넘긴다 (KAN-602). 프로필은 내 댓글 판별(KAN-333)과 닉네임 표시용이라 늦거나 실패해도
- * 앱은 떠야 한다.
+ * 전에는 여기서 `cookies()`로 로그인·게스트 여부를, `headers()`로 앱 셸 여부를 읽어
+ * `AuthProvider`와 `AdsProvider`에 내려줬다. 레이아웃은 모든 페이지의 부모라 그 호출이
+ * 전 라우트를 동적 렌더로 판정하게 했고, Next는 동적 응답에 `no-store`를 달아 FAQ처럼
+ * 데이터 없는 화면까지 CDN도 브라우저도 저장하지 못했다(ADR 0199). 지금은 둘 다 브라우저가
+ * 쿠키와 UA로 스스로 정한다. 그래서 이 레이아웃은 정적으로 굳고, 요청 데이터를 읽는 페이지만
+ * 동적이 된다.
+ *
+ * 프로필(닉네임·userId)은 `AuthProvider`가 브라우저에서 받는다. KAN-602에서 "레이아웃이
+ * BE를 기다리지 않는다"로 바꾼 뜻은 그대로다.
  */
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const loggedIn = await isLoggedIn();
-  const guestExpiresAt = await getGuestExpiresAt();
-  /* 기다리지 않는다. 쿠키만 읽고 바로 자식을 그리기 시작해야 BE가 느려도 첫 바이트가
-     나간다 (KAN-602). 프로필은 AuthProvider가 Suspense 안에서 풀어 채운다 */
-  const profile = loggedIn ? getProfileSeed() : Promise.resolve(null);
-  /* 광고 모드 (KAN-652). 프록시가 UA로 가른 브라우저 종류를 읽어 앱 셸이면 끈다.
-     애드센스는 WebView 노출을 금지해서다 */
-  const adsMode = resolveAdsMode(
-    ADS_BASE_MODE,
-    (await headers()).get(ANALYTICS_HEADERS.browser),
-  );
-
   return (
     <html
       lang="ko"
@@ -152,34 +142,47 @@ export default async function RootLayout({
         />
         {/* 기기 식별자 쿠키를 localStorage와 맞춘다 (KAN-610). 인앱 브라우저가 지운 쿠키를
             되살리는 자리다. 뒤따르는 /be fetch보다 먼저 돌아야 그 요청들이 옛 식별자를
-            달고 나가므로 위와 같이 head 동기 스크립트다. 내용은 @plick/core/analytics가 만든다 */}
-        <script dangerouslySetInnerHTML={{ __html: deviceSyncScript() }} />
+            달고 나가므로 위와 같이 head 동기 스크립트다. 내용은 @plick/core/analytics가 만든다.
+            KAN-665부터 새 식별자 만들기와 진입 주소 넘기기(랜딩 쿠키)도 여기서 한다. 프록시가
+            페이지 응답에 심던 쿠키라, 그대로 두면 CDN이 그 응답을 저장할 수 없다 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: deviceSyncScript({
+              issue: {
+                crawlerPattern: CRAWLER_UA_PATTERN,
+                handedParam: DEVICE_ID_QUERY_PARAM,
+              },
+              landing: true,
+            }),
+          }}
+        />
         {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
             미리 열어 둔다 (KAN-421) */}
         <link rel="preconnect" href="https://pbs.twimg.com" />
-        {/* 애드센스 로더 (KAN-652) — live 모드(prod, 앱 셸 밖)에만 붙는다. `next/script`의
+        {/* 애드센스 로더 (KAN-652) — live 모드(prod)에 붙는다. `next/script`의
             afterInteractive는 HTML에 preload 링크만 남기고 태그는 하이드레이션 뒤 브라우저가
             만들어서, JS를 돌리지 않는 애드센스 크롤러가 "코드 없음"으로 봤다. 구글이 주는
-            스니펫 그대로 head에 async 태그로 둔다. async라 파싱과 첫 페인트를 막지 않는다. 이 태그가 head에 있는 것으로 사이트 소유 확인과 심사가 된다 */}
-        {adsMode === "live" && (
-          <script async src={ADSENSE_SCRIPT_URL} crossOrigin="anonymous" />
+            스니펫 그대로 head에 async 태그로 둔다. async라 파싱과 첫 페인트를 막지 않는다. 이 태그가 head에 있는 것으로 사이트 소유 확인과 심사가 된다.
+            앱 셸(WebView)은 애드센스가 노출을 금지하는데, 서버가 UA를 읽지 않게 되면서(KAN-632)
+            태그를 빼는 대신 바로 위 동기 스크립트가 앱 셸 UA면 광고 요청을 멈춘다 */}
+        {ADS_BASE_MODE === "live" && (
+          <>
+            <script dangerouslySetInnerHTML={{ __html: adsPauseScript() }} />
+            <script async src={ADSENSE_SCRIPT_URL} crossOrigin="anonymous" />
+          </>
         )}
       </head>
       <body className="bg-canvas text-text">
         <QueryProvider>
-          <AuthProvider
-            isLoggedIn={loggedIn}
-            isGuest={guestExpiresAt !== null}
-            profile={profile}
-          >
-            <AdsProvider mode={adsMode}>{children}</AdsProvider>
+          <AuthProvider>
+            <AdsProvider>{children}</AdsProvider>
           </AuthProvider>
         </QueryProvider>
         {/* 뮤테이션 전역 안전망이 잡은 실패를 띄우는 토스트 (KAN-447) — fixed라
             트리 어디든 되지만, 화면 트리 밖에 두어 라우트 교체와 무관하게 산다 */}
         <ErrorToast />
         {/* 게스트 발급·연동 결과 안내 (KAN-514) — 위와 같은 이유로 화면 트리 밖에 둔다 */}
-        <GuestNoticeToast guestExpiresAt={guestExpiresAt} />
+        <GuestNoticeToast />
         {/* 진입·화면 전환 행동 이벤트 (KAN-543) — 라우트가 바뀌어도 살아야 해서 화면 트리 밖 */}
         <AnalyticsTracker />
         {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 이 컴포넌트가

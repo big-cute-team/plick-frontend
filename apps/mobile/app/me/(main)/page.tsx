@@ -20,6 +20,7 @@ import { ActivityScrollArea } from "@/me/_components/ActivityScrollArea";
 import { DeleteAccountButton } from "@/me/_components/DeleteAccountButton";
 import { LogoutButton } from "@/me/_components/LogoutButton";
 import { MeActivityFeed } from "@/me/_components/MeActivityFeed";
+import { MeSessionGate } from "@/me/_components/MeSessionGate";
 import { MeHeader } from "@/me/_components/MeHeader";
 import { MeLinkRow } from "@/me/_components/MeLinkRow";
 import { MeLoginNotice } from "@/me/_components/MeLoginNotice";
@@ -117,7 +118,9 @@ export default async function MyPage({
             }
           />
         ) : (
-          <MeLoginNotice mode="login" guestExpiresAt={guestExpiresAt} />
+          <MeSessionGate>
+            <MeLoginNotice mode="login" guestExpiresAt={guestExpiresAt} />
+          </MeSessionGate>
         )}
         {isGuest && !needsLogin && (
           <MeLoginNotice mode="guest" guestExpiresAt={guestExpiresAt} />

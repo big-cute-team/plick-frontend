@@ -5,12 +5,7 @@ import {
   formatRelativeTime,
   teamProfilePath,
 } from "@plick/domain/format";
-import type {
-  ArticleCard,
-  ArticleDetail,
-  Debate,
-  InitialCommentPage,
-} from "@plick/domain/types";
+import type { ArticleCard, ArticleDetail, Debate } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
 import { AdSlot } from "@/_components/AdSlot";
@@ -40,20 +35,16 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). 팀태그 기반
- *   관련 기사를 받는다(KAN-338). 비어 있으면 행 대신 빈 문구가 나온다.
- * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지(KAN-303).
- *   실패했으면 undefined — 목록이 클라에서 직접 받는다.
+ *   관련 기사를 받는다(KAN-338). 가로 카드 한 줄이고(KAN-668) 비어 있으면 빈 문구가 나온다.
  * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드와 VS가 빠진다.
  */
 export function ArticleBody({
   article,
   suggested = [],
-  initialComments,
   debate = null,
 }: {
   article: ArticleDetail;
   suggested?: ArticleCard[];
-  initialComments?: InitialCommentPage;
   debate?: Debate | null;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
@@ -131,6 +122,7 @@ export function ArticleBody({
         {debate && (
           <div className="pt-5">
             <DebateVoteCard
+              articleId={article.id}
               debate={debate}
               closed={article.contentType === "FINISH"}
             />
@@ -154,7 +146,7 @@ export function ArticleBody({
         <div className="flex items-center gap-5 pt-4.5">
           <ArticleLikeButton
             articleId={article.id}
-            initial={{ liked: article.liked, likeCount: article.likeCount }}
+            initialCount={article.likeCount}
           />
           <ArticleShareButton articleId={article.id} />
         </div>
@@ -174,7 +166,6 @@ export function ArticleBody({
         <ArticleComments
           articleId={article.id}
           initialCount={article.commentCount}
-          initialComments={initialComments}
         />
       </div>
     </article>

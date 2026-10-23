@@ -105,9 +105,50 @@ export const REFRESH_RETRY_MAX_AGE = 15; // 초
  * 이 쿠키의 **존재 자체가 "지금 세션은 게스트"라는 신호**이기도 하다. 프록시는
  * edge에서 돌아 `/users/me`를 부를 수 없어 재발급 401이 게스트 마감인지 소셜 세션
  * 만료인지 구별할 방법이 이것뿐이다. 소셜로 연동·로그인하면 지운다.
- * HttpOnly로 두는 이유는 토큰 쿠키와 같다 — 읽는 쪽이 전부 서버다.
+ *
+ * KAN-632부터 HttpOnly가 아니다. 루트 레이아웃이 `cookies()`를 읽지 않게 되면서 게스트 안내
+ * 토스트와 `AuthProvider`가 이 값을 브라우저에서 직접 읽는다(`SESSION_COOKIE_BASE`). 값은
+ * 마감 시각뿐이라 노출돼도 잃을 게 없고, 브라우저에서 고쳐도 자기 세션의 안내 문구만 틀린다.
+ * 프록시와 콜백은 전처럼 요청 쿠키로 읽으니 서버 쪽 판정은 그대로다.
  */
 export const GUEST_EXPIRES_COOKIE = "guestExpiresAt";
+
+/**
+ * 지금 세션이 게스트인지 소셜인지 브라우저가 읽는 표식 쿠키 (KAN-632).
+ *
+ * 토큰은 HttpOnly라 브라우저 JS가 "세션이 있는가"를 알 길이 없었고, 그래서 루트 레이아웃이
+ * 서버에서 `cookies()`로 판단해 `AuthProvider`에 내려줬다. 그 한 줄이 전 라우트를 동적 렌더로
+ * 만들어 `no-store`를 달았다(ADR 0199). 비밀이 아닌 "게스트다/소셜이다"만 따로 적어 두면
+ * 레이아웃이 요청을 읽을 이유가 없어진다. 토큰을 심는 자리(프록시 발급·재발급, 로그인·연동·로그아웃
+ * 액션)마다 같이 심고, 토큰을 지우는 자리마다 같이 지운다. 수명은 refresh와 같다. access가
+ * 먼저 만료돼도 다음 네비게이션이 재발급하므로 브라우저 입장에선 세션이 이어진다.
+ *
+ * 값은 {@link SESSION_KIND}의 둘 중 하나다. 브라우저에서 고칠 수 있으니 화면 분기에만 쓰고
+ * 권한 판단은 전처럼 BE가 토큰으로 한다.
+ */
+export const SESSION_KIND_COOKIE = "sessionKind";
+export const SESSION_KIND = { guest: "guest", user: "user" } as const;
+export type SessionKind = (typeof SESSION_KIND)[keyof typeof SESSION_KIND];
+
+/** 브라우저가 읽는 세션 표식 쿠키 옵션. HttpOnly만 뺀 토큰 쿠키 옵션이다 (KAN-632). */
+export const SESSION_COOKIE_BASE = {
+  ...AUTH_COOKIE_BASE,
+  httpOnly: false,
+} as const;
+
+/**
+ * 지금 게스트가 **로그아웃이 발급한** 게스트라는 표식 (KAN-658). 로그아웃 액션이
+ * 새 게스트를 심을 때 같이 심고, 소셜 로그인·연동이 끝나거나 프록시가 새 게스트를
+ * 자연 발급하면 지운다. 수명은 게스트 토큰과 같은 refresh TTL이다.
+ *
+ * 왜 필요한가: 로그아웃이 게스트로 전환하면 방금 로그아웃한 소셜 사용자도 게스트가
+ * 된다. 그 사람의 `/login`은 연동 화면이 되고 소셜 버튼은 `/auth/link`를 타는데,
+ * 기존 계정이면 BE가 `EXISTING_ACCOUNT`로 기존 계정 로그인을 시킨다. 동작은 맞지만
+ * "카카오로 연동" 문구와 "기록이 이어지지 않았어요" 토스트는 그 사람에게 틀린 말이다.
+ * 이 표식이 있으면 로그인 화면은 "로그인" 문구로, 연동 액션은 토스트 없이 간다.
+ * HttpOnly인 이유는 토큰 쿠키와 같다. 읽는 쪽이 전부 서버다.
+ */
+export const GUEST_FROM_LOGOUT_COOKIE = "guestFromLogout";
 
 /**
  * 게스트를 **방금** 발급했다는 1회용 표식 (KAN-514). 프록시가 심고, 첫 진입 안내
@@ -129,11 +170,28 @@ export const GUEST_NOTICE_MAX_AGE = 60 * 5; // 5분
  * - `issued`: 첫 진입에 게스트를 발급했다 → 마감까지 연동하면 기록이 이어진다는 안내
  * - `existing`: 연동했는데 그 소셜 계정이 이미 있어(`linked=false`, `EXISTING_ACCOUNT`)
  *   기존 계정으로 로그인됐다 → 게스트 기록은 안 넘어왔다는 안내
+ * - `loggedOut`: 로그아웃하면서 새 게스트로 전환했다 (KAN-658) → 게스트로 계속
+ *   둘러볼 수 있다는 안내. `issued`의 "지금부터 기록이 쌓여요"는 로그아웃 직후에 어색하다
  */
 export const GUEST_NOTICE = {
   issued: "issued",
   existing: "existing",
+  loggedOut: "loggedOut",
 } as const;
+
+/**
+ * 브라우저가 게스트를 받아 가는 자리 (KAN-665). 전에는 프록시가 쿠키 없는 페이지 요청마다
+ * 발급해 그 페이지 응답에 토큰을 심었다. 정적·ISR 문서에 `Set-Cookie`가 실리면 CDN이 그 응답을
+ * 저장할 수 없어서(한 사람의 토큰이 다음 사람에게 나간다), 발급을 이 POST로 옮겼다.
+ * `/api`는 프록시 matcher 밖이라 이 라우트가 쿠키를 직접 심는다.
+ */
+export const GUEST_SESSION_PATH = "/api/session/guest";
+
+/**
+ * 브라우저가 게스트를 새로 받았다는 window 이벤트 (KAN-665). `GuestNoticeToast`는
+ * `AuthProvider` 밖에 있어 세션 값을 못 보니, 발급 직후 이 이벤트로 표식 쿠키를 다시 읽게 한다.
+ */
+export const GUEST_ISSUED_EVENT = "plick:guest-issued";
 
 /**
  * 게스트를 발급하지 않을 크롤러 User-Agent (KAN-514).

@@ -14,7 +14,7 @@ import { IS_PRODUCTION_SITE } from "@/_constants/site";
 /**
  * 빌드가 정한 기본 모드. prod 빌드만 live이고 dev·로컬은 placeholder다.
  * `NEXT_PUBLIC_ADS_MODE`로 덮을 수 있다(로컬에서 off로 보고 싶을 때). 앱 셸 안에서
- * off로 접는 건 요청마다 레이아웃이 `resolveAdsMode`로 한다.
+ * off로 접는 건 `AdsProvider`가 브라우저에서 `resolveAdsMode`로 한다 (KAN-667).
  */
 export const ADS_BASE_MODE: AdsMode = (() => {
   const override = process.env.NEXT_PUBLIC_ADS_MODE;

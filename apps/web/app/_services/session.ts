@@ -6,16 +6,11 @@
  */
 
 import { cookies } from "next/headers";
-import { AUTH_COOKIES, GUEST_EXPIRES_COOKIE } from "@/_constants/api";
-
-/**
- * 로그인 여부 — accessToken 쿠키의 존재만으로 판단한다(BE 호출 없이 요청 컨텍스트에서).
- * 토큰 유효성 검증은 보호 API를 붙일 때 그 호출이 겸한다. 지금은 화면 분기용 신호만 필요하다.
- */
-export async function isLoggedIn(): Promise<boolean> {
-  const jar = await cookies();
-  return jar.has(AUTH_COOKIES.access);
-}
+import {
+  AUTH_COOKIES,
+  GUEST_EXPIRES_COOKIE,
+  GUEST_FROM_LOGOUT_COOKIE,
+} from "@/_constants/api";
 
 /**
  * 서버 렌더 중 access 토큰을 꺼낸다 — 읽기 fetch에 Bearer로 실을 때 쓴다(KAN-322).
@@ -44,4 +39,15 @@ export async function getAccessToken(): Promise<string | undefined> {
 export async function getGuestExpiresAt(): Promise<string | null> {
   const jar = await cookies();
   return jar.get(GUEST_EXPIRES_COOKIE)?.value ?? null;
+}
+
+/**
+ * 지금 게스트가 로그아웃이 발급한 게스트인지 (KAN-658). 로그인 화면이 "연동"이 아니라
+ * "로그인" 문구를 고를 때 읽는다. 표식의 뜻과 수명은 `GUEST_FROM_LOGOUT_COOKIE` 주석에 있다.
+ *
+ * @returns 로그아웃 출신 게스트면 true
+ */
+export async function isGuestFromLogout(): Promise<boolean> {
+  const jar = await cookies();
+  return jar.has(GUEST_FROM_LOGOUT_COOKIE);
 }

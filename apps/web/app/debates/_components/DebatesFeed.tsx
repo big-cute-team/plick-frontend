@@ -1,11 +1,12 @@
 "use client";
 
 import { ArticleLink } from "@/_components/ArticleLink";
+import { useSearchParams } from "next/navigation";
 import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useDebates } from "@/_hooks/useDebates";
-import type { DebateTab } from "@/_types/debates";
+import { debateTabFrom } from "@/_utils/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 
 /**
@@ -17,16 +18,14 @@ import { DebateListSkeleton } from "./DebateListSkeleton";
  * 마감 토론도 리스트에 함께 온다. contentType(FINISH) 마감은 기사 상세와 같은
  * 규약으로 `closed`로 넘기고, closesAt 경과 마감(KAN-436)도 마감 탭으로 보낸다.
  *
+ * 리스트는 익명 ISR이라 `myVote`가 늘 null이다 (KAN-667). 내 표는 카드가 기사 id로 내 상태
+ * 캐시에서 얹는다. 마감 탭 카드도 같은 `DebateVoteCard`라 따로 두지 않았다. 지금 탭은
+ * URL `?tab=`을 브라우저에서 읽는다(`DebateTabs`와 같은 이유).
+ *
  * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다
- * @param tab 지금 탭
  */
-export function DebatesFeed({
-  initial,
-  tab,
-}: {
-  initial?: InitialDebateList;
-  tab: DebateTab;
-}) {
+export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
+  const tab = debateTabFrom(useSearchParams().get("tab"));
   const { data, isPending, isError, isFetching, refetch } = useDebates(initial);
   const debates = (data ?? []).filter(
     (debate) => (tab === "closed") === isClosed(debate),
@@ -70,6 +69,7 @@ export function DebatesFeed({
           className={`border-border-soft border-b ${tab === "closed" ? "py-4.5" : "pt-5 pb-5.5"}`}
         >
           <DebateVoteCard
+            articleId={debate.articleId}
             debate={debate}
             closed={debate.contentType === "FINISH"}
             size={tab === "closed" ? "sm" : "md"}

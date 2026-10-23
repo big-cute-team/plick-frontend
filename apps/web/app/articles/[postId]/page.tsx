@@ -3,15 +3,10 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { getArticle, getRelatedArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
-import { getComments } from "@plick/core/comments";
 import { getArticleDebate } from "@plick/core/debates";
 import { truncateText } from "@plick/domain/format";
 import { newsArticleJsonLd } from "@plick/domain/jsonld";
-import type {
-  ArticleCard,
-  Debate,
-  InitialCommentPage,
-} from "@plick/domain/types";
+import type { ArticleCard, Debate } from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { AdSlot } from "@/_components/AdSlot";
 import { LiveStrip } from "@/_components/LiveStrip";
@@ -26,18 +21,30 @@ import {
   SITE_URL,
 } from "@/_constants/site";
 import { RELATED_ARTICLES_COUNT } from "@/_constants/app";
-import { getAccessToken } from "@/_services/session";
 
 /**
  * 상세를 한 렌더에 한 번만 받는다 (KAN-584). `generateMetadata`와 페이지 본문이 같은 기사를
- * 각각 불렀는데, 메타데이터는 토큰 없이(익명 60초 캐시) 본문은 토큰을 실어(`no-store`) 부르니
- * 사람 한 명의 열람에 상세 API가 두 번 나가고 서버는 그때마다 `article_opened`를 센다.
- * 익명 fetch끼리는 Next가 중복 제거하지만 헤더가 다른 두 호출은 별개다. React `cache`로 묶어
- * 같은 인자면 한 번만 부르고, 크롤러(토큰 없음)는 전처럼 익명 캐시를 탄다.
+ * 각각 부르면 상세 API가 두 번 나가고 서버는 그때마다 `article_opened`를 센다. KAN-667부터는
+ * 둘 다 익명이라 Next의 fetch 중복 제거로도 한 번이 되지만, 어느 쪽이 토큰을 다시 싣게 되더라도
+ * 한 번으로 남게 React `cache`로 묶어 둔다.
  */
-const loadArticle = cache((postId: string, accessToken?: string) =>
-  getArticle(postId, accessToken),
-);
+const loadArticle = cache((postId: string) => getArticle(postId));
+
+/**
+ * 익명 ISR (KAN-667, 모바일 KAN-664·ADR 0200). 이 페이지는 누구에게나 같은 것(본문, 좋아요 수,
+ * 투표 집계)만 서버에서 받고, 사람마다 다른 것(내 좋아요·투표, 댓글의 내 좋아요와 차단 가림)은
+ * 브라우저가 뜬 뒤 받는다. 데이터 fetch가 모두 익명 60초 캐시라 페이지도 60초다. 수(좋아요·
+ * 댓글·표)가 화면에 보여서 더 길게 잡지 않았다.
+ */
+export const revalidate = 60;
+
+/**
+ * 빈 목록이라도 선언해야 `[postId]`가 요청마다 렌더(ƒ)가 아니라 첫 요청에 그려 캐시(●)된다
+ * (인물·선수 프로필과 같은 이유). 기사는 수가 많고 계속 늘어 빌드 때 미리 그리지 않는다.
+ */
+export function generateStaticParams(): { postId: string }[] {
+  return [];
+}
 
 /**
  * 기사별 고유 메타데이터 (KAN-346) — 기사 하나하나가 롱테일 검색어의 랜딩이라
@@ -54,7 +61,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { postId } = await params;
   try {
-    const article = await loadArticle(postId, await getAccessToken());
+    const article = await loadArticle(postId);
     const description = truncateText(article.summary, 160);
     return {
       title: article.title,
@@ -98,11 +105,12 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 본문 1열로 스택한다(홈과 동일한 반응형 규칙).
  *
  * 상세(`GET /api/v1/articles/{articleId}`)는 단발 읽기라 서버 컴포넌트 fetch로
- * 받는다. 토큰이 있으면 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다.
- * 댓글 첫 페이지도 같은 렌더에서 병렬로 받아 클라 캐시의 씨앗으로 심는다 —
- * 안 심으면 목록 훅이 마운트되자마자 같은 페이지를 또 받는다(이중 페치).
- * 댓글 fetch만 실패하면 페이지를 죽이지 않고 씨앗 없이 내려보낸다 — 목록이
- * 클라에서 다시 받으면서 에러·재시도를 보여준다.
+ * 받는다. 토큰 없이 받아 페이지 전체를 ISR로 캐시한다(KAN-667, ADR 0200). 내 좋아요·투표는
+ * 좋아요 버튼과 투표 카드가 내 상태 캐시에서 얹는다.
+ *
+ * 댓글은 서버에서 받지 않는다. 전에는 첫 페이지를 같은 렌더에서 받아 씨앗으로 심었는데,
+ * 댓글 응답에는 내가 누른 좋아요와 내가 차단한 작성자의 가림이 섞여 있어 익명 캐시에 넣을
+ * 수 없다. 목록 훅이 브라우저에서 받는다(토큰은 프록시가 싣는다).
  *
  * 진입 자체는 조회로 기록한다(KAN-332) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
@@ -120,16 +128,12 @@ export default async function ArticleDetailPage({
   params: Promise<{ postId: string }>;
 }) {
   const { postId } = await params;
-  const accessToken = await getAccessToken();
 
-  const [articleResult, commentsResult, debateResult] =
-    await Promise.allSettled([
-      loadArticle(postId, accessToken),
-      getComments(postId, { accessToken }),
-      // 투표형 게시물인지는 이 호출이 판별한다 (KAN-418) — 토론 없는 기사는
-      // null이 온다. 토큰을 실어야 `myVote`가 이 유저 기준으로 온다
-      getArticleDebate(postId, accessToken ? { accessToken } : undefined),
-    ]);
+  const [articleResult, debateResult] = await Promise.allSettled([
+    loadArticle(postId),
+    // 투표형 게시물인지는 이 호출이 판별한다 (KAN-418) — 토론 없는 기사는 null이 온다
+    getArticleDebate(postId),
+  ]);
 
   if (articleResult.status === "rejected") {
     const error = articleResult.reason;
@@ -145,13 +149,7 @@ export default async function ArticleDetailPage({
     throw error;
   }
 
-  const initialComments: InitialCommentPage | undefined =
-    commentsResult.status === "fulfilled"
-      ? { page: commentsResult.value, fetchedAt: Date.now() }
-      : undefined;
-
-  // 토론 조회만 실패하면 페이지를 죽이지 않고 투표 카드 없이 내려보낸다 —
-  // 댓글 씨앗과 같은 판단이다
+  // 토론 조회만 실패하면 페이지를 죽이지 않고 투표 카드 없이 내려보낸다
   const debate: Debate | null =
     debateResult.status === "fulfilled" ? debateResult.value : null;
   if (debateResult.status === "rejected") {
@@ -192,7 +190,6 @@ export default async function ArticleDetailPage({
             <ArticleMain
               article={articleResult.value}
               related={related}
-              initialComments={initialComments}
               debate={debate}
             />
             {/* 광고 (KAN-652) — 댓글 아래, 푸터 위 가로 배너 */}

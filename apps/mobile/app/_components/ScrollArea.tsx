@@ -19,6 +19,8 @@ import { PullSpinner } from "./PullSpinner";
  *
  * @param restoreKey 이 화면의 이름. 주면 떠났다 돌아올 때 보던 위치로 되돌아가고,
  *   하단 탭 재탭에 맨 위로 올라간다. 없으면 예전 그대로 평범한 스크롤 영역이다.
+ * @param restoreLanding 뒤로가기로 다시 받아진 문서에서 읽던 자리를 되돌릴지 (KAN-632).
+ *   기본 true. `loading.tsx` 뼈대는 false로 줘서 본문 인스턴스의 복원을 가로채지 않게 한다
  * @param onRefresh 주면 맨 위에서 당겨 새로고침할 수 있다. 이 프로미스가 끝나야
  *   스피너가 멈춘다.
  * @param contentClassName 콘텐츠 래퍼에 더할 클래스. 내용이 짧아도 화면 끝까지
@@ -31,16 +33,18 @@ export function ScrollArea({
   className = "",
   contentClassName = "",
   restoreKey,
+  restoreLanding = true,
   onRefresh,
 }: {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
   restoreKey?: ScreenKey;
+  restoreLanding?: boolean;
   onRefresh?: () => Promise<unknown>;
 }) {
   const ref = useRef<HTMLElement>(null);
-  useScrollRestore(ref, restoreKey);
+  useScrollRestore(ref, restoreKey, restoreLanding);
   const { distance, dragging, refreshing } = usePullToRefresh(ref, onRefresh);
 
   /**

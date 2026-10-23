@@ -1,0 +1,17 @@
+{
+  "url": "https://m.plick.co.kr/articles/7908",
+  "type": "back_forward",
+  "ttfb": 40,
+  "domContentLoaded": 74,
+  "load": 181,
+  "transferSize": 17214,
+  "notRestoredReasons": {
+    "url": "https://m.plick.co.kr/articles/7908",
+    "reasons": [
+      { "reason": "masked" },
+      { "reason": "response-cache-control-no-store" },
+      { "reason": "response-cache-control-no-store-with-js-network-request" }
+    ],
+    "children": []
+  }
+}

@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { getHotArticles } from "@plick/core/articles";
 import { withTweetPhotos } from "@plick/core/tweet-media";
 import type { HotArticle } from "@plick/domain/types";
@@ -21,6 +22,9 @@ export async function HotSection() {
        제일 큰 사진으로 메운다 (KAN-484). 그래도 사진이 없는 카드는 뺀다 (KAN-569) */
     cards = (await withTweetPhotos(hot.withImage)).filter((a) => a.imageUrl);
   } catch (error) {
+    /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-667). 삼키면 빌드
+       로그에 "로드 실패"로 찍히고 라우트 판정을 가로챌 수 있다 */
+    unstable_rethrow(error);
     console.error("[home] 핫이슈 로드 실패:", error);
   }
 

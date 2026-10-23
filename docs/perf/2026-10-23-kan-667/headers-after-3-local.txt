@@ -1,0 +1,66 @@
+# 3단계 뒤 로컬 standalone 응답 헤더 (2026-10-23, 브라우저 UA, 쿠키 없음, API_BASE_URL=dev BE)
+# 전(headers-before-local.txt)과 같은 조건이다. 페이지 응답에 Set-Cookie가 없어야 한다
+
+== GET /
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /faq
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /articles/8757
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /debates
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /reels
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /reels/8757
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /teams/arsenal/profile
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /login
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /me
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /?utm_source=insta&fbclid=Ab1 (광고 랜딩. 페이지 응답은 쿠키 없이 캐시 가능해야 한다)
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== POST /api/session/guest (브라우저 UA, Sec-Fetch-Site: same-origin)
+HTTP/1.1 200 OK
+cache-control: private, no-store
+set-cookie: accessToken=<redacted>; Path=/; Expires=Fri, 23 Oct 2026 04:30:55 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=<redacted>; Path=/; Expires=Fri, 06 Nov 2026 03:35:55 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-11-06T12%3A35%3A55%2B09%3A00; Path=/; Expires=Fri, 06 Nov 2026 03:35:55 GMT; Max-Age=1209600; Secure; SameSite=lax
+set-cookie: sessionKind=guest; Path=/; Expires=Fri, 06 Nov 2026 03:35:55 GMT; Max-Age=1209600; Secure; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Fri, 23 Oct 2026 03:40:55 GMT; Max-Age=300; Secure; SameSite=lax
+
+== POST /api/session/guest (다른 출처: Sec-Fetch-Site: cross-site)
+HTTP/1.1 403 Forbidden
+cache-control: private, no-store
+
+== POST /api/session/guest (curl UA = 크롤러 패턴)
+HTTP/1.1 403 Forbidden

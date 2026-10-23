@@ -14,6 +14,7 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { LikeState } from "@plick/domain/types";
 import { activityKeys } from "./activityKeys";
+import { setMyArticleState } from "./article-states";
 import { articleKeys } from "./articleKeys";
 import { reelKeys } from "./reelKeys";
 
@@ -61,5 +62,8 @@ export function syncLikeIntoFeeds(
       patch,
     );
   }
+  /* 화면들이 하트를 그리는 원본은 이제 내 상태 캐시다(KAN-664). 카드의 `liked`는 익명
+     응답이라 늘 false지만, 마이페이지 목록처럼 토큰으로 받은 화면이 아직 읽어서 함께 둔다 */
+  setMyArticleState(queryClient, articleId, { liked: next.liked });
   void queryClient.invalidateQueries({ queryKey: activityKeys.counts() });
 }

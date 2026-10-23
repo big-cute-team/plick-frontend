@@ -100,8 +100,15 @@ export type BrowserKind = (typeof BROWSER_KINDS)[number];
  * 라인은 `Line/14.x`다. 인스타 UA에 `FBAN`이 같이 붙는 빌드가 있어 인스타를 먼저 본다.
  * 우리 앱 셸은 `PlickApp/x.y`를 UA 끝에 단다(plick-AppShell `USER_AGENT_SUFFIX`).
  */
+/**
+ * 우리 앱 셸(RN WebView)의 UA 표식 (KAN-610). `BROWSER_KIND_RULES`의 첫 규칙이자, 레이아웃이
+ * 서버에서 UA를 읽지 않게 된 뒤(KAN-632) head 인라인 스크립트가 브라우저에서 같은 판정을
+ * 내릴 때 쓰는 원본이다(`adsPauseScript`).
+ */
+export const PLICK_APP_UA_PATTERN = /\bPlickApp(\/|\b)/;
+
 const BROWSER_KIND_RULES: readonly (readonly [BrowserKind, RegExp])[] = [
-  ["plick_app", /\bPlickApp(\/|\b)/],
+  ["plick_app", PLICK_APP_UA_PATTERN],
   ["instagram", /\bInstagram\b/i],
   ["facebook", /\bFB(AN|AV|_IAB)\b/],
   ["kakaotalk", /\bKAKAOTALK\b/i],
@@ -160,7 +167,8 @@ export const ANALYTICS_HEADER_NAMES: readonly string[] =
 export type PlickClient = "mobile_web" | "desktop_web";
 
 /**
- * 기기 식별자를 들고 있는 쿠키 (KAN-542). 프록시가 없으면 UUID를 만들어 심는다.
+ * 기기 식별자를 들고 있는 쿠키 (KAN-542). 없으면 `<head>`의 `deviceSyncScript`가 만든다(페이지
+ * 응답에 쿠키를 심지 않으려고). 모바일은 KAN-665부터, 웹은 KAN-667부터다. 전에는 프록시가 심었다.
  *
  * HttpOnly가 아니다. PC·모바일 전환 배너가 링크에 이 값을 쿼리로 실어야 하는데
  * (`@plick/domain/cross-site`), 배너는 브라우저에서 도는 클라 컴포넌트라 읽을 수 있어야
@@ -208,11 +216,40 @@ export const DEVICE_RESTORED_KEY = "plick_did_restored";
  * 의도한 것이다. 400일은 "1년 이상 길게"라는 요구에 크롬의 `Max-Age` 상한을 그대로 쓴 값이지 만료
  * 정책이 아니고, 식별자는 익명 난수 하나라 오래 살아도 잃을 것이 없다. 사용자가 사이트 데이터를 지우면
  * 둘 다 같이 사라진다.
+ *
+ * `options`를 주면 두 가지를 더 한다 (KAN-665, 모바일). 둘 다 프록시가 페이지 응답에 심던 쿠키를
+ * 브라우저로 옮긴 것이다. 페이지 응답에 `Set-Cookie`가 있으면 CDN이 그 응답을 남에게 줄 수 없다.
+ * - `issue`: 쿠키도 localStorage도 비었으면 새 식별자를 만들어 둘 다에 적는다. 전환 배너가 쿼리로
+ *   넘긴 값이 있으면 그것을 쓴다. 크롤러 UA면 만들지 않는다(`resolveDeviceId`와 같은 규칙).
+ * - `landing`: 주소에 쿼리가 있거나 외부에서 들어왔으면 그 쿼리와 Referer origin을
+ *   {@link LANDING_COOKIE}에 적는다. 다음 `/be` 호출에서 프록시가 읽어 유입 경로·마케팅 쿠키를 정한다.
+ *
+ * @param options 두 앱 모두 넘긴다(모바일 KAN-665, 웹 KAN-667). 생략하면 되살리기와 거울만 한다
  */
-export function deviceSyncScript(): string {
+export function deviceSyncScript(options?: {
+  issue?: { crawlerPattern: RegExp; handedParam: string };
+  landing?: boolean;
+}): string {
   const cookie = DEVICE_ID_COOKIE;
   const pattern = DEVICE_ID_PATTERN.source;
   const attrs = `; Max-Age=${ANALYTICS_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+  const secure = '(location.protocol==="https:"?"; Secure":"")';
+  const issue = options?.issue
+    ? "else{" +
+      `var h=new URLSearchParams(location.search).get("${options.issue.handedParam}");` +
+      'var v=re.test(h||"")?h.toLowerCase():' +
+      `(/${options.issue.crawlerPattern.source}/i.test(navigator.userAgent)||!crypto.randomUUID?null:crypto.randomUUID());` +
+      `if(v){document.cookie="${cookie}="+v+"${attrs}"+${secure};` +
+      `localStorage.setItem("${DEVICE_ID_STORAGE_KEY}",v)}` +
+      "}"
+    : "";
+  const landing = options?.landing
+    ? 'try{var r=document.referrer,o="";' +
+      "if(r){var u=new URL(r);if(u.host!==location.host)o=u.origin}" +
+      "if(location.search||o){" +
+      `document.cookie="${LANDING_COOKIE}="+encodeURIComponent(location.search.slice(0,${LANDING_QUERY_MAX})+"\\n"+o)+"; Path=/; SameSite=Lax"+${secure}` +
+      "}}catch(e){}"
+    : "";
   return (
     "(function(){try{" +
     `var m=document.cookie.match(/(?:^|; )${cookie}=([^;]*)/);` +
@@ -221,12 +258,52 @@ export function deviceSyncScript(): string {
     `var re=/${pattern}/i;` +
     'if(re.test(l||"")){' +
     "if(c!==l){" +
-    `document.cookie="${cookie}="+l+"${attrs}"+(location.protocol==="https:"?"; Secure":"");` +
+    `document.cookie="${cookie}="+l+"${attrs}"+${secure};` +
     `sessionStorage.setItem("${DEVICE_RESTORED_KEY}","1")` +
     "}" +
     `}else if(re.test(c||"")){localStorage.setItem("${DEVICE_ID_STORAGE_KEY}",c)}` +
-    "}catch(e){}})()"
+    issue +
+    "}catch(e){}" +
+    landing +
+    "})()"
   );
+}
+
+/**
+ * 진입 주소의 쿼리와 외부 Referer origin을 다음 `/be` 호출까지 들고 가는 쿠키 (KAN-665, 모바일).
+ *
+ * 유입 경로(`plick_path`)와 마케팅(`plick_mkt`)은 진입 주소와 Referer로 정한다. 전에는 프록시가
+ * 페이지 요청에서 정해 그 응답에 심었는데, 인스타 광고처럼 외부에서 들어온 첫 화면은 거의 다 심을
+ * 값이 있다. 그 응답을 `no-store`로 막으면 광고 랜딩 화면이 CDN도 bfcache도 못 탄다. 그래서 값은
+ * `<head>` 스크립트(`deviceSyncScript`)가 이 쿠키로 넘기고, 첫 `/be` 호출에서 프록시가 같은 함수
+ * (`resolveRequestMarketing`, `readPathParam`)로 정해 그 응답에 심는다. API 응답은 캐시되지 않는다.
+ *
+ * 값은 `encodeURIComponent(쿼리 + "\n" + origin)`이다. 세션 쿠키고 프록시가 읽는 즉시 지운다.
+ * 브라우저에서 고칠 수 있지만 주소창에 쿼리를 직접 쳐서 넣을 수 있는 값과 다르지 않다.
+ */
+export const LANDING_COOKIE = "plick_landing";
+
+/** 랜딩 쿠키에 담는 쿼리 길이 상한. 쿠키 4KB 한도 안에 넉넉히 들어가게 자른다 */
+const LANDING_QUERY_MAX = 1500;
+
+/**
+ * 랜딩 쿠키를 푼다. 형식이 틀리면 null이다.
+ *
+ * @param value 쿠키 원값(Next가 디코드한 값)
+ * @returns 진입 쿼리와 외부 Referer origin(없으면 null)
+ */
+export function parseLandingCookie(
+  value: string | undefined,
+): { searchParams: URLSearchParams; referer: string | null } | null {
+  if (!value) return null;
+  const at = value.indexOf("\n");
+  if (at < 0) return null;
+  const search = value.slice(0, at);
+  const origin = value.slice(at + 1);
+  return {
+    searchParams: new URLSearchParams(search),
+    referer: origin || null,
+  };
 }
 
 /**

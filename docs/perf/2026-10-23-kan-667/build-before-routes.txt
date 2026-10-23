@@ -1,0 +1,45 @@
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ○ /ads.txt
+├ ƒ /api/client-error
+├ ƒ /api/health
+├ ƒ /api/tweet/[id]
+├ ○ /apple-icon.png
+├ ƒ /articles/[postId]
+├ ƒ /articles/[postId]/og
+├ ƒ /debates
+├ ƒ /faq
+├ ƒ /figures/[figureId]
+├ ○ /icon.png
+├ ƒ /live
+├ ƒ /live-paused
+├ ƒ /live/chat/session
+├ ƒ /live/matches/[matchId]
+├ ƒ /live/teams/[teamId]
+├ ○ /llms.txt
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /me
+├ ƒ /me/blocked
+├ ƒ /me/edit
+├ ƒ /oauth/callback
+├ ○ /opengraph-image.png
+├ ƒ /players/[playerId]
+├ ƒ /privacy
+├ ƒ /reels
+├ ƒ /reels/[postId]
+├ ○ /robots.txt
+├ ƒ /signup
+├ ƒ /sitemap.xml
+├ ƒ /stories/[storyId]
+├ ƒ /teams/[slug]
+├ ƒ /teams/[slug]/og
+├ ƒ /teams/[slug]/profile
+└ ƒ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
