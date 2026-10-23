@@ -12,7 +12,7 @@
 토큰과 Tailwind 간격은 rem이고 `theme.css`의 `html { font-size: 110% }`가 전체 배율이다(KAN-574). 임의값이
 꼭 필요하면 px 대신 rem으로 쓴다(`grid-cols-[2.5rem_minmax(0,1fr)]`). 크기를 숫자 prop으로 받아 인라인
 스타일로 박는 컴포넌트는 `@plick/domain/format`의 `rem()`을 거친다. px로 박으면 배율을 따라오지 못한다.
-선 두께(1px, 2px)와 앱 셸 최대폭(`max-w-[480px]`)만 px로 둔다.
+선 두께(1px, 2px)와 앱 셸 최대폭(`max-w-[480px]`), iOS 입력창 자동 확대 문턱(`globals.css`의 16px)만 px로 둔다.
 
 화면 좌우 패딩은 `px-edge`다. Tailwind 예약어라 `px-screen`은 안 된다([ADR 0002](../docs/adr/0002-mobile-home-layout.md) §6).
 

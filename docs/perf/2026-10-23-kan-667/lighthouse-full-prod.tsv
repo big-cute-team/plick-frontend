@@ -1,0 +1,183 @@
+app	screen	audit	status	detail
+mobile	home	bf-cache	통과	
+mobile	home	errors-in-console	통과 2/3	Framing 'https://www.google.com/' violates the following report-only Content Security Poli
+mobile	home	color-contrast	통과	
+mobile	home	label-content-name-mismatch	n/a	
+mobile	home	image-redundant-alt	실패	4건 div.snap-x-carousel > div.relative > a.relative > img.object-contain; div.snap-x-carousel 
+mobile	home	target-size	실패	3건 div.bg-elevate-2 > div.snap-x-carousel > div.relative > a.relative; div.bg-elevate-2 > div
+mobile	home	heading-order	통과	
+mobile	home	aria-required-children	n/a	
+mobile	home	aria-required-parent	n/a	
+mobile	home	unused-javascript	실패	Est savings of 274 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	home	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	home	uses-text-compression	통과	
+mobile	home	meta-description	통과	
+mobile	home	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+mobile	faq	bf-cache	통과	
+mobile	faq	errors-in-console	통과	
+mobile	faq	color-contrast	통과	
+mobile	faq	label-content-name-mismatch	n/a	
+mobile	faq	image-redundant-alt	n/a	
+mobile	faq	target-size	통과	
+mobile	faq	heading-order	통과	
+mobile	faq	aria-required-children	n/a	
+mobile	faq	aria-required-parent	n/a	
+mobile	faq	unused-javascript	실패	Est savings of 252 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	faq	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	faq	uses-text-compression	통과	
+mobile	faq	meta-description	통과	
+mobile	faq	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+mobile	article	bf-cache	통과	
+mobile	article	errors-in-console	통과	
+mobile	article	color-contrast	통과	
+mobile	article	label-content-name-mismatch	실패	2건 article > div.px-edge > div.flex > button.text-text-2; div.border-border-soft > div.flex >
+mobile	article	image-redundant-alt	실패	1건 header.px-edge > div.flex > a.flex > img.object-contain
+mobile	article	target-size	통과	
+mobile	article	heading-order	통과	
+mobile	article	aria-required-children	n/a	
+mobile	article	aria-required-parent	n/a	
+mobile	article	unused-javascript	실패	Est savings of 271 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	article	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	article	uses-text-compression	통과	
+mobile	article	meta-description	통과	
+mobile	article	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+mobile	reels	bf-cache	통과	
+mobile	reels	errors-in-console	실패	Error: Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= f
+mobile	reels	color-contrast	통과	
+mobile	reels	label-content-name-mismatch	실패	2건 div.flex > section.bg-reel-bg > div.absolute > button.text-text-strong; div.flex > section
+mobile	reels	image-redundant-alt	실패	1건 div.relative > div.flex > a.pointer-events-auto > img.object-contain
+mobile	reels	target-size	실패	1건 div.tweet-header-module__q3x0NW__author > div.tweet-header-module__q3x0NW__authorMeta > di
+mobile	reels	heading-order	n/a	
+mobile	reels	aria-required-children	n/a	
+mobile	reels	aria-required-parent	n/a	
+mobile	reels	unused-javascript	실패	Est savings of 239 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	reels	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	reels	uses-text-compression	실패	Est savings of 9 KiB /api/tweet/2113320182592463199, /api/tweet/2113339003625771140
+mobile	reels	meta-description	통과	
+mobile	reels	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+mobile	debates	bf-cache	통과	
+mobile	debates	errors-in-console	통과	
+mobile	debates	color-contrast	통과	
+mobile	debates	label-content-name-mismatch	n/a	
+mobile	debates	image-redundant-alt	통과	
+mobile	debates	target-size	통과	
+mobile	debates	heading-order	실패	1건 ul > li.border-border-soft > section.bg-vote-card > h3.text-text-strong
+mobile	debates	aria-required-children	n/a	
+mobile	debates	aria-required-parent	n/a	
+mobile	debates	unused-javascript	실패	Est savings of 274 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	debates	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	debates	uses-text-compression	통과	
+mobile	debates	meta-description	통과	
+mobile	debates	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+mobile	team-profile	bf-cache	통과	
+mobile	team-profile	errors-in-console	통과	
+mobile	team-profile	color-contrast	통과	
+mobile	team-profile	label-content-name-mismatch	n/a	
+mobile	team-profile	image-redundant-alt	실패	2건 div > div.grid > a.flex > img.object-contain; div > div.grid > a.flex > img.object-contain
+mobile	team-profile	target-size	통과	
+mobile	team-profile	heading-order	통과	
+mobile	team-profile	aria-required-children	실패	6건 div > section.pt-6.5 > div > div.text-micro-lg; div > section.pt-6.5 > div > div.grid
+mobile	team-profile	aria-required-parent	통과	
+mobile	team-profile	unused-javascript	실패	Est savings of 277 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+mobile	team-profile	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+mobile	team-profile	uses-text-compression	통과	
+mobile	team-profile	meta-description	통과	
+mobile	team-profile	meta-viewport	실패	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, vi…">
+web	home	bf-cache	통과	
+web	home	errors-in-console	실패	Failed to load resource: the server responded with a status of 404 ()
+web	home	color-contrast	통과	
+web	home	label-content-name-mismatch	n/a	
+web	home	image-redundant-alt	통과	
+web	home	target-size	실패	4건 li.w-2/3 > article.group > div.flex > a.text-micro-lg; li.w-2/3 > article.group > div.flex
+web	home	heading-order	통과	
+web	home	aria-required-children	실패	1건 section.mt-8.5 > div.min-w-0 > div.bg-bg > div.grid
+web	home	aria-required-parent	실패	1건 section.mt-8.5 > div.min-w-0 > div.bg-bg > div.grid
+web	home	unused-javascript	실패	Est savings of 249 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	home	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	home	uses-text-compression	통과	
+web	home	meta-description	통과	
+web	home	meta-viewport	통과	
+web	faq	bf-cache	통과	
+web	faq	errors-in-console	통과	
+web	faq	color-contrast	통과	
+web	faq	label-content-name-mismatch	n/a	
+web	faq	image-redundant-alt	통과	
+web	faq	target-size	통과	
+web	faq	heading-order	통과	
+web	faq	aria-required-children	n/a	
+web	faq	aria-required-parent	n/a	
+web	faq	unused-javascript	실패	Est savings of 250 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	faq	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	faq	uses-text-compression	통과	
+web	faq	meta-description	통과	
+web	faq	meta-viewport	통과	
+web	article	bf-cache	통과	
+web	article	errors-in-console	통과	
+web	article	color-contrast	통과	
+web	article	label-content-name-mismatch	실패	2건 article.min-w-0 > div.max-w-read > div.border-border > button.text-body-md; div.border-bor
+web	article	image-redundant-alt	실패	1건 article.min-w-0 > nav.flex > a.text-label > img.object-contain
+web	article	target-size	통과	
+web	article	heading-order	통과	
+web	article	aria-required-children	n/a	
+web	article	aria-required-parent	n/a	
+web	article	unused-javascript	실패	Est savings of 249 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	article	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	article	uses-text-compression	통과	
+web	article	meta-description	통과	
+web	article	meta-viewport	통과	
+web	reels	bf-cache	통과	
+web	reels	errors-in-console	통과	
+web	reels	color-contrast	통과	
+web	reels	label-content-name-mismatch	실패	3건 section.lg:pl-gutter > div.flex > div.flex > button.text-text; section.lg:pl-gutter > div.
+web	reels	image-redundant-alt	통과	
+web	reels	target-size	실패	1건 div.tweet-header-module__q3x0NW__author > div.tweet-header-module__q3x0NW__authorMeta > di
+web	reels	heading-order	통과	
+web	reels	aria-required-children	n/a	
+web	reels	aria-required-parent	n/a	
+web	reels	unused-javascript	실패	Est savings of 242 KiB /pagead/managed/js/adsense/m202610210101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	reels	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	reels	uses-text-compression	실패	Est savings of 40 KiB /api/tweet/2113301418488533076, /api/tweet/2113350809366806733
+web	reels	meta-description	통과	
+web	reels	meta-viewport	통과	
+web	debates	bf-cache	통과	
+web	debates	errors-in-console	통과	
+web	debates	color-contrast	통과	
+web	debates	label-content-name-mismatch	n/a	
+web	debates	image-redundant-alt	통과	
+web	debates	target-size	통과	
+web	debates	heading-order	실패	1건 ul > li.border-border-soft > section.bg-vote-card > h3.text-text-strong
+web	debates	aria-required-children	통과	
+web	debates	aria-required-parent	통과	
+web	debates	unused-javascript	실패	Est savings of 249 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	debates	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	debates	uses-text-compression	통과	
+web	debates	meta-description	통과	
+web	debates	meta-viewport	통과	
+web	team-profile	bf-cache	통과	
+web	team-profile	errors-in-console	통과	
+web	team-profile	color-contrast	실패	2건 div.max-w-page > dl.bg-elevate > div.flex > dd.text-caption-lg; div.max-w-page > dl.bg-ele
+web	team-profile	label-content-name-mismatch	실패	2건 aside.flex > section.border-border-strong > div.px-3.5 > a.focus-visible:outline-accent; a
+web	team-profile	image-redundant-alt	통과	
+web	team-profile	target-size	통과	
+web	team-profile	heading-order	통과	
+web	team-profile	aria-required-children	통과	
+web	team-profile	aria-required-parent	통과	
+web	team-profile	unused-javascript	실패	Est savings of 251 KiB /pagead/managed/js/adsense/m202610200101/show_ads_impl_fy202, /gtag/js?id=G-BF3JX9EDYQ
+web	team-profile	legacy-javascript	실패	Est savings of 13 KiB /_next/static/chunks/0es4x_xzcwf3s.js, /gtag/js?id=G-BF3JX9EDYQ
+web	team-profile	uses-text-compression	통과	
+web	team-profile	meta-description	통과	
+web	team-profile	meta-viewport	통과	
+
+app	screen	runs	perf	a11y	bp	seo	lcp_s(sim)	lcp_s(observed)
+mobile	home	3	75	89	79	100	8.7	0.6
+mobile	faq	3	91	92	79	100	3.5	0.1
+mobile	article	3	96	94	79	100	2.7	0.1
+mobile	reels	3	95	86	71	100	2.7	0.2
+mobile	debates	3	89	92	79	100	3.6	0.2
+mobile	team-profile	3	84	89	79	100	4.4	0.4
+web	home	3	91	86	74	100	2.0	0.7
+web	faq	3	100	100	78	100	0.6	0.1
+web	article	3	100	99	78	100	0.6	0.2
+web	reels	3	100	93	78	100	0.8	0.3
+web	debates	3	100	98	78	100	0.7	0.2
+web	team-profile	3	100	97	78	100	0.6	0.2
