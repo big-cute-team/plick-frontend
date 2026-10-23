@@ -20,7 +20,8 @@ import { SuggestedArticles } from "./SuggestedArticles";
 
 /**
  * 기사 세부 본문 (시안 KAN-567 "기사 세부"). 머리(팀 + VS, 제목, 기자와 시각, 조회),
- * 대표 이미지, 문단, 투표 카드, 태그 칩과 원문 링크, 좋아요와 공유, 관련 기사, 댓글 순이다.
+ * 대표 이미지, 문단, 투표 카드, 태그 칩과 원문 링크, 좋아요와 공유, 댓글, 관련 기사 순이다.
+ * 관련 기사는 시안에서 댓글 위였지만 KAN-676에서 댓글 밑으로 내렸다.
  *
  * 시안 규칙으로 뺀 것: 루머 단계 라벨(PostBadges), 기자 등급과 "외 N명"(ReporterLine),
  * 팀컬러 그라데이션 썸네일. 기자는 대표 한 명만 12/700으로 쓴다. 기자
@@ -34,7 +35,7 @@ import { SuggestedArticles } from "./SuggestedArticles";
  * 좋아요는 KAN-308, 공유는 KAN-312에서 각각 클라 경계 버튼으로 연결했다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
- * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). 팀태그 기반
+ * @param suggested - 댓글 밑 "함께 보면 좋은 기사" 목록(KAN-301, 위치 KAN-676). 팀태그 기반
  *   관련 기사를 받는다(KAN-338). 가로 카드 한 줄이고(KAN-668) 비어 있으면 빈 문구가 나온다.
  * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드와 VS가 빠진다.
  */
@@ -156,11 +157,9 @@ export function ArticleBody({
         <ReadEndSentinel articleId={article.id} />
       </div>
 
-      {/* 광고 (KAN-652) — 본문 끝 표식 뒤, 함께 보면 좋은 기사 위. 본문이 아니라
+      {/* 광고 (KAN-652) — 본문 끝 표식 뒤, 댓글 위. 본문이 아니라
           읽기 종료 판정에 들지 않는다 */}
       <AdSlot placement="article" className="px-edge mt-6.5" />
-
-      <SuggestedArticles articles={suggested} />
 
       <div className="px-edge pt-6.5">
         <ArticleComments
@@ -168,6 +167,10 @@ export function ArticleBody({
           initialCount={article.commentCount}
         />
       </div>
+
+      {/* 함께 보면 좋은 기사는 댓글 밑이다 (KAN-676). 본문을 다 읽은 사람이 반응부터
+          보고, 댓글까지 내려온 뒤 다음 기사로 넘어가게 한다 */}
+      <SuggestedArticles articles={suggested} />
     </article>
   );
 }
