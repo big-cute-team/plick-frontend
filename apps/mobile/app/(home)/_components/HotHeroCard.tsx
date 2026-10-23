@@ -30,7 +30,9 @@ const HERO_SRCSET = (url: string) =>
  * 에뮬레이션(DPR 1.75)은 360을 고른다. 그것도 못 구한 카드는 홈이 아예 빼므로
  * (KAN-569) 여기 오는 카드는 늘 사진이 있다. 원문 임베드 폴백(KAN-514)은 걷었다.
  *
- * 카드 전체가 기사 세부로 가는 링크고 팀 이름만 팀 프로필로 간다.
+ * 카드 전체가 기사 세부로 가는 링크고 팀 이름만 팀 프로필로 간다. 카드 링크는 사진을 품지
+ * 않고 덮기만 해서 전역의 `a:has(img)` 드래그 금지에 안 걸리므로 `draggable={false}`로
+ * 직접 끈다 (KAN-677).
  *
  * @param article - 핫이슈 기사(사진 있는 그룹)
  * @param rank - 핫이슈 안 순위(0부터). 배지에는 1부터 보여주고 조회 기록의 `feed_rank`가 된다 (KAN-543)
@@ -91,6 +93,7 @@ export function HotHeroCard({
         rank={rank}
         entry="hot"
         aria-label={article.title}
+        draggable={false}
         className="absolute inset-0"
       />
     </div>
