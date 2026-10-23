@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ApiError, needsSocialAccount } from "@plick/core/client";
 import { COMMENT_MAX_LENGTH } from "@plick/core/comments";
 import { useCreateComment } from "@/_hooks/useCreateComment";
@@ -22,8 +22,10 @@ const LoginPromptDialog = dynamic(
  *
  * 두 자리에서 쓰인다. 댓글 헤더 밑의 원 댓글 입력줄이 기본이고, `parentCommentId`가
  * 오면 답글 입력줄이다. 원 댓글의 "답글"을 누른 자리에 인라인으로 생기며
- * (`CommentThread`), 마운트되자마자 포커스를 받고 취소 버튼이 붙는다. 등록 성공도
- * `onCancel`로 입력줄을 접는다.
+ * (`CommentThread`) 취소 버튼이 붙는다. 등록 성공도 `onCancel`로 입력줄을 접는다.
+ * 열려도 포커스는 주지 않는다(KAN-676). "답글 N"은 답글 목록과 입력줄을 같이 펼쳐서,
+ * 자동 포커스가 있으면 답글을 읽으려던 사람에게도 키보드가 올라와 화면을 가렸다.
+ * 쓰려는 사람은 입력줄을 한 번 더 누른다.
  *
  * 세션 게이트(KAN-303, KAN-665): 세션이 없으면 인풋에 포커스가 오거나 제출할 때 게스트를
  * 받아 온다. 처음 온 사람은 화면이 뜬 뒤 브라우저가 게스트를 받아 오는데 그보다 먼저 입력창을
@@ -57,18 +59,12 @@ export function CommentComposer({
   className?: string;
 }) {
   const { isLoggedIn, ensureSession } = useAuth();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { mutate, isPending } = useCreateComment(articleId, onPosted);
 
   const isReply = parentCommentId != null;
-
-  /* 답글 입력줄은 "답글"을 누른 순간 생기므로 바로 입력을 시작하게 포커스한다 */
-  useEffect(() => {
-    if (isReply) inputRef.current?.focus();
-  }, [isReply]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -107,7 +103,6 @@ export function CommentComposer({
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
-          ref={inputRef}
           type="text"
           value={value}
           maxLength={COMMENT_MAX_LENGTH}
