@@ -86,7 +86,7 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
 /**
  * 모바일 기사 세부 페이지 (퍼블리싱 KAN-243, API 연결 KAN-283, 댓글 KAN-303) —
- * 상단바 + 본문(추천 기사 포함)·댓글. 홈 캐러셀·"지금 올라온 소식"에서 기사를
+ * 상단바 + 본문·댓글·추천 기사. 홈 캐러셀·"지금 올라온 소식"에서 기사를
  * 선택하면 진입한다. 피그마 S1(301:4).
  *
  * 상세(`GET /api/v1/articles/{id}`)는 단발 읽기라 서버 컴포넌트 fetch로 받는다.
@@ -100,7 +100,7 @@ import { ArticleViewTracker } from "./_components/ArticleViewTracker";
  * 진입 자체는 조회로 기록한다(KAN-310) — 서버 렌더가 아니라 브라우저에 마운트된
  * 뒤에 보낸다({@link ArticleViewTracker}).
  *
- * 본문 밑 "함께 보면 좋은 기사"(KAN-301)는 KAN-338에서 채웠다. 전용 추천 API
+ * 댓글 밑 "함께 보면 좋은 기사"(KAN-301, 위치 KAN-676)는 KAN-338에서 채웠다. 전용 추천 API
  * 대신 기사의 팀태그로 팀 필터 목록을 받아 자기 자신을 거르고 5개를 보여준다
  * (`getRelatedArticles`). 팀태그가 필요해 상세를 받은 뒤 이어 받고, 실패해도
  * 본문은 떠야 해서 빈 목록으로 둔다 — 섹션이 빈 문구를 그린다.
