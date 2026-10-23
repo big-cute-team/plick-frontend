@@ -37,7 +37,7 @@ export function TeamCrestCard({
           : "border-border-table bg-bg hover:border-border-strong hover:bg-elevate-2"
       } ${className}`}
     >
-      <TeamCrest team={team} size={40} />
+      <TeamCrest team={team} size={40} decorative />
       <span
         className={`text-body ${selected ? "text-accent font-bold" : "text-text-2 font-medium"}`}
       >

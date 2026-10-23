@@ -42,7 +42,7 @@ export function FigureHeader({ figure }: { figure: FigureProfile }) {
                 href={teamProfilePath(registry.code)}
                 className="text-label-lg text-text mt-2 inline-flex items-center gap-1.25 font-bold active:opacity-70"
               >
-                <TeamCrest team={registry} size={16} />
+                <TeamCrest team={registry} size={16} decorative />
                 {team.name}
               </Link>
             ) : (

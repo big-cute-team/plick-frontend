@@ -58,7 +58,7 @@ export function TeamProfileHead({
   return (
     <>
       <header className="flex items-center gap-4 pt-5 pb-4">
-        <TeamCrest team={TEAMS[code]} size={64} />
+        <TeamCrest team={TEAMS[code]} size={64} decorative />
         <div className="min-w-0 flex-1">
           <h1 className="text-profile tracking-title text-text-strong truncate font-black">
             {summary.name}
@@ -118,7 +118,7 @@ export function TeamProfileHead({
             team={nextFixture.opponent}
             className="flex min-w-0 items-center gap-2 active:opacity-70"
           >
-            <LiveCrest team={nextFixture.opponent} size={26} />
+            <LiveCrest team={nextFixture.opponent} size={26} decorative />
             <span className="text-body-lg text-text-strong max-w-32.5 truncate font-black">
               {nextFixture.opponent.name}
             </span>

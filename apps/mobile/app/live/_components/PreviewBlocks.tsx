@@ -47,7 +47,7 @@ function Absentees({ preview }: { preview: MatchPreview }) {
               team={group.team}
               className="flex items-center gap-1.5 active:opacity-70"
             >
-              <LiveCrest team={group.team} size={16} />
+              <LiveCrest team={group.team} size={16} decorative />
               <span className="text-body text-text-strong font-bold">
                 {group.team.name}
               </span>
@@ -131,7 +131,7 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
             team={position.team}
             className="flex min-w-0 flex-1 items-center gap-2 active:opacity-70"
           >
-            <LiveCrest team={position.team} size={20} />
+            <LiveCrest team={position.team} size={20} decorative />
             <span className="text-body text-text-strong min-w-0 flex-1 truncate font-bold">
               {position.team.name}
             </span>
@@ -181,7 +181,7 @@ function LastLineups({ preview }: { preview: MatchPreview }) {
               team={lineup.team}
               className="flex items-center gap-1.5 active:opacity-70"
             >
-              <LiveCrest team={lineup.team} size={16} />
+              <LiveCrest team={lineup.team} size={16} decorative />
               <span className="text-body text-text-strong font-bold">
                 {lineup.team.name}
               </span>

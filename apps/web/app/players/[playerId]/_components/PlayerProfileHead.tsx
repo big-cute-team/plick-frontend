@@ -61,7 +61,7 @@ export function PlayerProfileHead({ profile }: { profile: PlayerProfile }) {
             team={team}
             className="group focus-visible:outline-accent mt-3.5 inline-flex items-center gap-1.75 focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            <LiveCrest team={team} size={20} />
+            <LiveCrest team={team} size={20} decorative />
             <span
               className={`text-body-md text-text font-bold ${team.code ? "group-hover:text-accent" : ""}`}
             >

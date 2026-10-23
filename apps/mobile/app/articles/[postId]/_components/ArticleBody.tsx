@@ -64,7 +64,7 @@ export function ArticleBody({
                 href={teamProfilePath(team.code)}
                 className="flex items-center gap-1.75 active:opacity-60"
               >
-                <TeamCrest team={team} size={18} />
+                <TeamCrest team={team} size={18} decorative />
                 <span className="text-caption-lg text-text-3 font-bold">
                   {team.name}
                 </span>

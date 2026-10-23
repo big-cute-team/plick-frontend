@@ -15,3 +15,12 @@ export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [
  * 기사 세부와 릴 세부 시트가 같은 문구를 쓴다.
  */
 export const VOTE_LOGIN_PROMPT = "VS 참여는 로그인한 사용자만 할 수 있어요.";
+
+/**
+ * 탭별 목록 머리(스크린리더 전용 h2). 화면 h1과 카드 제목 h3 사이 레벨을 채운다
+ * (heading-order, KAN-670).
+ */
+export const DEBATE_LIST_HEADING: Record<DebateTab, string> = {
+  open: "진행 중인 투표",
+  closed: "마감된 투표",
+};

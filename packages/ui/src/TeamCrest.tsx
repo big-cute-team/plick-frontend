@@ -44,15 +44,19 @@ const UI_SCALE = 1.1;
  *
  * @param team - 팀 레지스트리 항목 (예: `TEAMS.LIV` — `code`로 에셋, `name`으로 alt)
  * @param size - 렌더 크기(시안 px, 정사각형). rem으로 그려 전체 배율을 따른다
+ * @param decorative - 옆에 팀명 텍스트가 있으면 true. alt를 비워 스크린리더가 팀명을 두 번 읽지
+ *   않게 한다(image-redundant-alt, KAN-670)
  */
 export function TeamCrest({
   team,
   size = 40,
   className = "",
+  decorative = false,
 }: {
   team: { code: string; name: string };
   size?: number;
   className?: string;
+  decorative?: boolean;
 }) {
   const crest = CRESTS[team.code.toUpperCase()];
   if (!crest) return null;
@@ -62,7 +66,7 @@ export function TeamCrest({
       src={crest.small.src}
       srcSet={`${crest.small.src} ${crest.small.width}w, ${crest.large.src} ${crest.large.width}w`}
       sizes={`${Math.round(size * UI_SCALE)}px`}
-      alt={team.name}
+      alt={decorative ? "" : team.name}
       width={size}
       height={size}
       /* Tailwind preflight(img { height:auto })가 height 속성을 무시해 인라인으로 고정 */

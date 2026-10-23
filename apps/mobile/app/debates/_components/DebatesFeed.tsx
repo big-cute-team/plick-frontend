@@ -8,7 +8,7 @@ import { VoteCard } from "@plick/ui/VoteCard";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { QueryBoundary } from "@/_components/QueryBoundary";
-import { DEBATE_EMPTY_COPY } from "@/_constants/debates";
+import { DEBATE_EMPTY_COPY, DEBATE_LIST_HEADING } from "@/_constants/debates";
 import { useDebates } from "@/_hooks/useDebates";
 import { useMyArticleState } from "@/_hooks/useMyArticleState";
 import { useViewState } from "@/_stores/view-state";
@@ -93,33 +93,39 @@ function DebateList({
   }
 
   return (
-    <ul>
-      {items.map((debate) => (
-        <li key={debate.id} className="border-border-soft border-b pt-4 pb-4.5">
-          {tab === "open" ? (
-            <DebateVoteCard
-              articleId={debate.articleId}
-              debate={debate}
-              size="md"
-            />
-          ) : (
+    <>
+      <h2 className="sr-only">{DEBATE_LIST_HEADING[tab]}</h2>
+      <ul>
+        {items.map((debate) => (
+          <li
+            key={debate.id}
+            className="border-border-soft border-b pt-4 pb-4.5"
+          >
+            {tab === "open" ? (
+              <DebateVoteCard
+                articleId={debate.articleId}
+                debate={debate}
+                size="md"
+              />
+            ) : (
+              <ArticleLink
+                articleId={debate.articleId}
+                className="block active:opacity-70"
+              >
+                <ClosedVoteCard debate={debate} />
+              </ArticleLink>
+            )}
             <ArticleLink
               articleId={debate.articleId}
-              className="block active:opacity-70"
+              className="text-caption-lg text-text-3 flex items-center justify-end gap-0.5 pt-2.5 active:opacity-60"
             >
-              <ClosedVoteCard debate={debate} />
+              댓글
+              <ChevronRightIcon size={12} />
             </ArticleLink>
-          )}
-          <ArticleLink
-            articleId={debate.articleId}
-            className="text-caption-lg text-text-3 flex items-center justify-end gap-0.5 pt-2.5 active:opacity-60"
-          >
-            댓글
-            <ChevronRightIcon size={12} />
-          </ArticleLink>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

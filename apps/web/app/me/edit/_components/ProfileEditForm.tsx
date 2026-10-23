@@ -106,7 +106,7 @@ export function ProfileEditForm({
                     key={code}
                     className="border-border-table flex items-center gap-1.75 border py-1.5 pr-3.25 pl-2.25"
                   >
-                    <TeamCrest team={TEAMS[code]} size={18} />
+                    <TeamCrest team={TEAMS[code]} size={18} decorative />
                     <span className="text-label-lg text-text-strong font-bold">
                       {TEAMS[code].name}
                     </span>

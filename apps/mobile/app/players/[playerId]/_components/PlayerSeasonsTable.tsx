@@ -57,7 +57,7 @@ export function PlayerSeasonsTable({
                     team={line.team}
                     className="flex min-w-0 items-center gap-1.5 active:opacity-70"
                   >
-                    <LiveCrest team={line.team} size={18} />
+                    <LiveCrest team={line.team} size={18} decorative />
                     <span className="text-body text-text-strong truncate font-bold">
                       {line.team.name}
                     </span>

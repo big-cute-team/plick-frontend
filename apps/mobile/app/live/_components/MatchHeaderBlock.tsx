@@ -56,7 +56,7 @@ function TeamSide({ team }: { team: MatchSummary["home"] }) {
       team={team}
       className="flex min-w-0 flex-1 flex-col items-center gap-2.25 active:opacity-70"
     >
-      <LiveCrest team={team} size={56} />
+      <LiveCrest team={team} size={56} decorative />
       <span className="text-body text-text-strong max-w-full truncate text-center font-bold">
         {team.name}
       </span>

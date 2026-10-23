@@ -48,7 +48,7 @@ export function TeamNumberBand({
             {value}
           </dd>
           {sub && (
-            <dd className="text-caption-lg text-text-4 whitespace-nowrap tabular-nums">
+            <dd className="text-caption-lg text-text-3 whitespace-nowrap tabular-nums">
               {sub}
             </dd>
           )}

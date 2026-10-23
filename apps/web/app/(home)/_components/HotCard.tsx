@@ -69,10 +69,11 @@ export function HotCard({
         <span className="text-caption text-accent font-black">{rank + 1}</span>
         {team && (
           <>
-            <TeamCrest team={team} size={14} className="shrink-0" />
+            <TeamCrest team={team} size={14} className="shrink-0" decorative />
             <Link
               href={teamProfilePath(team.code)}
-              className="text-micro-lg text-text-3 hover:text-accent relative z-10 font-bold"
+              /* 위아래 패딩과 최소 폭으로 클릭 영역을 24px 넘게 키우고 음수 마진으로 줄 높이는 그대로 둔다. 두 글자 팀명은 21px이었다 (target-size, KAN-670) */
+              className="text-micro-lg text-text-3 hover:text-accent relative z-10 -my-1.5 min-w-6 py-1.5 font-bold"
             >
               {team.name}
             </Link>

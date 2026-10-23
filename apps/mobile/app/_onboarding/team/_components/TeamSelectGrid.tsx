@@ -36,7 +36,7 @@ export function TeamSelectGrid({
                 : "bg-elevate-2 border-transparent"
             }`}
           >
-            <TeamCrest team={TEAMS[code]} size={51} />
+            <TeamCrest team={TEAMS[code]} size={51} decorative />
             <span className="text-body text-text-strong font-bold">
               {TEAMS[code].name}
             </span>

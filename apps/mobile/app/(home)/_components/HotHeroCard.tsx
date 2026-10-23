@@ -70,9 +70,10 @@ export function HotHeroCard({
       {team && (
         <Link
           href={teamProfilePath(team.code)}
-          className="relative z-10 mb-1 flex w-fit items-center gap-1.25 active:opacity-60"
+          /* 위아래 패딩으로 터치 영역을 24px 넘게 키우고 음수 위 마진으로 자리는 그대로 둔다 (target-size, KAN-670) */
+          className="relative z-10 -mt-1 flex w-fit items-center gap-1.25 py-1 active:opacity-60"
         >
-          <TeamCrest team={team} size={13} />
+          <TeamCrest team={team} size={13} decorative />
           <span className="text-micro-lg text-text-3 font-bold">
             {team.name}
           </span>
