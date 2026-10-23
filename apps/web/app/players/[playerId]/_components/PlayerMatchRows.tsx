@@ -108,7 +108,7 @@ function Row({
           team={opponent}
           className="group focus-visible:outline-accent flex min-w-0 items-center gap-1.75 focus-visible:outline-2"
         >
-          <LiveCrest team={opponent} size={18} />
+          <LiveCrest team={opponent} size={18} decorative />
           <span
             className={`text-label-lg text-text-strong truncate font-bold ${opponent.code ? "group-hover:text-accent" : ""}`}
           >

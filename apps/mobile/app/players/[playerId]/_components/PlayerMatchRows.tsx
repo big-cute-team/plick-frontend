@@ -43,7 +43,7 @@ function Row({ match }: { match: PlayerMatch }) {
         team={opponent}
         className="flex min-w-0 flex-1 items-center gap-2.5 active:opacity-70"
       >
-        <LiveCrest team={opponent} size={24} />
+        <LiveCrest team={opponent} size={24} decorative />
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex min-w-0 items-baseline gap-1.25">
             <span className="text-body-md text-text-strong truncate font-bold">

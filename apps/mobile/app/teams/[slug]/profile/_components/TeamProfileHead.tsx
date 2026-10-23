@@ -118,7 +118,7 @@ export function TeamProfileHead({
             team={nextFixture.opponent}
             className="flex min-w-0 items-center gap-2 active:opacity-70"
           >
-            <LiveCrest team={nextFixture.opponent} size={26} />
+            <LiveCrest team={nextFixture.opponent} size={26} decorative />
             <span className="text-body-lg text-text-strong max-w-32.5 truncate font-black">
               {nextFixture.opponent.name}
             </span>

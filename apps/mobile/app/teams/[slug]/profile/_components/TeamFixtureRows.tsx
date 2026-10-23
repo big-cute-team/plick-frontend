@@ -56,7 +56,7 @@ function FixtureRow({ fixture }: { fixture: TeamFixture }) {
         team={opponent}
         className="flex min-w-0 items-center gap-2 active:opacity-70"
       >
-        <LiveCrest team={opponent} size={24} />
+        <LiveCrest team={opponent} size={24} decorative />
         <span className="text-body-md text-text-strong truncate font-bold">
           {opponent.name}
         </span>

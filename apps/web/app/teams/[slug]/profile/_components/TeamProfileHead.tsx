@@ -50,7 +50,7 @@ export function TeamProfileHead({
             <span className="text-label-lg text-text-3 font-bold">
               {next.isHome ? "홈" : "원정"}
             </span>
-            <LiveCrest team={next.opponent} size={30} />
+            <LiveCrest team={next.opponent} size={30} decorative />
             <span
               className={`text-title text-text-strong font-black tracking-[-0.03em] ${next.opponent.code ? "group-hover:text-accent" : ""}`}
             >

@@ -62,7 +62,7 @@ function StandingLine({ row }: { row: StandingRow }) {
         {row.rank}
       </span>
       <span className="flex justify-center">
-        <LiveCrest team={row.team} size={18} />
+        <LiveCrest team={row.team} size={18} decorative />
       </span>
       <span
         className={`text-label-lg text-text-strong min-w-0 truncate ${row.team.code ? "font-bold" : ""}`}
