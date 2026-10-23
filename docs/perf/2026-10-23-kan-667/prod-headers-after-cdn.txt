@@ -1,0 +1,250 @@
+=== GET https://m.plick.co.kr/ (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "13dmm11vl5z2fmo"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 280
+=== GET https://m.plick.co.kr/ (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "dnntbfso632fmo"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://m.plick.co.kr/faq (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "zhc32ga5gfnsv"
+x-nextjs-cache: HIT
+cache-control: s-maxage=31536000
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 279
+=== GET https://m.plick.co.kr/faq (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "zhc32ga5gfnsv"
+x-nextjs-cache: HIT
+cache-control: s-maxage=31536000
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 279
+=== GET https://m.plick.co.kr/articles/9679 (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "12kbe8i60ko19t0"
+x-nextjs-cache: MISS
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/articles/9679 (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "12kbe8i60ko19t0"
+x-nextjs-cache: MISS
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://m.plick.co.kr/reels (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "16oks1o7ix81fc2"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 279
+=== GET https://m.plick.co.kr/reels (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "13csh0k7wo1fbs"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://m.plick.co.kr/debates (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "16fc7sowoyex78"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 278
+=== GET https://m.plick.co.kr/debates (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "4vh901yvbux78"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://m.plick.co.kr/teams/liverpool/profile (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "6v9mm1j9mk3j8i"
+x-nextjs-cache: HIT
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/teams/liverpool/profile (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "6v9mm1j9mk3j8i"
+x-nextjs-cache: HIT
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://m.plick.co.kr/me (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/me (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/login (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://m.plick.co.kr/login (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/ (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "f71pe3w2q0328o"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 283
+=== GET https://plick.co.kr/ (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "13jhxig9y1032gt"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://plick.co.kr/faq (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "dpf410rpzqrvg"
+x-nextjs-cache: HIT
+cache-control: s-maxage=31536000
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 284
+=== GET https://plick.co.kr/faq (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "dpf410rpzqrvg"
+x-nextjs-cache: HIT
+cache-control: s-maxage=31536000
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 284
+=== GET https://plick.co.kr/articles/9679 (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "roazzozwng1mcn"
+x-nextjs-cache: MISS
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/articles/9679 (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "roazzozwng1mcn"
+x-nextjs-cache: MISS
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://plick.co.kr/reels (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "57j27ero692tf2"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 283
+=== GET https://plick.co.kr/reels (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "64j1wlhw3b2tf2"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://plick.co.kr/debates (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "mprujxk4w41avm"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+age: 283
+=== GET https://plick.co.kr/debates (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "v8jud5bmnc1avk"
+x-nextjs-cache: STALE
+cache-control: s-maxage=20, stale-while-revalidate=31535980
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://plick.co.kr/teams/liverpool/profile (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "6q8h18t7qbuhh"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/teams/liverpool/profile (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+etag: "6q8h18t7qbuhh"
+x-nextjs-cache: STALE
+cache-control: s-maxage=60, stale-while-revalidate=31535940
+vary: rsc,Accept-Encoding
+x-cache: Hit from cloudfront
+=== GET https://plick.co.kr/me (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/me (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/login (#1)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront
+=== GET https://plick.co.kr/login (#2)
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc,Accept-Encoding
+x-cache: Miss from cloudfront

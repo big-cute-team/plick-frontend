@@ -126,3 +126,37 @@ dev BE를 보도록 빌드한 standalone에 착수 전과 같은 조건(브라�
 - `article-states` API가 prod BE에 아직 없다. prod 배포는 BE KAN-663이 prod에 나간 뒤여야 하트가 찬다. 그 전에 나가도 `useMyArticleState`가 실패를 삼켜 화면은 뜬다(웹 `QueryProvider`는 에러를 던지지 않는다).
 - 투표 쓰기는 dev에 열린 투표가 없어 못 눌러 봤다. dev 배포 뒤 열린 투표가 생기면 E2E `debates.spec`이 본다.
 - KAN-643은 이 작업의 1단계와 같은 내용이라 닫는다.
+
+## 배포 뒤: 콘솔 적용과 prod 재측정
+
+이 브랜치가 develop에 머지돼 dev에 배포된 뒤, 저장소 밖에 남겨 둔 CloudFront 콘솔 작업을 했다. 순서는 이랬다. 10월 23일 13:52(KST)에 `dev.plick.co.kr` 배포(E1NRBTX3Y1PE98)의 기본 비헤이비어 캐시 정책을 바꿨다. `dev-m.plick.co.kr`은 ADR 0201 때(10월 16일) 이미 바뀐 상태였다. 14:06에 develop→main PR이 머지돼 BE `plick-main-prod`(14:05~14:17)와 FE `plick-frontend-prod`(14:11~14:22) CodeDeploy가 돌았고, 14:41에 `plick.co.kr`(E1KX1LWBFZKMMY)과 `m.plick.co.kr`(EDJQ2UHUYBADH) 두 prod 배포의 정책을 바꿨다. 네 배포가 같은 커스텀 정책을 쓰게 되자 처음 만들 때 붙인 이름 `plick-mobile-documents-dev`가 틀린 말이 돼서 14:42에 `plick-documents`로 바꿨다(ID `6c5e02cc-2ac2-4c70-9c28-5be91c3303ea`). 어드민 배포만 `Managed-CachingDisabled`로 남겨 뒀다.
+
+정책의 내용은 ADR 0201의 "남긴 것"에 적은 그대로다. TTL은 최소 0·기본 0·최대 1년이다. 최소와 기본이 0이면 CloudFront는 원본 응답의 `Cache-Control`이 말하는 시간만큼만 저장하고, 원본이 아무 말도 하지 않으면 저장하지 않는다. 최대 1년은 FAQ·약관처럼 `s-maxage=31536000`을 단 정적 문서를 그대로 받아 주기 위한 상한이다. 캐시 키는 쿼리스트링 전체와 `rsc` 헤더이고 쿠키는 키에 넣지 않는다. CloudFront는 원본의 `Vary`를 캐시 키로 쓰지 않으므로, Next가 같은 URL에 `rsc: 1` 헤더와 `_rsc` 쿼리로 요청하는 RSC 페이로드(`text/x-component`)와 HTML이 한 항목에 섞이지 않게 하려면 둘을 키에 직접 올려야 한다. 쿠키를 키에서 뺐다는 것은 로그인한 사람과 게스트가 같은 캐시 항목을 본다는 뜻이고, 그래서 세션을 보고 그리는 MY·로그인과 쿠키를 심는 응답은 전부 `private, no-store`여야 한다. 3단계의 안전핀이 그 자리다. 오리진 요청 정책은 `Managed-AllViewer`라 Miss일 때 원본에는 쿠키가 그대로 간다.
+
+### curl로 본 것
+
+콘솔 적용 직후 두 호스트에 브라우저 UA로 같은 문서를 두 번씩 요청했다(`docs/perf/2026-10-23-kan-667/prod-headers-after-cdn.txt`).
+
+| 문서                           | `Cache-Control`                                           | 1번째 → 2번째 `x-cache` |
+| ------------------------------ | --------------------------------------------------------- | ----------------------- |
+| 홈(두 호스트)                  | `s-maxage=20, stale-while-revalidate=31535980`            | Hit → Hit               |
+| FAQ(두 호스트)                 | `s-maxage=31536000`                                       | Hit → Hit               |
+| 기사 상세 9679 모바일 / 웹     | `s-maxage=60` / `s-maxage=20`                             | Miss → Hit              |
+| 릴스(두 호스트)                | `s-maxage=60`                                             | Hit → Hit               |
+| 투표 모바일 / 웹               | `s-maxage=60` / `s-maxage=20`                             | Hit → Hit               |
+| 팀 프로필 liverpool(두 호스트) | `s-maxage=60`                                             | Miss → Hit              |
+| MY·로그인(두 호스트)           | `private, no-cache, no-store, max-age=0, must-revalidate` | Miss → Miss             |
+
+홈·FAQ·릴스·투표가 첫 요청부터 Hit인 것은 내가 재기 몇 분 전에 다른 누군가가(또는 앞서 돈 Lighthouse 스모크가) 이미 받아 뒀기 때문이고, `age` 헤더가 278~284초였다. 기사 상세와 팀 프로필은 아무도 안 받은 문서라 첫 요청이 Miss였다. 32개 응답 어디에도 `Set-Cookie`가 없다. 착수 전 로컬 측정에서 여덟 줄씩 실리던 자리다. RSC 페이로드도 따로 확인했다. `rsc: 1`을 달고 `/faq?_rsc=…`를 두 번 요청하면 `text/x-component`로 Miss → Hit이고, 헤더 없이 받은 HTML 항목과 섞이지 않았다. `/_next/static` 청크는 `public, max-age=31536000, immutable`인데 이건 CloudFront가 아니라 S3 CDN이 따로 맡는 자리다(ADR 0081).
+
+### Lighthouse bf-cache
+
+10월 11일 감사에서 모바일 18개, 웹 19개 라우트가 전부 `bf-cache`에 실패했다. 이번엔 두 호스트의 홈·FAQ·기사 상세(9679)·릴스·투표·팀 프로필(liverpool) 12개 URL을 Lighthouse 12.8.2 CLI로 3회씩, 36회 돌렸다(`--only-audits=bf-cache`, 모바일은 기본 프로파일, 웹은 `--preset=desktop`). 36회 모두 통과했고 차단 사유는 0건이었다(`lighthouse-bfcache-prod.tsv`). ADR 0199에서 꼽힌 사유 셋은 문서 `no-store`, 메인 리소스 `no-store`, JS가 받은 응답의 `no-store`였다. 앞의 둘은 문서가 `s-maxage`로 바뀌어 사라졌다. 셋째는 조금 다르다. `/be` API 응답은 지금도 `no-cache, no-store, max-age=0, must-revalidate`인데 사유에 오르지 않았다. Lighthouse가 띄운 크롬 136이 그 조건을 더는 차단 사유로 세지 않는 것이고, 문서만 고쳐도 통과한다는 뜻이다.
+
+### `article-states`가 prod에 들어왔다
+
+"남긴 것"에 prod BE에는 `article-states`가 아직 없다고 적었는데, 이 글을 쓰는 사이 상황이 바뀌었다. 사설 ALB(`plick-alb-pri-prod`) 로그를 보면 12:14~12:15와 13:12~13:16에 FE가 보낸 `GET /api/v1/users/me/article-states` 다섯 건이 404였고, 14:17에 BE `plick-main-prod` CodeDeploy가 끝난 뒤 두 호스트에서 `POST /api/session/guest`로 게스트 하나를 받아 `/be/api/v1/users/me/article-states?ids=9679`를 부르니 200에 `{"articleSummaryId":9679,"liked":false,"vote":null}`이 왔다(`prod-article-states.txt`). KAN-663이 같은 날 prod에 나간 것이다. 그 전 404 구간에는 ADR 0201에서 `throwOnError`를 끈 덕에 기사 화면이 비는 대신 하트만 비어 있었다.
+
+### ALB 로그는 이번엔 답을 주지 못했다
+
+콘솔 적용 전후 한 시간(04:40~05:40, 05:40~06:40 UTC)의 공용 ALB 문서 요청을 셌다(`alb-buckets.tsv`). 전은 모바일 313·웹 264건, 후는 539·670건으로 오히려 늘었다. 두 가지가 겹쳤다. 후 구간에 내 Lighthouse 72회가 들어 있는데 공용 ALB 로그의 클라이언트 IP는 CloudFront 엣지 IP라 내 요청을 IP로 뺄 수 없어 UA로 뺐고(1997건), 그래도 Lighthouse가 띄운 화면이 뒤이어 보내는 요청까지 다 걸러지진 않았다. 그리고 06:20과 06:30에 크롤러 버스트가 모바일 211건, 웹 226건을 보냈다. 크롤러는 기사 2천여 개를 서로 다른 URL로 훑으니 CloudFront 캐시가 거의 돕지 못하는 트래픽이기도 하다. 사설 ALB의 BE 게스트 발급(`POST /api/v1/auth/guest`)은 전 8건, 후 79건인데 후의 대부분이 내 Lighthouse가 받은 게스트다. 측정이 곧 부작용이었다. 사람 트래픽에서 문서 요청이 얼마나 줄었는지는 측정이 없는 날 같은 시간대를 다시 세야 알 수 있다. 이번에 분명한 것은 curl과 Lighthouse가 본 것, 같은 문서의 두 번째 요청은 CloudFront가 답하고 문서는 bfcache에 들어간다는 것까지다.
