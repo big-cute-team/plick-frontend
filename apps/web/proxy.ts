@@ -73,6 +73,9 @@ import {
   REFRESH_RETRY_COOKIE,
   REFRESH_RETRY_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
+  SESSION_COOKIE_BASE,
+  SESSION_KIND,
+  SESSION_KIND_COOKIE,
 } from "@/_constants/api";
 import { PLICK_CLIENT } from "@/_constants/analytics";
 
@@ -296,6 +299,7 @@ async function startGuestSession(
     failed.cookies.delete(AUTH_COOKIES.access);
     failed.cookies.delete(AUTH_COOKIES.refresh);
     failed.cookies.delete(GUEST_EXPIRES_COOKIE);
+    failed.cookies.delete(SESSION_KIND_COOKIE);
     failed.cookies.delete(GUEST_FROM_LOGOUT_COOKIE);
     failed.cookies.delete(REFRESH_RETRY_COOKIE);
     return failed;
@@ -318,8 +322,13 @@ async function startGuestSession(
     ...AUTH_COOKIE_BASE,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
+  /* 마감 시각과 세션 종류는 브라우저가 읽는다 (KAN-667). 옵션 설명은 `SESSION_KIND_COOKIE` 주석 */
   response.cookies.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt, {
-    ...AUTH_COOKIE_BASE,
+    ...SESSION_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+  response.cookies.set(SESSION_KIND_COOKIE, SESSION_KIND.guest, {
+    ...SESSION_COOKIE_BASE,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
   /* 첫 진입 안내 토스트를 띄울 표식 — 띄운 클라 컴포넌트가 지운다(HttpOnly 아님) */
@@ -464,12 +473,18 @@ async function route(
     });
     if (tokens.guestExpiresAt) {
       response.cookies.set(GUEST_EXPIRES_COOKIE, tokens.guestExpiresAt, {
-        ...AUTH_COOKIE_BASE,
+        ...SESSION_COOKIE_BASE,
         maxAge: REFRESH_TOKEN_MAX_AGE,
       });
     } else {
       response.cookies.delete(GUEST_EXPIRES_COOKIE);
     }
+    /* 세션 종류 표식도 같이 갱신한다 (KAN-667). 연동 직후처럼 게스트에서 소셜로 바뀐 경우를 따라간다 */
+    response.cookies.set(
+      SESSION_KIND_COOKIE,
+      tokens.guestExpiresAt ? SESSION_KIND.guest : SESSION_KIND.user,
+      { ...SESSION_COOKIE_BASE, maxAge: REFRESH_TOKEN_MAX_AGE },
+    );
     return response;
   } catch (e) {
     /**
@@ -513,6 +528,7 @@ async function route(
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(AUTH_COOKIES.access);
     response.cookies.delete(AUTH_COOKIES.refresh);
+    response.cookies.delete(SESSION_KIND_COOKIE);
     response.cookies.delete(REFRESH_RETRY_COOKIE);
     return response;
   }

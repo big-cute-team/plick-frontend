@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { TEAM_IDS } from "@plick/domain/constants";
 import type { TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "@plick/core/client";
-import { AUTH_COOKIES } from "@/_constants/api";
+import {
+  AUTH_COOKIES,
+  GUEST_EXPIRES_COOKIE,
+  SESSION_KIND_COOKIE,
+} from "@/_constants/api";
 
 /**
  * 온보딩 저장 서버 액션 (KAN-320, 모바일 KAN-264 이식) — 닉네임·응원팀을 BE에 한 번에 보낸다.
@@ -181,6 +185,8 @@ export async function deleteAccount(): Promise<{ error: string } | undefined> {
 
   jar.delete(AUTH_COOKIES.access);
   jar.delete(AUTH_COOKIES.refresh);
+  jar.delete(SESSION_KIND_COOKIE);
+  jar.delete(GUEST_EXPIRES_COOKIE);
 
   redirect("/");
 }

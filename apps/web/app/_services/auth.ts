@@ -16,6 +16,9 @@ import {
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
+  SESSION_COOKIE_BASE,
+  SESSION_KIND,
+  SESSION_KIND_COOKIE,
 } from "@/_constants/api";
 import { buildAuthorizeUrl, getRedirectUri, packOAuthState } from "./oauth";
 import type { SocialProvider } from "@/_types/api";
@@ -110,6 +113,10 @@ export async function login(
   /* 연동이 아니라 별도 로그인이므로 게스트 표식은 버린다 (KAN-514, KAN-658) */
   jar.delete(GUEST_EXPIRES_COOKIE);
   jar.delete(GUEST_FROM_LOGOUT_COOKIE);
+  jar.set(SESSION_KIND_COOKIE, SESSION_KIND.user, {
+    ...SESSION_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
 
   redirect("/");
 }
@@ -192,6 +199,10 @@ export async function linkSocial(
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
   jar.delete(GUEST_EXPIRES_COOKIE);
+  jar.set(SESSION_KIND_COOKIE, SESSION_KIND.user, {
+    ...SESSION_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
   const fromLogout = jar.has(GUEST_FROM_LOGOUT_COOKIE);
   jar.delete(GUEST_FROM_LOGOUT_COOKIE);
   if (!data.linked && !fromLogout) {
@@ -244,6 +255,7 @@ export async function logout(): Promise<void> {
   jar.delete(AUTH_COOKIES.access);
   jar.delete(AUTH_COOKIES.refresh);
   jar.delete(GUEST_EXPIRES_COOKIE);
+  jar.delete(SESSION_KIND_COOKIE);
   jar.delete(GUEST_FROM_LOGOUT_COOKIE);
 
   let guest: GuestResponse;
@@ -262,8 +274,13 @@ export async function logout(): Promise<void> {
     ...AUTH_COOKIE_BASE,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
+  /* 마감 시각과 세션 종류는 브라우저가 읽는다 (KAN-667). 옵션 설명은 `SESSION_KIND_COOKIE` 주석 */
   jar.set(GUEST_EXPIRES_COOKIE, guest.guestExpiresAt, {
-    ...AUTH_COOKIE_BASE,
+    ...SESSION_COOKIE_BASE,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+  jar.set(SESSION_KIND_COOKIE, SESSION_KIND.guest, {
+    ...SESSION_COOKIE_BASE,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
   jar.set(GUEST_FROM_LOGOUT_COOKIE, "1", {

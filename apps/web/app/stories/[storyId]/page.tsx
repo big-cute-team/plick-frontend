@@ -13,6 +13,15 @@ import { SiteHeader } from "@/_components/SiteHeader";
 import { StoryHeader } from "./_components/StoryHeader";
 
 /**
+ * 빈 목록이어도 선언해 둔다 (KAN-667). Next는 `generateStaticParams`가 아예 없는 동적 세그먼트를
+ * 요청마다 렌더(ƒ)로 다루고, 있으면(목록 밖 값 포함) 첫 요청에 그려 fetch의 revalidate만큼
+ * 캐시한다. 이슈는 수가 늘어나서 빌드 때 전부 그리지는 않는다. 인물·선수 페이지와 같은 판단이다.
+ */
+export function generateStaticParams(): { storyId: string }[] {
+  return [];
+}
+
+/**
  * 이슈별 메타데이터 (KAN-523). 이슈 제목이 곧 "히샬리송", "맨체스터 더비" 같은
  * 짧은 키워드라(KAN-533) title에 그대로 쓴다. 키워드가 이적설만이 아니라 경기나
  * 대표팀 명단일 수도 있어 설명에는 기사 종류를 적지 않는다. 모바일에는 이슈
