@@ -68,7 +68,7 @@ export function PlayerProfileHead({ profile }: { profile: PlayerProfile }) {
               team={team}
               className="mt-2 inline-flex items-center gap-1.5 active:opacity-70"
             >
-              <LiveCrest team={team} size={18} />
+              <LiveCrest team={team} size={18} decorative />
               <span className="text-body text-text-strong font-bold">
                 {team.name}
               </span>

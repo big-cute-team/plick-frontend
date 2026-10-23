@@ -24,3 +24,12 @@ export const DEBATE_EMPTY_COPY: Record<DebateTab, string> = {
   open: "진행 중인 투표가 없어요",
   closed: "마감된 투표가 없어요",
 };
+
+/**
+ * 탭별 목록 머리(스크린리더 전용 h2). 화면 h1과 카드 제목 h3 사이 레벨을 채운다
+ * (heading-order, KAN-670).
+ */
+export const DEBATE_LIST_HEADING: Record<DebateTab, string> = {
+  open: "진행 중인 투표",
+  closed: "마감된 투표",
+};

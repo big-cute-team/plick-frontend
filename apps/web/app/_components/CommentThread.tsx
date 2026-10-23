@@ -462,7 +462,7 @@ function CommentLikeButton({
         type="button"
         onClick={like.toggle}
         aria-pressed={comment.liked}
-        aria-label={comment.liked ? "좋아요 취소" : "좋아요"}
+        aria-label={`좋아요 ${formatCount(comment.likeCount)}`}
         className={`text-caption-lg focus-visible:outline-accent inline-flex items-center gap-1 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${
           comment.liked
             ? "text-danger-strong"

@@ -41,7 +41,7 @@ export function FavoriteTeamPicker({
                 : "border-border-table text-text-strong"
             }`}
           >
-            <TeamCrest team={TEAMS[code]} size={18} />
+            <TeamCrest team={TEAMS[code]} size={18} decorative />
             <span className="text-label-lg font-bold">{TEAMS[code].name}</span>
           </button>
         );

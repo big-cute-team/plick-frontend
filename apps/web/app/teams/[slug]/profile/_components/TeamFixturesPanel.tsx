@@ -109,7 +109,7 @@ function Side({
       {team.name}
     </span>
   );
-  const crest = <LiveCrest team={team} size={20} />;
+  const crest = <LiveCrest team={team} size={20} decorative />;
   return (
     <TeamProfileLink
       team={team}

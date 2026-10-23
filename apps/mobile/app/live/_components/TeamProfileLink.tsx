@@ -16,6 +16,10 @@ import type { ReactNode } from "react";
  * 앵커 안에 앵커를 넣을 수 없으므로 이미 링크 안에 있는 자리(경기 목록 카드처럼
  * 카드 전체가 상세로 가는 곳)에는 쓰지 않는다.
  *
+ * 이름은 aria-label로 덮지 않고 보이는 내용(팀명)에서 나온다. 순위 행처럼 순위·승점까지
+ * 한 링크에 담는 자리에서 덮어쓴 이름이 보이는 글자와 어긋났다 (label-content-name-mismatch, KAN-670).
+ * 그래서 안의 크레스트는 `decorative`로 alt를 비워 팀명이 두 번 읽히지 않게 한다.
+ *
  * @param team 팀 참조
  * @param className 링크·span 공통 클래스
  * @param children 크레스트와 팀명
@@ -33,11 +37,7 @@ export function TeamProfileLink({
     return <span className={className}>{children}</span>;
   }
   return (
-    <Link
-      href={teamProfilePath(team.code)}
-      aria-label={`${team.name} 팀 프로필`}
-      className={className}
-    >
+    <Link href={teamProfilePath(team.code)} className={className}>
       {children}
     </Link>
   );

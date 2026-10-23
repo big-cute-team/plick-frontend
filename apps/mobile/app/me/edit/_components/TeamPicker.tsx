@@ -33,7 +33,7 @@ export function TeamPicker({
               active ? "bg-accent text-on-accent" : "bg-chip text-text-3"
             }`}
           >
-            <TeamCrest team={TEAMS[code]} size={20} />
+            <TeamCrest team={TEAMS[code]} size={20} decorative />
             {TEAMS[code].name}
           </button>
         );

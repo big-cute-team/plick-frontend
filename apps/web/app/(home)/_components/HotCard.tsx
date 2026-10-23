@@ -31,7 +31,8 @@ const CARD_SRCSET = (url: string) =>
  * 카드 전체가 기사 세부(`/articles/[postId]`)로 가는 링크다. 링크를 형제로 깔아
  * 카드를 덮고, 팀명만 `relative z-10`으로 그 위에 올려 팀 프로필로 간다(중첩
  * 앵커를 피하는 표 행과 같은 수). 임베드 안 링크는 전역 CSS에서 꺼져 있어
- * (globals.css) 카드 링크만 산다.
+ * (globals.css) 카드 링크만 산다. 카드 링크는 사진을 품지 않고 덮기만 해서 전역의
+ * `a:has(img)` 드래그 금지에 안 걸리므로 `draggable={false}`로 직접 끈다 (KAN-677).
  *
  * @param article - 표시할 핫이슈 기사
  */
@@ -68,10 +69,11 @@ export function HotCard({
         <span className="text-caption text-accent font-black">{rank + 1}</span>
         {team && (
           <>
-            <TeamCrest team={team} size={14} className="shrink-0" />
+            <TeamCrest team={team} size={14} className="shrink-0" decorative />
             <Link
               href={teamProfilePath(team.code)}
-              className="text-micro-lg text-text-3 hover:text-accent relative z-10 font-bold"
+              /* 위아래 패딩과 최소 폭으로 클릭 영역을 24px 넘게 키우고 음수 마진으로 줄 높이는 그대로 둔다. 두 글자 팀명은 21px이었다 (target-size, KAN-670) */
+              className="text-micro-lg text-text-3 hover:text-accent relative z-10 -my-1.5 min-w-6 py-1.5 font-bold"
             >
               {team.name}
             </Link>
@@ -100,6 +102,7 @@ export function HotCard({
         rank={rank}
         entry="hot"
         aria-label={article.title}
+        draggable={false}
         className="focus-visible:outline-accent absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
       />
     </article>

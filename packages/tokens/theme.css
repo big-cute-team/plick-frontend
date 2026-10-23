@@ -408,6 +408,13 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+/* 이미지를 누른 채 끌면 반투명 복제본이 따라다니는 기본 드래그를 끈다 (KAN-677).
+ * 이미지를 감싼 링크는 끌 때 링크 드래그가 시작돼 같은 고스트가 뜨므로 함께 막고,
+ * 텍스트 링크는 그대로 둔다. Firefox는 이 속성을 모른다. */
+img,
+a:has(img) {
+  -webkit-user-drag: none;
+}
 /* a { color } 같은 규칙을 여기(레이어 밖)에 두면 Tailwind 유틸리티(@layer utilities)를
  * 이긴다 — 레이어 밖 CSS가 레이어 안 CSS보다 우선이라 text-accent가 먹지 않는다.
  * 링크 색 상속은 preflight가 base 레이어에서 이미 한다. */

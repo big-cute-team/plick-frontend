@@ -158,7 +158,7 @@ export function ReelItem({
             <div className="flex items-center gap-2 pb-2.75">
               {team && (
                 <>
-                  <TeamCrest team={team} size={18} />
+                  <TeamCrest team={team} size={18} decorative />
                   <span className="text-caption-lg text-text-strong font-bold">
                     {team.name}
                   </span>

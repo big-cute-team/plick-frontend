@@ -105,3 +105,10 @@ body {
   width: 1.875rem;
   height: 1.875rem;
 }
+
+/* 트윗 헤더의 "· Follow" 링크를 숨긴다 (KAN-670) — 임베드는 pointer-events: none인 읽기 전용이라
+ * 누를 수 없는데 링크로는 남아 24px 미만 타깃으로 잡혔다(target-size). 접미사 일치로 잡는 이유는
+ * 위 아바타 규칙과 같다. */
+.react-tweet-theme [class*="tweet-header-module"][class$="__authorFollow"] {
+  display: none;
+}

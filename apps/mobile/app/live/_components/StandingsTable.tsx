@@ -82,7 +82,7 @@ export function StandingsTable({
             {row.rank}
           </span>
           <span className="flex justify-center">
-            <LiveCrest team={row.team} size={18} />
+            <LiveCrest team={row.team} size={18} decorative />
           </span>
           <span
             className={`text-label-lg min-w-0 truncate ${

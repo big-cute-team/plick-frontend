@@ -81,7 +81,7 @@ function RecentRow({ fixture }: { fixture: TeamFixture }) {
         team={opponent}
         className="group focus-visible:outline-accent flex min-w-0 items-center gap-2 focus-visible:outline-2"
       >
-        <LiveCrest team={opponent} size={20} />
+        <LiveCrest team={opponent} size={20} decorative />
         <span
           className={`text-body text-text-strong truncate font-bold ${opponent.code ? "group-hover:text-accent" : ""}`}
         >

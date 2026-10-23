@@ -28,11 +28,20 @@ export function StandingsWindow({
         role="row"
         className={`text-micro-lg text-text-4 grid h-7 items-center px-2 ${COLS}`}
       >
-        <span>#</span>
-        <span>팀</span>
-        <span className="text-center">경기</span>
-        <span className="text-center">득실</span>
-        <span className="text-center">승점</span>
+        {/* role="table" 아래 행은 셀 역할을 채워야 표로 읽힌다 (aria-required-children, KAN-670) */}
+        <span role="columnheader" aria-label="순위">
+          #
+        </span>
+        <span role="columnheader">팀</span>
+        <span role="columnheader" className="text-center">
+          경기
+        </span>
+        <span role="columnheader" className="text-center">
+          득실
+        </span>
+        <span role="columnheader" className="text-center">
+          승점
+        </span>
       </div>
       {rows.map((row) => {
         const self = row.team.id === teamId;
@@ -42,21 +51,31 @@ export function StandingsWindow({
             role="row"
             className={`grid h-10 items-center px-2 ${COLS} ${self ? "bg-accent/8 rounded-tile" : ""}`}
           >
-            <span className="text-label text-text-3 tabular-nums">
+            <span role="cell" className="text-label text-text-3 tabular-nums">
               {row.rank}
             </span>
-            <TeamProfileLink
-              team={row.team}
-              className="flex min-w-0 items-center gap-2 active:opacity-70"
+            {/* 링크에 셀 역할을 얹으면 링크 역할이 사라져 셀로 한 겹 감싼다 */}
+            <span role="cell" className="min-w-0">
+              <TeamProfileLink
+                team={row.team}
+                className="flex min-w-0 items-center gap-2 active:opacity-70"
+              >
+                <LiveCrest team={row.team} size={20} decorative />
+                <span className="text-body text-text-strong truncate font-bold">
+                  {row.team.name}
+                </span>
+              </TeamProfileLink>
+            </span>
+            <span role="cell" className={cell}>
+              {row.played}
+            </span>
+            <span role="cell" className={cell}>
+              {goalDiffLabel(row.goalDiff)}
+            </span>
+            <span
+              role="cell"
+              className="text-body text-text-strong text-center font-black tabular-nums"
             >
-              <LiveCrest team={row.team} size={20} />
-              <span className="text-body text-text-strong truncate font-bold">
-                {row.team.name}
-              </span>
-            </TeamProfileLink>
-            <span className={cell}>{row.played}</span>
-            <span className={cell}>{goalDiffLabel(row.goalDiff)}</span>
-            <span className="text-body text-text-strong text-center font-black tabular-nums">
               {row.points}
             </span>
           </div>
