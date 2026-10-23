@@ -13,6 +13,7 @@
 
 import { TEAM_CODES } from "@plick/domain/constants";
 import {
+  dedupeAbsentees,
   eventMinuteLabel,
   HIDDEN_SEASON_COMPETITION,
   teamShortName,
@@ -392,21 +393,24 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
       })),
     preview: detail.preview
       ? {
-          // 홈 먼저, 원정 다음 — 화면이 팀별로 묶을 때 홈 그룹이 앞에 온다 (KAN-459)
-          absentees: [...detail.preview.absences]
-            .sort((a, b) => sideOrder(a.side) - sideOrder(b.side))
-            .map(
-              (absence): Absentee => ({
-                team: teamOf(absence.side),
-                playerId: absence.playerId ?? null,
-                playerName: absence.playerName,
-                photo: absence.photo,
-                reason: absence.reason ?? absence.type ?? "결장",
-                kind: /suspen/i.test(absence.reason ?? "")
-                  ? "SUSPENSION"
-                  : "INJURY",
-              }),
-            ),
+          // 홈 먼저, 원정 다음 — 화면이 팀별로 묶을 때 홈 그룹이 앞에 온다 (KAN-459).
+          // BE가 목록을 두 번 이어 붙여 내리는 일이 있어 선수 단위로 겹침을 걷는다 (KAN-668)
+          absentees: dedupeAbsentees(
+            [...detail.preview.absences]
+              .sort((a, b) => sideOrder(a.side) - sideOrder(b.side))
+              .map(
+                (absence): Absentee => ({
+                  team: teamOf(absence.side),
+                  playerId: absence.playerId ?? null,
+                  playerName: absence.playerName,
+                  photo: absence.photo,
+                  reason: absence.reason ?? absence.type ?? "결장",
+                  kind: /suspen/i.test(absence.reason ?? "")
+                    ? "SUSPENSION"
+                    : "INJURY",
+                }),
+              ),
+          ),
           headToHead: detail.preview.headToHead.flatMap(
             (game): HeadToHeadGame[] => {
               if (game.homeGoals === null || game.awayGoals === null) {

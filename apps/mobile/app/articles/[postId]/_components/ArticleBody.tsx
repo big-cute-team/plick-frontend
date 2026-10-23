@@ -35,7 +35,7 @@ import { SuggestedArticles } from "./SuggestedArticles";
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param suggested - 본문 밑 "함께 보면 좋은 기사" 목록(KAN-301). 팀태그 기반
- *   관련 기사를 받는다(KAN-338). 비어 있으면 행 대신 빈 문구가 나온다.
+ *   관련 기사를 받는다(KAN-338). 가로 카드 한 줄이고(KAN-668) 비어 있으면 빈 문구가 나온다.
  * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드와 VS가 빠진다.
  */
 export function ArticleBody({
