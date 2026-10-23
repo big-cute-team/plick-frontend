@@ -9,6 +9,39 @@
 html {
   height: 100%;
   -webkit-text-size-adjust: 100%; /* iOS 가로전환 시 폰트 확대 방지 */
+  /* 더블탭 확대만 끈다 (KAN-669). 뷰포트 meta의 확대 금지를 걷어내면서 핀치 줌은 접근성
+   * 때문에 살려 두고, 탭이 잦은 UI(좋아요·탭 바)에서 더블탭이 화면을 키우는 것만 막는다.
+   * manipulation은 팬과 핀치 줌을 허용하는 값이라 릴스의 `touch-pan-x touch-pinch-zoom`과
+   * 교차해도 그대로 pan-x pinch-zoom이 된다. 1.2.0 미만 구버전 앱 셸은 meta를 다시 잠그지
+   * 않아 확대가 열리는데, 이 한 줄이 그쪽 더블탭도 막아 준다 */
+  touch-action: manipulation;
+}
+
+/* iOS 입력창 포커스 자동 확대 방지 (KAN-669). iOS는 글자가 16px 미만인 input·textarea에
+ * 포커스가 가면 화면 전체를 확대한다. 전에는 viewport `maximum-scale=1`이 이걸 막았는데
+ * 그 줄을 걷어냈으니 글자 크기로 조건을 없앤다. 댓글·채팅 입력은 text-label-lg(13.75px),
+ * 닉네임은 text-body-md(15.4px)라 전부 걸린다. iOS WebKit만 아는 속성으로 분기해 Android는
+ * 디자인 크기를 그대로 둔다. 16px은 토큰이 아니라 iOS가 정한 문턱값이다.
+ * 레이어 밖 규칙이라 유틸리티 클래스(`text-label-lg`)보다 우선한다. 포커스로 키보드나 피커가 뜨는
+ * 컨트롤만 고른다. 체크박스·버튼류는 자동 확대 대상이 아니고 글자를 키우면 모양이 바뀐다 */
+@supports (-webkit-touch-callout: none) {
+  input:where(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="number"],
+    [type="password"],
+    [type="date"],
+    [type="time"],
+    [type="datetime-local"]
+  ),
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 /* 안전영역 변수 — 컴포넌트는 env(safe-area-inset-*)를 직접 쓰지 않고 이 변수를 쓴다.
