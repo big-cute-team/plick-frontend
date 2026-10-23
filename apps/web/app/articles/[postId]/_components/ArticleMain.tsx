@@ -8,12 +8,7 @@ import {
   hashtagHref,
   teamProfilePath,
 } from "@plick/domain/format";
-import type {
-  ArticleCard,
-  ArticleDetail,
-  Debate,
-  InitialCommentPage,
-} from "@plick/domain/types";
+import type { ArticleCard, ArticleDetail, Debate } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
@@ -45,27 +40,24 @@ import { ReadEndSentinel } from "./ReadEndSentinel";
  * 줄바꿈으로 갈라 문단을 만든다.
  *
  * 저장 버튼은 뺐다 — BE 계약에 없다(모바일 KAN-283과 같은 판단). 좋아요는
- * KAN-330에서 눌리게 됐다 — 상세 응답의 `likedByMe`·`likeCount`를 초기값으로 받아
- * `ArticleLikeButton`(클라 경계)이 토글한다. 이 파일은 서버 컴포넌트로 남는다.
+ * KAN-330에서 눌리게 됐다 — 상세 응답의 `likeCount`를 초기값으로 받아
+ * `ArticleLikeButton`(클라 경계)이 토글한다. 눌렀는가는 페이지가 익명 ISR이라
+ * (KAN-667) 응답 대신 내 상태 캐시가 원본이다. 이 파일은 서버 컴포넌트로 남는다.
  * 댓글은 KAN-329에서 붙였다 — 헤더·입력바·목록은 클라 경계(`ArticleComments`)로
- * 내려가고, 이 파일은 서버가 미리 받아 둔 첫 페이지를 넘겨주기만 한다.
+ * 내려가고 목록은 브라우저에서 받는다.
  *
  * @param article - 표시할 기사(본문은 `summary` — 상세 계약에 문단 필드가 없다)
  * @param related - 관련 기사 목록. 로드 실패면 null, 팀태그가 없거나 같은 팀 기사가
  *   더 없으면 빈 배열
- * @param initialComments - 서버가 미리 받아 둔 댓글 첫 페이지. 댓글 fetch가
- *   실패했으면 없이 들어오고, 그때는 목록이 클라에서 직접 받는다.
  * @param debate - 이 기사에 붙은 토론(KAN-418). null이면 투표 카드가 빠진다.
  */
 export function ArticleMain({
   article,
   related,
-  initialComments,
   debate = null,
 }: {
   article: ArticleDetail;
   related: ArticleCard[] | null;
-  initialComments?: InitialCommentPage;
   debate?: Debate | null;
 }) {
   const team = article.teams[0] ? TEAMS[article.teams[0]] : null;
@@ -158,7 +150,11 @@ export function ArticleMain({
             인터랙션이 있어 댓글처럼 클라 경계로 내려간다 */}
         {debate && (
           <div className="mt-6.5">
-            <DebateVoteCard debate={debate} closed={closed} />
+            <DebateVoteCard
+              articleId={article.id}
+              debate={debate}
+              closed={closed}
+            />
           </div>
         )}
 
@@ -212,7 +208,7 @@ export function ArticleMain({
         <div className="border-border mt-5.5 flex items-center gap-5.5 border-t pt-5">
           <ArticleLikeButton
             articleId={article.id}
-            initial={{ liked: article.liked, likeCount: article.likeCount }}
+            initialCount={article.likeCount}
           />
           <ArticleShareButton articleId={article.id} />
         </div>
@@ -254,7 +250,6 @@ export function ArticleMain({
       <ArticleComments
         articleId={article.id}
         initialCount={article.commentCount}
-        initialComments={initialComments}
       />
     </article>
   );

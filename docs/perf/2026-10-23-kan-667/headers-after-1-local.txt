@@ -1,0 +1,95 @@
+# 1단계 뒤 로컬 standalone 응답 헤더 (2026-10-23, curl UA라 게스트 발급 없음, API_BASE_URL=prod BE)
+
+== GET /
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /faq
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /terms
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /privacy
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /login
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /signup
+HTTP/1.1 200 OK
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /articles/9679
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /debates
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /reels
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /reels/9679
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /teams/arsenal
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /teams/arsenal/profile
+HTTP/1.1 200 OK
+x-nextjs-cache: STALE
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /figures/1
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /players/1
+HTTP/1.1 404 Not Found
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=60, stale-while-revalidate=31535940
+
+== GET /stories/1
+HTTP/1.1 200 OK
+x-nextjs-cache: MISS
+Cache-Control: s-maxage=20, stale-while-revalidate=31535980
+
+== GET /me
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /live
+HTTP/1.1 200 OK
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+
+== GET /faq 두 번째 (캐시 적중 확인)
+x-nextjs-cache: HIT
+Cache-Control: s-maxage=31536000
+
+== GET /faq (브라우저 UA, 쿠키 없음: 정적 응답에도 아직 게스트 Set-Cookie가 실린다. 3단계에서 뗀다)
+set-cookie: accessToken=<redacted>; Path=/; Expires=Fri, 23 Oct 2026 03:44:35 GMT; Max-Age=3300; Secure; HttpOnly; SameSite=lax
+set-cookie: refreshToken=<redacted>; Path=/; Expires=Fri, 06 Nov 2026 02:49:35 GMT; Max-Age=1209600; Secure; HttpOnly; SameSite=lax
+set-cookie: guestExpiresAt=2026-11-06T11%3A49%3A35%2B09%3A00; Path=/; Expires=Fri, 06 Nov 2026 02:49:35 GMT; Max-Age=1209600; Secure; SameSite=lax
+set-cookie: sessionKind=guest; Path=/; Expires=Fri, 06 Nov 2026 02:49:35 GMT; Max-Age=1209600; Secure; SameSite=lax
+set-cookie: guestNotice=issued; Path=/; Expires=Fri, 23 Oct 2026 02:54:35 GMT; Max-Age=300; Secure; SameSite=lax
+set-cookie: refreshRetry=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: guestFromLogout=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+set-cookie: plick_did=a66a95a9-bba9-4e8d-b00d-2ff0ed9c40e1; Path=/; Expires=Sat, 27 Nov 2027 02:49:35 GMT; Max-Age=34560000; Secure; SameSite=lax
+set-cookie: plick_path=direct; Path=/; Expires=Sat, 27 Nov 2027 02:49:35 GMT; Max-Age=34560000; Secure; HttpOnly; SameSite=lax
+Cache-Control: s-maxage=31536000

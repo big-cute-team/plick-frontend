@@ -1,0 +1,10 @@
+
+Running 5 tests using 5 workers
+
+[1/5] [web] › specs/web/home.spec.ts:5:3 › 홈 › 첫 화면에 핫이슈와 주 메뉴가 뜬다
+[2/5] [web] › specs/web/home.spec.ts:21:3 › 홈 › 이슈 더 보기를 누르면 홈 표에 이어 붙는다
+[3/5] [web] › specs/web/articles.spec.ts:8:3 › 기사 › 목록 첫 기사를 열면 같은 제목의 상세와 댓글 입력이 뜬다
+[4/5] [web] › specs/web/reels.spec.ts:5:3 › 릴스 › 진입하면 첫 릴이 열린다
+[5/5] [web] › specs/web/debates.spec.ts:8:3 › 투표 › 목록이 뜨고 첫 카드가 기사로 이어진다
+  5 passed (4.6s)
+exit=0

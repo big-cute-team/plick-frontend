@@ -1,13 +1,27 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getReelsFrom } from "@plick/core/reels";
 import { truncateText } from "@plick/domain/format";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
-import { getAccessToken } from "@/_services/session";
 import { ReelsWorkspace } from "@/reels/_components/ReelsWorkspace";
+
+/**
+ * 익명 ISR (KAN-667, 모바일 KAN-664·ADR 0200). 내 좋아요·투표는 화면이 뜬 뒤 내 상태 캐시가
+ * 얹고, 이 페이지는 누구에게나 같은 것만 서버에서 받는다. 피드의 데이터 fetch가 익명 60초
+ * 캐시라 같은 주기다.
+ */
+export const revalidate = 60;
+
+/**
+ * 빈 목록이라도 선언해야 `[postId]`가 요청마다 렌더(ƒ)가 아니라 첫 요청에 그려 캐시(●)된다
+ * (기사 세부와 같은 이유). 릴은 수가 많아 빌드 때 미리 그리지 않는다.
+ */
+export function generateStaticParams(): { postId: string }[] {
+  return [];
+}
 
 /**
  * 릴별 고유 메타데이터 (KAN-349) — 공유 미리보기가 그 릴의 제목·요약으로 나와야
@@ -79,12 +93,11 @@ export default async function ReelDeepLinkPage({
 
   let initial: InitialReelFeed | undefined;
   try {
-    // 토큰을 실어야 응답의 `likedByMe`가 이 유저 기준으로 온다 (KAN-308)
-    const page = await getReelsFrom(postId, {
-      accessToken: await getAccessToken(),
-    });
+    // 토큰 없이 받는다 (KAN-667). 딥링크 순서는 BE가 원래 개인화하지 않는 시간순이라 잃는 게 없다
+    const page = await getReelsFrom(postId);
     initial = { page, fetchedAt: Date.now() };
   } catch (e) {
+    unstable_rethrow(e);
     if (
       e instanceof ApiError &&
       (e.code === "ARTICLE_NOT_FOUND" || e.code === "COMMON_INVALID_PARAM")

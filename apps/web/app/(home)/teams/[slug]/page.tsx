@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TEAMS, TEAM_BY_SLUG, TEAM_FULL_NAMES } from "@plick/domain/constants";
+import {
+  TEAMS,
+  TEAM_BY_SLUG,
+  TEAM_FULL_NAMES,
+  TEAM_ORDER,
+} from "@plick/domain/constants";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { HomeScreen } from "@/(home)/_components/HomeScreen";
+
+/**
+ * 팀 6개는 고정(`TEAM_ORDER`)이라 빌드 때 전부 미리 그린다 (KAN-667, 모바일 KAN-632). 없으면
+ * 동적 파라미터라 첫 요청까지 ƒ(요청마다 렌더)로 남는다.
+ */
+export function generateStaticParams(): { slug: string }[] {
+  return TEAM_ORDER.map((code) => ({ slug: TEAMS[code].slug }));
+}
 
 /**
  * 팀별 고유 메타데이터 (KAN-350) — 팀 허브는 "토트넘 이적 루머" 같은 팀 검색어의

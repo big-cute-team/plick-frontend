@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { DEBATE_TABS } from "@/_constants/debates";
-import type { DebateTab } from "@/_types/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebatesSection } from "./DebatesSection";
+import { DebateTabBar, DebateTabs } from "./DebateTabs";
+import { DEFAULT_DEBATE_TAB } from "@/_utils/debates";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { SideRail } from "@/_components/SideRail";
@@ -18,14 +17,14 @@ import { SideRail } from "@/_components/SideRail";
  *
  * 카드는 여기서 바로 투표한다(`DebateVoteCard`). 전에는 표시 전용 카드를 눌러 기사
  * 상세로 보냈다. BE에 필터, 페이지네이션이 없어 팀 탭도 무한스크롤도 없다. 탭의
- * 원본은 URL `?tab=`이라 링크로 그린다.
+ * 원본은 URL `?tab=`이고 탭 줄과 목록이 브라우저에서 읽는다 (KAN-667). 서버가 쿼리를
+ * 읽으면 페이지가 동적이 돼 익명 ISR이 안 되기 때문이다. 두 곳 다 `useSearchParams`라
+ * 각자 Suspense 안에 둔다. 탭 줄의 fallback은 기본 탭 모양이라 자리가 흔들리지 않는다.
  *
  * 목록 조회는 {@link DebatesSection}이 Suspense 안에서 맡는다 (KAN-602). 상단 바,
  * 제목, 탭 줄, 레일 틀은 기다리지 않고 바로 나간다.
- *
- * @param tab 지금 탭
  */
-export function DebatesScreen({ tab }: { tab: DebateTab }) {
+export function DebatesScreen() {
   return (
     <>
       <SiteHeader />
@@ -36,32 +35,11 @@ export function DebatesScreen({ tab }: { tab: DebateTab }) {
             <h1 className="text-section text-text-strong tracking-title pb-5 font-black">
               투표
             </h1>
-            <div
-              role="tablist"
-              aria-label="투표 상태"
-              className="border-border flex items-center gap-5 border-b"
-            >
-              {DEBATE_TABS.map(({ key, label, href }) => {
-                const on = key === tab;
-                return (
-                  <Link
-                    key={key}
-                    href={href}
-                    role="tab"
-                    aria-selected={on}
-                    className={`text-body focus-visible:outline-accent -mb-px border-b-2 pb-2.25 focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                      on
-                        ? "border-accent text-text-strong font-bold"
-                        : "hover:text-text-strong text-text-3 border-transparent font-medium"
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
+            <Suspense fallback={<DebateTabBar tab={DEFAULT_DEBATE_TAB} />}>
+              <DebateTabs />
+            </Suspense>
             <Suspense fallback={<DebateListSkeleton />}>
-              <DebatesSection tab={tab} />
+              <DebatesSection />
             </Suspense>
           </div>
           <SideRail />

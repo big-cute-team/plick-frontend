@@ -167,8 +167,8 @@ export const ANALYTICS_HEADER_NAMES: readonly string[] =
 export type PlickClient = "mobile_web" | "desktop_web";
 
 /**
- * 기기 식별자를 들고 있는 쿠키 (KAN-542). 웹은 프록시가 없으면 UUID를 만들어 심는다. 모바일은
- * KAN-665부터 `<head>`의 `deviceSyncScript`가 만든다(페이지 응답에 쿠키를 심지 않으려고).
+ * 기기 식별자를 들고 있는 쿠키 (KAN-542). 없으면 `<head>`의 `deviceSyncScript`가 만든다(페이지
+ * 응답에 쿠키를 심지 않으려고). 모바일은 KAN-665부터, 웹은 KAN-667부터다. 전에는 프록시가 심었다.
  *
  * HttpOnly가 아니다. PC·모바일 전환 배너가 링크에 이 값을 쿼리로 실어야 하는데
  * (`@plick/domain/cross-site`), 배너는 브라우저에서 도는 클라 컴포넌트라 읽을 수 있어야
@@ -224,7 +224,7 @@ export const DEVICE_RESTORED_KEY = "plick_did_restored";
  * - `landing`: 주소에 쿼리가 있거나 외부에서 들어왔으면 그 쿼리와 Referer origin을
  *   {@link LANDING_COOKIE}에 적는다. 다음 `/be` 호출에서 프록시가 읽어 유입 경로·마케팅 쿠키를 정한다.
  *
- * @param options 웹은 생략한다(프록시가 여전히 페이지 응답에서 심는다)
+ * @param options 두 앱 모두 넘긴다(모바일 KAN-665, 웹 KAN-667). 생략하면 되살리기와 거울만 한다
  */
 export function deviceSyncScript(options?: {
   issue?: { crawlerPattern: RegExp; handedParam: string };

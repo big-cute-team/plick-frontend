@@ -27,6 +27,7 @@ import {
  * 표시와 클릭만 맡는다. 레일이 데스크톱, 좁은 폭으로 두 벌 붙어 있어 각자 훅을
  * 들면 팝업도 두 벌이 되고, 어느 쪽이 떠 있는지가 뷰포트에 좌우된다.
  *
+ * @param liked - 내가 좋아요를 눌렀는가. 카드가 아니라 내 상태 캐시 값이다 (KAN-667)
  * @param className - 래퍼에 덧붙일 클래스(표시, 위치 제어)
  * @param onLike - 하트 클릭 시 호출
  * @param onOpenComments - 댓글 버튼 클릭 시 세부 패널을 여는 콜백
@@ -37,6 +38,7 @@ import {
  */
 export function ReelActionRail({
   reel,
+  liked,
   className = "",
   onLike,
   onOpenComments,
@@ -46,6 +48,7 @@ export function ReelActionRail({
   navigable = false,
 }: {
   reel: ReelCard;
+  liked: boolean;
   className?: string;
   onLike?: () => void;
   onOpenComments?: () => void;
@@ -57,12 +60,12 @@ export function ReelActionRail({
   return (
     <div className={`flex flex-col items-center gap-4.5 pb-2.5 ${className}`}>
       <RailAction
-        icon={<LikeIcon size={22} filled={reel.liked} />}
+        icon={<LikeIcon size={22} filled={liked} />}
         label={formatCount(reel.likeCount)}
         onClick={onLike}
-        active={reel.liked}
-        ariaLabel={reel.liked ? "좋아요 취소" : "좋아요"}
-        ariaPressed={reel.liked}
+        active={liked}
+        ariaLabel={liked ? "좋아요 취소" : "좋아요"}
+        ariaPressed={liked}
       />
       <RailAction
         icon={<ChatIcon size={22} />}

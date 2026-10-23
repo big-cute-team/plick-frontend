@@ -14,6 +14,7 @@ import {
   TEAM_BY_SLUG,
   TEAM_FULL_NAMES,
   TEAM_IDS,
+  TEAM_ORDER,
 } from "@plick/domain/constants";
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
 import { standingsWindow, type TeamSummary } from "@plick/domain/team-profile";
@@ -34,6 +35,14 @@ import { TeamNumberBand } from "./_components/TeamNumberBand";
 import { TeamOverviewPanel } from "./_components/TeamOverviewPanel";
 import { TeamProfileHead } from "./_components/TeamProfileHead";
 import { TeamProfileView } from "./_components/TeamProfileView";
+
+/**
+ * 팀 6개는 고정(`TEAM_ORDER`)이라 빌드 때 전부 미리 그린다 (KAN-667, 모바일 KAN-632). 없으면
+ * 동적 파라미터라 첫 요청까지 ƒ(요청마다 렌더)로 남는다.
+ */
+export function generateStaticParams(): { slug: string }[] {
+  return TEAM_ORDER.map((code) => ({ slug: TEAMS[code].slug }));
+}
 
 /**
  * 팀 프로필 메타데이터 (KAN-507 → KAN-599). 팀 검색어("토트넘 이적 루머")의 랜딩은 팀

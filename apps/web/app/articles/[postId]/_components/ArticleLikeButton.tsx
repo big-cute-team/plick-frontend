@@ -9,6 +9,7 @@ import { HeartMiniIcon } from "@plick/ui/icons";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
 import { useArticleLike } from "@/_hooks/useArticleLike";
+import { useMyArticleState } from "@/_hooks/useMyArticleState";
 
 /**
  * 기사 세부 좋아요 버튼 (KAN-308, web 이식 KAN-330, 시안 KAN-567) — 액션 줄의 하트
@@ -18,30 +19,33 @@ import { useArticleLike } from "@/_hooks/useArticleLike";
  * 서버 컴포넌트인 `ArticleMain`에서 이 버튼만 클라 경계로 떼어 냈다 — 본문
  * 전체를 클라로 내리면 문단·관련 기사까지 번들에 실린다.
  *
- * 상태를 여기 state로 든다. 릴스와 달리 기사 상세엔 클라 캐시가 없고 서버가 준
- * props가 원본이라, 낙관적 갱신은 이 state를 고치는 게 곧 화면을 고치는 것이다.
- * 다시 들어오면 서버가 새로 받은 값으로 다시 시작한다.
+ * 좋아요 수는 여기 state로 든다. 기사 상세엔 클라 캐시가 없고 서버가 준 props가
+ * 원본이라, 낙관적 갱신은 이 state를 고치는 게 곧 화면을 고치는 것이다. 눌렀는가는
+ * 다르다. 페이지가 익명 ISR이라 props의 값은 늘 "안 누름"이고, 내 상태 캐시
+ * (`useMyArticleState`, KAN-667)가 원본이다. 누르면 `syncLikeIntoFeeds`가 그 캐시를 고친다.
  *
  * 같은 값을 캐시된 피드 목록에도 옮겨 적는다 (KAN-379) — 여기서 누르고 목록으로
  * 돌아가면 목록이 누르기 전 숫자를 그대로 보여주던 걸 맞춘다.
  *
  * @param articleId 기사 id
- * @param initial 서버가 내려준 최초 좋아요 상태(`likedByMe`·`likeCount`)
+ * @param initialCount 서버가 내려준 좋아요 수(익명 캐시라 ISR 주기만큼 늦을 수 있다)
  */
 export function ArticleLikeButton({
   articleId,
-  initial,
+  initialCount,
 }: {
   articleId: string;
-  initial: LikeState;
+  initialCount: number;
 }) {
-  const [state, setState] = useState<LikeState>(initial);
+  const [likeCount, setLikeCount] = useState(initialCount);
+  const { liked } = useMyArticleState(articleId);
+  const state: LikeState = { liked, likeCount };
   const queryClient = useQueryClient();
   const like = useArticleLike({
     articleId,
     state,
     onChange: (next) => {
-      setState(next);
+      setLikeCount(next.likeCount);
       syncLikeIntoFeeds(queryClient, articleId, next);
     },
   });

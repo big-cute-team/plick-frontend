@@ -7,6 +7,7 @@ import {
   recordArticleView,
   takeArticleOrigin,
 } from "@plick/core/article-views";
+import { isBackForwardLanding } from "@/_utils/navigation";
 
 /**
  * 기사·릴을 봤다고 서버에 기록한다 (KAN-310). 렌더에 관여하지 않는 부수효과 전용 훅이다.
@@ -26,6 +27,12 @@ import {
  * 카운트를 화면에서 즉시 올리지는 않는다. 응답이 갱신된 조회수를 안 주는 데다,
  * 하루 1회 제약 때문에 이번 호출이 실제로 셌는지 아닌지를 FE가 알 수 없다.
  * 오늘 두 번째로 들어온 사람에게 +1을 보여주면 새로고침에서 도로 내려간다.
+ *
+ * 뒤로가기로 다시 받아진 문서의 첫 화면은 보내지 않는다 (KAN-667, 모바일 KAN-632). `no-store`
+ * 화면은 원문(x.com) 등에 나갔다 돌아올 때 bfcache 대신 서버에서 새로 받아지는데, 그건 같은
+ * 방문이지 새 열람이 아니다. 전에는 이때 조회 기록이 한 번 더 나갔다. 판별은
+ * `isBackForwardLanding`이다. 그 문서 안에서 다른 기사로 옮기면 보낸다. 데스크톱은 외부 링크가
+ * 새 탭으로 열려 이 길이 드물지만, 주소창으로 나갔다 돌아오는 경우가 같은 자리다.
  *
  * @param articleId 기사(릴) id
  * @param active 지금 보고 있는가. 릴스는 활성 슬라이드가 될 때만 true로 넘긴다.
@@ -51,6 +58,7 @@ export function useArticleView(
     }
     if (sentFor.current === articleId) return;
     sentFor.current = articleId;
+    if (isBackForwardLanding()) return;
     const origin = takeArticleOrigin(articleId);
     recordArticleView(articleId, {
       rank: rank ?? origin.rank,
