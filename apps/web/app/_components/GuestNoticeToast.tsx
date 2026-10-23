@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { guestLinkNotice } from "@plick/domain/format";
 import {
   GUEST_EXPIRES_COOKIE,
+  GUEST_ISSUED_EVENT,
   GUEST_NOTICE,
   GUEST_NOTICE_COOKIE,
 } from "@/_constants/api";
@@ -16,10 +17,11 @@ import { readCookie } from "@/_utils/cookie";
  * 루트 레이아웃에 한 번만 마운트한다. 모양은 시안(KAN-567)의
  * 각진 다이얼로그 상자(`border-strong` + `shadow-dialog`)를 작게 쓴 것이다.
  *
- * 왜 쿠키를 신호로 쓰나: 안내는 "발급이 일어난 그 순간"에만 떠야 하는데, 발급은 edge에서
- * 도는 프록시가 하고 토스트는 브라우저에 있다. 그 사이를 이을 수 있는 게 응답 쿠키뿐이다
- * (프록시는 렌더 트리에 값을 넘길 수 없고, 서버 컴포넌트는 발급 여부를 모른다).
- * 그래서 프록시·연동 액션이 표식 쿠키를 심고 여기서 읽는다.
+ * 왜 쿠키를 신호로 쓰나: 안내는 "발급이 일어난 그 순간"에만 떠야 하는데, 발급하는 쪽(게스트 발급
+ * 라우트, 연동·로그아웃 액션)과 토스트가 떨어져 있다. 그 사이를 응답 쿠키가 잇는다. 발급하는 쪽이
+ * 표식 쿠키를 심고 여기서 읽는다. 마운트할 때 한 번 읽고, 브라우저가 화면을 띄운 뒤 게스트를
+ * 받아 오면(KAN-667) `GUEST_ISSUED_EVENT`를 받아 다시 읽는다. 이 컴포넌트는 `AuthProvider` 밖이라
+ * 세션 값을 직접 볼 수 없다.
  *
  * 그리고 **읽은 즉시 지운다**. 안 지우면 표식이 살아 있는 동안 화면을 옮길 때마다 같은
  * 안내가 다시 뜬다. 쿠키를 JS로 지우려면 HttpOnly가 아니어야 해서, 이 표식만 예외로
@@ -36,20 +38,29 @@ export function GuestNoticeToast() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const kind = readNoticeCookie();
-    if (!kind) return;
-    clearNoticeCookie();
-    const guestExpiresAt = readCookie(GUEST_EXPIRES_COOKIE);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const show = () => {
+      const kind = readNoticeCookie();
+      if (!kind) return;
+      clearNoticeCookie();
+      const guestExpiresAt = readCookie(GUEST_EXPIRES_COOKIE);
 
-    setMessage(
-      kind === GUEST_NOTICE.existing
-        ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요"
-        : kind === GUEST_NOTICE.loggedOut
-          ? "로그아웃했어요. 로그인 없이 계속 둘러볼 수 있어요"
-          : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
-    );
-    const timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
-    return () => clearTimeout(timer);
+      setMessage(
+        kind === GUEST_NOTICE.existing
+          ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요"
+          : kind === GUEST_NOTICE.loggedOut
+            ? "로그아웃했어요. 로그인 없이 계속 둘러볼 수 있어요"
+            : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
+      );
+      clearTimeout(timer);
+      timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
+    };
+    show();
+    window.addEventListener(GUEST_ISSUED_EVENT, show);
+    return () => {
+      window.removeEventListener(GUEST_ISSUED_EVENT, show);
+      clearTimeout(timer);
+    };
   }, []);
 
   if (!message) return null;

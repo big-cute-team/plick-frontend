@@ -32,7 +32,7 @@ import type { BouncedMessage } from "@/_types/live";
  * 밖으로 밀려 닿지 않는다
  */
 export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
-  const { isLoggedIn, nickname } = useAuth();
+  const { isLoggedIn, isSessionPending, nickname } = useAuth();
   const minHeight = compact ? "min-h-82.5" : "min-h-113";
 
   return (
@@ -43,7 +43,11 @@ export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
       <header className="border-border flex h-9.5 shrink-0 items-center border-b px-3.25">
         <h2 className="text-body text-text-strong font-black">채팅방</h2>
       </header>
-      {!isLoggedIn ? (
+      {!isLoggedIn && isSessionPending ? (
+        /* 처음 온 사람은 화면이 뜬 뒤 게스트를 받아 온다 (KAN-667). 그동안 로그인 안내를 띄우면
+           곧바로 방으로 바뀌어 깜빡이므로 자리만 비워 둔다 */
+        <div className={minHeight} />
+      ) : !isLoggedIn ? (
         <Gate
           className={minHeight}
           title="로그인이 필요해요"

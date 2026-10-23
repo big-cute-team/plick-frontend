@@ -9,11 +9,13 @@ import {
 } from "@plick/domain/brand";
 import { ADSENSE_SCRIPT_URL, adsPauseScript } from "@plick/core/ads";
 import { deviceSyncScript } from "@plick/core/analytics";
+import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { AdsProvider } from "@/_components/AdsProvider";
 import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
 import { AuthProvider } from "@/_components/AuthProvider";
 import { GuestNoticeToast } from "@/_components/GuestNoticeToast";
 import { ADS_BASE_MODE } from "@/_constants/ads";
+import { CRAWLER_UA_PATTERN } from "@/_constants/api";
 import { GA_MEASUREMENT_ID } from "@/_constants/analytics";
 import { SwitchToMobileBanner } from "@/_components/SwitchToMobileBanner";
 import { QueryProvider } from "@/_queries/QueryProvider";
@@ -112,8 +114,20 @@ export default function RootLayout({
     <html lang="ko" data-theme="light" className={notoSansKr.variable}>
       <head>
         {/* 기기 식별자 쿠키를 localStorage와 맞춘다 (KAN-610). 모바일 레이아웃과 같은 스크립트다.
-            뒤따르는 /be fetch보다 먼저 돌아야 해서 head 동기 스크립트로 둔다. DOM은 안 건드린다 */}
-        <script dangerouslySetInnerHTML={{ __html: deviceSyncScript() }} />
+            뒤따르는 /be fetch보다 먼저 돌아야 해서 head 동기 스크립트로 둔다. DOM은 안 건드린다.
+            KAN-667(모바일 KAN-665)부터 새 식별자 만들기와 진입 주소 넘기기(랜딩 쿠키)도 여기서 한다.
+            프록시가 페이지 응답에 심던 쿠키라, 그대로 두면 CDN이 그 응답을 저장할 수 없다 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: deviceSyncScript({
+              issue: {
+                crawlerPattern: CRAWLER_UA_PATTERN,
+                handedParam: DEVICE_ID_QUERY_PARAM,
+              },
+              landing: true,
+            }),
+          }}
+        />
         {/* 릴 미디어가 트윗 임베드(pbs.twimg.com) 경로라 첫 이미지(LCP) 연결을
             미리 열어 둔다 (KAN-421) */}
         <link rel="preconnect" href="https://pbs.twimg.com" />
