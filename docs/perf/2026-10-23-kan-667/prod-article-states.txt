@@ -1,0 +1,12 @@
+== m.plick.co.kr
+guest POST 200
+1
+{"code":"OK","message":null,"data":[{"articleSummaryId":9679,"liked":false,"vote":null}]}
+article-states 200
+
+== plick.co.kr
+guest POST 200
+1
+{"code":"OK","message":null,"data":[{"articleSummaryId":9679,"liked":false,"vote":null}]}
+article-states 200
+

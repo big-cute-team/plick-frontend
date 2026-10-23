@@ -235,6 +235,8 @@ CloudFront는 모바일·웹·admin 배포 모두 기본 비헤이비어 캐시 
 
 로컬 standalone 헤더는 `docs/perf/2026-10-15-kan-632/headers-after-local.txt`, 빌드 표는 `build-after-routes.txt`, Lighthouse는 `lighthouse-after-local.tsv`에 있다. prod 배포 뒤 1편과 같은 방법(라이트하우스 3회 중앙값, 시뮬레이터에서 x.com 다녀온 뒤 ALB 로그)으로 다시 잰다.
 
+2026-10-23에 이 작업이 KAN-664·665와 함께 main에 나간 뒤 prod를 다시 쟀다. `m.plick.co.kr`의 홈·FAQ·기사 상세·릴스·투표·팀 프로필을 Lighthouse 12.8.2로 3회씩 돌렸고 18회 모두 `bf-cache`를 통과했다. 10월 11일 감사에서 18개 라우트가 전부 실패하던 항목이다. 차단 사유는 0건이었다. 위에서 셋으로 꼽힌 사유가 전부 `no-store`였으니 문서가 `s-maxage`로 바뀐 것으로 설명이 끝난다. 같은 날 CloudFront 기본 비헤이비어 캐시 정책도 켜져서, 같은 문서를 두 번 요청하면 두 번째는 `Hit from cloudfront`이고 MY·로그인만 `no-store`로 Miss다. 시뮬레이터에서 x.com에 다녀온 뒤 문서 재요청이 사라졌는지 ALB 로그로 보는 것은 이번에는 하지 않았고, 대신 콘솔 적용 전후 한 시간의 ALB 문서 요청 수를 비교했다. 수치와 과정은 [ADR 0204](0204-web-render-cache-port.md)의 "배포 뒤" 절에 있고 원자료는 `docs/perf/2026-10-23-kan-667/`다.
+
 ### 남긴 것
 
 - 홈이 빌드 때 BE를 불러 미리 그려진다. CI 빌드 환경에서 BE에 닿지 않으면 첫 20초(revalidate)까지 빈 섹션이 나간다. dev 배포에서 확인할 몫이다.
