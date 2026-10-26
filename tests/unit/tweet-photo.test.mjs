@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  tweetAvatarUrl,
   tweetPhotoSrcSet,
   tweetPhotoUrl,
   TWEET_GRID_SRCSET,
@@ -87,4 +88,21 @@ test("임베드 격자 후보는 배율 1·1.75·2에 240·360·small을 준다"
       "https://pbs.twimg.com/media/AbC?format=webp&name=360x360 1.75x, " +
       "https://pbs.twimg.com/media/AbC?format=webp&name=small 2x",
   );
+});
+
+test("아바타 _normal은 _bigger로 바꾼다 (KAN-672)", () => {
+  assert.equal(
+    tweetAvatarUrl(
+      "https://pbs.twimg.com/profile_images/1567939825474355200/qwJraMmT_normal.jpg",
+    ),
+    "https://pbs.twimg.com/profile_images/1567939825474355200/qwJraMmT_bigger.jpg",
+  );
+});
+
+test("프로필 이미지 밖이나 _normal이 없는 주소는 그대로 둔다", () => {
+  const other =
+    "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png";
+  assert.equal(tweetAvatarUrl(other), other);
+  const big = "https://pbs.twimg.com/profile_images/1/a_400x400.jpg";
+  assert.equal(tweetAvatarUrl(big), big);
 });
