@@ -6,7 +6,6 @@ import { CHAT_MAX_MESSAGE_LENGTH } from "@plick/core/chat";
 import type { ChatMessage } from "@plick/domain/chat";
 import { formatChatTime } from "@plick/domain/format";
 import { useAuth } from "@/_components/AuthProvider";
-import { ONBOARDING_ENTRY } from "@/_constants/app";
 import { CHAT_REJECT_MESSAGE } from "@/_constants/live";
 import { useLiveChat } from "@/_hooks/useLiveChat";
 import type { BouncedMessage } from "@/_types/live";
@@ -16,8 +15,13 @@ import type { BouncedMessage } from "@/_types/live";
  * 언제나 열려 있다(BE KAN-571). 경기 상세 채팅 탭과 라이브 목록 배너로 들어가는
  * `/live/chat` 화면이 같은 방을 본다. 경기 상태나 킥오프 시각으로 거르지 않는다.
  *
- * 접속 전에 화면이 먼저 거르는 것은 비로그인과 닉네임 없음(온보딩 미완료, 서버 403)
- * 뿐이고 안내 지면으로 끝낸다. 그 밖에는 붙어서 목록과 입력바를 그린다.
+ * 접속 전에 화면이 먼저 거르는 것은 비로그인과 닉네임 없음(서버 403) 뿐이고 안내 지면으로
+ * 끝낸다. 그 밖에는 붙어서 목록과 입력바를 그린다.
+ *
+ * 닉네임 게이트(KAN-671): BE가 가입 때 닉네임을 붙여 주고 온보딩은 내렸으므로 게이트에 걸리는 건
+ * 닉네임이 빈 옛 계정뿐이고, 계정 화면(`/me/edit`)에서 정하게 보낸다. 전에는 내린 온보딩 주소를
+ * 가리켜 깨진 링크였고, 프로필을 받는 짧은 순간에도 게이트가 그려져 링크 프리페치가 404를 냈다.
+ * 그래서 프로필을 받는 동안은 아무것도 그리지 않는다.
  *
  * 비로그인 처리(티켓 확인 항목): 탭은 보이되 안에서 로그인을 권한다. 서버가
  * 읽기도 로그인을 요구하므로 미리보기 없이 안내만 있다. 게스트는 KAN-514에서 같은
@@ -25,7 +29,8 @@ import type { BouncedMessage } from "@/_types/live";
  * 분기를 지웠다. 게스트 행은 생성 때 닉네임이 있어 닉네임 게이트도 지나간다.
  */
 export function LiveChatPanel() {
-  const { isLoggedIn, isSessionPending, nickname } = useAuth();
+  const { isLoggedIn, isSessionPending, isProfilePending, nickname } =
+    useAuth();
 
   /* 처음 온 사람은 화면이 뜬 뒤 게스트를 받아 온다(KAN-665). 그동안 로그인 안내를 띄우면 곧바로 방으로 바뀌어 깜빡인다 */
   if (!isLoggedIn && isSessionPending) return null;
@@ -39,12 +44,13 @@ export function LiveChatPanel() {
       />
     );
   }
+  if (!nickname && isProfilePending) return null;
   if (!nickname) {
     return (
       <Gate
         title="닉네임을 정해 주세요"
         body="닉네임을 정하면 채팅에 참여할 수 있어요"
-        href={ONBOARDING_ENTRY}
+        href="/me/edit"
         cta="닉네임 정하러 가기"
       />
     );
