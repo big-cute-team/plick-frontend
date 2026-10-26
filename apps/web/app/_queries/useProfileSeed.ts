@@ -21,13 +21,17 @@ interface ProfileSeedResponse {
  * 끊긴 것이라 null이다. 서버 액션 로그인·로그아웃이 세션 종류를 바꾸면 쿼리 키가 바뀌어
  * 다시 받고, 그 전까지는 직전 값을 들고 있어 닉네임이 깜빡이지 않는다.
  *
+ * `isLoading`은 KAN-671에서 붙었다. 조각이 null인 것만으로는 "아직 안 옴"과 "왔는데 닉네임이 없음"을
+ * 가를 수 없어, 채팅 닉네임 게이트가 받는 동안에도 그려졌다.
+ *
  * @param sessionKind 표식 쿠키로 읽은 세션 종류. null이면 세션이 없어 부르지 않는다
- * @returns 프로필 조각. 아직 안 왔거나 세션이 없으면 null
+ * @returns `seed`는 프로필 조각(아직 안 왔거나 세션이 없으면 null), `isLoading`은 처음 받는 중인가
  */
-export function useProfileSeed(
-  sessionKind: SessionKind | null,
-): ProfileSeed | null {
-  const { data } = useQuery({
+export function useProfileSeed(sessionKind: SessionKind | null): {
+  seed: ProfileSeed | null;
+  isLoading: boolean;
+} {
+  const { data, isLoading } = useQuery({
     queryKey: ["profile-seed", sessionKind],
     queryFn: async (): Promise<ProfileSeed | null> => {
       try {
@@ -47,5 +51,5 @@ export function useProfileSeed(
     staleTime: Infinity,
     placeholderData: (previous) => previous,
   });
-  return data ?? null;
+  return { seed: data ?? null, isLoading };
 }

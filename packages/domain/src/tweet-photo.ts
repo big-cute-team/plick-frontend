@@ -124,3 +124,20 @@ export function tweetPhotoUrl(
   parsed.searchParams.set("name", size);
   return parsed.toString();
 }
+
+/**
+ * 트윗 작성자 아바타를 `_normal`(48px) 대신 `_bigger`(73px)로 받는다 (KAN-672).
+ *
+ * 모바일 릴 임베드는 아바타를 2.125rem(약 37 CSS px)으로 줄여 그리는데, 배율 1.75 기기에서
+ * 65px가 필요해 48px 원본은 Lighthouse `image-size-responsive`에 걸렸다. `_bigger`면 배율 2까지
+ * 1:1 이상이다. 프로필 이미지 주소가 아니거나 `_normal`이 없으면 그대로 둔다.
+ *
+ * @param src react-tweet이 넘긴 `profile_image_url_https`
+ * @example tweetAvatarUrl("https://pbs.twimg.com/profile_images/1/a_normal.jpg") → ".../1/a_bigger.jpg"
+ */
+export function tweetAvatarUrl(src: string): string {
+  return src.replace(
+    /^(https:\/\/pbs\.twimg\.com\/profile_images\/.+)_normal(\.\w+)$/,
+    "$1_bigger$2",
+  );
+}

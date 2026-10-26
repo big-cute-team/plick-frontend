@@ -64,6 +64,8 @@ interface Auth {
   isGuest: boolean;
   userId: number | null;
   nickname: string | null;
+  /** 세션은 있는데 프로필을 아직 받는 중인가. 이 동안 `nickname`이 null이어도 닉네임이 없다는 뜻이 아니다 */
+  isProfilePending: boolean;
   /** 세션이 없으면 게스트를 받아 온다. 세션이 생겼으면(원래 있었거나 방금 받았으면) true */
   ensureSession: () => Promise<boolean>;
   /** 세션을 아직 모르거나 게스트를 받아 오는 중인가. 세션이 필요한 화면은 이 동안 안내를 미룬다 */
@@ -173,7 +175,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, [queryClient]);
 
-  const seed = useProfileSeed(sessionKind ?? null);
+  const { seed, isLoading: isProfileLoading } = useProfileSeed(
+    sessionKind ?? null,
+  );
   const isLoggedIn = sessionKind !== undefined && sessionKind !== null;
   const value: Auth = {
     isLoggedIn,
@@ -182,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       : false,
     userId: isLoggedIn ? (seed?.userId ?? null) : null,
     nickname: isLoggedIn ? (seed?.nickname ?? null) : null,
+    isProfilePending: isLoggedIn && isProfileLoading,
     ensureSession,
     isSessionPending: sessionKind === undefined || awaitsGuest,
   };
