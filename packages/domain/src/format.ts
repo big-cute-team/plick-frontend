@@ -191,6 +191,34 @@ export function formatDateKo(iso: string): string {
 }
 
 /**
+ * 트윗 임베드의 작성 시각 — "11:48 PM · Oct 25, 2026" (KAN-672). react-tweet `formatDate`와
+ * 같은 모양이고 타임존만 KST로 고정한다.
+ *
+ * react-tweet은 타임존 없이 포맷해 실행 환경의 시간대를 탄다. 서버(UTC)가 그린 임베드를
+ * KST 브라우저가 하이드레이트하면 글자가 달라 React #418이 났다. 고정하면 양쪽이 같은
+ * 글자를 낸다. 영문 임베드 카드 안이라 로캘은 react-tweet처럼 en-US로 둔다.
+ *
+ * @param iso 트윗 `created_at` (예: "2026-10-25T23:48:28.000Z")
+ * @example formatTweetCreatedAt("2026-10-25T23:48:28.000Z") → "8:48 AM · Oct 26, 2026"
+ */
+export function formatTweetCreatedAt(iso: string): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Seoul",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+      .formatToParts(new Date(iso))
+      .map((p) => [p.type, p.value]),
+  );
+  return `${parts.hour}:${parts.minute} ${parts.dayPeriod} · ${parts.month} ${parts.day}, ${parts.year}`;
+}
+
+/**
  * 게스트 마감 안내용 날짜 — "9월 30일" (KAN-514). 연도를 빼는 이유는 마감이 항상
  * 14일 안이라 해가 바뀌어도 한 달 안쪽이고, 토스트·카드 한 줄에 들어가야 해서다.
  * 기기 시간대와 무관하게 KST로 고정하는 이유는 {@link formatChangeableAt}과 같다.
