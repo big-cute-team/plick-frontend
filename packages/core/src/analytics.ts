@@ -270,6 +270,35 @@ export function deviceSyncScript(options?: {
 }
 
 /**
+ * GA4 gtag 라이브러리 주소 (KAN-674). 두 앱 레이아웃이 `next/script`의 `lazyOnload`로 싣는다.
+ *
+ * @param measurementId GA4 측정 ID(`G-XXXXXXXXXX`)
+ */
+export function gaScriptUrl(measurementId: string): string {
+  return `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+}
+
+/**
+ * GA4 초기화 인라인 스크립트 본문 (KAN-674). `dataLayer`와 `gtag` 함수를 만들고 `js`·`config`를
+ * 큐에 넣는다. 라이브러리(`gaScriptUrl`)가 늦게 와도 큐를 꺼내 처리하므로, 이 스크립트를 먼저 돌려
+ * 두면 `js` 시각이 진입 시점으로 찍히고 라이브러리만 load 뒤로 미룰 수 있다.
+ *
+ * 전에는 `@next/third-parties`의 `GoogleAnalytics`가 이것과 라이브러리를 둘 다 `afterInteractive`로
+ * 실었다. 그 컴포넌트는 로드 전략을 바꿀 수 없어 직접 싣는다. 본문은 그 컴포넌트와 같다.
+ *
+ * @param measurementId GA4 측정 ID
+ * @returns `<script>` 안에 그대로 넣을 JS
+ */
+export function gaInitScript(measurementId: string): string {
+  return (
+    "window.dataLayer=window.dataLayer||[];" +
+    "function gtag(){dataLayer.push(arguments)}" +
+    "gtag('js',new Date());" +
+    `gtag('config',${JSON.stringify(measurementId)})`
+  );
+}
+
+/**
  * 진입 주소의 쿼리와 외부 Referer origin을 다음 `/be` 호출까지 들고 가는 쿠키 (KAN-665, 모바일).
  *
  * 유입 경로(`plick_path`)와 마케팅(`plick_mkt`)은 진입 주소와 Referer로 정한다. 전에는 프록시가
