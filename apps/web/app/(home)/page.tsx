@@ -23,7 +23,7 @@ export const metadata: Metadata = {
  * 데스크톱 홈 라우트 — 화면 본체는 팀 허브(`/teams/[slug]`)와 공용인
  * {@link HomeScreen}이 그린다 (KAN-350).
  *
- * 홈은 브랜드 검색("plick", "플릭")의 랜딩이라 발행 주체(Organization)와
+ * 홈은 브랜드 검색("해축이모", 옛 이름 "플릭")의 랜딩이라 발행 주체(Organization)와
  * 사이트(WebSite) JSON-LD를 여기 싣는다 (KAN-351).
  */
 export default function HomePage() {

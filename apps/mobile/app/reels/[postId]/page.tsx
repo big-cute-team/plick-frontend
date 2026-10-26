@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getReelsFrom } from "@plick/core/reels";
+import {
+  type ReelSeedTweet,
+  tweetImageSrcSet,
+  tweetImageUrl,
+} from "@plick/core/tweet";
 import { truncateText } from "@plick/domain/format";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
@@ -9,8 +14,6 @@ import { ReelsFeed } from "@/reels/_components/ReelsFeed";
 import { TabBar } from "@/_components/TabBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { getReelSeedTweet } from "@/_services/tweet";
-import { tweetImageSrcSet, tweetImageUrl } from "@/_utils/tweet";
-import type { ReelSeedTweet } from "@/_types/reels";
 
 /**
  * 익명 ISR (KAN-664, ADR 0200). 내 좋아요·투표는 화면이 뜬 뒤 내 상태 캐시가 얹고, 이 페이지는

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import {
   BRAND_DESCRIPTION,
   BRAND_NAME_KO,
@@ -8,7 +8,11 @@ import {
   BRAND_TITLE_TEMPLATE,
 } from "@plick/domain/brand";
 import { ADSENSE_SCRIPT_URL, adsPauseScript } from "@plick/core/ads";
-import { deviceSyncScript } from "@plick/core/analytics";
+import {
+  deviceSyncScript,
+  gaInitScript,
+  gaScriptUrl,
+} from "@plick/core/analytics";
 import { DEVICE_ID_QUERY_PARAM } from "@plick/domain/cross-site";
 import { AdsProvider } from "@/_components/AdsProvider";
 import { AnalyticsTracker } from "@/_components/AnalyticsTracker";
@@ -159,10 +163,24 @@ export default function RootLayout({
         <GuestNoticeToast />
         {/* 진입·화면 전환 행동 이벤트 (KAN-543) — 라우트가 바뀌어도 살아야 해서 화면 트리 밖 */}
         <AnalyticsTracker />
-        {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 이 컴포넌트가
-            스크립트를 afterInteractive로 실어 첫 페인트를 막지 않는다. 측정하려다
-            LCP를 깎으면 본말전도라 직접 gtag를 박지 않고 이걸 쓴다 */}
-        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {/* GA4 (KAN-380) — 측정 ID가 있는 빌드(prod)에만 붙는다. 초기화 큐는 바로 돌리고
+            gtag 라이브러리만 lazyOnload(load 이벤트 뒤 한가할 때)로 싣는다 (KAN-674). 전에는
+            afterInteractive라 하이드레이션 직후 첫 화면 JS와 메인 스레드를 다퉜다. 실측 LCP가
+            1초 안이라 load 전에 나가는 방문은 드물고, 그 사이 큐에 쌓인 page_view는 라이브러리가
+            와서 보낸다. 첫 상호작용까지 미루면 보고 나가는 방문이 세션에서 빠져 그렇게는 안 한다 */}
+        {GA_MEASUREMENT_ID && (
+          <>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: gaInitScript(GA_MEASUREMENT_ID),
+              }}
+            />
+            <Script
+              src={gaScriptUrl(GA_MEASUREMENT_ID)}
+              strategy="lazyOnload"
+            />
+          </>
+        )}
       </body>
     </html>
   );

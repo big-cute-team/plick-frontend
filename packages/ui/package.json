@@ -22,6 +22,7 @@
   "dependencies": {
     "@plick/domain": "workspace:*",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-tweet": "^3.3.1"
   }
 }

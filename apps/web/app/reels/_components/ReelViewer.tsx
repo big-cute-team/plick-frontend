@@ -2,6 +2,7 @@
 
 import { useRef, type ReactNode, type Ref } from "react";
 import type { ReelSlide } from "@plick/core/ads";
+import type { ReelSeedTweet } from "@plick/core/tweet";
 import type { ReelCard } from "@plick/domain/types";
 import { ReelAdSlide } from "./ReelAdSlide";
 import { ReelItem } from "./ReelItem";
@@ -28,6 +29,7 @@ import { ReelItem } from "./ReelItem";
  *
  * @param slides - 표시할 슬라이드 목록(릴과 광고)
  * @param activeIndex - 지금 보고 있는 슬라이드 인덱스. 화살표가 이웃을 계산한다
+ * @param seedTweet - 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-673). id가 맞는 릴에만 준다
  * @param onOpenDetail - 제목, 댓글 클릭 시 세부 패널을 여는 콜백. 패널이 어떤 릴을
  *   그릴지는 지금 보고 있는 릴로 정해지므로(`useActiveReel`) 인자가 없다
  * @param registerReel - 각 릴 섹션에 달 ref 콜백(`useActiveReel`이 만든다).
@@ -37,12 +39,14 @@ import { ReelItem } from "./ReelItem";
 export function ReelViewer({
   slides,
   activeIndex,
+  seedTweet,
   onOpenDetail,
   registerReel,
   trailing,
 }: {
   slides: ReelSlide<ReelCard>[];
   activeIndex: number;
+  seedTweet?: ReelSeedTweet;
   onOpenDetail: () => void;
   registerReel: Ref<HTMLElement>;
   trailing?: ReactNode;
@@ -80,6 +84,11 @@ export function ReelViewer({
                   : undefined
               }
               eager={i === 0}
+              seedTweet={
+                seedTweet?.reelId === slide.reel.id
+                  ? seedTweet.tweet
+                  : undefined
+              }
             />
           ) : (
             <ReelAdSlide />
