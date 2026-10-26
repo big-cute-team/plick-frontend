@@ -12,6 +12,7 @@ import { ApiError } from "@plick/core/client";
 import { trackScreenViewed } from "@plick/core/events";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
+import type { ReelSeedTweet } from "@plick/core/tweet";
 import {
   REELS_PANEL_DESKTOP_QUERY,
   REELS_PREFETCH_AHEAD,
@@ -59,13 +60,17 @@ import { ReelViewer } from "./ReelViewer";
  *   없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  * @param anchorId - 딥링크(`/reels/[postId]`) 진입 릴 id (KAN-349). 있으면 그 릴에서
  *   시작하는 별도 캐시의 피드가 된다.
+ * @param seedTweet - 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-673). 피드가 refetch로
+ *   갈렸을 수 있어 뷰어가 릴 id가 일치하는 릴에만 붙인다.
  */
 export function ReelsWorkspace({
   initial,
   anchorId,
+  seedTweet,
 }: {
   initial?: InitialReelFeed;
   anchorId?: string;
+  seedTweet?: ReelSeedTweet;
 }) {
   /** `null`은 미정(데스크톱 열림·좁은 폭 닫힘을 CSS가 정한다), 이후엔 사용자 선택 */
   const [detailOpen, setDetailOpen] = useState<boolean | null>(null);
@@ -179,6 +184,7 @@ export function ReelsWorkspace({
         <ReelViewer
           slides={slides}
           activeIndex={activeIndex}
+          seedTweet={seedTweet}
           onOpenDetail={() => {
             setDetailOpen(true);
             /* 패널은 서버 요청 없이 열리는 화면이라 여기서 화면 전환으로 센다 (KAN-543) */

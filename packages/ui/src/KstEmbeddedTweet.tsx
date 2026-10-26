@@ -16,7 +16,8 @@ import { formatTweetCreatedAt } from "@plick/domain/format";
 
 /**
  * react-tweet `EmbeddedTweet`을 같은 부품으로 다시 조립하고 작성 시각 줄(`TweetInfo`)만
- * KST 고정 포맷으로 바꾼 것 (KAN-672).
+ * KST 고정 포맷으로 바꾼 것 (KAN-672). 웹 릴스도 첫 장을 서버가 그리게 되면서(KAN-673)
+ * 두 앱이 함께 쓴다.
  *
  * 원본 `TweetInfo`는 타임존 없이 날짜를 포맷해 서버(UTC)와 브라우저(KST)의 글자가 달랐다.
  * 릴 첫 장은 서버가 임베드를 그리므로(KAN-422) 하이드레이션이 React #418로 깨졌다.

@@ -1,5 +1,8 @@
 /**
- * @file 트윗 원문 링크 파싱 (KAN-284).
+ * @file 트윗 원문 링크 파싱과 릴 첫 장 preload 주소 (KAN-284, KAN-422, 공용 승격 KAN-673).
+ *
+ * 두 앱의 `_utils/tweet.ts`에 같은 코드로 있던 것을 올렸다. 웹이 첫 트윗 선로드를 받으면서
+ * preload 주소 함수까지 두 벌이 될 참이었다.
  *
  * BE `sourceUrl`은 현재 전부 `https://x.com/<핸들>/status/<숫자ID>` 형태다
  * (be-verify 확인). 옛 twitter.com 도메인과 `/i/web/status/` 변형도 함께 받는다.
@@ -12,6 +15,19 @@ import {
   TWEET_GRID_SRCSET,
   TWEET_PHOTO_SIZE,
 } from "@plick/domain/tweet-photo";
+
+/**
+ * 서버가 미리 받아 둔 첫 릴의 트윗 데이터 (KAN-422).
+ *
+ * 임베드를 초기 HTML에 그려 LCP 이미지가 문서에서 바로 발견되게 하는 씨앗이다.
+ * 피드가 refetch로 갈리면 첫 릴이 바뀔 수 있어, 어느 릴의 것인지 id로 못박아
+ * 그 릴에만 붙인다.
+ */
+export interface ReelSeedTweet {
+  /** 이 트윗이 속한 릴 id. 피드의 릴과 대조해 일치할 때만 쓴다 */
+  reelId: string;
+  tweet: Tweet;
+}
 
 /* 도메인 앞 경계는 시작·`/`(스킴 뒤)·`.`(서브도메인)만 허용해 fakex.com류를 거른다 */
 const TWEET_URL_PATTERN =
@@ -32,7 +48,7 @@ export function tweetIdFromUrl(url: string): string | null {
  *
  * 임베드 사진은 `TweetMediaImg`(`@plick/ui`)가 react-tweet의 `getMediaUrl(media, "small")`
  * 결과를 webp로 바꿔 그린다. preload가 렌더와 같은 리소스를 맞히려면 여기도 같은 함수
- * (`tweetPhotoUrl`)로 같은 변형을 만들어야 한다 — 다르면 이중 다운로드가 된다 (KAN-624).
+ * (`tweetPhotoUrl`)로 같은 변형을 만들어야 한다. 다르면 이중 다운로드가 된다 (KAN-624).
  *
  * 영상 릴은 `media_url_https`가 포스터 이미지인데, 포스터는 react-tweet `TweetMediaVideo`가
  * 직접 `getMediaUrl`로 그려 포맷을 바꿀 수 없다. 그래서 사진만 webp고 영상은 원래 확장자다.

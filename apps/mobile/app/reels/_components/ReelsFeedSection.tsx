@@ -1,9 +1,12 @@
 import { unstable_rethrow } from "next/navigation";
 import { getReels } from "@plick/core/reels";
 import type { InitialReelFeed } from "@plick/domain/types";
+import {
+  type ReelSeedTweet,
+  tweetImageSrcSet,
+  tweetImageUrl,
+} from "@plick/core/tweet";
 import { getReelSeedTweet } from "@/_services/tweet";
-import type { ReelSeedTweet } from "@/_types/reels";
-import { tweetImageSrcSet, tweetImageUrl } from "@/_utils/tweet";
 import { ReelsFeed } from "./ReelsFeed";
 
 /**

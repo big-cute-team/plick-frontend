@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getReelsFrom } from "@plick/core/reels";
+import {
+  type ReelSeedTweet,
+  tweetImageSrcSet,
+  tweetImageUrl,
+} from "@plick/core/tweet";
 import { truncateText } from "@plick/domain/format";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
+import { getReelSeedTweet } from "@/_services/tweet";
 import { ReelsWorkspace } from "@/reels/_components/ReelsWorkspace";
 
 /**
@@ -83,6 +89,9 @@ export async function generateMetadata({
  * 없는·미발행 릴(404)과 정수가 아닌 id(400)는 삭제된 공유 링크나 손으로 친 주소의
  * 정상 경로다 — 에러 화면이 아니라 not-found로 보낸다. 그 외 실패(네트워크 순단
  * 등)는 씨앗 없이 내려보내 클라가 다시 받게 한다.
+ *
+ * 진입 릴(`items[0]`)이 임베드 릴이면 트윗 데이터도 미리 받아 preload까지 건다 (KAN-673).
+ * 피드 탭과 같은 LCP 체인 단축이다.
  */
 export default async function ReelDeepLinkPage({
   params,
@@ -92,10 +101,12 @@ export default async function ReelDeepLinkPage({
   const { postId } = await params;
 
   let initial: InitialReelFeed | undefined;
+  let seedTweet: ReelSeedTweet | undefined;
   try {
     // 토큰 없이 받는다 (KAN-667). 딥링크 순서는 BE가 원래 개인화하지 않는 시간순이라 잃는 게 없다
     const page = await getReelsFrom(postId);
     initial = { page, fetchedAt: Date.now() };
+    seedTweet = await getReelSeedTweet(page.items[0]);
   } catch (e) {
     unstable_rethrow(e);
     if (
@@ -107,10 +118,27 @@ export default async function ReelDeepLinkPage({
     console.error("[reels] 릴스 딥링크 초기 로드 실패:", e);
   }
 
+  /* 피드 탭과 같은 이유로 preload()가 아니라 <link> 렌더 (ReelsFeedSection 주석) */
+  const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
+  const seedImageSrcSet = seedTweet ? tweetImageSrcSet(seedTweet.tweet) : null;
+
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
+      {seedImageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={seedImageUrl}
+          imageSrcSet={seedImageSrcSet ?? undefined}
+          fetchPriority="high"
+        />
+      )}
       <SiteHeader />
-      <ReelsWorkspace initial={initial} anchorId={postId} />
+      <ReelsWorkspace
+        initial={initial}
+        anchorId={postId}
+        seedTweet={seedTweet}
+      />
     </div>
   );
 }
