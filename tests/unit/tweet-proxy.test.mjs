@@ -8,6 +8,7 @@ import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import {
   compressedJson,
   pickEncoding,
+  tweetProxyResponse,
 } from "../../packages/core/src/tweet-proxy.ts";
 import { tweetIdFromUrl } from "../../packages/core/src/tweet.ts";
 
@@ -28,6 +29,7 @@ test("br을 gzip보다 먼저 고른다", () => {
 test("q=0으로 거부한 인코딩은 고르지 않는다", () => {
   assert.equal(pickEncoding("br;q=0, gzip"), "gzip");
   assert.equal(pickEncoding("gzip;q=0"), "identity");
+  assert.equal(pickEncoding("br; q = 0, gzip"), "gzip");
 });
 
 test("헤더가 없거나 모르는 인코딩이면 압축하지 않는다", () => {
@@ -71,4 +73,11 @@ test("트윗 링크에서 status id를 뽑고 다른 도메인은 거른다", ()
   );
   assert.equal(tweetIdFromUrl("https://twitter.com/i/web/status/123"), "123");
   assert.equal(tweetIdFromUrl("https://fakex.com/a/status/123"), null);
+});
+
+test("숫자가 아닌 id는 신디케이션을 부르지 않고 400 no-store다", async () => {
+  const res = await tweetProxyResponse(req("gzip"), "abc");
+  assert.equal(res.status, 400);
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await res.json(), { data: null });
 });

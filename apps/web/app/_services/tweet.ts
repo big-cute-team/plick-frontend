@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { getTweet } from "react-tweet/api";
 import type { Tweet } from "react-tweet/api";
 import { type ReelSeedTweet, tweetIdFromUrl } from "@plick/core/tweet";
@@ -38,7 +39,9 @@ export async function getReelSeedTweet(
   try {
     const tweet: Tweet | null = await getCachedTweet(id);
     return tweet ? { reelId: reel.id, tweet } : undefined;
-  } catch {
+  } catch (e) {
+    /* 정적 생성 중단 같은 Next 제어 흐름 예외는 되던진다 (KAN-673 리뷰) */
+    unstable_rethrow(e);
     return undefined;
   }
 }

@@ -34,6 +34,9 @@ const FOUND_CACHE = "public, max-age=86400";
  */
 const MISSING_CACHE = "public, max-age=3600";
 
+/** 잘못된 id와 신디케이션 장애는 캐시하지 않는다 */
+const ERROR_CACHE = "no-store";
+
 export type ContentEncoding = "br" | "gzip" | "identity";
 
 /**
@@ -49,7 +52,9 @@ export function pickEncoding(acceptEncoding: string | null): ContentEncoding {
   const accepted = new Set<string>();
   for (const part of acceptEncoding.split(",")) {
     const [token = "", ...params] = part.trim().toLowerCase().split(";");
-    const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
+    const q = params
+      .map((p) => p.replace(/\s+/g, ""))
+      .find((p) => p.startsWith("q="));
     if (q && Number(q.slice(2)) === 0) continue;
     accepted.add(token.trim());
   }
@@ -97,7 +102,9 @@ export function compressedJson(
 }
 
 /**
- * `/api/tweet/[id]` 응답. 숫자가 아닌 id는 400, 신디케이션 장애는 502이고 둘 다 캐시하지 않는다.
+ * `/api/tweet/[id]` 응답. 숫자가 아닌 id는 400, 신디케이션 장애는 502이고 둘 다 `no-store`다.
+ * 지금 CloudFront 캐시 정책은 기본 TTL이 0이라 헤더가 없어도 캐시하지 않지만, 장애 응답이
+ * 정책 변경 하나로 굳지 않게 명시한다.
  *
  * @param request 들어온 요청
  * @param id 라우트 파라미터의 트윗 id
@@ -107,7 +114,7 @@ export async function tweetProxyResponse(
   id: string,
 ): Promise<Response> {
   if (!/^\d+$/.test(id)) {
-    return compressedJson(request, { data: null }, 400);
+    return compressedJson(request, { data: null }, 400, ERROR_CACHE);
   }
   try {
     const tweet = await getTweet(id);
@@ -116,6 +123,6 @@ export async function tweetProxyResponse(
       : compressedJson(request, { data: null }, 200, MISSING_CACHE);
   } catch {
     /* 신디케이션 API 장애. 임베드는 조용히 안내 문구로 폴백한다 */
-    return compressedJson(request, { data: null }, 502);
+    return compressedJson(request, { data: null }, 502, ERROR_CACHE);
   }
 }

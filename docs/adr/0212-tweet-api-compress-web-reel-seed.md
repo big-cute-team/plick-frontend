@@ -117,6 +117,16 @@ LCP 요소는 전후 모두 트윗 본문 `<p>`인데, 후에는 LCP가 FCP와 �
 
 웹 딥링크를 처음 확인할 때 임베드가 0개였다. 처음 띄운 `web-prod` 설정은 런타임 `API_BASE_URL`이 없어 BE를 `localhost:8080`으로 불렀고, `/reels/[postId]`는 빌드 때가 아니라 첫 요청 때 그려 캐시하는 라우트(빈 `generateStaticParams`, KAN-632·KAN-667)라 그 실패한 렌더가 `.next`의 ISR 캐시에 기록됐다. prod BE를 보는 `web-prodbe-alt`로 다시 띄워도 첫 요청은 그 캐시를 stale로 내주고 뒤에서 재생성했다. 두 번째 요청(`x-nextjs-cache: HIT`)부터 임베드가 나왔다. 코드 문제가 아니라 디스크 ISR 캐시가 서버를 갈아 끼워도 남는다는 점이다.
 
+## 헤드리스 리뷰에서 고친 것
+
+push 전 `./scripts/review/pr-review.sh`가 CRITICAL 0, WARN 2, INFO 3을 냈다.
+
+- 400·502 응답에 `Cache-Control`이 없었다. 지금 CloudFront 캐시 정책은 기본 TTL이 0이라 헤더가 없으면 캐시하지 않지만, 정책을 바꾸는 순간 장애 응답이 굳는다. 둘 다 `no-store`를 명시했다.
+- `tweetProxyResponse`의 분기 테스트가 없었다. 신디케이션을 부르지 않는 400 분기를 테스트에 넣었다. 200 null과 502는 `getTweet`을 갈아 끼울 방법이 없어(모듈 모킹 없이 `node --test`를 쓴다) curl 검증으로 대신했다.
+- `getReelSeedTweet`의 빈 `catch`가 Next 제어 흐름 예외(정적 생성 중단 같은 것)까지 삼킬 수 있었다. 페이지 쪽 catch는 KAN-632에서 `unstable_rethrow`를 넣었는데 이 안쪽 catch는 빠져 있었다. 두 앱 모두 넣었다.
+- `Accept-Encoding`의 `q = 0`처럼 공백이 낀 표기를 거부로 읽지 못했다. 공백을 걷고 비교하게 고쳤다.
+- 동기 압축이 이벤트 루프를 막는다는 지적은 위에 쓴 대로 품질 5와 1KB 하한, 하루 캐시로 감수하기로 했다.
+
 ## 남은 것
 
 - prod 배포 뒤 완료 조건 재확인: `curl -H 'Accept-Encoding: gzip' https://{m.,}plick.co.kr/api/tweet/{id}`의 `content-encoding`, 웹 릴스 Lighthouse.
