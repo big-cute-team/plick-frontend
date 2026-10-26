@@ -6,7 +6,6 @@ import { CHAT_MAX_MESSAGE_LENGTH } from "@plick/core/chat";
 import type { ChatMessage } from "@plick/domain/chat";
 import { formatChatTime } from "@plick/domain/format";
 import { useAuth } from "@/_components/AuthProvider";
-import { ONBOARDING_ENTRY } from "@/_constants/app";
 import { CHAT_REJECT_MESSAGE } from "@/_constants/live";
 import { useLiveChat } from "@/_hooks/useLiveChat";
 import type { BouncedMessage } from "@/_types/live";
@@ -20,9 +19,14 @@ import type { BouncedMessage } from "@/_types/live";
  *
  * 방은 하나고 언제나 열려 있다(BE KAN-571). 그래서 경기 상세 우측 aside와 홈 우측
  * 레일(`SideRail`)이 같은 카드를 쓰고 같은 방을 본다. 경기 상태나 킥오프 시각으로
- * 거르지 않는다. 접속 전에 거르는 것은 비로그인과 닉네임 없음(온보딩 미완료, 서버 403)
- * 뿐이다. 게스트는 BE KAN-656부터 들어올 수 있어 KAN-514의 연동 안내 분기를 KAN-657에서
- * 지웠다. 게스트 행은 생성 때 닉네임이 있어 닉네임 게이트도 지나간다.
+ * 거르지 않는다. 접속 전에 거르는 것은 비로그인과 닉네임 없음(서버 403) 뿐이다. 게스트는
+ * BE KAN-656부터 들어올 수 있어 KAN-514의 연동 안내 분기를 KAN-657에서 지웠다. 게스트 행은
+ * 생성 때 닉네임이 있어 닉네임 게이트도 지나간다.
+ *
+ * 닉네임 게이트(KAN-671): BE가 가입 때 닉네임을 붙여 주고 온보딩은 내렸으므로(KAN-318) 게이트에
+ * 걸리는 건 닉네임이 빈 옛 계정뿐이고, 계정 화면(`/me/edit`)에서 정하게 보낸다. 전에는 내린
+ * 온보딩 주소를 가리켜, 프로필을 받는 짧은 순간 게이트가 그려지면 Next가 링크를 프리페치해 홈
+ * 콘솔에 404가 찍혔다. 그래서 프로필을 받는 동안은 게이트 대신 자리만 비운다.
  *
  * 경기 상세에서는 좌측 탭을 바꿔도 같은 자리의 같은 컴포넌트라 리마운트되지 않는다.
  * 소켓, 메시지 목록, 입력 중인 글이 그대로 남는다.
@@ -32,7 +36,8 @@ import type { BouncedMessage } from "@/_types/live";
  * 밖으로 밀려 닿지 않는다
  */
 export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
-  const { isLoggedIn, isSessionPending, nickname } = useAuth();
+  const { isLoggedIn, isSessionPending, isProfilePending, nickname } =
+    useAuth();
   const minHeight = compact ? "min-h-82.5" : "min-h-113";
 
   return (
@@ -55,12 +60,14 @@ export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
           href="/login"
           cta="로그인"
         />
+      ) : !nickname && isProfilePending ? (
+        <div className={minHeight} />
       ) : !nickname ? (
         <Gate
           className={minHeight}
           title="닉네임을 정해 주세요"
           body="닉네임을 정하면 채팅에 참여할 수 있어요"
-          href={ONBOARDING_ENTRY}
+          href="/me/edit"
           cta="닉네임 정하기"
         />
       ) : (
