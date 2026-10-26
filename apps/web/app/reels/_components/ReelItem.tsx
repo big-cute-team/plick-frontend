@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import type { Tweet } from "react-tweet/api";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime, isDebateClosed } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
@@ -52,6 +53,8 @@ import { ReelActionRail } from "./ReelActionRail";
  * @param onPrev - 이전 릴로 (첫 릴이면 undefined)
  * @param onNext - 다음 릴로 (마지막 릴이면 undefined)
  * @param eager - 첫 릴(LCP 후보)이면 사진을 lazy 큐잉 없이 최우선으로 받는다 (KAN-421)
+ * @param seedTweet - 서버가 미리 받아 둔 이 릴의 트윗 데이터 (KAN-673, 첫 릴만). 있으면 임베드가
+ *   클라 fetch 없이 초기 HTML에 그려진다
  */
 export function ReelItem({
   reel,
@@ -59,12 +62,14 @@ export function ReelItem({
   onPrev,
   onNext,
   eager = false,
+  seedTweet,
 }: {
   reel: ReelCard;
   onOpenDetail: () => void;
   onPrev?: () => void;
   onNext?: () => void;
   eager?: boolean;
+  seedTweet?: Tweet;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLButtonElement>(null);
@@ -138,7 +143,7 @@ export function ReelItem({
               className="reel-embed absolute inset-x-0 top-0 flex flex-col [justify-content:safe_center] px-4"
               style={{ bottom: embedBottom }}
             >
-              <TweetEmbed url={reel.sourceUrl} />
+              <TweetEmbed url={reel.sourceUrl} seedTweet={seedTweet} />
             </div>
           )
         )}

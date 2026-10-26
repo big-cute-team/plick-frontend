@@ -1,6 +1,12 @@
 import { unstable_rethrow } from "next/navigation";
 import { getReels } from "@plick/core/reels";
+import {
+  type ReelSeedTweet,
+  tweetImageSrcSet,
+  tweetImageUrl,
+} from "@plick/core/tweet";
 import type { InitialReelFeed } from "@plick/domain/types";
+import { getReelSeedTweet } from "@/_services/tweet";
 import { ReelsWorkspace } from "./ReelsWorkspace";
 
 /**
@@ -13,16 +19,22 @@ import { ReelsWorkspace } from "./ReelsWorkspace";
  * 다음 페이지부터는 브라우저가 프록시를 거쳐 토큰을 실어 받으므로 개인화가 다시 붙는다.
  * 하트는 카드의 `liked`가 아니라 내 상태 캐시가 그린다.
  *
+ * 첫 릴이 임베드 릴이면 트윗 데이터도 여기서 미리 받는다 (KAN-673, 모바일 KAN-422). LCP인
+ * 첫 트윗이 초기 HTML에 그려지고, 사진이 있으면 preload까지 걸어 프리로드 스캐너가 최우선으로
+ * 내려받게 한다. ISR 재생성 때 받으므로 60초 주기를 같이 탄다.
+ *
  * 릴스 페이지가 Suspense로 감싸 스트리밍한다 (KAN-602). ISR이 된 뒤에는 캐시된 HTML이
  * 통째로 나가 기다릴 일이 거의 없고, 재생성 중에만 의미가 있다.
  */
 export async function ReelsFeedSection() {
   let initial: InitialReelFeed | undefined;
+  let seedTweet: ReelSeedTweet | undefined;
   try {
     // 받은 시각을 함께 넘긴다 — 클라 캐시가 이 씨앗의 신선도를 재는 기준이 된다.
     // ISR이라 이 시각은 페이지가 생성된 시각이고 최대 60초 전일 수 있다
     const page = await getReels();
     initial = { page, fetchedAt: Date.now() };
+    seedTweet = await getReelSeedTweet(page.items[0]);
   } catch (e) {
     /* Next가 제어 흐름으로 쓰는 예외(정적 생성 중단 등)는 되던진다 (KAN-667). 삼키면 빌드
        로그에 "로드 실패"로 찍히고 라우트 판정을 가로챌 수 있다 */
@@ -32,5 +44,24 @@ export async function ReelsFeedSection() {
     console.error("[reels] 릴스 피드 초기 로드 실패:", e);
   }
 
-  return <ReelsWorkspace initial={initial} />;
+  /* ReactDOM.preload() 호출이 아니라 <link> 렌더로 건다. 임퍼러티브 호출은 Data Cache 히트
+     요청에서 head에 실리지 않는 일이 있었다(모바일 ADR 0113). 트리에 렌더한
+     <link rel="preload">는 React가 요청마다 head로 호이스팅한다 */
+  const seedImageUrl = seedTweet ? tweetImageUrl(seedTweet.tweet) : null;
+  const seedImageSrcSet = seedTweet ? tweetImageSrcSet(seedTweet.tweet) : null;
+
+  return (
+    <>
+      {seedImageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={seedImageUrl}
+          imageSrcSet={seedImageSrcSet ?? undefined}
+          fetchPriority="high"
+        />
+      )}
+      <ReelsWorkspace initial={initial} seedTweet={seedTweet} />
+    </>
+  );
 }

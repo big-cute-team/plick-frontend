@@ -26,7 +26,7 @@ import { useReelsFeed } from "@/_hooks/useReelsFeed";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { InitialReelFeed, ReelCard } from "@plick/domain/types";
-import type { ReelSeedTweet } from "@/_types/reels";
+import type { ReelSeedTweet } from "@plick/core/tweet";
 import { ReelAdSlide } from "./ReelAdSlide";
 import { ReelItem } from "./ReelItem";
 import { ReelLoadingSlide } from "./ReelLoadingSlide";

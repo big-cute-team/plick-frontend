@@ -3,9 +3,9 @@
 import { useTweet } from "react-tweet";
 import { TweetMediaImg, TweetMediaImgGrid } from "@plick/ui/TweetMediaImg";
 import type { Tweet } from "react-tweet/api";
-import { tweetIdFromUrl } from "@/_utils/tweet";
-import { KstEmbeddedTweet } from "./KstEmbeddedTweet";
-import { TweetAvatarImg } from "./TweetAvatarImg";
+import { tweetIdFromUrl } from "@plick/core/tweet";
+import { KstEmbeddedTweet } from "@plick/ui/KstEmbeddedTweet";
+import { TweetAvatarImg } from "@plick/ui/TweetAvatarImg";
 
 /**
  * 사진 한 장: `small` 그대로. 두 장 이상 격자: 배율별 srcset (KAN-624).
@@ -89,7 +89,7 @@ export function TweetEmbed({
         }
       />
     );
-  /* data === null은 프록시가 ok로 빈 데이터를 준 경우 — 실패와 같게 본다 */
+  /* data === null은 없는 트윗(원문 삭제). 프록시가 404 대신 200으로 준다 (KAN-673) */
   if (!id || error || data === null) {
     return (
       <p className="text-body text-text-4 text-center">

@@ -1,0 +1,7 @@
+variant	run	LCP_sim_ms	LCP_observed_ms	FCP_observed_ms	perf	uses-text-compression	LCP_element
+before	1	988	770	62	0.99	0.5 (Est savings of 28 KiB)	p.tweet-body-module__oCS80q__root
+before	2	945	748	65	0.99	0.5 (Est savings of 28 KiB)	p.tweet-body-module__oCS80q__root
+before	3	987	812	85	0.99	0.5 (Est savings of 28 KiB)	p.tweet-body-module__oCS80q__root
+after	1	906	94	94	0.99	1	p.tweet-body-module__oCS80q__root
+after	2	907	75	75	0.99	1	p.tweet-body-module__oCS80q__root
+after	3	908	82	82	0.99	1	p.tweet-body-module__oCS80q__root

@@ -1,0 +1,33 @@
+# KAN-673 /api/tweet 응답 헤더 (로컬 next start, prod BE). 전: develop(prod 2026-10-26 같은 코드), 후: 이 브랜치
+## 전 (prod m.plick.co.kr, Accept-Encoding: gzip, br)
+HTTP/2 200 
+cache-control: public, max-age=86400
+vary: rsc
+## 후 localhost:3061 (Accept-Encoding: gzip, deflate, br)
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+vary: Accept-Encoding
+cache-control: public, max-age=86400
+content-encoding: br
+content-length: 1443
+## 후 localhost:3061 압축 없이
+content-length: 7279
+## 후 localhost:3061 없는 트윗(/api/tweet/1)
+HTTP/1.1 200 OK
+cache-control: public, max-age=3600
+{"data":null}
+
+## 후 localhost:3064 (Accept-Encoding: gzip, deflate, br)
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+vary: Accept-Encoding
+cache-control: public, max-age=86400
+content-encoding: br
+content-length: 1443
+## 후 localhost:3064 압축 없이
+content-length: 7279
+## 후 localhost:3064 없는 트윗(/api/tweet/1)
+HTTP/1.1 200 OK
+cache-control: public, max-age=3600
+{"data":null}
+
