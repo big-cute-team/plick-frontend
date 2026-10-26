@@ -23,11 +23,21 @@ export const BRAND_NAME_KO = "해축이모";
 /** 영문 브랜드명 — 사이트명의 alternateName. 로고는 한글 글자라 화면에는 안 나온다. */
 export const BRAND_NAME_EN = "Haechukimo";
 
+/**
+ * 리브랜딩 전 이름 (KAN-633). KAN-567에서 "플릭 PLick"이 "해축이모"로 바뀌었고 도메인은 그대로다.
+ * 옛 이름으로 걸린 백링크·북마크와 "플릭" 검색이 새 이름과 같은 사이트로 묶이도록 WebSite·Organization
+ * JSON-LD의 `alternateName`에 영문명과 함께 싣는다. 구글 사이트명 문서가 alternateName 배열을 받는다.
+ */
+export const BRAND_FORMER_NAMES = ["플릭", "PLick"] as const;
+
 /** 로고 옆 태그라인 — 웹 상단 바. */
 export const BRAND_TAGLINE = "해외축구 이슈 모음";
 
+/** 서비스 한 줄 요약 — 루트 기본 title 뒷부분과 앱 manifest description이 같은 값이다. */
+export const BRAND_SUMMARY = "해외축구 이적 루머와 이슈 모음";
+
 /** 루트 기본 title — 브랜드 검색("해축이모")의 파란 제목 줄. */
-export const BRAND_TITLE = "해축이모 / 해외축구 이적 루머와 이슈 모음";
+export const BRAND_TITLE = `${BRAND_NAME_KO} / ${BRAND_SUMMARY}`;
 
 /** 하위 페이지 title 템플릿 — "릴스 | 해축이모"처럼 감싼다. */
 export const BRAND_TITLE_TEMPLATE = "%s | 해축이모";
