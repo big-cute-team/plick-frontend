@@ -28,6 +28,7 @@ test("프로세스 시간대가 달라도 결과가 같다", () => {
     process.env.TZ = "UTC";
     assert.equal(formatTweetCreatedAt("2026-10-25T23:48:28.000Z"), la);
   } finally {
-    process.env.TZ = prev;
+    if (prev === undefined) delete process.env.TZ;
+    else process.env.TZ = prev;
   }
 });
