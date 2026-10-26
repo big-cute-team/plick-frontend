@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND_NAME_KO, BRAND_SUMMARY } from "@plick/domain/brand";
 
 /**
  * 웹 앱 manifest (KAN-380). `/manifest.webmanifest`로 컴파일되고 링크 태그는
@@ -12,14 +13,17 @@ import type { MetadataRoute } from "next";
  * 캐시 무효화용 쿼리를 붙이지만 `/icon.png` 자체가 200으로 응답하므로 여기서는
  * 쿼리 없는 안정된 경로를 적는다.
  *
+ * 이름과 설명은 `@plick/domain/brand` 상수다(KAN-633). 루트 title과 같은 출처라 브랜드
+ * 문구를 바꾸면 manifest도 따라온다.
+ *
  * 색은 `theme.css` 토큰과 수동 동기화다(루트 레이아웃 viewport의 themeColor와
  * 같은 값). 토큰을 바꾸면 여기도 같이 본다.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "해축이모",
-    short_name: "해축이모",
-    description: "해외축구 이적 루머와 이슈 모음",
+    name: BRAND_NAME_KO,
+    short_name: BRAND_NAME_KO,
+    description: BRAND_SUMMARY,
     lang: "ko",
     start_url: "/",
     display: "standalone",

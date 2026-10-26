@@ -29,6 +29,15 @@ const ACCENT = "#0a6b42";
 const BRAND_LOGO_HEIGHT = 64;
 const BRAND_LOGO_WIDTH = Math.round((BRAND_LOGO_HEIGHT * 581) / 200);
 
+/**
+ * 팀 로고 워터마크 크기와 위치. 하단 줄(로고·태그라인)은 세로 506~570에 놓이므로 워터마크가
+ * 그 위(52+420=472)에서 끝나게 둔다 (KAN-633). 전에는 470을 top 80에 둬 550까지 내려와 토트넘
+ * HOTSPUR, 첼시 FOOTBALL CLUB 같은 엠블럼 아래 글자가 태그라인과 겹쳤다.
+ */
+const WATERMARK_SIZE = 420;
+const WATERMARK_TOP = 52;
+const WATERMARK_RIGHT = -20;
+
 /** theme.css `--plk-team-*` 사본 — 세로 띠 색 */
 export const TEAM_OG_COLORS: Record<TeamCode, string> = {
   LIV: "#c8102e",
@@ -91,12 +100,12 @@ export function OgCard({
         /* eslint-disable-next-line @next/next/no-img-element -- satori 렌더에는 next/image가 없다 */
         <img
           src={logoSrc}
-          width={470}
-          height={470}
+          width={WATERMARK_SIZE}
+          height={WATERMARK_SIZE}
           style={{
             position: "absolute",
-            right: -36,
-            top: 80,
+            right: WATERMARK_RIGHT,
+            top: WATERMARK_TOP,
             opacity: logoOpacity,
           }}
           alt=""

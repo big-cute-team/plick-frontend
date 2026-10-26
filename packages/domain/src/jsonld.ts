@@ -8,9 +8,17 @@
  *
  * 렌더는 `@plick/ui` JsonLd 컴포넌트가 맡는다.
  */
-import { BRAND_DESCRIPTION, BRAND_NAME_EN, BRAND_NAME_KO } from "./brand";
+import {
+  BRAND_DESCRIPTION,
+  BRAND_FORMER_NAMES,
+  BRAND_NAME_EN,
+  BRAND_NAME_KO,
+} from "./brand";
 import { FAQ_ITEMS, faqAnswerText } from "./faq";
 import type { ArticleCard, ArticleDetail } from "./types";
+
+/** 사이트명 대체 표기. 영문명과 리브랜딩 전 이름(KAN-633)을 함께 싣는다 */
+const ALTERNATE_NAMES = [BRAND_NAME_EN, ...BRAND_FORMER_NAMES];
 
 /** Organization 노드의 안정 식별자 — 페이지끼리 같은 발행 주체를 가리키게 한다 */
 function organizationId(siteUrl: string): string {
@@ -36,7 +44,7 @@ export function organizationJsonLd({
     "@type": "Organization",
     "@id": organizationId(siteUrl),
     name: BRAND_NAME_KO,
-    alternateName: BRAND_NAME_EN,
+    alternateName: ALTERNATE_NAMES,
     url: siteUrl,
     description: BRAND_DESCRIPTION,
     logo: { "@type": "ImageObject", url: logoUrl },
@@ -47,7 +55,8 @@ export function organizationJsonLd({
  * 사이트 자체를 선언하는 WebSite — 홈에 Organization과 나란히 싣는다.
  * 검색 결과 상단의 사이트명 표기를 정하는 노드다 (KAN-384) — 구글 사이트명
  * 문서가 이 name을 1순위 소스로 쓴다. 한글 "해축이모"를 대표명으로, 영문
- * 표기를 alternateName으로 둬 두 표기 검색을 다 받는다(KAN-567 브랜드 교체).
+ * 표기와 리브랜딩 전 이름(플릭, PLick)을 alternateName 배열로 둬 옛 이름 검색과
+ * 백링크도 같은 사이트로 묶는다(KAN-567 브랜드 교체, KAN-633).
  *
  * @param siteUrl canonical 도메인 절대 URL
  */
@@ -61,7 +70,7 @@ export function webSiteJsonLd({
     "@type": "WebSite",
     "@id": `${siteUrl}/#website`,
     name: BRAND_NAME_KO,
-    alternateName: BRAND_NAME_EN,
+    alternateName: ALTERNATE_NAMES,
     url: siteUrl,
     inLanguage: "ko",
     publisher: { "@id": organizationId(siteUrl) },
