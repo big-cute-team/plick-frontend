@@ -110,7 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     SessionKind | null | undefined
   >(undefined);
 
-  /* 이 화면에서 게스트 발급이 실패했는가. 화면을 옮기면 다시 시도한다 */
+  /**
+   * 이 화면에서 게스트 발급이 실패했는가. 화면을 옮기면 다시 시도한다.
+   *
+   * 실패 뒤 시간을 두고 다시 부르지 않는다(KAN-675). 실패 원인은 BE 다운, 상한 초과(429), 1.5초 상한이라
+   * 셋 다 BE가 버거운 때고, 자동 재시도는 부담만 얹는다. 세션이 없어도 읽기는 그대로 되고, 좋아요·투표·
+   * 댓글은 누르는 순간 `ensureSession`이 이 표식과 상관없이 다시 받는다. BE 상한은 1분 고정 창이라 그때쯤
+   * 대개 풀려 있다. 세션이 있어야 그리는 채팅과 내 정보는 실패하면 로그인 안내로 떨어진다.
+   */
   const [issueFailed, setIssueFailed] = useState(false);
   /* 날아가는 중인 `ensureSession`. 한가할 때의 발급과 클릭이 겹쳐도 뒤처리(캐시 채우기, 이벤트)는 한 번이다 */
   const pending = useRef<Promise<boolean> | null>(null);

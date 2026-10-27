@@ -17,6 +17,7 @@ import {
   resolveRequestMarketing,
 } from "@plick/core/marketing";
 import { issueGuest } from "@plick/core/guest";
+import { viewerForwardedHeaders } from "@plick/core/viewer-ip";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -61,6 +62,15 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
  *
  * 발급이 실패하면(BE 다운, 429, 1.5초 상한) 503으로 답하고 쿠키는 건드리지 않는다. 브라우저는 다음
  * 화면이나 다음 탭에서 다시 시도한다.
+ *
+ * 남용 방어는 위 두 거름 말고 FE에 따로 두지 않는다(KAN-675). 발급 상한은 BE의 같은 IP 분당 60회
+ * (`auth-guest`)인데, 이 라우트가 BE를 서버에서 부르므로 BE 내부 ALB가 적는 IP는 FE 인스턴스다.
+ * 그래서 KAN-680 전에는 상한이 사람별이 아니라 인스턴스당 분당 60회 공용이었고, prod에서 쿠키 없는
+ * 스캐너 한 대가 바구니를 비워 429가 난 날이 실제로 있었다(ADR 0216). 지금은 CloudFront가 적어 준
+ * `CloudFront-Viewer-Address`를 `X-Forwarded-For`로 실어 BE가 방문자별로 센다(`viewerForwardedHeaders`).
+ * 들어온 `X-Forwarded-For` 체인은 첫 값을 요청자가 지어낼 수 있어 넘기지 않는다. 헤더가 없으면
+ * (로컬, 정책 미적용 배포) 안 실어 예전과 같은 공용 상한으로 남는다. FE 인스턴스 메모리에 상한을
+ * 두는 건 인스턴스가 여럿이라 이득이 없다.
  */
 export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? "";
@@ -92,7 +102,11 @@ export async function POST(request: NextRequest) {
 
   let guest;
   try {
-    guest = await issueGuest(analyticsHeaders(request, userAgent, isCrawler));
+    guest = await issueGuest({
+      ...analyticsHeaders(request, userAgent, isCrawler),
+      /* 방문자 IP를 BE 상한의 주체로 (KAN-680). CloudFront 헤더가 없으면 안 싣는다 */
+      ...viewerForwardedHeaders(request.headers),
+    });
   } catch (e) {
     console.error("[guest] 게스트 발급 실패:", e);
     return NextResponse.json(
