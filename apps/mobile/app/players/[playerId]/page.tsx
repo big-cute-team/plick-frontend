@@ -10,6 +10,7 @@ import {
 import { getTeamSquadTable } from "@plick/core/team-profile";
 import { teammates } from "@plick/domain/player-profile";
 import { AppShell } from "@/_components/AppShell";
+import { ProfileScrollArea } from "@/_components/ProfileScrollArea";
 import { ProfileSection } from "@/_components/ProfileSection";
 import { ScrollArea } from "@/_components/ScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
@@ -135,7 +136,8 @@ export default async function PlayerProfilePage({
   return (
     <AppShell>
       <SubTopBar title="선수" backHref="/" backBehavior="back" />
-      <ScrollArea className="pb-section">
+      {/* 당겨서 새로고침은 서버 갱신이다 (KAN-681). 이 화면은 전부 서버가 그린다 */}
+      <ProfileScrollArea>
         <div className="px-edge">
           <PlayerProfileHead profile={profile} />
           <PlayerProfileView
@@ -173,7 +175,7 @@ export default async function PlayerProfilePage({
             seasons={<PlayerSeasonsTable lines={seasons} />}
           />
         </div>
-      </ScrollArea>
+      </ProfileScrollArea>
       <TabBar />
     </AppShell>
   );

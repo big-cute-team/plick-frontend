@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { syncDebateVote } from "@plick/core/debate-sync";
+import { debateKeys } from "@plick/core/debateKeys";
 import type { Debate, DebateVoteState, VoteOption } from "@plick/domain/types";
 import { sessionUnavailableError } from "@/_apis/guest-session";
 import { useAuth } from "@/_components/AuthProvider";
@@ -57,7 +58,10 @@ export function useDebateVote({
       }
       return result.result;
     },
-    onMutate: (option) => {
+    onMutate: async (option) => {
+      /* 마운트로 토론을 다시 받는 중이면 취소한다 (KAN-681). 누르기 전에 나간 요청의
+         옛 집계가 낙관 갱신 뒤에 도착해 덮지 않게. 확정 집계는 응답이 준다 */
+      await queryClient.cancelQueries({ queryKey: debateKeys.all });
       const previous: DebateVoteState = {
         voteCountA: debate.voteCountA,
         voteCountB: debate.voteCountB,
