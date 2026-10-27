@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { debateKeys } from "@plick/core/debateKeys";
 import { getDebates } from "@plick/core/debates";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
+import { DEBATE_FRESH_MS } from "@/_constants/debates";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
@@ -17,6 +18,11 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
  * 유저별 값이라 브라우저 refetch는 `/be` 프록시가 Bearer를 실어 준다(릴스
  * `likedByMe`와 같은 규약).
  *
+ * 신선도는 60초(`DEBATE_FRESH_MS`, KAN-681)다. 지나서 탭에 돌아오면 캐시를 그대로
+ * 그린 채 뒤에서 다시 받는다(suspend 없음). 캐시 보관은 피드와 같은 30분이라 그 안에
+ * 돌아오면 스크롤 자리가 남는다. 피드는 staleTime과 gcTime을 같게 두지만(커서 체인
+ * 재요청 함정, `FEED_FRESH_MS` 주석) 여기는 배열 하나라 refetch가 요청 하나다.
+ *
  * @param initial 서버 컴포넌트가 받아 둔 리스트와 그 시각. 서버 fetch가
  *   실패했으면 없이 들어온다.
  */
@@ -24,7 +30,7 @@ export function useDebates(initial?: InitialDebateList) {
   return useSuspenseQuery<DebateListItem[]>({
     queryKey: debateKeys.list(),
     queryFn: () => getDebates(),
-    staleTime: FEED_FRESH_MS,
+    staleTime: DEBATE_FRESH_MS,
     gcTime: FEED_FRESH_MS,
     retry: FEED_MAX_RETRIES,
     ...(initial && {

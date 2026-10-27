@@ -19,7 +19,7 @@ import {
 import { LIVE_SEASON_LABEL } from "@plick/domain/live";
 import { standingsWindow, type TeamSummary } from "@plick/domain/team-profile";
 import { AppShell } from "@/_components/AppShell";
-import { ScrollArea } from "@/_components/ScrollArea";
+import { ProfileScrollArea } from "@/_components/ProfileScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
 import {
@@ -134,7 +134,8 @@ export default async function TeamProfilePage({
   return (
     <AppShell>
       <SubTopBar title="팀" backHref="/" backBehavior="back" />
-      <ScrollArea className="pb-section">
+      {/* 당겨서 새로고침은 서버 갱신이다 (KAN-681). 이 화면은 전부 서버가 그린다 */}
+      <ProfileScrollArea>
         <div className="px-edge">
           <TeamProfileHead code={code} summary={summary} />
           <TeamProfileView
@@ -158,7 +159,7 @@ export default async function TeamProfilePage({
             injuries={summary.injuries}
           />
         </div>
-      </ScrollArea>
+      </ProfileScrollArea>
       <TabBar />
     </AppShell>
   );

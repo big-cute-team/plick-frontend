@@ -4,6 +4,13 @@
 
 import type { DebateTab } from "@/_types/debates";
 
+/**
+ * 투표 리스트를 신선한 것으로 보는 시간(ms) (KAN-681). 모바일과 같은 판단이다.
+ * 피드의 30분(`FEED_FRESH_MS`)은 커서 페이지와 스크롤 자리를 지키려는 값인데 투표
+ * 리스트는 배열 하나라 해당이 없고, 그 탓에 60초 ISR인 기사 상세와 집계가 어긋났다.
+ */
+export const DEBATE_FRESH_MS = 60_000;
+
 /** 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). */
 export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [
   { key: "open", label: "진행 중", href: "/debates" },

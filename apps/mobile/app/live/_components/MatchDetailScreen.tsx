@@ -9,6 +9,7 @@ import { SubTopBar } from "@/_components/SubTopBar";
 import { SwipePager } from "@/_components/SwipePager";
 import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
+import { useMatchDetailRefresh } from "@/_hooks/useMatchDetailRefresh";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveChatPanel } from "./LiveChatPanel";
@@ -99,6 +100,8 @@ function MatchDetailBody({
   standings: StandingRow[] | null;
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
+  /* 당겨서 새로고침 (KAN-681). 채팅 탭은 스크롤 영역이 아니라 대상이 아니다 */
+  const refresh = useMatchDetailRefresh(matchId);
   const { header } = detail;
   const tabs = matchTabsFor(header.status);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
@@ -125,7 +128,7 @@ function MatchDetailBody({
       />
       <MatchHeaderBlock header={header} />
       {active === undefined ? (
-        <ScrollArea>
+        <ScrollArea onRefresh={refresh}>
           {header.status === "POSTPONED" && detail.preview ? (
             <PreviewBlocks preview={detail.preview} />
           ) : (
@@ -153,7 +156,7 @@ function MatchDetailBody({
               <LiveChatPanel />
             </SwipePager>
           ) : (
-            <ScrollArea>
+            <ScrollArea onRefresh={refresh}>
               <SwipePager
                 value={active}
                 neighborOf={neighborTab}

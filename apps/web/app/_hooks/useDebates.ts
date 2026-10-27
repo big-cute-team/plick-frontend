@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { debateKeys } from "@plick/core/debateKeys";
 import { getDebates } from "@plick/core/debates";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
+import { DEBATE_FRESH_MS } from "@/_constants/debates";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
 
 /**
@@ -13,6 +14,9 @@ import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
  * 유저별 값이라 브라우저 refetch는 `/be` 프록시가 Bearer를 실어 준다(릴스
  * `likedByMe`와 같은 규약).
  *
+ * 신선도는 60초(`DEBATE_FRESH_MS`, KAN-681)다. 지나서 돌아오면 캐시를 그대로 그린 채
+ * 뒤에서 다시 받는다. 캐시 보관은 피드와 같은 30분이다. 모바일 `useDebates`와 같다.
+ *
  * @param initial 서버 컴포넌트가 받아 둔 리스트와 그 시각. 서버 fetch가
  *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다.
  */
@@ -20,7 +24,7 @@ export function useDebates(initial?: InitialDebateList) {
   return useQuery<DebateListItem[]>({
     queryKey: debateKeys.list(),
     queryFn: () => getDebates(),
-    staleTime: FEED_FRESH_MS,
+    staleTime: DEBATE_FRESH_MS,
     gcTime: FEED_FRESH_MS,
     retry: FEED_MAX_RETRIES,
     ...(initial && {
