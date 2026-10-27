@@ -12,8 +12,8 @@ import type { ArticleCard, ArticleDetail, Debate } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
-import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { ArticleComments } from "./ArticleComments";
+import { ArticleDebateCard } from "./ArticleDebateCard";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
 import { ReadEndSentinel } from "./ReadEndSentinel";
@@ -147,15 +147,14 @@ export function ArticleMain({
         </div>
 
         {/* 투표 카드 — 본문 밑, 태그 줄 위 (KAN-418, 시안 기사 상세).
-            인터랙션이 있어 댓글처럼 클라 경계로 내려간다 */}
+            인터랙션이 있어 댓글처럼 클라 경계로 내려간다. 서버가 준 토론은 씨앗이고
+            집계는 브라우저가 다시 받는다 (KAN-681) */}
         {debate && (
-          <div className="mt-6.5">
-            <DebateVoteCard
-              articleId={article.id}
-              debate={debate}
-              closed={closed}
-            />
-          </div>
+          <ArticleDebateCard
+            articleId={article.id}
+            debate={debate}
+            closed={closed}
+          />
         )}
 
         {/* 태그 줄 (KAN-500) — 팀 태그는 팀 프로필, 인물 태그는 인물 프로필로

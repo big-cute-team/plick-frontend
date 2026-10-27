@@ -101,3 +101,13 @@ KAN-681은 그 절충이 사용자 눈에 띈 티켓이다. 증상은 둘이었�
 `pr-review.sh`가 WARN 하나를 냈다. 기사 상세는 마운트 때 토론을 다시 받는데, 그 응답이 오기 전에 투표하면 낙관 갱신(+1) 뒤에 옛 집계가 도착해 숫자가 잠깐 하나 적게 보일 수 있다. 뮤테이션 응답이 오면 BE 집계로 덮으니 저절로 맞지만, 그 사이 숫자가 한 번 흔들린다. TanStack의 낙관 갱신 정석대로 `useDebateVote`의 `onMutate`에서 `cancelQueries({ queryKey: debateKeys.all })`로 진행 중인 토론 쿼리(리스트·기사별)를 먼저 취소하게 했다. 취소된 쿼리는 stale로 남아 다음 포커스나 당기기 때 다시 받는데, 그때는 내 표가 들어간 집계가 온다.
 
 INFO 넷은 그대로 뒀다. `syncDebateVote`가 기사 캐시에 `myVote`까지 쓰는 건 리스트 캐시와 같은 모양이고 카드는 내 상태 캐시의 값을 덮어 그리니 영향이 없다. 스크롤 껍데기 둘의 구조 중복은 홈·활동 껍데기와 같은 관용이다. `ReelsFeed`의 `find`는 릴 수십 장에 한 번이라 비용이 없다.
+
+## 웹도 같은 길로
+
+처음엔 모바일만 고치고 웹은 TODO로 남겼는데, PR을 만든 뒤 사용자가 한 번에 반영하자고 해서 이어 붙였다. 데스크톱 웹도 `useDebates`가 30분이고 `DebateVoteCard`가 표 수를 state로 복사하는 같은 모양이었다.
+
+손댄 건 셋이다. `apps/web/app/_constants/debates.ts`에 `DEBATE_FRESH_MS`를 두고 `useDebates`의 `staleTime`에 썼다. 웹 `DebateVoteCard`에서 state를 걷어 내고 props를 그린다. 기사 상세는 `useArticleDebate`와 `ArticleDebateCard`를 모바일에서 그대로 옮겨 `ArticleMain`이 쓰게 했다. `useDebateVote`의 `onMutate`에도 같은 `cancelQueries`를 넣었다. 쿼리키와 `syncDebateVote`는 `@plick/core`라 이미 공용이다.
+
+릴 패널은 손댈 게 없었다. `ReelsWorkspace`가 `activeReel`을 매 렌더마다 슬라이드 배열에서 고르므로 피드 캐시가 바뀌면 패널도 새 릴을 받는다. 모바일 시트처럼 열 때 찍은 스냅샷을 들고 있지 않았다. 당겨서 새로고침은 데스크톱이라 해당이 없다.
+
+확인은 같은 Playwright 스크립트를 데스크톱 뷰포트로 돌렸다. 기사 상세 SSR "78명 참여"가 refetch 한 번 뒤 "178명 참여"로 바뀌었고, 투표 목록은 기사에 들어갔다 바로 돌아오면 요청 0회, 61초 뒤 같은 동작은 1회였고 첫 카드가 "15명"에서 "115명"으로 바뀌었다. 여기서 한 번 헛돌았다. 처음 스크립트는 `page.goto`로 기사에 갔다 `goBack`했는데, 전체 로드 뒤의 뒤로가기는 Playwright에서 bfcache 없이 문서를 다시 받아 QueryClient가 새로 생기고 씨앗 시각도 새로 찍힌다. 61초가 지나도 요청 0회로 나온 건 그 때문이었다. 모바일 때처럼 링크 클릭(클라 내비게이션)으로 갔다 돌아오게 바꾸니 1회가 나왔다. 웹 타입·린트·포맷·단위 테스트도 통과했다.
