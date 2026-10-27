@@ -250,7 +250,7 @@ alias를 붙일 때 같이 정하는 값 둘. 보안 정책은 기본 선택인 
   (⚠️ 서버 액션과 `/be/*` 프록시가 POST를 쓴다. GET/HEAD만 허용하면 로그인부터
   깨진다)
 - 캐시 정책: `CachingDisabled`
-- 오리진 요청 정책: `AllViewer`
+- 오리진 요청 정책: `AllViewerAndCloudFrontHeaders-2022-06` (처음엔 `AllViewer`, KAN-680에서 바꿈)
 - 응답 헤더 정책: 없음
 - 압축: 켬
 
@@ -258,6 +258,13 @@ alias를 붙일 때 같이 정하는 값 둘. 보안 정책은 기본 선택인 
 전부 오리진으로 넘긴다. Host 헤더가 넘어가야 ALB의 호스트 헤더 규칙이 살고,
 쿠키가 넘어가야 인증이 산다. 이걸 기본값으로 두면 ALB가 등록 안 된 호스트로
 판단해 리스너 기본 작업인 404 고정 응답만 돌려준다.
+
+`AllViewerAndCloudFrontHeaders-2022-06`은 거기에 CloudFront가 만드는 헤더
+(`CloudFront-Viewer-Address` 등)를 더해 넘긴다. 게스트 발급 라우트가 그 헤더의
+방문자 IP를 BE 호출의 `X-Forwarded-For`로 실어 BE 상한이 방문자별로 세게 하려고
+KAN-680에서 바꿨다(ADR 0216). 뷰어가 같은 이름의 헤더를 보내도 CloudFront가
+자기 값으로 덮어쓴다(dev에서 확인). 오리진 요청 정책은 캐시 키와 별개라 문서
+캐시 Hit에는 영향이 없다. S3 비헤이비어에는 적용하지 않는다.
 
 정적 비헤이비어 `/_next/static/*` (S3 오리진)
 
