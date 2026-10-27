@@ -149,6 +149,18 @@ ADR 0215에 "prod에서 429를 관측하지 않았다"고 썼다. 안 본 것이
 넘겼다. 임시 항목은 지우고 `launch.json`은 Prettier로 서식을 되돌렸다. 파이썬 `json.dump`로 고쳤더니
 배열이 전부 줄바꿈돼 diff가 185줄로 불었던 걸 그렇게 수습했다.
 
+## 헤드리스 리뷰가 잡은 것
+
+push 전 `pr-review.sh`는 CRITICAL 0, WARN 1, INFO 4였다. WARN이 정확했다. `issueGuest`를 부르는 곳이
+라우트만이 아니라 두 앱 `_services/auth.ts`의 로그아웃 서버 액션에도 있었다. 로그아웃하면 토큰을 지우고
+곧바로 게스트를 다시 발급하는데, 그 호출에도 방문자 IP가 없었다. 라우트의 `request.headers`만 보고
+서버 액션은 요청 객체가 없다고 넘겨 버린 건데, 서버 액션도 `next/headers`의 `headers()`로 들어온 요청
+헤더를 읽을 수 있다. 같은 헬퍼를 `viewerForwardedHeaders(await headers())`로 꽂았다. 이 경로는
+`cookies()`와 `headers()`가 요청 컨텍스트를 요구해 단위 테스트로 못 걸었다. INFO 중 하나는 헬퍼 머리
+주석이 ADR 0215만 가리킨다는 것이라 0216과 호출처 둘을 적었다. IPv6에 대괄호가 없을 때 마지막 콜론으로
+자르는 게 모호하다는 지적은 맞지만, CloudFront가 어느 형식을 쓰는지 문서에 없어 둘 다 받게 둔 채
+dev에서 실제 값을 보고 좁히기로 했다.
+
 ## 남은 것
 
 - 콘솔: 네 배포 기본 비헤이비어의 오리진 요청 정책을 `AllViewerAndCloudFrontHeaders-2022-06`으로. dev 둘

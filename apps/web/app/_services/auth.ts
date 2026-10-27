@@ -1,9 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@plick/core/client";
 import { type GuestResponse, issueGuest } from "@plick/core/guest";
+import { viewerForwardedHeaders } from "@plick/core/viewer-ip";
 import {
   ACCESS_TOKEN_MAX_AGE,
   AUTH_COOKIE_BASE,
@@ -260,7 +261,8 @@ export async function logout(): Promise<void> {
 
   let guest: GuestResponse;
   try {
-    guest = await issueGuest();
+    /* 방문자 IP를 BE 상한의 주체로 (KAN-680). 서버 액션도 들어온 요청 헤더를 읽을 수 있다 */
+    guest = await issueGuest(viewerForwardedHeaders(await headers()));
   } catch (e) {
     console.error("[logout] 게스트 발급 실패:", e);
     redirect("/");
