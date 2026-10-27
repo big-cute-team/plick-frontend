@@ -29,7 +29,7 @@ scripts/
   review/             PR 전 헤드리스 리뷰 게이트
   e2e/                E2E 실패 묶음 변환(bundle.mjs)과 치유 에이전트(heal.sh)
 tests/hooks/          훅 회귀 테스트 (pnpm test:hooks, CI 포함)
-tests/unit/           packages TS 순수 함수 단위 테스트 (pnpm test:unit, node --test, CI 포함)
+tests/unit/           packages 순수 함수와 앱 라우트·프록시 단위 테스트 (pnpm test:unit, node --test, CI 포함)
 tests/e2e/            배포된 dev를 타는 Playwright QA 자동화 (@plick/e2e, PR 게이트 아님)
 ```
 
