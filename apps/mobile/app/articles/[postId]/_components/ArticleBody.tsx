@@ -10,9 +10,9 @@ import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
 import { AdSlot } from "@/_components/AdSlot";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
-import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { EntityChips } from "@/_components/EntityChips";
 import { ArticleComments } from "./ArticleComments";
+import { ArticleDebateCard } from "./ArticleDebateCard";
 import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
 import { ReadEndSentinel } from "./ReadEndSentinel";
@@ -119,15 +119,14 @@ export function ArticleBody({
         </div>
 
         {/* 투표 카드 (KAN-418). 인터랙션이 있어 댓글처럼 클라 경계로 내려간다.
+            서버가 준 토론은 씨앗이고 집계는 브라우저가 다시 받는다 (KAN-681).
             마감 판정은 기사 contentType이 실기준이다(FINISH = 마감) */}
         {debate && (
-          <div className="pt-5">
-            <DebateVoteCard
-              articleId={article.id}
-              debate={debate}
-              closed={article.contentType === "FINISH"}
-            />
-          </div>
+          <ArticleDebateCard
+            articleId={article.id}
+            debate={debate}
+            closed={article.contentType === "FINISH"}
+          />
         )}
 
         {/* 태그 칩 줄 (KAN-500) — 선수·팀 이름 칩은 700에 프로필 링크. 오른쪽 끝은

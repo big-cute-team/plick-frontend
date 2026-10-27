@@ -302,7 +302,13 @@ export function ReelsFeed({
         </div>
       </main>
       {motion.mounted && detail && (
-        <ReelDetailSheet reel={detail.reel} motion={motion} />
+        /* 시트에는 열 때 찍은 스냅샷이 아니라 피드 캐시의 지금 릴을 준다 (KAN-681).
+           투표 카드가 집계를 캐시에서 읽게 되면서, 시트에서 누른 표가 `syncDebateVote`로
+           피드 캐시에 적히면 그 값이 시트까지 흘러야 한다. 피드에서 사라진 릴이면 스냅샷 */
+        <ReelDetailSheet
+          reel={reels.find((r) => r.id === detail.reel.id) ?? detail.reel}
+          motion={motion}
+        />
       )}
     </div>
   );

@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticles } from "@plick/core/articles";
 import { ApiError } from "@plick/core/client";
+import { articleKeys } from "@plick/core/articleKeys";
 import { getFigureProfile } from "@plick/core/figures";
 import { FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
-import { ScrollArea } from "@/_components/ScrollArea";
+import { ProfileScrollArea } from "@/_components/ProfileScrollArea";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
 import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
@@ -109,7 +110,8 @@ export default async function FigurePage({
         backHref="/"
         backBehavior="back"
       />
-      <ScrollArea className="pb-section">
+      {/* 당겨서 새로고침 (KAN-681) — 관련 이슈 피드는 브라우저가, 머리·기본 정보는 서버 갱신 */}
+      <ProfileScrollArea feedKey={articleKeys.figureFeed(figure.id)}>
         <FigureHeader figure={figure} />
         <section>
           <div className="px-edge">
@@ -121,7 +123,7 @@ export default async function FigurePage({
           <ProfileSectionTitle>기본 정보</ProfileSectionTitle>
           <FigureFacts figure={figure} />
         </section>
-      </ScrollArea>
+      </ProfileScrollArea>
       <TabBar />
     </AppShell>
   );

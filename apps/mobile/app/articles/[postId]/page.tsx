@@ -10,7 +10,6 @@ import { newsArticleJsonLd } from "@plick/domain/jsonld";
 import type { ArticleCard, Debate } from "@plick/domain/types";
 import { JsonLd } from "@plick/ui/JsonLd";
 import { AppShell } from "@/_components/AppShell";
-import { ScrollArea } from "@/_components/ScrollArea";
 import { TabBar } from "@/_components/TabBar";
 import { WEB_SITE_URL } from "@/_constants/site";
 
@@ -81,6 +80,7 @@ export async function generateMetadata({
   }
 }
 import { ArticleBody } from "./_components/ArticleBody";
+import { ArticleScrollArea } from "./_components/ArticleScrollArea";
 import { ArticleTopBar } from "./_components/ArticleTopBar";
 import { ArticleViewTracker } from "./_components/ArticleViewTracker";
 
@@ -178,13 +178,14 @@ export default async function ArticleDetailPage({
         }
         articleId={articleResult.value.id}
       />
-      <ScrollArea className="pb-section">
+      {/* 당겨서 새로고침 (KAN-681) — 투표 집계·댓글은 브라우저가, 나머지는 서버 갱신 */}
+      <ArticleScrollArea articleId={articleResult.value.id}>
         <ArticleBody
           article={articleResult.value}
           suggested={suggested}
           debate={debate}
         />
-      </ScrollArea>
+      </ArticleScrollArea>
       <TabBar />
     </AppShell>
   );
