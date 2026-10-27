@@ -107,3 +107,23 @@ push 전 `pr-review.sh`를 돌렸다. CRITICAL은 없었고 WARN 셋 중 둘을 
 - 워크플로 로그에 무효화 ID 둘과 완료 메시지가 남는지
 
 권한 콘솔 작업이 머지보다 먼저다. 그리고 prod는 세션 시작 때 돌던 main 배포가 끝난 뒤로 다시 10월 26일 FAQ를 내고 있을 것이라, 이 PR이 prod에 나가기 전까지는 손으로 한 번 더 무효화해야 한다.
+
+## 머지 뒤 dev에서 확인한 것
+
+사용자가 두 롤에 권한을 붙이고 PR #329를 develop에 머지했다. `aws iam get-role-policy`로 읽어 보니 dev·prod 롤 모두 `CreateInvalidation`·`GetInvalidation`이 해당 환경 배포 두 개 ARN에 한정돼 들어가 있었다. 머지 커밋(`727d120`)의 Deploy 워크플로가 08:48 UTC에 돌았다.
+
+배포 직전에 기준값을 다시 찍어 뒀다. `dev.plick.co.kr/faq`는 10월 23일 응답(`age` 359,671초), `dev-m.plick.co.kr/faq`는 10월 16일 응답(`age` 963,770초)이었다.
+
+워크플로 로그는 이랬다.
+
+| 스텝                            | 결과    | 시각(UTC)           |
+| ------------------------------- | ------- | ------------------- |
+| Create deployment               | success | 08:52:26 ~ 09:04:07 |
+| Invalidate CloudFront documents | success | 09:04:07 ~ 09:04:31 |
+| Deployment failure info         | skipped |                     |
+
+무효화 스텝 안의 줄은 생성 둘, 완료 둘이다. `E1NRBTX3Y1PE98`에 `I3DE3T1TY0HPNDKQ9E0GSOE848`이 09:04:08, `E8Z1P2UP1OTYK`에 `I3SYWX29V0HBS5QXPO03N7JOUA`가 09:04:09에 만들어졌고, 첫 `wait`가 21초 뒤인 09:04:30에 돌아왔다. 둘째 `wait`는 1초 만에 돌아왔다. 둘을 먼저 만들어 둔 덕에 둘째는 이미 끝나 있었던 것이다. 생성-대기-생성-대기였으면 40초쯤 걸렸을 일이 24초다. `Deployment failure info`는 조건을 좁힌 대로 건너뛰었다.
+
+스텝이 끝나고 30초 뒤 여섯 문서를 받았다. 두 호스트의 `/faq`·`/terms`·`/privacy` 전부 `Miss from cloudfront`에 `date`가 그 시각이었다. 저장분이 지워져 오리진에 다시 물은 것이다. 20초 뒤 두 번째 요청은 `Hit from cloudfront`에 `age` 20·21이었다. 완료 조건 첫째, "배포 직후 `age`가 작게 시작한다"가 그대로다. dev-m `/faq`의 뷰포트 메타에서 `user-scalable=no`가 사라져 있었다. 열하루 동안 FAQ에만 남아 있던 옛 설정이 이번 배포로 나갔다.
+
+prod는 아직이다. 이 변경이 main 릴리스에 실려 나가면 그 배포의 무효화가 prod 두 호스트를 지운다. 릴리스 뒤 `/faq`의 `date`가 릴리스 시각인지 보는 것이 완료 조건 둘째다.
