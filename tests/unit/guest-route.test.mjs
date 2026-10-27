@@ -174,6 +174,46 @@ for (const app of APPS) {
       assert.equal(headers.get("X-Plick-Bot"), null);
     });
 
+    test("발급 호출에 CloudFront가 본 방문자 IP를 X-Forwarded-For로 싣는다 (KAN-680)", async () => {
+      stub = stubFetch(() => beOk(GUEST));
+      await POST(
+        post({
+          headers: {
+            /* 뷰어가 지어낸 값, CloudFront가 본 방문자 IP, CloudFront 엣지 IP(ALB가 덧붙임) 순 */
+            "x-forwarded-for": "1.2.3.4, 203.0.113.7, 13.224.0.10",
+            "cloudfront-viewer-address": "203.0.113.7:51234",
+          },
+        }),
+      );
+      assert.equal(stub.calls.length, 1);
+      const { headers } = stub.calls[0];
+      /* BE 상한이 방문자별로 세려면 체인이 아니라 믿을 수 있는 값 하나만 실려야 한다 */
+      assert.equal(headers.get("X-Forwarded-For"), "203.0.113.7");
+    });
+
+    test("CloudFront 헤더가 없으면 들어온 X-Forwarded-For 체인을 넘기지 않는다 (KAN-680)", async () => {
+      stub = stubFetch(() => beOk(GUEST));
+      /* 로컬이나 정책 미적용 배포. 체인의 첫 값은 요청자가 지어낼 수 있어 그대로 넘기면 상한이 사라진다 */
+      await POST(
+        post({ headers: { "x-forwarded-for": "1.2.3.4, 203.0.113.7" } }),
+      );
+      assert.equal(stub.calls.length, 1);
+      assert.equal(stub.calls[0].headers.get("X-Forwarded-For"), null);
+    });
+
+    test("IPv6 방문자 주소도 포트만 떼서 싣는다 (KAN-680)", async () => {
+      for (const [raw, ip] of [
+        ["[2001:db8::1]:443", "2001:db8::1"],
+        ["2001:db8::1:443", "2001:db8::1"],
+      ]) {
+        stub = stubFetch(() => beOk(GUEST));
+        await POST(post({ headers: { "cloudfront-viewer-address": raw } }));
+        assert.equal(stub.calls[0].headers.get("X-Forwarded-For"), ip, raw);
+        stub.restore();
+      }
+      stub = null;
+    });
+
     test("자연 발급은 로그아웃 출신 표식과 재시도 가드를 지운다", async () => {
       stub = stubFetch(() => beOk(GUEST));
       const res = await POST(
