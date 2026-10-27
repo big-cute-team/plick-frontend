@@ -322,8 +322,15 @@ S3가 SigV4 서명 검증에 실패해 403을 뱉는다. 이 비헤이비어는 
 `immutable`을 자기가 붙여 주지만 S3는 아무것도 안 붙인다. 안 넣으면 CloudFront가
 기본 TTL로만 캐시하고 브라우저는 매번 재검증하러 온다.
 
-⚠️ 무효화(invalidation)는 필요 없다. 파일명이 콘텐츠 해시라 같은 URL의 내용이
-바뀔 일이 없다. 워크플로에 `create-invalidation`을 넣지 않는다.
+⚠️ 정적 자산에는 무효화(invalidation)가 필요 없다. 파일명이 콘텐츠 해시라 같은
+URL의 내용이 바뀔 일이 없다. 다만 이 문장은 HTML 문서 캐시를 켜기 전(ADR 0201·0204)
+기준이다. 문서 캐시를 켠 뒤로는 FAQ·약관·개인정보처리방침처럼 `s-maxage=31536000`만
+붙고 `stale-while-revalidate`가 없는 정적 문서가 배포 뒤에도 1년 동안 옛 HTML로 남아서,
+`Create deployment` 뒤에 네 배포 ID(잡 env의 `WEB_DISTRIBUTION_ID`·
+`MOBILE_DISTRIBUTION_ID`)에 `/*` 무효화를 걸고 완료까지 기다리는 스텝이 있다(KAN-679,
+[ADR 0217](adr/0217-cloudfront-document-invalidation-on-deploy.md)). 배포 롤에
+`cloudfront:CreateInvalidation`·`cloudfront:GetInvalidation`을 그 네 배포 ARN
+(`arn:aws:cloudfront::<계정ID>:distribution/<ID>`)에 한정해 붙여야 한다.
 
 기존 `Assemble standalone` 스텝의 `.next/static` 복사는 당분간 남겨 둔다.
 CloudFront 비헤이비어가 잘못 걸렸을 때 EC2가 폴백으로 서빙해 주는 안전핀이다.
