@@ -57,6 +57,11 @@ jobs:
       CODEDEPLOY_GROUP: ${{ github.ref_name == 'main' && 'plick-frontend-dg-prod' || 'plick-frontend-dg-dev' }}
       WEB_SITE_URL: ${{ github.ref_name == 'main' && 'https://plick.co.kr' || 'https://dev.plick.co.kr' }}
       MOBILE_SITE_URL: ${{ github.ref_name == 'main' && 'https://m.plick.co.kr' || 'https://dev-m.plick.co.kr' }}
+      # CloudFront 배포 ID (KAN-679). 배포 뒤 문서 캐시를 무효화할 대상이다. 비밀이 아닌
+      # 식별자라 사이트 URL과 같은 이유로 분기 상수로 둔다. 배포를 새로 만들면 여기와
+      # 배포 롤의 cloudfront 권한 리소스 ARN을 같이 고친다.
+      WEB_DISTRIBUTION_ID: ${{ github.ref_name == 'main' && 'E1KX1LWBFZKMMY' || 'E1NRBTX3Y1PE98' }}
+      MOBILE_DISTRIBUTION_ID: ${{ github.ref_name == 'main' && 'EDJQ2UHUYBADH' || 'E8Z1P2UP1OTYK' }}
       # GA4 측정 ID (KAN-380). 실서비스 빌드에만 넣는다 — dev 빌드는 빈 값이라
       # 태그가 렌더되지 않아 개발 트래픽이 실서비스 지표에 섞이지 않는다.
       # 브라우저에 그대로 노출되는 공개 값이라 시크릿이 아니다.
@@ -148,7 +153,8 @@ jobs:
       # 목적이다. 붙이는 순간 v2와 똑같은 세대 간 404가 CloudFront 뒤에서 재현된다.
       # ⚠️ Cache-Control을 직접 지정한다. Next 서버는 .next/static 응답에 immutable을
       # 자기가 붙여 주지만 S3는 아무것도 안 붙인다. 파일명이 콘텐츠 해시라 1년 불변이 맞고,
-      # 같은 이유로 무효화(create-invalidation)도 필요 없다.
+      # 같은 이유로 정적 자산은 무효화가 필요 없다. HTML 문서 캐시는 다르다. 배포 뒤
+      # 별도 스텝에서 무효화한다(KAN-679, 아래 Invalidate CloudFront documents).
       - name: Upload static assets
         run: |
           for APP in web mobile; do
@@ -175,10 +181,35 @@ jobs:
           aws deploy wait deployment-successful --deployment-id "$DEPLOYMENT_ID"
           echo "배포 성공: $DEPLOYMENT_ID"
 
+      # CloudFront 문서 캐시 무효화(KAN-679, ADR 0217). FAQ·약관처럼 완전 정적인 문서는
+      # `s-maxage=31536000`에 stale-while-revalidate가 없어 배포해도 옛 HTML이 1년 남는다.
+      # Blue/Green 전환이 끝난 뒤여야 한다. 전환 전에 지우면 구세대 응답이 다시 채워진다.
+      # 생성을 둘 다 먼저 걸고 나서 기다려야 두 무효화가 동시에 진행된다. 완료까지
+      # 기다리는 건 dev 배포 뒤 도는 E2E가 새 버전을 보게 하려는 것이다(20초 간격 최대
+      # 30회). 배포 롤에 cloudfront:CreateInvalidation·GetInvalidation이 있어야 한다.
+      - name: Invalidate CloudFront documents
+        run: |
+          WEB_INV=$(aws cloudfront create-invalidation \
+            --distribution-id "$WEB_DISTRIBUTION_ID" --paths "/*" \
+            --query Invalidation.Id --output text)
+          echo "무효화 생성: $WEB_DISTRIBUTION_ID $WEB_INV"
+          MOBILE_INV=$(aws cloudfront create-invalidation \
+            --distribution-id "$MOBILE_DISTRIBUTION_ID" --paths "/*" \
+            --query Invalidation.Id --output text)
+          echo "무효화 생성: $MOBILE_DISTRIBUTION_ID $MOBILE_INV"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$WEB_DISTRIBUTION_ID" --id "$WEB_INV"
+          echo "무효화 완료: $WEB_DISTRIBUTION_ID $WEB_INV"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$MOBILE_DISTRIBUTION_ID" --id "$MOBILE_INV"
+          echo "무효화 완료: $MOBILE_DISTRIBUTION_ID $MOBILE_INV"
+
       # 훅 스크립트 stdout은 러너로 안 온다. 어느 훅에서 죽었는지는 여기 요약으로 보고,
       # 상세 로그는 CodeDeploy 콘솔의 배포 상세 → 이벤트에서 본다.
+      # 배포 스텝 자체가 실패했을 때만 찍는다. 뒤의 무효화 스텝이 실패한 경우에 찍으면
+      # 성공한 배포 요약이 실패 원인처럼 보인다.
       - name: Deployment failure info
-        if: failure() && steps.create-deployment.outputs.deployment_id != ''
+        if: failure() && steps.create-deployment.outcome == 'failure' && steps.create-deployment.outputs.deployment_id != ''
         run: |
           aws deploy get-deployment \
             --deployment-id "${{ steps.create-deployment.outputs.deployment_id }}" \
