@@ -61,6 +61,15 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
  *
  * 발급이 실패하면(BE 다운, 429, 1.5초 상한) 503으로 답하고 쿠키는 건드리지 않는다. 브라우저는 다음
  * 화면이나 다음 탭에서 다시 시도한다.
+ *
+ * 남용 방어는 위 두 거름 말고 FE에 따로 두지 않는다(KAN-675, 그 시점 BE 코드와 인프라를 읽은 판단이고
+ * prod에서 관측하지는 않았다. 경위는 ADR 0215). 발급 상한은 BE의 같은 IP 분당 60회
+ * (`auth-guest`)인데, 이 라우트가 BE를 서버에서 부르므로 BE가 세는 IP는 방문자가 아니라 FE 인스턴스다.
+ * BE는 `X-Forwarded-For` 첫 값을 보고, 이 호출에는 그 헤더가 없어 BE 내부 ALB가 FE 주소를 적는다.
+ * 그래서 지금 상한은 사람별이 아니라 인스턴스당 분당 60회 공용이다. 대량 생성은 막지만 유입이 몰리면
+ * 진짜 방문자도 503을 받는다. 들어온 `X-Forwarded-For`를 그대로 넘기면 첫 값을 방문자가 지어낼 수 있어
+ * 상한이 사실상 사라진다. 믿을 수 있는 방문자 IP(CloudFront가 붙이는 값)를 넘기는 일은 인프라 확인이
+ * 필요해 따로 다룬다. FE 인스턴스 메모리에 상한을 두는 건 인스턴스가 여럿이라 이득이 없다.
  */
 export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? "";
