@@ -18,7 +18,8 @@ import {
 } from "./support/next-app.mjs";
 
 const NO_STORE = "private, no-store";
-const EXPIRES = "2026-11-10T12:00:00+09:00";
+/** 마감 시각. 프록시는 문자열로만 옮기지만 해석하게 돼도 깨지지 않게 먼 미래로 둔다 */
+const EXPIRES = "2099-11-10T12:00:00+09:00";
 
 let stub = null;
 afterEach(() => {
@@ -53,6 +54,7 @@ for (const app of APPS) {
         res.headers.get("x-middleware-request-x-plick-path"),
         "insta",
       );
+      assert.equal(stub.calls.length, 0);
     });
 
     test("access가 살아 있는 /be 요청은 Bearer를 싣고 쿠키는 없다", async () => {
@@ -71,6 +73,7 @@ for (const app of APPS) {
       );
       assert.deepEqual(res.headers.getSetCookie(), []);
       assert.equal(res.headers.get("cache-control"), null);
+      assert.equal(stub.calls.length, 0);
     });
 
     test("게스트 재발급 응답은 회전된 쌍과 표식을 심고 no-store다", async () => {
@@ -155,6 +158,7 @@ for (const app of APPS) {
         res.headers.get("x-middleware-request-x-plick-utm-campaign"),
         "fall",
       );
+      assert.equal(stub.calls.length, 0);
     });
 
     test("크롤러의 /be 요청은 랜딩 쿠키가 있어도 유입 쿠키를 심지 않는다", async () => {
@@ -168,6 +172,7 @@ for (const app of APPS) {
       const cookies = setCookies(res);
       assert.equal(cookies.plick_path, undefined);
       assert.equal(cookies.plick_mkt, undefined);
+      assert.equal(stub.calls.length, 0);
     });
 
     test("크롤러의 분석 쓰기는 BE로 보내지 않고 204다", async () => {
@@ -179,6 +184,7 @@ for (const app of APPS) {
         }),
       );
       assert.equal(res.status, 204);
+      assert.equal(stub.calls.length, 0);
     });
 
     test("재발급이 401이면 첫 번째는 같은 주소로 한 번 다시 보낸다", async () => {

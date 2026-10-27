@@ -170,3 +170,14 @@ FE에는 지금의 UA·출처 거름만 두고, 상한은 BE에 맡기되 BE가 
 - `tests/unit/register.mjs`: `@/` alias, `next/*` 확장자 보정.
 - `package.json`: `test:unit`을 `--experimental-transform-types`로.
 - 두 앱 `route.ts`와 `AuthProvider.tsx`: 남용 방어와 재시도 판단 주석. 코드 동작은 그대로다.
+
+## 헤드리스 리뷰에서 고친 것
+
+push 전 `pr-review.sh`가 CRITICAL 없이 WARN 셋을 남겼다. 하나는 정확한 지적이었다. "BE를 부르면 안
+된다"를 가짜 `fetch` 안의 `assert.fail`로만 걸어 뒀는데, 프록시는 재발급 호출을 `try/catch`로 감싸 실패를
+익명 통과로 바꾼다. 프록시가 실수로 BE를 불러도 `assert.fail`이 던진 예외를 프록시가 삼키면 테스트는
+초록으로 남는다. 해당 다섯 케이스 끝에 `stub.calls.length === 0`을 직접 확인하게 했다. 테스트의 마감
+시각 상수는 지금은 문자열로만 오가지만 언젠가 프록시가 해석하게 되면 그 날짜가 지나는 순간 깨지는 시한폭탄이라
+2099년으로 옮겼다. `--experimental-transform-types`가 Node 22.7부터라는 지적은 CI의 setup-node가 `.nvmrc`의
+`22`를 최신 22.x로 받고 로컬도 22.19라 그대로 뒀다. 라우트 주석에는 BE·인프라를 읽고 내린 판단이고 prod
+관측은 아니라는 근거 시점을 달았다.

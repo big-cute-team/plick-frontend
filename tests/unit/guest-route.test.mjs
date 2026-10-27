@@ -20,7 +20,7 @@ const GUEST = {
   refreshToken: "guest-refresh",
   needsOnboarding: true,
   isGuest: true,
-  guestExpiresAt: "2026-11-10T12:00:00+09:00",
+  guestExpiresAt: "2099-11-10T12:00:00+09:00",
 };
 
 const NO_STORE = "private, no-store";
