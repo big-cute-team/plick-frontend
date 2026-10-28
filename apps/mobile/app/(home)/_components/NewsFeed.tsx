@@ -9,6 +9,7 @@ import { ARTICLES_PAGE_SIZE } from "@plick/core/articles";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useHomeRefresh } from "@/_hooks/useHomeRefresh";
+import { useHydrated } from "@/_hooks/useHydrated";
 import { useViewState } from "@/_stores/view-state";
 import {
   teamFilterFromPathname,
@@ -68,6 +69,7 @@ export function NewsFeed({
   const filter = teamFilterFromPathname(pathname);
   const setHomeFilter = useViewState((state) => state.setHomeFilter);
   const refreshHome = useHomeRefresh();
+  const hydrated = useHydrated();
 
   /**
    * URL이 정한 필터를 스토어에 흘려 둔다 — 직접 진입·뒤로가기까지 포함해
@@ -185,12 +187,16 @@ export function NewsFeed({
                 </p>
               )}
               {/* 첫 페이지 refetch 중에도 막는다. 캐시에 남은 옛 커서로 다음 페이지를
-                  쏘면 복구 refetch가 취소돼 400 루프에 갇힌다 (KAN-404) */}
+                  쏘면 복구 refetch가 취소돼 400 루프에 갇힌다 (KAN-404).
+                  하이드레이션 첫 렌더만은 서버 HTML처럼 활성으로 둔다 (KAN-682). 묵은
+                  씨앗이 마운트 직후 refetch를 돌리면 첫 렌더부터 isFetching이라 서버
+                  HTML과 어긋나는데, React는 그 불일치를 고쳐 쓰지 않아 DOM은 활성인
+                  채 클릭만 버려진다. 서버와 맞춘 뒤 바로 오는 재렌더가 속성을 쓴다 */}
               {(hasNextPage || isFetchNextPageError) && (
                 <button
                   type="button"
                   onClick={loadMore}
-                  disabled={isFetching}
+                  disabled={hydrated && isFetching}
                   className="border-border-strong text-label-lg text-text-2 rounded-control mt-3.5 flex h-11 w-full items-center justify-center border font-bold active:opacity-70 disabled:opacity-50"
                 >
                   {isFetchNextPageError ? "다시 시도" : "기사 더 보기"}
