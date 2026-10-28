@@ -19,6 +19,7 @@ import { PostTableHead } from "@/_components/PostTableHead";
 import { TeamFilterTabs } from "@/_components/TeamFilterTabs";
 import { useArticleFeed } from "@/_hooks/useArticleFeed";
 import { useFeedRefresh } from "@/_hooks/useFeedRefresh";
+import { useHydrated } from "@/_hooks/useHydrated";
 import { useScrollRestore } from "@/_hooks/useScrollRestore";
 import { useViewState } from "@/_stores/view-state";
 
@@ -74,6 +75,7 @@ export function PostFeed({
   const filter = teamFilterFromPathname(pathname);
   const queryClient = useQueryClient();
   const refresh = useFeedRefresh();
+  const hydrated = useHydrated();
   useScrollRestore("news");
 
   /**
@@ -179,7 +181,11 @@ export function PostFeed({
             {isFetchingNextPage && <PostListItemSkeleton />}
 
             {/* 첫 페이지 refetch 중에도 막는다. 캐시에 남은 옛 커서로 다음 페이지를
-                쏘면 복구 refetch가 취소돼 400 루프에 갇힌다 (KAN-404) */}
+                쏘면 복구 refetch가 취소돼 400 루프에 갇힌다 (KAN-404).
+                하이드레이션 첫 렌더만은 서버 HTML처럼 활성으로 둔다 (KAN-682). 묵은
+                씨앗이 마운트 직후 refetch를 돌리면 첫 렌더부터 isFetching이라 서버
+                HTML과 어긋나는데, React는 그 불일치를 고쳐 쓰지 않아 DOM은 활성인
+                채 클릭만 버려진다. 서버와 맞춘 뒤 바로 오는 재렌더가 속성을 쓴다 */}
             {(hasNextPage || isFetchNextPageError) && (
               <div className="flex h-13 items-center justify-center gap-3">
                 {isFetchNextPageError && (
@@ -190,7 +196,7 @@ export function PostFeed({
                 <button
                   type="button"
                   onClick={loadMore}
-                  disabled={isFetching}
+                  disabled={hydrated && isFetching}
                   className="border-border-table text-label text-text-3 hover:text-accent hover:border-accent focus-visible:outline-accent flex h-6.5 items-center border px-2.25 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
                 >
                   {isFetchNextPageError ? "다시 시도" : "이슈 더 보기"}
