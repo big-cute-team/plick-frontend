@@ -145,3 +145,17 @@ export const CHAT_REJECT_MESSAGE: Record<string, string> = {
  * 한 칸 폭의 4분의 1쯤이면 옆 칸이 살짝 비쳐 더 밀 수 있다는 게 읽힌다.
  */
 export const DATE_STRIP_KEEP_PAD = 12;
+
+/**
+ * 홈 채팅방 띠가 보여주는 줄 수 (KAN-684). 띠 높이는 이 줄 수로 고정이고 새 글이 오면 한 줄씩
+ * 밀어 올린다. 줄 높이(`h-6`)와 띠 높이(`h-18`)가 이 값에 묶여 있다.
+ */
+export const HOME_CHAT_ROWS = 3;
+
+/**
+ * 홈 채팅방 띠가 소켓을 붙여 두는 범위 (KAN-684). `IntersectionObserver`의 `rootMargin`이다.
+ * 띠가 뷰포트에서 한 판 높이 넘게 멀어지면 끊고 돌아오면 다시 붙는다. 소식을 읽느라 한참 내려간
+ * 사람에게까지 방송을 보내지 않으려는 것이고, 한 판의 여유는 조금 오르내릴 때마다 붙었다 끊기지
+ * 않게 한다.
+ */
+export const HOME_CHAT_WATCH_MARGIN = "100%";
