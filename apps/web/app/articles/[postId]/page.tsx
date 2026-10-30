@@ -47,8 +47,8 @@ export function generateStaticParams(): { postId: string }[] {
 }
 
 /**
- * 기사별 고유 메타데이터 (KAN-346) — 기사 하나하나가 롱테일 검색어의 랜딩이라
- * title·description·OG가 페이지마다 달라야 한다. 이 URL이 canonical이고, 같은
+ * 기사별 고유 메타데이터 (KAN-346) — 공유 카드(OG)와 브라우저 탭 제목이
+ * 페이지마다 달라야 한다. 색인은 KAN-652에서 뺐다(아래 robots). 이 URL이 canonical이고, 같은
  * 콘텐츠의 모바일 기사 URL을 alternate로 선언한다(별도 모바일 URL 패턴).
  *
  * 상세는 본문과 같은 호출(`loadArticle`)을 나눠 쓴다. 없는 기사는 빈 메타데이터로 두면
@@ -66,6 +66,10 @@ export async function generateMetadata({
     return {
       title: article.title,
       description,
+      // 색인 제외 (KAN-652). 본문이 원문 트윗 한두 문장의 요약이라 검색 엔진이 복제·자동 생성
+      // 콘텐츠로 묶는다(애드센스 "가치가 별로 없는 콘텐츠" 거절). 링크는 따라가게 둬 팀 허브와
+      // 인물 페이지로 가는 크롤 경로는 유지한다. 공유·OG·JSON-LD는 그대로다
+      robots: { index: false, follow: true },
       alternates: {
         canonical: `/articles/${article.id}`,
         media: {

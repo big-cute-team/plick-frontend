@@ -12,6 +12,7 @@
 import { BRAND_DESCRIPTION, BRAND_NAME_EN, BRAND_NAME_KO } from "./brand";
 import { TEAMS, TEAM_ORDER } from "./constants";
 import { FAQ_ITEMS, faqAnswerText } from "./faq";
+import { GUIDES, GUIDE_ORDER } from "./guides";
 
 /**
  * llms.txt 본문을 만든다.
@@ -32,6 +33,10 @@ export function llmsTxt({
   );
   const faq = FAQ_ITEMS.map(
     (item) => `- ${item.question} ${faqAnswerText(item)}`,
+  );
+  const guides = GUIDE_ORDER.map(
+    (slug) =>
+      `- [${GUIDES[slug].title}](${siteUrl}/guide/${slug}): ${GUIDES[slug].description}`,
   );
   const canonicalNote =
     canonicalSiteUrl === siteUrl
@@ -57,10 +62,14 @@ export function llmsTxt({
     "",
     ...teams,
     "",
+    "## 운영자가 쓴 글",
+    "",
+    `- [해축이모 소개](${siteUrl}/about): 수집 방식, 콘텐츠 원칙, 운영자와 문의처`,
+    ...guides,
+    "",
     "## 기사",
     "",
-    `- 기사 상세는 \`${siteUrl}/articles/{id}\`, 같은 기사의 릴 보기는 \`${siteUrl}/reels/{id}\` 다.`,
-    `- 전체 기사 목록은 [사이트맵](${siteUrl}/sitemap.xml)에 있다.`,
+    `- 기사 상세는 \`${siteUrl}/articles/{id}\`, 같은 기사의 릴 보기는 \`${siteUrl}/reels/{id}\` 다. 본문은 원문 게시물의 요약이라 색인 대상이 아니고(noindex) 사이트맵에도 없다.`,
     "",
     "## 자주 묻는 질문",
     "",

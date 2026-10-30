@@ -6,6 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   ADSENSE_CLIENT,
+  adNetworkFor,
+  adfitSize,
   adsPauseScript,
   adsTxt,
   interleaveReelAds,
@@ -103,4 +105,19 @@ test("앱 셸 UA에서만 pauseAdRequests를 세우는 head 스크립트", () =>
     run("Mozilla/5.0 (Linux; Android 14) Instagram 320.0.0.0.0 Android"),
     null,
   );
+});
+
+test("애드핏 크기는 높이가 있어야 나오고 폭이 비면 배너 폭을 쓴다 (KAN-652)", () => {
+  assert.deepEqual(adfitSize({ height: 90 }, 728), { width: 728, height: 90 });
+  assert.deepEqual(adfitSize({ width: 300, height: 250 }, 320), {
+    width: 300,
+    height: 250,
+  });
+  assert.equal(adfitSize({}, 320), null);
+});
+
+test("광고망은 애드핏 ID가 먼저고 둘 다 비면 자리를 안 그린다 (KAN-652)", () => {
+  assert.equal(adNetworkFor({ slot: "123", adfit: "DAN-1" }), "adfit");
+  assert.equal(adNetworkFor({ slot: "123", adfit: "" }), "adsense");
+  assert.equal(adNetworkFor({ slot: "", adfit: "" }), null);
 });
