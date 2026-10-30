@@ -9,6 +9,7 @@ import { HomeBanners } from "./HomeBanners";
 import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
+import { TeamIntro } from "./TeamIntro";
 import { HotSection } from "./HotSection";
 import { HotSectionSkeleton } from "./HotSectionSkeleton";
 import { NewsSection } from "./NewsSection";
@@ -58,6 +59,9 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection team={team} />
         </Suspense>
+
+        {/* 팀 소개 (KAN-652) - 팀 허브에만. 탭을 따라가야 해서 클라에서 URL의 팀을 읽는다 */}
+        <TeamIntro />
 
         <AdSlot placement="homeBottom" className="px-edge mt-6" />
 

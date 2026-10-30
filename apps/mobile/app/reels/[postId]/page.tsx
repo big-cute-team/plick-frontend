@@ -52,6 +52,8 @@ export async function generateMetadata({
     return {
       title: reel.title,
       description,
+      // 색인 제외 (KAN-652) — 기사 상세와 같은 이유. 릴은 같은 요약을 세로로 보여줄 뿐이다
+      robots: { index: false, follow: true },
       alternates: { canonical: `${WEB_SITE_URL}/reels/${reel.id}` },
       openGraph: {
         title: reel.title,

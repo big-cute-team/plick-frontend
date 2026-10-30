@@ -33,6 +33,9 @@ export const metadata: Metadata = {
 
 /** 스토어 심사용 문서 링크. 시안에는 없지만 심사 정책상 진입점을 남긴다. */
 const DOC_LINKS = [
+  { href: "/about", label: "서비스 소개" },
+  { href: "/guide/rumour-stages", label: "루머 단계 가이드" },
+  { href: "/guide/transfer-terms", label: "이적 용어 사전" },
   { href: "/faq", label: "FAQ" },
   { href: "/terms", label: "이용약관" },
   { href: "/privacy", label: "개인정보처리방침" },
