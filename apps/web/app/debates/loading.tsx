@@ -5,7 +5,7 @@ import { DEBATE_TABS } from "@/_constants/debates";
 import { DebateListSkeleton } from "./_components/DebateListSkeleton";
 
 /**
- * 투표 화면의 로딩 자리 (KAN-602). 목록(`GET /debates`, 토큰을 실어 캐시를 못 탄다)을
+ * 투표 화면의 로딩 자리 (KAN-602). 목록(`GET /debates`, 익명 ISR이라 재생성 중에만 보인다)을
  * 기다리는 동안 상단 바, 제목, 탭 줄, 카드 뼈대, 우측 급상승 레일 뼈대를 먼저 그린다.
  * 탭 줄은 어느 탭이 열릴지 아직 몰라 밑줄 없이 라벨만 둔다.
  */

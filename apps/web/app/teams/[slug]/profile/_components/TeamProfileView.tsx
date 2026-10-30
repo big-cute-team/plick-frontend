@@ -11,6 +11,7 @@ import {
 import { TEAM_PROFILE_TABS } from "@/_constants/team-profile";
 import type { TeamProfileTabKey } from "@/_types/team-profile";
 import { ProfileTabBar } from "@/_components/ProfileTabBar";
+import { TabPanel } from "@/_components/TabPanel";
 import { LiveLoadError } from "@/live/_components/LiveLoadError";
 import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { TeamLeadersCard } from "./TeamLeadersCard";
@@ -82,13 +83,34 @@ export function TeamProfileView({
         tabs={tabs}
         active={tab}
         onSelect={setTab}
+        idPrefix="team-profile"
       />
       <div className="grid grid-cols-1 gap-10 pt-7 lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-11">
-        <div role="tabpanel" className="flex min-w-0 flex-col gap-9.5">
-          {tab === "overview" && overview}
-          {tab === "matches" && matches}
-          {tab === "squad" &&
-            (squad === null ? (
+        {/* 네 탭을 전부 그리고 비활성은 hidden (KAN-683). 선수단·기록이 서버 HTML에 실린다 */}
+        <div className="min-w-0">
+          <TabPanel
+            on={tab === "overview"}
+            id="team-profile-panel-overview"
+            labelledBy="team-profile-tab-overview"
+            className="flex flex-col gap-9.5"
+          >
+            {overview}
+          </TabPanel>
+          <TabPanel
+            on={tab === "matches"}
+            id="team-profile-panel-matches"
+            labelledBy="team-profile-tab-matches"
+            className="flex flex-col gap-9.5"
+          >
+            {matches}
+          </TabPanel>
+          <TabPanel
+            on={tab === "squad"}
+            id="team-profile-panel-squad"
+            labelledBy="team-profile-tab-squad"
+            className="flex flex-col gap-9.5"
+          >
+            {squad === null ? (
               <LiveLoadError />
             ) : (
               <>
@@ -98,9 +120,15 @@ export function TeamProfileView({
                   competitionId={competitionId}
                 />
               </>
-            ))}
-          {tab === "stats" &&
-            (stats === null ? (
+            )}
+          </TabPanel>
+          <TabPanel
+            on={tab === "stats"}
+            id="team-profile-panel-stats"
+            labelledBy="team-profile-tab-stats"
+            className="flex flex-col gap-9.5"
+          >
+            {stats === null ? (
               <LiveLoadError />
             ) : (
               <TeamStatsPanel
@@ -109,7 +137,8 @@ export function TeamProfileView({
                 }
                 picker={picker}
               />
-            ))}
+            )}
+          </TabPanel>
         </div>
         <aside className="flex flex-col gap-3.5">
           {railTop}

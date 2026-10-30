@@ -1,10 +1,27 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getMatchDetail, getStandings } from "@plick/core/live";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { MatchDetailScreen } from "@/live/_components/MatchDetailScreen";
+
+/**
+ * 익명 ISR (KAN-683). 상세와 순위표 둘 다 토큰 없는 읽기라 누구에게나 같은 페이지다. 전에는
+ * 요청마다 렌더(ƒ, `no-store`)라 CloudFront가 문서를 못 들고 크롤러가 올 때마다 BE를 돌았다.
+ * 20초는 `LIVE_REVALIDATE_SECONDS`(라이브 폴링 주기)와 같은 값이다. 세그먼트 설정은 리터럴만
+ * 받아 상수를 못 쓴다. 라이브 경기는 씨앗이 묵어도 클라 훅이 `initialDataUpdatedAt`으로 알아채
+ * 마운트 때 다시 받고 폴링한다.
+ */
+export const revalidate = 20;
+
+/**
+ * 빈 목록이라도 선언해야 `[matchId]`가 요청마다 렌더(ƒ)가 아니라 첫 요청에 그려 캐시(●)된다
+ * (기사·선수 프로필과 같은 이유). 경기는 시즌마다 늘어 빌드 때 미리 그리지 않는다.
+ */
+export function generateStaticParams(): { matchId: string }[] {
+  return [];
+}
 
 /**
  * 경기 상세 메타 — 제목은 양 팀명, 이 URL이 canonical이고 대응 모바일 상세를
@@ -63,8 +80,14 @@ export default async function MatchDetailPage({
     initial = { detail: detailResult.value, fetchedAt: Date.now() };
   } else {
     const error = detailResult.reason;
+    // Next 제어 흐름 예외(정적 생성 중단 등)는 되던진다 (KAN-683, ADR 0199 관행)
+    unstable_rethrow(error);
     if (error instanceof ApiError && error.status === 404) notFound();
+    /* 404가 아닌 실패는 던진다 (KAN-683). 전에는 씨앗 없이 내려보내 클라가 다시 받았는데, ISR이 된
+       뒤로는 그 에러 지면이 20초 캐시에 들어가고 CloudFront까지 붙어 크롤러가 색인할 수 있다.
+       던지면 재생성 실패로 남아 직전 성공본이 그대로 나가고, 첫 요청이면 루트 error.tsx가 받는다 */
     console.error("[live] 경기 상세 초기 로드 실패:", error);
+    throw error;
   }
 
   if (standingsResult.status === "fulfilled") {

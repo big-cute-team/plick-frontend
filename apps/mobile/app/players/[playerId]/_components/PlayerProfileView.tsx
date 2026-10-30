@@ -10,6 +10,7 @@ import {
 import { PREMIER_LEAGUE_ID } from "@plick/domain/team-profile";
 import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { ProfileTabBar } from "@/_components/ProfileTabBar";
+import { TabPanel } from "@/_components/TabPanel";
 import { PLAYER_PROFILE_TABS } from "@/_constants/player-profile";
 import type { PlayerProfileTabKey } from "@/_types/player-profile";
 import { PlayerStatBox } from "./PlayerStatBox";
@@ -87,23 +88,37 @@ export function PlayerProfileView({
         tabs={PLAYER_PROFILE_TABS}
         active={tab}
         onSelect={setTab}
+        idPrefix="player-profile"
       />
-      <div role="tabpanel">
-        {tab === "overview" && overview}
-        {tab === "stats" && (
-          <>
-            {stats ? (
-              <PlayerStatGroups
-                groups={playerStatGroups(stats, isKeeper, cleanSheets)}
-              />
-            ) : (
-              <p className="text-body text-text-4 py-6">기록이 없어요</p>
-            )}
-            {seasons}
-          </>
+      {/* 세 탭을 전부 그리고 비활성은 hidden (KAN-683). 기록·경기가 서버 HTML에 실린다 */}
+      <TabPanel
+        on={tab === "overview"}
+        id="player-profile-panel-overview"
+        labelledBy="player-profile-tab-overview"
+      >
+        {overview}
+      </TabPanel>
+      <TabPanel
+        on={tab === "stats"}
+        id="player-profile-panel-stats"
+        labelledBy="player-profile-tab-stats"
+      >
+        {stats ? (
+          <PlayerStatGroups
+            groups={playerStatGroups(stats, isKeeper, cleanSheets)}
+          />
+        ) : (
+          <p className="text-body text-text-4 py-6">기록이 없어요</p>
         )}
-        {tab === "matches" && matchesTab}
-      </div>
+        {seasons}
+      </TabPanel>
+      <TabPanel
+        on={tab === "matches"}
+        id="player-profile-panel-matches"
+        labelledBy="player-profile-tab-matches"
+      >
+        {matchesTab}
+      </TabPanel>
     </>
   );
 }

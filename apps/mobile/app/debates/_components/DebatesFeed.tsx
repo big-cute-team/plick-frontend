@@ -1,7 +1,6 @@
 "use client";
 
 import { ArticleLink } from "@/_components/ArticleLink";
-import { useSearchParams } from "next/navigation";
 import { isDebateClosed } from "@plick/domain/format";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
 import { VoteCard } from "@plick/ui/VoteCard";
@@ -9,11 +8,12 @@ import { ChevronRightIcon } from "@plick/ui/icons";
 import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { DEBATE_EMPTY_COPY, DEBATE_LIST_HEADING } from "@/_constants/debates";
+import { useDebateTab } from "@/_hooks/useDebateTab";
 import { useDebates } from "@/_hooks/useDebates";
+import { useHydrated } from "@/_hooks/useHydrated";
 import { useMyArticleState } from "@/_hooks/useMyArticleState";
 import { useViewState } from "@/_stores/view-state";
 import type { DebateTab } from "@/_types/debates";
-import { debateTabFrom, debateTabPath } from "@/_utils/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabs } from "./DebateTabs";
 
@@ -21,9 +21,10 @@ import { DebateTabs } from "./DebateTabs";
  * 투표 화면 본체 (KAN-418, KAN-567 리디자인). 탭 줄 + 탭별 투표 카드 리스트.
  *
  * 어느 탭을 보고 있는지는 URL `?tab=`이 정한다(MY 활동 탭과 같은 규약). 탭
- * 선택은 `history.replaceState`로 URL만 바꾼다. 서버 왕복도 리마운트도 없이
- * `useSearchParams`가 따라오고, 탭 선택이 히스토리에 쌓이지 않는다. 탭을 바꾸면
- * 맨 위로 올린다.
+ * 선택은 `history.replaceState`로 URL만 바꾼다. 서버 왕복도 리마운트도 없고 탭 선택이
+ * 히스토리에 쌓이지 않는다. 탭을 바꾸면 맨 위로 올린다. 읽기는 `useDebateTab`이다
+ * (KAN-683). 전에는 `useSearchParams`였는데 정적 페이지에서 Suspense 경계까지 클라
+ * 렌더로 미뤄져 서버 HTML에 목록이 안 실렸다.
  *
  * 탭과 경계만 세우고 리스트는 {@link DebateList}가 그린다 (KAN-447). 씨앗 없이
  * 들어와 클라가 받는 동안은 Suspense fallback(스켈레톤)이, 실패는 경계의 에러
@@ -32,13 +33,16 @@ import { DebateTabs } from "./DebateTabs";
  * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다.
  */
 export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
-  const searchParams = useSearchParams();
-  const tab = debateTabFrom(searchParams.get("tab"));
+  const [tab, selectTab] = useDebateTab();
+  /* 씨앗이 없으면 마운트 뒤에만 목록을 그린다 (KAN-683). `DebateList`의 suspense 쿼리가 서버에서
+     BE를 직접 부르는데, CI 빌드처럼 BE가 없는 프리렌더에서 그 fetch가 던져 빌드가 깨졌다. 전에는
+     `useSearchParams` 바이아웃이 이 서브트리를 서버에서 아예 안 그려 숨어 있던 경로다 */
+  const hydrated = useHydrated();
 
   function handleChange(next: DebateTab) {
     if (next === tab) return;
     useViewState.getState().requestTop("debate");
-    window.history.replaceState(null, "", debateTabPath(next));
+    selectTab(next);
   }
 
   return (
@@ -50,7 +54,11 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
           fallback={<DebateListSkeleton />}
           errorMessage="투표를 불러오지 못했어요"
         >
-          <DebateList tab={tab} initial={initial} />
+          {initial || hydrated ? (
+            <DebateList tab={tab} initial={initial} />
+          ) : (
+            <DebateListSkeleton />
+          )}
         </QueryBoundary>
       </section>
     </>
