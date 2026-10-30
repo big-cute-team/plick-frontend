@@ -6,6 +6,9 @@ import { teamHubPath } from "@plick/domain/format";
 const SERVICE_LINKS = [
   { href: "/reels", label: "릴스" },
   { href: "/debates", label: "투표" },
+  { href: "/about", label: "소개" },
+  { href: "/guide/rumour-stages", label: "루머 단계 가이드" },
+  { href: "/guide/transfer-terms", label: "이적 용어 사전" },
   { href: "/faq", label: "자주 묻는 질문" },
   { href: "/terms", label: "이용약관" },
   { href: "/privacy", label: "개인정보처리방침" },

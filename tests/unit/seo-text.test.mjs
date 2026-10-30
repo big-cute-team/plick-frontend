@@ -39,9 +39,18 @@ test("llms.txt는 브랜드, 팀 허브 6개, FAQ, 안내 페이지를 호스트
   );
   assert.match(text, /이 도메인이 canonical이다/);
   for (const item of FAQ_ITEMS) assert.ok(text.includes(item.question));
-  for (const path of ["/faq", "/terms", "/privacy", "/sitemap.xml"]) {
+  for (const path of [
+    "/about",
+    "/guide/rumour-stages",
+    "/guide/transfer-terms",
+    "/faq",
+    "/terms",
+    "/privacy",
+  ]) {
     assert.ok(text.includes(`https://plick.co.kr${path}`), path);
   }
+  // 기사는 noindex라 사이트맵 링크로 전건을 안내하지 않는다 (KAN-652)
+  assert.doesNotMatch(text, /sitemap\.xml/);
 });
 
 test("모바일 llms.txt는 자기 URL을 쓰고 canonical이 데스크톱임을 적는다", () => {
