@@ -235,6 +235,8 @@ export const ReelItem = memo(function ReelItem({
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- 릴 이미지 호스트가 유동이라 next/image 대신 일반 img (핫이슈와 같은 이유) */}
           <img
+            // X CDN이 Referer 붙은 핫링크를 351로 막는다 (KAN-682) - 보내지 않는다
+            referrerPolicy="no-referrer"
             src={reel.imageUrl}
             alt=""
             /* 보고 있는 릴(첫 진입 시 index 0)은 LCP 후보라 lazy 큐잉 대신 최우선으로
