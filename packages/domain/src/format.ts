@@ -96,6 +96,17 @@ export function playerProfilePath(playerId: number): string {
 }
 
 /**
+ * 경기 상세 URL (KAN-683). 팀 프로필 경기 탭의 행이 여기로 가서, 그날 경기만 보여 주는 `/live`
+ * 밖의 경기 상세에도 크롤러가 닿는 길이 된다. 두 앱이 같은 경로다.
+ *
+ * @example
+ * matchDetailPath(1557450); // "/live/matches/1557450"
+ */
+export function matchDetailPath(matchId: number): string {
+  return `/live/matches/${matchId}`;
+}
+
+/**
  * 태그된 인물의 도착 URL (KAN-600). API 선수 id가 연결된 인물은 선수 프로필로, 아니면 인물
  * 프로필로 간다. 이름으로 선수를 추측하지 않는다. 선수 화면이 웹에만 있어 웹이 쓴다.
  *

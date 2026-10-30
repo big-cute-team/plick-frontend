@@ -34,6 +34,8 @@ export function MatchTabBar({
             key={key}
             type="button"
             role="tab"
+            id={`match-tab-${key}`}
+            aria-controls={`match-panel-${key}`}
             aria-selected={on}
             onClick={() => onSelect(key)}
             className={`text-body focus-visible:outline-accent -mb-px border-b-2 pb-2.25 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${

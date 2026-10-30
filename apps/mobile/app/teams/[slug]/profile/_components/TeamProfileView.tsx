@@ -11,6 +11,7 @@ import {
 } from "@plick/domain/team-profile";
 import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { ProfileTabBar } from "@/_components/ProfileTabBar";
+import { TabPanel } from "@/_components/TabPanel";
 import { TEAM_PROFILE_TABS } from "@/_constants/team-profile";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { TeamProfileTabKey } from "@/_types/team-profile";
@@ -85,37 +86,57 @@ export function TeamProfileView({
         tabs={tabs}
         active={tab}
         onSelect={setTab}
+        idPrefix="team-profile"
       />
-      <div role="tabpanel">
-        {tab === "overview" && overview}
-        {tab === "matches" && matches}
-        {tab === "squad" &&
-          (squad === null ? (
-            <LiveLoadError />
-          ) : (
-            <>
-              {picker && <div className="flex justify-end pt-4">{picker}</div>}
-              <TeamSquadList
-                players={squad.players}
-                competitionId={competitionId}
-              />
-            </>
-          ))}
-        {tab === "stats" &&
-          (stats === null ? (
-            <LiveLoadError />
-          ) : (
-            <TeamStatsPanel
-              stats={
-                stats.find((c) => c.competitionId === competitionId) ?? null
-              }
-              players={squad?.players ?? null}
+      {/* 네 탭을 전부 그리고 비활성은 hidden (KAN-683). 선수단·기록이 서버 HTML에 실린다 */}
+      <TabPanel
+        on={tab === "overview"}
+        id="team-profile-panel-overview"
+        labelledBy="team-profile-tab-overview"
+      >
+        {overview}
+      </TabPanel>
+      <TabPanel
+        on={tab === "matches"}
+        id="team-profile-panel-matches"
+        labelledBy="team-profile-tab-matches"
+      >
+        {matches}
+      </TabPanel>
+      <TabPanel
+        on={tab === "squad"}
+        id="team-profile-panel-squad"
+        labelledBy="team-profile-tab-squad"
+      >
+        {squad === null ? (
+          <LiveLoadError />
+        ) : (
+          <>
+            {picker && <div className="flex justify-end pt-4">{picker}</div>}
+            <TeamSquadList
+              players={squad.players}
               competitionId={competitionId}
-              injuries={injuries}
-              picker={picker}
             />
-          ))}
-      </div>
+          </>
+        )}
+      </TabPanel>
+      <TabPanel
+        on={tab === "stats"}
+        id="team-profile-panel-stats"
+        labelledBy="team-profile-tab-stats"
+      >
+        {stats === null ? (
+          <LiveLoadError />
+        ) : (
+          <TeamStatsPanel
+            stats={stats.find((c) => c.competitionId === competitionId) ?? null}
+            players={squad?.players ?? null}
+            competitionId={competitionId}
+            injuries={injuries}
+            picker={picker}
+          />
+        )}
+      </TabPanel>
     </>
   );
 }

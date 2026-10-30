@@ -19,11 +19,14 @@ export function ProfileTabBar<K extends string>({
   tabs,
   active,
   onSelect,
+  idPrefix,
 }: {
   label: string;
   tabs: { key: K; label: string }[];
   active: K;
   onSelect: (key: K) => void;
+  /** 탭 버튼 id와 `aria-controls`의 접두어. 패널(`TabPanel`)의 id·labelledBy와 짝이다 (KAN-683) */
+  idPrefix?: string;
 }) {
   return (
     <div
@@ -38,6 +41,8 @@ export function ProfileTabBar<K extends string>({
             key={key}
             type="button"
             role="tab"
+            id={idPrefix ? `${idPrefix}-tab-${key}` : undefined}
+            aria-controls={idPrefix ? `${idPrefix}-panel-${key}` : undefined}
             aria-selected={on}
             onClick={() => onSelect(key)}
             className={`text-tab h-full ${

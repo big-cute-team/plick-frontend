@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { matchDetailPath } from "@plick/domain/format";
 import { kickoffTimeLabel } from "@plick/domain/live";
 import {
   fixtureOpponent,
@@ -61,11 +63,14 @@ function FixtureRow({ fixture }: { fixture: TeamFixture }) {
           {opponent.name}
         </span>
       </TeamProfileLink>
-      <span
-        className={`text-body-lg text-right font-black tabular-nums ${played ? "text-text-strong" : "text-text-4"}`}
+      {/* 스코어 칸이 경기 상세 링크다 (KAN-683). 크롤러가 지난 경기에 닿는 유일한 길이다 */}
+      <Link
+        href={matchDetailPath(fixture.matchId)}
+        aria-label={`${opponent.name} 경기 상세`}
+        className={`text-body-lg text-right font-black tabular-nums active:opacity-60 ${played ? "text-text-strong" : "text-text-4"}`}
       >
         {score ?? "vs"}
-      </span>
+      </Link>
       {fixture.result ? <ResultChip result={fixture.result} /> : <span />}
     </div>
   );

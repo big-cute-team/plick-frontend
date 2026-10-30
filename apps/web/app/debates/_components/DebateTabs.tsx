@@ -1,31 +1,37 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { DEBATE_TABS } from "@/_constants/debates";
 import type { DebateTab } from "@/_types/debates";
-import { debateTabFrom } from "@/_utils/debates";
 
 /**
  * 투표 탭 줄 (KAN-567 시안 투표 1064-1213행). 진행 중, 마감 두 링크이고 지금 탭은 밑줄과
- * 굵은 글자다. 탭의 원본은 URL `?tab=`이라 링크로 그린다.
+ * 굵은 글자다. 링크 href는 `?tab=`이라 새 탭 열기와 크롤러는 URL을 그대로 쓴다.
  *
- * 지금 탭을 브라우저에서 `useSearchParams`로 읽는다 (KAN-667). 전에는 페이지가 `searchParams`를
- * 읽어 prop으로 내려줬는데, 서버가 쿼리를 읽는 순간 그 라우트는 요청마다 렌더가 돼 익명 ISR이
- * 안 된다. `useSearchParams`는 정적 페이지에서 가장 가까운 Suspense 경계까지 클라이언트 렌더로
- * 미루므로 호출부가 감싸고, fallback에는 쿼리를 읽지 않는 {@link DebateTabBar}를 기본 탭으로 둔다.
- * 서버 HTML은 그 fallback이고 브라우저가 쿼리를 읽어 맞춘다.
- */
-export function DebateTabs() {
-  return <DebateTabBar tab={debateTabFrom(useSearchParams().get("tab"))} />;
-}
-
-/**
- * 탭 줄의 표시 부분. 쿼리를 읽지 않아 서버 렌더와 Suspense fallback에 그대로 쓴다.
+ * 지금 탭은 부모(`DebatesFeed`)가 `useDebateTab`으로 읽어 준다 (KAN-683). 전에는 이 줄이
+ * 직접 `useSearchParams`를 읽어 Suspense 안에 살았는데, 그 훅은 정적 페이지에서 Suspense
+ * 경계까지 클라 렌더로 미뤄 서버 HTML에 목록이 안 실리게 했다. 보통 클릭은 가로채
+ * `onSelect`로 넘기고(URL은 replaceState), 수정키 클릭은 링크 본연의 동작에 맡긴다.
+ * `onSelect`가 없으면(Suspense fallback) 그냥 링크다.
  *
  * @param tab 지금 탭
+ * @param onSelect 탭 선택 콜백. 없으면 링크 이동
  */
-export function DebateTabBar({ tab }: { tab: DebateTab }) {
+export function DebateTabBar({
+  tab,
+  onSelect,
+}: {
+  tab: DebateTab;
+  onSelect?: (tab: DebateTab) => void;
+}) {
+  function intercept(e: MouseEvent<HTMLAnchorElement>, key: DebateTab) {
+    if (!onSelect) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    onSelect(key);
+  }
+
   return (
     <div
       role="tablist"
@@ -40,6 +46,7 @@ export function DebateTabBar({ tab }: { tab: DebateTab }) {
             href={href}
             role="tab"
             aria-selected={on}
+            onClick={(e) => intercept(e, key)}
             className={`text-body focus-visible:outline-accent -mb-px border-b-2 pb-2.25 focus-visible:outline-2 focus-visible:outline-offset-2 ${
               on
                 ? "border-accent text-text-strong font-bold"

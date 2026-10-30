@@ -17,11 +17,11 @@ import { StandingsTable } from "@/live/_components/StandingsTable";
  */
 export const dynamic = "force-dynamic";
 
-/** 데스크톱은 순위표가 `/live` 대시보드 레일에 있어 canonical을 거기로 둔다. */
+/** canonical은 데스크톱 순위표다 (KAN-683). 전에는 데스크톱에 고유 URL이 없어 `/live`였다. */
 export const metadata: Metadata = {
   title: "순위표",
   description: PAGE_DESCRIPTIONS.standings,
-  alternates: { canonical: `${WEB_SITE_URL}/live` },
+  alternates: { canonical: `${WEB_SITE_URL}/live/standings` },
 };
 
 /**
