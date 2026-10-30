@@ -127,6 +127,8 @@ export function ArticleMain({
           <div className="bg-media my-5 aspect-[16/7] overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- 이미지 호스트가 유동이라 next/image 대신 일반 img (릴과 같은 이유) */}
             <img
+              // X CDN이 Referer 붙은 핫링크를 351로 막는다 (KAN-682) - 보내지 않는다
+              referrerPolicy="no-referrer"
               src={article.imageUrl}
               alt=""
               className="size-full object-cover"

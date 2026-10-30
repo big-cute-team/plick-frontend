@@ -40,6 +40,8 @@ export function TweetMediaImg({
   const webp = tweetPhotoUrl(src, TWEET_PHOTO_SIZE, "webp");
   return (
     <img
+      // X CDN이 Referer 붙은 핫링크를 351로 막는다 (KAN-682) - 보내지 않는다
+      referrerPolicy="no-referrer"
       src={webp}
       srcSet={
         grid
