@@ -44,7 +44,8 @@ interface RejectNotice {
  * TanStack Query를 쓰지 않는 이유: 요청·응답이 아니라 열려 있는 연결이라 캐시할
  * 값이 없고, 화면을 떠나면 버려도 된다(다시 붙으면 최근 50개를 받는다).
  *
- * @param enabled false면 붙지 않는다(비로그인·게스트·닉네임 없음은 화면이 먼저 거른다)
+ * @param enabled false면 붙지 않는다(비로그인·게스트·닉네임 없음은 화면이 먼저 거른다). 켰다 끄면
+ *   끊고 상태를 `idle`로 되돌리며, 다시 켜면 새로 붙어 지급분으로 목록을 갈아 끼운다(KAN-684)
  */
 export function useLiveChat(enabled: boolean) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -88,6 +89,10 @@ export function useLiveChat(enabled: boolean) {
     return () => {
       socket.dispose();
       socketRef.current = null;
+      /* 끊긴 뒤 옛 상태(open·failed)가 남으면 다음에 붙을 때까지 화면이 그걸 믿는다(KAN-684 홈 띠).
+         목록은 둔다. 다시 붙으면 지급분이 갈아 끼우고, 그때까지 보여 줄 수 있다 */
+      setStatus("idle");
+      setFailure(null);
     };
   }, [enabled]);
 
