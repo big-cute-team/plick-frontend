@@ -374,6 +374,24 @@
       transform: none;
     }
   }
+
+  /* 홈 채팅방 띠의 줄 교체 (KAN-684). 새 줄은 높이 0에서 제 높이로 펴지며 아래에서 올라오고,
+     밀려나는 윗줄은 흐려진다. 끝 높이를 적지 않아 줄이 가진 높이(h-6)를 그대로 따른다 */
+  --animate-ticker: ticker 0.35s ease-out both;
+  --animate-fade-out: fade-out 0.35s ease-out both;
+
+  @keyframes ticker {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
 }
 
 /* 기본 리셋 */
