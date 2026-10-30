@@ -21,6 +21,7 @@ import {
   type Absentee,
   type BenchPlayer,
   type HeadToHeadGame,
+  type HeadToHeadSummary,
   type LastLineup,
   type LeaguePosition,
   type LineupPlayer,
@@ -35,6 +36,7 @@ import {
   type PlayerStatEntry,
   type Position,
   type StandingRow,
+  type TeamForm,
   type TeamLineup,
   type TeamSquad,
 } from "@plick/domain/live";
@@ -125,6 +127,16 @@ interface MatchDetailResponse {
       formation: string | null;
       startXI: LineupPlayerResponse[];
     }[];
+    /** 팀 비교 최근 전적 (KAN-695). 승부예측 전 BE 응답에는 없어 optional */
+    teamForm?: {
+      side: Side;
+      recent: string[];
+      winRate: number | null;
+      goalsForAvg: number | null;
+      goalsAgainstAvg: number | null;
+    }[];
+    /** 맞대결 요약 (KAN-695). 전적이 없거나 구버전 BE면 null */
+    headToHeadSummary?: HeadToHeadSummary | null;
   } | null;
   events:
     | {
@@ -444,6 +456,20 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
               playerNames: lineup.startXI.map((player) => player.name),
             }),
           ),
+          teamForms: [...(detail.preview.teamForm ?? [])]
+            .sort((a, b) => sideOrder(a.side) - sideOrder(b.side))
+            .map(
+              (form): TeamForm => ({
+                team: teamOf(form.side),
+                recent: toForm(form.recent.join("")),
+                winRate: form.winRate,
+                goalsForAvg: form.goalsForAvg,
+                goalsAgainstAvg: form.goalsAgainstAvg,
+              }),
+            ),
+          headToHeadSummary: detail.preview.headToHeadSummary
+            ? { ...detail.preview.headToHeadSummary }
+            : null,
         }
       : null,
     // 이벤트는 시간순으로 오고 타임라인은 최신이 위라 여기서 뒤집는다
