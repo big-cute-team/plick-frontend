@@ -56,6 +56,8 @@ export async function ReelsFeedSection() {
         <link
           rel="preload"
           as="image"
+          // 이미지 요청과 같은 정책이어야 preload가 재사용된다 (KAN-682)
+          referrerPolicy="no-referrer"
           href={seedImageUrl}
           imageSrcSet={seedImageSrcSet ?? undefined}
           fetchPriority="high"

@@ -22,6 +22,13 @@ export function TweetAvatarImg({
   height: number;
 }) {
   return (
-    <img src={tweetAvatarUrl(src)} alt={alt} width={width} height={height} />
+    <img
+      // X CDN이 Referer 붙은 핫링크를 351로 막는다 (KAN-682) - 보내지 않는다
+      referrerPolicy="no-referrer"
+      src={tweetAvatarUrl(src)}
+      alt={alt}
+      width={width}
+      height={height}
+    />
   );
 }
