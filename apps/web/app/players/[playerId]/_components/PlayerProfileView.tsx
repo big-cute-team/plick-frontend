@@ -10,6 +10,7 @@ import {
 import { PREMIER_LEAGUE_ID } from "@plick/domain/team-profile";
 import { CompetitionPicker } from "@/_components/CompetitionPicker";
 import { ProfileTabBar } from "@/_components/ProfileTabBar";
+import { TabPanel } from "@/_components/TabPanel";
 import { PLAYER_PROFILE_TABS } from "@/_constants/player-profile";
 import type { PlayerProfileTabKey } from "@/_types/player-profile";
 import { PlayerNumberBand } from "./PlayerNumberBand";
@@ -86,23 +87,42 @@ export function PlayerProfileView({
         tabs={PLAYER_PROFILE_TABS}
         active={tab}
         onSelect={setTab}
+        idPrefix="player-profile"
       />
       <div className="grid grid-cols-1 gap-10 pt-7 lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-11">
-        <div role="tabpanel" className="flex min-w-0 flex-col gap-9.5">
-          {tab === "overview" && overview}
-          {tab === "stats" && (
-            <>
-              {stats ? (
-                <PlayerStatGroups
-                  groups={playerStatGroups(stats, isKeeper, cleanSheets)}
-                />
-              ) : (
-                <p className="text-body text-text-4 py-7">기록이 없어요</p>
-              )}
-              {seasons}
-            </>
-          )}
-          {tab === "matches" && matchesTab}
+        {/* 세 탭을 전부 그리고 비활성은 hidden (KAN-683). 기록·경기가 서버 HTML에 실린다 */}
+        <div className="min-w-0">
+          <TabPanel
+            on={tab === "overview"}
+            id="player-profile-panel-overview"
+            labelledBy="player-profile-tab-overview"
+            className="flex flex-col gap-9.5"
+          >
+            {overview}
+          </TabPanel>
+          <TabPanel
+            on={tab === "stats"}
+            id="player-profile-panel-stats"
+            labelledBy="player-profile-tab-stats"
+            className="flex flex-col gap-9.5"
+          >
+            {stats ? (
+              <PlayerStatGroups
+                groups={playerStatGroups(stats, isKeeper, cleanSheets)}
+              />
+            ) : (
+              <p className="text-body text-text-4 py-7">기록이 없어요</p>
+            )}
+            {seasons}
+          </TabPanel>
+          <TabPanel
+            on={tab === "matches"}
+            id="player-profile-panel-matches"
+            labelledBy="player-profile-tab-matches"
+            className="flex flex-col gap-9.5"
+          >
+            {matchesTab}
+          </TabPanel>
         </div>
         <aside className="flex flex-col gap-3.5">{rail}</aside>
       </div>

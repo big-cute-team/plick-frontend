@@ -31,38 +31,25 @@ export type AdPlacement = "homeFeed" | "homeBottom" | "article" | "reel";
 
 /**
  * 광고 단위 하나의 규격.
- * - `slot`: 애드센스 광고 단위 번호(`data-ad-slot`). 승인 뒤 대시보드에서 만든 번호를 채운다.
- * - `adfit`: 카카오 애드핏 광고 단위 ID(`data-ad-unit`, DAN-으로 시작). 매체 심사 뒤 채운다 (KAN-652).
- *   둘 다 비어 있으면 live 모드에서 그 자리를 아예 그리지 않고, 둘 다 있으면 애드핏이 먼저다
- *   (애드센스가 미승인이라 번호가 있어도 채워지지 않는다).
+ * - `slot`: 애드센스 광고 단위 번호(`data-ad-slot`). 비어 있으면 live 모드에서 그 자리를
+ *   아예 그리지 않는다. 승인 뒤 대시보드에서 만든 번호를 채운다.
  * - `width`: px. 없으면 상자 폭을 채운다.
  * - `height`: px. 없으면 상자 높이를 채운다(릴스 전면).
  */
 export interface AdUnit {
   slot: string;
-  adfit: string;
   width?: number;
   height?: number;
 }
 
-/**
- * 자리별 광고 단위. 애드센스 번호는 승인 뒤, 애드핏 ID는 매체 심사 뒤 채운다.
- * 애드핏 모바일 규격은 320×50, 320×100, 300×250, 250×250이라 홈 배너 둘(320×100)과 기사
- * 사각형(300×250)에 맞고, 전면 릴스는 규격이 없어 애드센스 전용으로 남는다.
- */
+/** 자리별 광고 단위. 번호는 애드센스 승인 뒤 채운다. */
 export const AD_UNITS: Record<AdPlacement, AdUnit> = {
   /* 홈 핫이슈와 새 이슈 사이 가로 배너(320×100 규격 높이) */
-  homeFeed: { slot: "", adfit: "", height: 100 },
+  homeFeed: { slot: "", height: 100 },
   /* 홈 기사 더 보기 아래, 소개문 위 가로 배너 */
-  homeBottom: { slot: "", adfit: "", height: 100 },
+  homeBottom: { slot: "", height: 100 },
   /* 기사 본문 끝, 함께 보면 좋은 기사 위 사각형. 셸 폭 480 안에 300이 든다 */
-  article: { slot: "", adfit: "", width: 300, height: 250 },
+  article: { slot: "", width: 300, height: 250 },
   /* 릴스 전면 슬라이드. 화면을 그대로 채운다 */
-  reel: { slot: "", adfit: "" },
+  reel: { slot: "" },
 };
-
-/**
- * 애드핏 가로 배너 폭 (KAN-652). 애드핏은 폭도 고정 px라, 폭을 채우던 가로 배너 자리(`width`
- * 없음)에는 모바일 규격 320을 쓴다. 셸 최대폭 480 안에서 `AdSlot` wrapper가 가운데 둔다.
- */
-export const ADFIT_BANNER_WIDTH = 320;

@@ -34,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/reels`, changeFrequency: "daily", priority: 0.6 },
     // 라이브 스코어 (KAN-452) — 경기 상세는 시즌 단위로 바뀌는 임시 URL이라 목록만 싣는다
     { url: `${SITE_URL}/live`, changeFrequency: "hourly", priority: 0.7 },
+    // 순위표 (KAN-683) - "프리미어리그 순위" 검색어 랜딩. 경기 상세는 팀 프로필 경기 탭 링크로 발견된다
+    {
+      url: `${SITE_URL}/live/standings`,
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
     // 토론 리스트 (KAN-418, KAN-623) — 탐색 진입점으로만 싣는다
     { url: `${SITE_URL}/debates`, changeFrequency: "daily", priority: 0.6 },
     // 팀 허브 (KAN-350) — 팀 검색어의 랜딩. KAN-652부터 팀 소개 글이 본문에 실린다

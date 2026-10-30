@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { kickoffDateLabel, kickoffTimeLabel } from "@plick/domain/live";
+import { matchDetailPath } from "@plick/domain/format";
 import {
   playedDateLabel,
   roundLabel,
@@ -82,11 +84,14 @@ function FixtureRow({ fixture }: { fixture: TeamFixture }) {
         {when}
       </span>
       <Side team={home} self={fixture.isHome} align="end" />
-      <span
-        className={`text-body-lg text-center font-black tabular-nums ${played ? "text-text-strong" : "text-text-4"}`}
+      {/* 스코어 칸이 경기 상세 링크다 (KAN-683). 크롤러가 지난 경기에 닿는 유일한 길이다 */}
+      <Link
+        href={matchDetailPath(fixture.matchId)}
+        aria-label={`${home.name} ${away.name} 경기 상세`}
+        className={`text-body-lg hover:text-accent focus-visible:outline-accent text-center font-black tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 ${played ? "text-text-strong" : "text-text-4"}`}
       >
         {played ? `${score.home}-${score.away}` : "vs"}
-      </span>
+      </Link>
       <Side team={away} self={!fixture.isHome} align="start" />
       {result ? <ResultBox result={result} /> : <span />}
     </div>

@@ -15,6 +15,7 @@ import { LiveLoadError } from "./LiveLoadError";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import { MatchHeaderCard } from "./MatchHeaderCard";
 import { MatchTabBar } from "./MatchTabBar";
+import { TabPanel } from "@/_components/TabPanel";
 import { PreviewGrid } from "./PreviewGrid";
 import { SiteFooter } from "@/_components/SiteFooter";
 
@@ -127,11 +128,40 @@ function MatchDetailBody({
           ) : (
             <>
               <MatchTabBar tabs={tabs} active={active} onSelect={setSelected} />
-              <MatchDetailTabs
-                detail={detail}
-                tab={active}
-                standings={standings}
-              />
+              {/* 내용 탭은 전부 그리고 비활성은 hidden (KAN-683). 라인업·스탯·순위가 서버 HTML에
+                  실린다. 뉴스 탭만 열 때 그린다. 열리면 클라에서 받는 목록이라 숨겨 두면 모두에게
+                  요청이 나간다 */}
+              {tabs.map((tab) =>
+                tab === "news" ? (
+                  active === "news" && (
+                    <TabPanel
+                      key={tab}
+                      on
+                      id={`match-panel-${tab}`}
+                      labelledBy={`match-tab-${tab}`}
+                    >
+                      <MatchDetailTabs
+                        detail={detail}
+                        tab={tab}
+                        standings={standings}
+                      />
+                    </TabPanel>
+                  )
+                ) : (
+                  <TabPanel
+                    key={tab}
+                    on={active === tab}
+                    id={`match-panel-${tab}`}
+                    labelledBy={`match-tab-${tab}`}
+                  >
+                    <MatchDetailTabs
+                      detail={detail}
+                      tab={tab}
+                      standings={standings}
+                    />
+                  </TabPanel>
+                ),
+              )}
             </>
           )}
         </div>

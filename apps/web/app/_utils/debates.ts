@@ -16,3 +16,17 @@ export const DEFAULT_DEBATE_TAB: DebateTab = "open";
 export function debateTabFrom(value: string | null | undefined): DebateTab {
   return value === "closed" ? "closed" : DEFAULT_DEBATE_TAB;
 }
+
+/** 투표 화면 경로. */
+export const DEBATES_PATH = "/debates";
+
+/**
+ * 탭 → 투표 화면 URL. 기본 탭은 쿼리를 붙이지 않는다. 모바일과 같은 규약이다 (KAN-683).
+ *
+ * @param tab 열 탭
+ */
+export function debateTabPath(tab: DebateTab): string {
+  return tab === DEFAULT_DEBATE_TAB
+    ? DEBATES_PATH
+    : `${DEBATES_PATH}?tab=${tab}`;
+}
