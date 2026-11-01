@@ -2,8 +2,9 @@
 
 /**
  * @file 승부예측 쓰기 서버 액션 (KAN-696). 웹 `_services/prediction-actions.ts`(KAN-695)의 모바일
- * 복제다. 등록·수정(PUT)과 취소(DELETE)는 KAN-696이, 의견 공감과 신고는 KAN-697이 옮겼다. 답글과
- * 키플레이어 투표는 그 화면 티켓(KAN-698, 699)이 붙을 때 같은 꼴로 더한다.
+ * 복제다. 등록·수정(PUT)과 취소(DELETE)는 KAN-696이, 의견 공감과 신고는 KAN-697이, 답글 다섯(공감,
+ * 신고, 등록, 수정, 삭제)은 KAN-698이 옮겼다. 키플레이어 투표는 그 화면 티켓(KAN-699)이 붙을 때 같은
+ * 꼴로 더한다.
  *
  * 보호 API라 HttpOnly 쿠키의 access 토큰을 Bearer로 실어야 하는데 클라는 그 쿠키를 못 읽으므로
  * 서버 액션을 경유한다. 결과는 던지지 않고 값으로 돌려준다. 서버 액션이 던진 에러는 프로덕션에서
@@ -15,13 +16,16 @@
 import { cookies } from "next/headers";
 import { ApiError, apiFetch } from "@plick/core/client";
 import {
+  toPredictionReply,
   toPredictionSummary,
+  type PredictionReplyResponse,
   type PredictionSummaryResponse,
 } from "@plick/core/predictions";
 import type {
   PredictionActionResult,
   PredictionLikeState,
   PredictionPick,
+  PredictionReply,
   PredictionReportReason,
   PredictionSummary,
 } from "@plick/domain/prediction";
@@ -178,5 +182,105 @@ export async function reportPredictionOpinion(
     { method: "POST", body: { reason } },
     toNull,
     "신고를 접수하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 답글에 공감하거나 공감을 거둔다 (`POST`·`DELETE /prediction-replies/{replyId}/like`). 규약은
+ * {@link likePredictionOpinion}과 같고 게스트도 된다.
+ *
+ * @param replyId 답글 id
+ * @param liked true면 공감, false면 취소
+ */
+export async function likePredictionReply(
+  replyId: number,
+  liked: boolean,
+): Promise<PredictionActionResult<PredictionLikeState>> {
+  return callProtected<
+    { likeCount: number; likedByMe: boolean },
+    PredictionLikeState
+  >(
+    `/api/v1/prediction-replies/${replyId}/like`,
+    { method: liked ? "POST" : "DELETE" },
+    (r) => ({ likeCount: r.likeCount, liked: r.likedByMe }),
+    "공감을 반영하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 답글을 신고한다 (`POST /prediction-replies/{replyId}/report`). 규약은
+ * {@link reportPredictionOpinion}과 같다.
+ *
+ * @param replyId 답글 id
+ * @param reason 사유
+ */
+export async function reportPredictionReply(
+  replyId: number,
+  reason: PredictionReportReason,
+): Promise<PredictionActionResult<null>> {
+  return callProtected<null, null>(
+    `/api/v1/prediction-replies/${replyId}/report`,
+    { method: "POST", body: { reason } },
+    toNull,
+    "신고를 접수하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 답글을 단다 (`POST /predictions/{predictionId}/replies`, 201). 1단계만 있고 답장은 본문 앞에
+ * `@닉네임 `을 붙여 보낸다. LOCKED, SETTLED, VOID에서도 달 수 있다.
+ *
+ * @param predictionId 의견 id
+ * @param content 본문. 1자 이상 300자 이하
+ * @returns 성공이면 만들어진 답글 한 건. OPEN에서 예측하지 않은 사용자는 403 `PREDICTION_LOCKED`,
+ *   길이는 400 `PREDICTION_REPLY_LENGTH`, 금칙어는 400 `PREDICTION_REPLY_BLOCKED`, 게스트는 403
+ *   `AUTH_GUEST_FORBIDDEN`
+ */
+export async function createPredictionReply(
+  predictionId: number,
+  content: string,
+): Promise<PredictionActionResult<PredictionReply>> {
+  return callProtected<PredictionReplyResponse, PredictionReply>(
+    `/api/v1/predictions/${predictionId}/replies`,
+    { method: "POST", body: { content } },
+    toPredictionReply,
+    "답글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 내 답글을 고친다 (`PATCH /prediction-replies/{replyId}`).
+ *
+ * @param replyId 답글 id
+ * @param content 바꿀 본문
+ * @returns 성공이면 `isEdited: true`인 답글. 남의 답글은 403 `PREDICTION_REPLY_FORBIDDEN`, 없는
+ *   답글은 404 `PREDICTION_REPLY_NOT_FOUND`
+ */
+export async function updatePredictionReply(
+  replyId: number,
+  content: string,
+): Promise<PredictionActionResult<PredictionReply>> {
+  return callProtected<PredictionReplyResponse, PredictionReply>(
+    `/api/v1/prediction-replies/${replyId}`,
+    { method: "PATCH", body: { content } },
+    toPredictionReply,
+    "답글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 내 답글을 지운다 (`DELETE /prediction-replies/{replyId}`, 204).
+ *
+ * @param replyId 답글 id
+ * @returns 성공이면 null. 실패 규약은 {@link updatePredictionReply}와 같다
+ */
+export async function deletePredictionReply(
+  replyId: number,
+): Promise<PredictionActionResult<null>> {
+  return callProtected<null, null>(
+    `/api/v1/prediction-replies/${replyId}`,
+    { method: "DELETE" },
+    toNull,
+    "답글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
   );
 }

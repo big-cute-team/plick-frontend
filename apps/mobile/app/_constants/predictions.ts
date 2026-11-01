@@ -1,5 +1,5 @@
 /**
- * @file 승부예측 화면 상수 (KAN-696, 시안 가이드 §5.4·§7). 웹 `_constants/predictions.ts`와 같은
+ * @file 승부예측 화면 상수 (KAN-696, 답글은 KAN-698, 시안 가이드 §5.4·§5.6·§7). 웹 `_constants/predictions.ts`와 같은
  * 값의 수동 동기화 복제다. 카피와 잠금 지면 치수는 화면 정책이라 승격하지 않는다. BE 오류별
  * 문구는 `@plick/core/prediction-errors`가 든다.
  */
@@ -38,3 +38,15 @@ export const PREDICTION_REPORT_LOGIN_PROMPT =
 
 /** 삭제된 의견(답글이 남아 자리만 있는 행)의 본문 대체 문구. */
 export const PREDICTION_DELETED_OPINION = "삭제된 의견이에요";
+
+/** 답글 신고 시트·팝업 제목(KAN-698). 의견 신고와 같은 사유를 쓰고 제목만 다르다. */
+export const PREDICTION_REPLY_REPORT_TITLE = "답글 신고";
+
+/** 답글 목록 빈 상태 문구. */
+export const PREDICTION_REPLIES_EMPTY = "아직 답글이 없어요";
+
+/** 답글 삭제 확인 제목. */
+export const PREDICTION_REPLY_DELETE_TITLE = "답글을 삭제할까요?";
+
+/** 의견 상세를 직접 열었는데 지워졌거나 가려진 의견일 때(404)의 안내. */
+export const PREDICTION_OPINION_GONE = "지워졌거나 볼 수 없는 의견이에요";

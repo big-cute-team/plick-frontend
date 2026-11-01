@@ -9,10 +9,12 @@ import { predictionKeys } from "../../packages/core/src/predictionKeys.ts";
 import {
   applyOpinionLike,
   applyReplyLike,
+  applyReplyUpdate,
   invalidateAfterPredictionWrite,
   invalidateAfterReplyWrite,
   removeBlockedOpinions,
   removeBlockedReplies,
+  removeReply,
 } from "../../packages/core/src/prediction-sync.ts";
 
 function recorder() {
@@ -149,4 +151,36 @@ test("차단 뒤 답글도 같은 규칙이다", () => {
   assert.deepEqual(predictionKeys.replies(1).slice(0, 2), [
     ...predictionKeys.replyLists(),
   ]);
+});
+
+test("답글 수정 응답은 그 답글만 덮고 지우기는 그 답글만 뺀다 (KAN-698)", () => {
+  const data = {
+    pages: [
+      {
+        items: [
+          { id: 501, content: "a", isEdited: false },
+          { id: 502, content: "b", isEdited: false },
+        ],
+        nextCursor: "c1",
+      },
+      { items: [{ id: 503, content: "c", isEdited: false }], nextCursor: null },
+    ],
+    pageParams: [null, "c1"],
+  };
+  const edited = applyReplyUpdate(data, {
+    id: 502,
+    content: "b2",
+    isEdited: true,
+  });
+  assert.equal(edited.pages[0].items[1].content, "b2");
+  assert.equal(edited.pages[0].items[1].isEdited, true);
+  assert.equal(edited.pages[0].items[0], data.pages[0].items[0]);
+  assert.equal(edited.pages[1], data.pages[1]);
+  assert.equal(applyReplyUpdate(data, { id: 999, content: "x" }), data);
+
+  const removed = removeReply(data, 503);
+  assert.deepEqual(removed.pages[1].items, []);
+  assert.equal(removed.pages[0], data.pages[0]);
+  assert.equal(removeReply(data, 999), data);
+  assert.equal(removeReply(undefined, 1), undefined);
 });

@@ -10,6 +10,9 @@ import {
   formatPredictionPercent,
   formatPredictionRecord,
   isPredictionOpinionLengthValid,
+  isPredictionReplyLengthValid,
+  predictionReplyMention,
+  predictionReplyPlaceholder,
   predictionDraftKey,
   predictionTextLength,
 } from "../../packages/domain/src/prediction.ts";
@@ -58,4 +61,25 @@ test("글자 수는 앞뒤 공백을 빼고 코드포인트로 센다", () => {
 
 test("임시 저장 키는 경기별로 갈린다", () => {
   assert.equal(predictionDraftKey(1208345), "plick:pred-draft:1208345");
+});
+
+test("답글은 한 글자부터 300자까지이고 답장 머리말은 @닉네임 뒤 공백이다 (KAN-698)", () => {
+  assert.equal(isPredictionReplyLengthValid(" "), false);
+  assert.equal(isPredictionReplyLengthValid("ㅇ"), true);
+  assert.equal(isPredictionReplyLengthValid("가".repeat(300)), true);
+  assert.equal(isPredictionReplyLengthValid("가".repeat(301)), false);
+  assert.equal(predictionReplyMention("레드데블스"), "@레드데블스 ");
+});
+
+test("답글 입력 안내는 내 픽과 원 의견 픽이 같은지로 갈린다", () => {
+  assert.equal(predictionReplyPlaceholder(null, "HOME"), "답글 입력");
+  assert.equal(predictionReplyPlaceholder("HOME", null), "답글 입력");
+  assert.equal(
+    predictionReplyPlaceholder("HOME", "HOME"),
+    "같은 픽에 의견 보태기",
+  );
+  assert.equal(
+    predictionReplyPlaceholder("HOME", "DRAW"),
+    "다른 픽에 반론 남기기",
+  );
 });

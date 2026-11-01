@@ -4,12 +4,18 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { classifyPredictionError } from "@plick/core/prediction-errors";
 import { COMMENT_REPORT_REASONS } from "@plick/domain/constants";
-import type { PredictionReportReason } from "@plick/domain/prediction";
-import { PREDICTION_REPORT_TITLE } from "@/_constants/predictions";
-import { useReportPredictionOpinion } from "@/_hooks/useReportPredictionOpinion";
+import type {
+  PredictionReportReason,
+  PredictionReportTarget,
+} from "@plick/domain/prediction";
+import {
+  PREDICTION_REPLY_REPORT_TITLE,
+  PREDICTION_REPORT_TITLE,
+} from "@/_constants/predictions";
+import { useReportPrediction } from "@/_hooks/useReportPrediction";
 
 /**
- * 예측 의견 신고 팝업 (KAN-697, 모바일 `PredictionReportSheet`의 웹 판). 댓글 신고 팝업
+ * 예측 의견·답글 신고 팝업 (KAN-697, 답글은 KAN-698, 모바일 `PredictionReportSheet`의 웹 판). 댓글 신고 팝업
  * (`ReportCommentDialog`)과 같은 각진 상자와 사유 다섯 줄인데 제목이 `의견 신고`이고 뮤테이션과
  * 실패 분류가 예측 쪽이라 따로 뒀다. 댓글 팝업은 댓글 신고 훅과 `AUTH_REQUIRED` 판정을 안에
  * 박고 있어 그대로 못 쓴다.
@@ -20,18 +26,18 @@ import { useReportPredictionOpinion } from "@/_hooks/useReportPredictionOpinion"
  *
  * body 포털 이유는 `ConfirmDialog`와 같다.
  *
- * @param predictionId 신고할 의견 id
+ * @param target 신고할 의견이나 답글(KAN-698). 제목과 액션이 종류로 갈린다
  * @param nickname 의견 작성자. 설명 줄에 쓴다
  * @param onClose 취소·완료·딤 클릭으로 닫을 때
  * @param onAuthRequired 로그인이나 계정 연동이 필요할 때. 호출부가 팝업을 닫고 안내로 돌린다
  */
 export function PredictionReportDialog({
-  predictionId,
+  target,
   nickname,
   onClose,
   onAuthRequired,
 }: {
-  predictionId: number;
+  target: PredictionReportTarget;
   nickname: string;
   onClose: () => void;
   onAuthRequired: () => void;
@@ -43,7 +49,11 @@ export function PredictionReportDialog({
   const [reason, setReason] = useState<PredictionReportReason | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const { mutate, isPending } = useReportPredictionOpinion();
+  const { mutate, isPending } = useReportPrediction();
+  const title =
+    target.kind === "reply"
+      ? PREDICTION_REPLY_REPORT_TITLE
+      : PREDICTION_REPORT_TITLE;
 
   if (!mounted) return null;
 
@@ -51,7 +61,7 @@ export function PredictionReportDialog({
     if (reason === null) return;
     setError(null);
     mutate(
-      { predictionId, reason },
+      { target, reason },
       {
         onSuccess: () => setDone(true),
         onError: (err) => {
@@ -107,10 +117,11 @@ export function PredictionReportDialog({
               id="prediction-report-title"
               className="text-body-lg text-text-strong text-center font-black"
             >
-              {PREDICTION_REPORT_TITLE}
+              {title}
             </p>
             <p className="text-label text-text-3 mt-1.75 text-center">
-              {nickname}님의 의견을 신고합니다
+              {nickname}님의 {target.kind === "reply" ? "답글" : "의견"}을
+              신고합니다
             </p>
 
             <div

@@ -6,6 +6,7 @@ import { applyOpinionLike } from "@plick/core/prediction-sync";
 import { predictionKeys } from "@plick/core/predictionKeys";
 import type {
   PredictionOpinion,
+  PredictionOpinionDetail,
   PredictionOpinionPage,
 } from "@plick/domain/prediction";
 import { useLikeToggle } from "@/_hooks/useLikeToggle";
@@ -46,6 +47,11 @@ export function usePredictionOpinionLike(
         InfiniteData<PredictionOpinionPage, string | null>
       >({ queryKey: predictionKeys.opinionsOf(matchId) }, (data) =>
         applyOpinionLike(data, opinion.id, next),
+      );
+      /* 의견 상세 캐시(앱 의견 상세 화면, KAN-698)는 키가 따로라 같이 덮는다. 웹은 아직 안 받는 키다 */
+      queryClient.setQueryData<PredictionOpinionDetail>(
+        predictionKeys.opinion(opinion.id),
+        (detail) => detail && { ...detail, ...next },
       );
     },
   });

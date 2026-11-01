@@ -9,6 +9,7 @@ import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type {
   PredictionLikeState,
   PredictionOpinionPage,
+  PredictionReply,
   PredictionReplyPage,
 } from "@plick/domain/prediction";
 import { predictionKeys } from "./predictionKeys";
@@ -114,6 +115,57 @@ export function applyReplyLike(
       item.id === replyId ? { ...item, ...next } : item,
     );
     if (items.some((item, i) => item !== page.items[i])) {
+      changed = true;
+      return { ...page, items };
+    }
+    return page;
+  });
+  return changed ? { ...data, pages } : data;
+}
+
+/**
+ * 답글 무한 쿼리 캐시에서 답글 하나를 수정 응답으로 덮는다(KAN-698). PATCH가 같은 모양을
+ * 돌려주고 `replyCount`는 안 변하니 다시 받을 이유가 없다. 대상이 없는 페이지는 같은 참조다.
+ *
+ * @param data 무한 쿼리 데이터
+ * @param reply 수정 응답(`isEdited: true`)
+ */
+export function applyReplyUpdate(
+  data: InfiniteData<PredictionReplyPage, string | null> | undefined,
+  reply: PredictionReply,
+): InfiniteData<PredictionReplyPage, string | null> | undefined {
+  if (!data) return data;
+  let changed = false;
+  const pages = data.pages.map((page) => {
+    const items = page.items.map((item) =>
+      item.id === reply.id ? reply : item,
+    );
+    if (items.some((item, i) => item !== page.items[i])) {
+      changed = true;
+      return { ...page, items };
+    }
+    return page;
+  });
+  return changed ? { ...data, pages } : data;
+}
+
+/**
+ * 답글 무한 쿼리 캐시에서 답글 하나를 뺀다(KAN-698, 삭제 204). 댓글은 지운 자리를 tombstone으로
+ * 남기지만 답글은 BE 목록에서 사라지므로 바로 빼야 다음 조회와 같은 모양이다. `replyCount`는
+ * 의견 캐시에 있어 호출부가 {@link invalidateAfterReplyWrite}로 따로 맞춘다.
+ *
+ * @param data 무한 쿼리 데이터
+ * @param replyId 지운 답글
+ */
+export function removeReply(
+  data: InfiniteData<PredictionReplyPage, string | null> | undefined,
+  replyId: number,
+): InfiniteData<PredictionReplyPage, string | null> | undefined {
+  if (!data) return data;
+  let changed = false;
+  const pages = data.pages.map((page) => {
+    const items = page.items.filter((item) => item.id !== replyId);
+    if (items.length !== page.items.length) {
       changed = true;
       return { ...page, items };
     }
