@@ -43,6 +43,14 @@ export type KeyPlayerSide = "HOME" | "AWAY";
 /** 예측 의견·답글 신고 사유. 댓글 신고와 같은 BE enum을 쓴다. */
 export type PredictionReportReason = CommentReportReason;
 
+/**
+ * 신고 대상. 의견(`POST /predictions/{id}/report`)과 답글(`POST /prediction-replies/{id}/report`)은
+ * 사유와 실패 규약이 같고 경로만 달라 신고 시트·팝업 하나가 둘을 받는다(KAN-698).
+ */
+export type PredictionReportTarget =
+  | { kind: "opinion"; id: number }
+  | { kind: "reply"; id: number };
+
 /** 승, 무, 패 분포(정수 퍼센트). 세 값의 합은 서버가 100으로 맞춘다. */
 export interface PredictionDistribution {
   home: number;
@@ -354,6 +362,50 @@ export function predictionDraftKey(matchId: number): string {
  */
 export function predictionTextLength(text: string): number {
   return Array.from(text.trim()).length;
+}
+
+/**
+ * 등록 버튼을 켤 수 있는 답글인가(KAN-698, 티켓 완료 조건 "본문 1자 이상 300자 이하"). 의견과
+ * 달리 최소 한 글자다. 금칙어는 BE만 알아 400 `PREDICTION_REPLY_BLOCKED`로 돌아온다.
+ *
+ * @param content 입력 원문
+ */
+export function isPredictionReplyLengthValid(content: string): boolean {
+  const length = predictionTextLength(content);
+  return length >= 1 && length <= PREDICTION_TEXT_MAX_LENGTH;
+}
+
+/**
+ * 답장할 때 입력창에 채우는 머리말(시안 가이드 §5.6 "답장: 입력창에 `@닉네임 `을 채운다"). 답글은
+ * 1단계뿐이라 누구에게 하는 말인지는 이 머리말이 전부다. BE에 따로 보내는 값은 없다.
+ *
+ * @param nickname 답장 대상 닉네임
+ * @example predictionReplyMention("레드데블스") // "@레드데블스 "
+ */
+export function predictionReplyMention(nickname: string): string {
+  return `@${nickname} `;
+}
+
+/**
+ * 답글 입력창 안내(KAN-698, 티켓 완료 조건 "입력창 안내 문구는 내 픽과 원 의견 픽이 같은지로
+ * 분기"). 예측하지 않았거나 원 의견이 지워져 픽이 없으면 기본 문구다. 같은 픽이면 근거를
+ * 보태는 쪽, 다른 픽이면 반론을 남기는 쪽으로 말을 건다. 의견과 답글은 "논쟁"이 목적이라
+ * 여기만 설명체 금지 규칙의 예외로 둔다.
+ *
+ * @param myPick 내 픽. 예측하지 않았으면 null
+ * @param opinionPick 원 의견의 픽. 지워진 의견이면 null
+ * @example predictionReplyPlaceholder("HOME", "HOME") // "같은 픽에 의견 보태기"
+ * @example predictionReplyPlaceholder("HOME", "AWAY") // "다른 픽에 반론 남기기"
+ * @example predictionReplyPlaceholder(null, "AWAY") // "답글 입력"
+ */
+export function predictionReplyPlaceholder(
+  myPick: PredictionPick | null,
+  opinionPick: PredictionPick | null,
+): string {
+  if (!myPick || !opinionPick) return "답글 입력";
+  return myPick === opinionPick
+    ? "같은 픽에 의견 보태기"
+    : "다른 픽에 반론 남기기";
 }
 
 /**

@@ -45,6 +45,9 @@ function chipClass(on: boolean): string {
  * 다음 페이지는 끝 감시 요소가 보이면 받고(`useInfiniteScroll`), 더 받기 실패는 데이터가 있는
  * 실패라 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다.
  *
+ * 의견 행을 누르면 그 아래로 답글이 펼쳐진다(KAN-698). 펼친 의견 id는 여기서 하나만 들어 다른
+ * 행을 누르면 먼저 것이 접힌다. 시안의 웹 동선이 그렇다.
+ *
  * @param summary 예측 요약. 상태와 내 예측을 본다
  * @param teams 홈·원정 팀명(픽 라벨용)
  * @param onCompose 작성 팝업을 열 때(잠금 지면, 투표하기)
@@ -69,6 +72,8 @@ export function PredictionOpinions({
   const open = summary.status === "OPEN";
   const [sort, setSort] = useState<PredictionOpinionSort>("accuracy");
   const [pickFilter, setPickFilter] = useState<PredictionPick | null>(null);
+  /* 답글이 펼쳐진 의견. 한 번에 하나만 펼친다(KAN-698). 정렬·필터를 바꿔도 같은 의견이면 그대로 */
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const {
     data,
@@ -197,6 +202,11 @@ export function PredictionOpinions({
               opinion={opinion}
               matchId={matchId}
               teams={teams}
+              myPick={mine?.pick ?? null}
+              expanded={expandedId === opinion.id}
+              onToggle={() =>
+                setExpandedId((id) => (id === opinion.id ? null : opinion.id))
+              }
             />
           ))}
           {isFetchNextPageError ? (
