@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { LiveTeam, MatchDetail, StandingRow } from "@plick/domain/live";
+import type { PredictionSummary } from "@plick/domain/prediction";
 import { matchEmptyLabel } from "@/_constants/live";
 import type { MatchTabKey } from "@/_types/live";
 import { BenchList } from "./BenchList";
@@ -10,6 +11,7 @@ import { LineupPitch } from "./LineupPitch";
 import { MatchNewsBlock } from "./MatchNewsBlock";
 import { PlayerMatchStatsSheet } from "./PlayerMatchStatsSheet";
 import { PlayerStatsTable } from "./PlayerStatsTable";
+import { PredictionTab } from "./PredictionTab";
 import { PreviewBlocks } from "./PreviewBlocks";
 import { StandingsTable } from "./StandingsTable";
 import { StatsCompare } from "./StatsCompare";
@@ -31,23 +33,36 @@ import { TimelineBlock } from "./TimelineBlock";
  * 빈 자리 문구는 경기 상태를 본다 (KAN-484). 끝난 경기에 라인업이 안 실려 와도
  * 킥오프를 기다리라고 말하지 않게 `matchEmptyLabel`이 갈라 준다.
  *
+ * 예측 탭(KAN-696)은 요약이 있을 때만 탭 목록에 들어오므로 여기서는 받은 요약을 그대로 그린다.
+ *
  * @param detail 경기 상세
  * @param tab 지금 탭. `chat`은 오지 않는다
  * @param standings 순위 탭의 순위표. 서버가 못 받았으면 null이라 문구만 둔다
+ * @param prediction 예측 요약. 예측 탭이 없는 경기는 null
  */
 export function MatchDetailTabs({
   detail,
   tab,
   standings,
+  prediction,
 }: {
   detail: MatchDetail;
   tab: Exclude<MatchTabKey, "chat">;
   standings: StandingRow[] | null;
+  prediction: PredictionSummary | null;
 }) {
   const [player, setPlayer] = useState<{ id: number; team: LiveTeam } | null>(
     null,
   );
   const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
+
+  if (tab === "prediction") {
+    return prediction ? (
+      <PredictionTab header={detail.header} summary={prediction} />
+    ) : (
+      <EmptyBlock label="예측할 수 없는 경기예요" />
+    );
+  }
 
   if (tab === "preview") {
     return detail.preview ? (

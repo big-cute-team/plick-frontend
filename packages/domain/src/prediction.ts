@@ -426,3 +426,149 @@ export function formatPredictionHits(
 export function isPredictionOpen(status: PredictionStatus): boolean {
   return status === "OPEN";
 }
+
+/** 세 픽의 고정 순서. 3분할 바, 픽 버튼, 분포 칸이 모두 홈, 무, 원정 순으로 선다. */
+export const PREDICTION_PICKS: readonly PredictionPick[] = [
+  "HOME",
+  "DRAW",
+  "AWAY",
+] as const;
+
+/**
+ * 픽 라벨. 홈과 원정은 `팀명 승`, 무승부는 그대로다. 픽 버튼, 내 예측 배지, MY 기록
+ * `내 예측 맨시티 승`이 같은 표기를 쓴다.
+ *
+ * @param pick 픽
+ * @param teams 홈·원정 팀명
+ * @example predictionPickLabel("AWAY", { home: "맨유", away: "맨시티" }) // "맨시티 승"
+ */
+export function predictionPickLabel(
+  pick: PredictionPick,
+  teams: { home: string; away: string },
+): string {
+  if (pick === "HOME") return `${teams.home} 승`;
+  if (pick === "AWAY") return `${teams.away} 승`;
+  return "무승부";
+}
+
+/**
+ * 분포 한 칸의 값. 비공개(`distribution: null`)면 null이라 `?%`로 그린다.
+ *
+ * @param distribution 요약의 분포
+ * @param pick 칸
+ */
+export function predictionPercentOf(
+  distribution: PredictionDistribution | null,
+  pick: PredictionPick,
+): number | null {
+  if (!distribution) return null;
+  if (pick === "HOME") return distribution.home;
+  if (pick === "DRAW") return distribution.draw;
+  return distribution.away;
+}
+
+/**
+ * 예측이 열리는 시각 표기(`9월 14일 22:30 열림`). UPCOMING 상태 줄이다. 라이브의
+ * `kickoffDateLabel`은 요일을 붙이는데 시안 상태 줄은 요일이 없어 따로 만든다.
+ *
+ * @param opensAt 요약의 `opensAt`(ISO, KST 오프셋)
+ * @example formatPredictionOpensAt("2026-09-14T22:30:00+09:00") // "9월 14일 22:30 열림"
+ */
+export function formatPredictionOpensAt(opensAt: string): string {
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(opensAt));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  const hour = get("hour") === "24" ? "00" : get("hour");
+  return `${get("month")}월 ${get("day")}일 ${hour}:${get("minute")} 열림`;
+}
+
+/**
+ * 예측 탭 상단 상태 줄(시안 가이드 §4). OPEN은 상태 줄이 없어 null이다.
+ * SETTLED는 스코어와 이긴 쪽(`결과 1 - 2 맨시티 승`, 무승부면 `결과 1 - 1 무승부`)이고,
+ * 정산 정보가 아직 없으면 `결과 확정`만 적는다.
+ *
+ * @param summary 예측 요약
+ * @param teams 홈·원정 팀명
+ */
+export function predictionStatusLine(
+  summary: Pick<PredictionSummary, "status" | "opensAt" | "outcome">,
+  teams: { home: string; away: string },
+): string | null {
+  switch (summary.status) {
+    case "UPCOMING":
+      return formatPredictionOpensAt(summary.opensAt);
+    case "OPEN":
+      return null;
+    case "LOCKED":
+      return "예측 마감";
+    case "VOID":
+      return "경기 취소, 적중 기록 제외";
+    case "SETTLED": {
+      const outcome = summary.outcome;
+      if (
+        !outcome ||
+        outcome.result === "VOID" ||
+        outcome.homeGoals === null ||
+        outcome.awayGoals === null
+      ) {
+        return "결과 확정";
+      }
+      const winner = predictionPickLabel(outcome.result, teams);
+      return `결과 ${outcome.homeGoals} - ${outcome.awayGoals} ${winner}`;
+    }
+  }
+}
+
+/**
+ * 내 예측의 적중 표기. 정산 전(PENDING)과 무효(VOID)는 표기가 없다.
+ *
+ * @param result 예측 결과
+ */
+export function predictionVerdictLabel(
+  result: PredictionResult | null | undefined,
+): "적중" | "빗나감" | null {
+  if (result === "HIT") return "적중";
+  if (result === "MISS") return "빗나감";
+  return null;
+}
+
+/**
+ * 작성 중인 예측의 임시 저장 값. 픽까지 함께 둬서 비로그인이 로그인하고 돌아왔을 때
+ * 고른 픽이 살아 있게 한다(티켓 완료 조건 "로그인 뒤 고른 픽 유지").
+ */
+export interface PredictionDraft {
+  pick: PredictionPick | null;
+  opinion: string;
+}
+
+/**
+ * 임시 저장 값을 되살린다. 모양이 어긋난 값(옛 포맷, 손으로 고친 값)은 버린다.
+ *
+ * @param raw localStorage에서 읽은 문자열
+ */
+export function parsePredictionDraft(
+  raw: string | null | undefined,
+): PredictionDraft | null {
+  if (!raw) return null;
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (typeof value !== "object" || value === null) return null;
+    const { pick, opinion } = value as Record<string, unknown>;
+    const validPick =
+      pick === null || PREDICTION_PICKS.includes(pick as PredictionPick);
+    if (!validPick || typeof opinion !== "string") return null;
+    return {
+      pick: pick as PredictionPick | null,
+      opinion: opinion.slice(0, PREDICTION_TEXT_MAX_LENGTH),
+    };
+  } catch {
+    return null;
+  }
+}
