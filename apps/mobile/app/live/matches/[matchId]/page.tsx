@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getMatchDetail, getStandings } from "@plick/core/live";
+import { getPredictionSummary } from "@plick/core/predictions";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
+import type { PredictionSummary } from "@plick/domain/prediction";
 import { WEB_SITE_URL } from "@/_constants/site";
 import { MatchDetailScreen } from "@/live/_components/MatchDetailScreen";
 
@@ -57,6 +59,10 @@ export async function generateMetadata({
  * 단발 읽기(BE 캐시 1시간, `apiFetch` 60초)라 서버 fetch로 충분하고, 실패해도
  * 상세는 멀쩡해야 하므로 null로 접어 탭 안에서만 문구를 둔다. 상세와 독립이라
  * 병렬로 받는다.
+ *
+ * 예측 요약(KAN-696)도 같이 받는다. 이 페이지는 익명 ISR이라 토큰 없이 받고, 그 값은 "예측 탭을
+ * 만들 경기인가"(404면 null)와 첫 그림의 씨앗이다. 내 예측과 분포는 클라 훅이 마운트 뒤 Bearer를
+ * 실어 다시 받는다. 못 받으면 undefined로 내려 클라가 처음부터 받게 한다.
  */
 export default async function MatchDetailPage({
   params,
@@ -66,10 +72,12 @@ export default async function MatchDetailPage({
   const id = parseMatchId((await params).matchId);
   if (id === null) notFound();
 
-  const [detailResult, standingsResult] = await Promise.allSettled([
-    getMatchDetail(id),
-    getStandings(),
-  ]);
+  const [detailResult, standingsResult, predictionResult] =
+    await Promise.allSettled([
+      getMatchDetail(id),
+      getStandings(),
+      getPredictionSummary(id),
+    ]);
 
   let initial: InitialMatchDetail | undefined;
   if (detailResult.status === "fulfilled") {
@@ -90,8 +98,20 @@ export default async function MatchDetailPage({
   if (standingsResult.status === "fulfilled") standings = standingsResult.value;
   else console.error("[live] 순위표 로드 실패:", standingsResult.reason);
 
+  let prediction: PredictionSummary | null | undefined;
+  if (predictionResult.status === "fulfilled") {
+    prediction = predictionResult.value;
+  } else {
+    console.error("[live] 예측 요약 로드 실패:", predictionResult.reason);
+  }
+
   return (
-    <MatchDetailScreen matchId={id} initial={initial} standings={standings} />
+    <MatchDetailScreen
+      matchId={id}
+      initial={initial}
+      standings={standings}
+      prediction={prediction}
+    />
   );
 }
 

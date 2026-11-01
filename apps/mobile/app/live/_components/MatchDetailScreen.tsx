@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
+import type { PredictionSummary } from "@plick/domain/prediction";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
@@ -10,6 +11,7 @@ import { SwipePager } from "@/_components/SwipePager";
 import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import { useMatchDetailRefresh } from "@/_hooks/useMatchDetailRefresh";
+import { usePredictionSummary } from "@/_hooks/usePredictionSummary";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveChatPanel } from "./LiveChatPanel";
@@ -28,15 +30,18 @@ import { PreviewBlocks } from "./PreviewBlocks";
  * @param matchId API-Football fixture id
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
  * @param standings 순위 탭에 깔 순위표. 서버가 못 받았으면 null
+ * @param prediction 예측 요약 씨앗 (KAN-696). null은 예측 없는 경기, undefined는 서버가 못 받은 것
  */
 export function MatchDetailScreen({
   matchId,
   initial,
   standings,
+  prediction,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
+  prediction?: PredictionSummary | null;
 }) {
   return (
     <AppShell>
@@ -59,6 +64,7 @@ export function MatchDetailScreen({
           matchId={matchId}
           initial={initial}
           standings={standings}
+          prediction={prediction}
         />
       </QueryBoundary>
     </AppShell>
@@ -83,6 +89,9 @@ export function MatchDetailScreen({
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이 사라지면
  * 첫 탭으로 돌아간다. 채팅이 열려 있으면 첫 탭이 채팅이라 채팅이 기본이다.
  *
+ * 예측 탭(KAN-696)은 요약 쿼리가 값을 줄 때만 맨 끝에 선다. 빅6 밖 경기는 404라 null이고
+ * 탭이 없다. 서버 씨앗이 없고 아직 받는 중이면 탭이 잠깐 없다가 응답 뒤에 붙는다.
+ *
  * 본문을 좌우로 끌면 이웃 탭으로 넘어간다 (KAN-462, `SwipePager`). 커밋은 탭을
  * 누른 것과 같은 `setSelected`다. 페이저는 두 레이아웃(채팅 고정 / 스크롤)에
  * 각각 하나씩이라 채팅 경계를 넘는 커밋에서는 옛 페이저가 내려가고 새 페이저가
@@ -94,16 +103,22 @@ function MatchDetailBody({
   matchId,
   initial,
   standings,
+  prediction: predictionSeed,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
+  prediction?: PredictionSummary | null;
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
+  const { data: prediction = null } = usePredictionSummary(
+    matchId,
+    predictionSeed,
+  );
   /* 당겨서 새로고침 (KAN-681). 채팅 탭은 스크롤 영역이 아니라 대상이 아니다 */
   const refresh = useMatchDetailRefresh(matchId);
   const { header } = detail;
-  const tabs = matchTabsFor(header.status);
+  const tabs = matchTabsFor(header.status, prediction !== null);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
@@ -116,7 +131,12 @@ function MatchDetailBody({
     tab === "chat" ? (
       <LiveChatPreview />
     ) : (
-      <MatchDetailTabs detail={detail} tab={tab} standings={standings} />
+      <MatchDetailTabs
+        detail={detail}
+        tab={tab}
+        standings={standings}
+        prediction={prediction}
+      />
     );
 
   return (
@@ -167,6 +187,7 @@ function MatchDetailBody({
                   detail={detail}
                   tab={active}
                   standings={standings}
+                  prediction={prediction}
                 />
               </SwipePager>
             </ScrollArea>

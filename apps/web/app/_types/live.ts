@@ -11,6 +11,9 @@
  * `news`는 양 팀 기사 모아보기다 (KAN-484). 경기 지면에서 그 경기 팀 소식을
  * 보러 기사 목록으로 나갔다 오지 않게 한다. `table`은 리그 순위표다 (KAN-567 시안
  * 경기 상세 탭). 순위는 페이지가 서버에서 함께 받아 내려준다.
+ *
+ * `prediction`은 승부예측이다 (KAN-696). 빅6가 낀 경기에만 생기고 늘 맨 끝에 선다.
+ * 요약 API가 404(`PREDICTION_NOT_AVAILABLE`)를 주는 경기는 탭 자체가 없다.
  */
 export type MatchTabKey =
   | "preview"
@@ -18,7 +21,8 @@ export type MatchTabKey =
   | "lineups"
   | "stats"
   | "table"
-  | "news";
+  | "news"
+  | "prediction";
 
 /**
  * 채팅방이 붐벼(`ROOM_BUSY`) 방에 나가지 못하고 되돌아온 글 (KAN-572). 입력창이

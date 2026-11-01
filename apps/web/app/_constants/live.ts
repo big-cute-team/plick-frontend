@@ -39,6 +39,35 @@ export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
 };
 
 /**
+ * 예측 탭을 맨 끝에 붙인 표 (KAN-696). 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지
+ * 않는다. 날짜 미정 연기 경기의 예측이 OPEN으로 남는 경우(티켓 참고)는 새 일정이 잡혀 SCHEDULED로
+ * 돌아오면 탭이 선다.
+ */
+const TABS_WITH_PREDICTION: Record<MatchStatus, MatchTabKey[]> = {
+  SCHEDULED: [...MATCH_TABS_BY_STATUS.SCHEDULED, "prediction"],
+  LIVE: [...MATCH_TABS_BY_STATUS.LIVE, "prediction"],
+  FINISHED: [...MATCH_TABS_BY_STATUS.FINISHED, "prediction"],
+  POSTPONED: [],
+  CANCELLED: [],
+};
+
+/**
+ * 지금 화면에 보이는 상세 탭 목록. 예측할 수 있는 경기(요약 API가 200)면 `prediction`을 맨 끝에
+ * 붙인다 (KAN-696). 상태별로 같은 배열 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
+ *
+ * @param status 경기 상태
+ * @param hasPrediction 예측 요약이 있는 경기인가. 빅6 밖 경기는 false
+ */
+export function matchTabsFor(
+  status: MatchStatus,
+  hasPrediction = false,
+): MatchTabKey[] {
+  return hasPrediction
+    ? TABS_WITH_PREDICTION[status]
+    : MATCH_TABS_BY_STATUS[status];
+}
+
+/**
  * 요약·라인업·스탯 탭이 빈 자리에 세우는 문구 (KAN-484).
  *
  * 전에는 상태와 무관하게 한 문구였다. 그래서 끝난 경기에 라인업이 안 실려 오면
@@ -93,6 +122,7 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   stats: "스탯",
   table: "순위",
   news: "뉴스",
+  prediction: "예측",
 };
 
 /**
