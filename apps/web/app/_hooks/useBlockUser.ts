@@ -4,6 +4,15 @@ import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { commentKeys } from "@plick/core/commentKeys";
+import {
+  removeBlockedOpinions,
+  removeBlockedReplies,
+} from "@plick/core/prediction-sync";
+import { predictionKeys } from "@plick/core/predictionKeys";
+import type {
+  PredictionOpinionPage,
+  PredictionReplyPage,
+} from "@plick/domain/prediction";
 import type { ArticleComment, CommentPage } from "@plick/domain/types";
 import { blockUser } from "@/_services/block-actions";
 
@@ -19,6 +28,10 @@ import { blockUser } from "@/_services/block-actions";
  *
  * `invalidateQueries`를 안 쓰는 이유는 다른 댓글 뮤테이션과 같다 — 무한 쿼리
  * 무효화는 쌓인 페이지를 전부 순차로 다시 받는다.
+ *
+ * 예측 의견과 답글(KAN-697)은 댓글과 달리 캐시에서 뺀다. BE 계약이 차단한 사용자의 의견을
+ * 목록에서 빼고 주는 쪽이라(시안 가이드 §5.4) 플래그로 가릴 자리가 없고, 다음 조회와 같은
+ * 모양이 되게 지금 받아 둔 페이지에서도 그 사용자의 행을 지운다(core `removeBlockedOpinions`).
  *
  * 서버 액션은 실패를 값으로 돌려주므로 여기서 `ApiError`로 되살려 던진다.
  */
@@ -44,6 +57,14 @@ export function useBlockUser() {
               items: page.items.map((item) => applyBlock(item, blockedUserId)),
             })),
           },
+      );
+      qc.setQueriesData<InfiniteData<PredictionOpinionPage, string | null>>(
+        { queryKey: predictionKeys.opinionLists() },
+        (data) => removeBlockedOpinions(data, blockedUserId),
+      );
+      qc.setQueriesData<InfiniteData<PredictionReplyPage, string | null>>(
+        { queryKey: predictionKeys.replyLists() },
+        (data) => removeBlockedReplies(data, blockedUserId),
       );
     },
   });

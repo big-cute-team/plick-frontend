@@ -1,6 +1,7 @@
 /**
  * @file 승부예측 캐시 정리 테스트 (KAN-695). 쓰기 뒤 무효화 범위가 가이드 §8(요약, 의견,
  * 홈, 내 기록)과 맞는지와, 공감 낙관 갱신이 무한 쿼리 페이지의 그 의견만 덮는지 본다.
+ * 차단 뒤 그 사용자의 의견·답글만 페이지에서 빠지는지도 본다(KAN-697).
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -10,6 +11,8 @@ import {
   applyReplyLike,
   invalidateAfterPredictionWrite,
   invalidateAfterReplyWrite,
+  removeBlockedOpinions,
+  removeBlockedReplies,
 } from "../../packages/core/src/prediction-sync.ts";
 
 function recorder() {
@@ -93,4 +96,57 @@ test("답글 공감 갱신도 같은 규칙이다", () => {
     liked: false,
     likeCount: 33,
   });
+});
+
+test("차단 뒤에는 그 사용자의 의견만 빠지고 손대지 않은 페이지는 같은 참조다", () => {
+  const author = (userId) => ({
+    userId,
+    nickname: `u${userId}`,
+    favoriteTeam: null,
+  });
+  const untouched = page([{ id: 1, author: author(5) }]);
+  const data = {
+    pages: [
+      untouched,
+      page([
+        { id: 2, author: author(7) },
+        { id: 3, author: author(9) },
+      ]),
+    ],
+    pageParams: [null, "c1"],
+  };
+  const next = removeBlockedOpinions(data, 7);
+  assert.equal(next.pages[0], untouched);
+  assert.deepEqual(
+    next.pages[1].items.map((item) => item.id),
+    [3],
+  );
+  assert.equal(removeBlockedOpinions(data, 99), data);
+  assert.equal(removeBlockedOpinions(undefined, 7), undefined);
+  assert.deepEqual(predictionKeys.opinions(1, "accuracy", null).slice(0, 2), [
+    ...predictionKeys.opinionLists(),
+  ]);
+});
+
+test("차단 뒤 답글도 같은 규칙이다", () => {
+  const data = {
+    pages: [
+      {
+        items: [
+          { id: 501, author: { userId: 31, nickname: "a" } },
+          { id: 502, author: { userId: 12, nickname: "b" } },
+        ],
+        nextCursor: null,
+      },
+    ],
+    pageParams: [null],
+  };
+  const next = removeBlockedReplies(data, 31);
+  assert.deepEqual(
+    next.pages[0].items.map((item) => item.id),
+    [502],
+  );
+  assert.deepEqual(predictionKeys.replies(1).slice(0, 2), [
+    ...predictionKeys.replyLists(),
+  ]);
 });

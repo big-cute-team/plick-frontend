@@ -1,12 +1,15 @@
 /**
  * @file 승부예측 탭 표기 헬퍼 테스트 (KAN-696). 상태 줄 다섯 갈래, 픽 라벨, 열림 시각 표기,
- * 임시 저장 값 되살리기(옛 포맷과 깨진 값은 버림)를 본다.
+ * 임시 저장 값 되살리기(옛 포맷과 깨진 값은 버림)를 본다. 의견 목록의 픽 필터 순서와 빈 상태
+ * 문구(KAN-697)도 여기 둔다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   formatPredictionOpensAt,
   parsePredictionDraft,
+  predictionFilterPicks,
+  predictionOpinionsEmptyText,
   predictionPercentOf,
   predictionPickLabel,
   predictionStatusLine,
@@ -102,4 +105,20 @@ test("임시 저장은 픽과 본문을 되살리고 깨진 값은 버린다", (
     JSON.stringify({ pick: "HOME", opinion: "a".repeat(400) }),
   );
   assert.equal(long.opinion.length, 300);
+});
+
+test("픽 필터는 전체 뒤에 다른 픽 둘, 내 픽 순이다", () => {
+  assert.deepEqual(predictionFilterPicks(null), ["HOME", "DRAW", "AWAY"]);
+  assert.deepEqual(predictionFilterPicks("AWAY"), ["HOME", "DRAW", "AWAY"]);
+  assert.deepEqual(predictionFilterPicks("HOME"), ["DRAW", "AWAY", "HOME"]);
+  assert.deepEqual(predictionFilterPicks("DRAW"), ["HOME", "AWAY", "DRAW"]);
+});
+
+test("빈 상태 문구는 필터, 내 의견 유무 순으로 가른다", () => {
+  assert.equal(
+    predictionOpinionsEmptyText("HOME", true),
+    "이 픽의 의견이 없어요",
+  );
+  assert.equal(predictionOpinionsEmptyText(null, true), "다른 의견이 없어요");
+  assert.equal(predictionOpinionsEmptyText(null, false), "아직 의견이 없어요");
 });

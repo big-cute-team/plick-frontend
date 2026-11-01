@@ -9,10 +9,11 @@ import {
  * 면에 `내 예측` 라벨, 픽 배지, 적중 여부가 한 줄에 서고 OPEN이면 오른쪽에 수정과 취소 텍스트
  * 버튼이 붙는다. 본문은 15px이다.
  *
- * 작성자 기록(`3전 3적중`)은 요약의 `myPrediction`에 없어 의견 목록(KAN-697)의 `mine`이 붙을 때
- * 더한다.
+ * 작성자 기록(`3전 3적중`)은 요약의 `myPrediction`에 없고 의견 목록 첫 페이지의 `mine`에 실려
+ * 온다(KAN-697). 그래서 문자열로 따로 받고 아직 없으면 비워 둔다. 웹은 적중 여부 뒤에 선다.
  *
  * @param mine 내 예측
+ * @param record 기록 표기(`formatPredictionRecord`). 목록을 아직 못 받았으면 null
  * @param teams 홈·원정 팀명(픽 라벨용)
  * @param editable OPEN이면 true. 수정·취소 버튼을 그린다
  * @param onEdit 수정을 눌렀을 때
@@ -20,12 +21,14 @@ import {
  */
 export function PredictionMineBox({
   mine,
+  record = null,
   teams,
   editable,
   onEdit,
   onCancel,
 }: {
   mine: MyPrediction;
+  record?: string | null;
   teams: { home: string; away: string };
   editable: boolean;
   onEdit: () => void;
@@ -34,18 +37,25 @@ export function PredictionMineBox({
   const verdict = predictionVerdictLabel(mine.result);
   return (
     <div className="bg-accent-soft mt-3.5 p-4">
-      <div className="flex items-center gap-2">
-        <span className="text-body text-accent font-bold">내 예측</span>
-        <span className="bg-bg text-label text-text-strong inline-flex h-5.5 items-center px-1.75 font-bold">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-body text-accent shrink-0 font-bold whitespace-nowrap">
+          내 예측
+        </span>
+        <span className="bg-bg text-label text-text-strong inline-flex h-5.5 shrink-0 items-center px-1.75 font-bold whitespace-nowrap">
           {predictionPickLabel(mine.pick, teams)}
         </span>
         {verdict && (
           <span
-            className={`text-label font-bold ${
+            className={`text-label shrink-0 font-bold ${
               verdict === "적중" ? "text-accent" : "text-text-4"
             }`}
           >
             {verdict}
+          </span>
+        )}
+        {record && (
+          <span className="text-label text-text-3 shrink-0 whitespace-nowrap tabular-nums">
+            {record}
           </span>
         )}
         <div className="flex-1" />

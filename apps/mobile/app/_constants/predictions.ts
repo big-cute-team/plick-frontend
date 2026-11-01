@@ -28,3 +28,13 @@ export const PREDICTION_CANCEL_TITLE = "예측을 취소할까요?";
 
 /** 게스트가 작성을 누르면 띄우는 연동 안내. */
 export const PREDICTION_LINK_NOTICE = "계정 연동 후 예측할 수 있어요";
+
+/** 의견 신고 시트·팝업 제목. 댓글 신고와 같은 사유를 쓰고 제목만 다르다. */
+export const PREDICTION_REPORT_TITLE = "의견 신고";
+
+/** 비로그인이 의견에 신고·차단을 누르면 띄우는 로그인 안내 본문. */
+export const PREDICTION_REPORT_LOGIN_PROMPT =
+  "신고와 차단은 로그인한 사용자만 할 수 있어요";
+
+/** 삭제된 의견(답글이 남아 자리만 있는 행)의 본문 대체 문구. */
+export const PREDICTION_DELETED_OPINION = "삭제된 의견이에요";

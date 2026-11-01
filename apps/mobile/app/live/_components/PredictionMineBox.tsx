@@ -9,10 +9,11 @@ import {
  * 배지, 적중 여부, 본문이다. OPEN에서만 오른쪽에 수정과 취소 텍스트 버튼이 선다. 작은 글자 버튼은
  * 세로 패딩으로 터치 목표를 44px까지 넓힌다.
  *
- * 작성자 기록(`3전 3적중`)은 요약의 `myPrediction`에 없어 의견 목록(KAN-697)의 `mine`이 붙을 때
- * 더한다.
+ * 작성자 기록(`3전 3적중`)은 요약의 `myPrediction`에 없고 의견 목록 첫 페이지의 `mine`에 실려
+ * 온다(KAN-697). 그래서 문자열로 따로 받고 아직 없으면 비워 둔다. 앱은 `내 예측` 라벨 옆에 선다.
  *
  * @param mine 내 예측
+ * @param record 기록 표기(`formatPredictionRecord`). 목록을 아직 못 받았으면 null
  * @param teams 홈·원정 팀명(픽 라벨용)
  * @param editable OPEN이면 true. 수정·취소 버튼을 그린다
  * @param onEdit 수정을 눌렀을 때
@@ -20,12 +21,14 @@ import {
  */
 export function PredictionMineBox({
   mine,
+  record = null,
   teams,
   editable,
   onEdit,
   onCancel,
 }: {
   mine: MyPrediction;
+  record?: string | null;
   teams: { home: string; away: string };
   editable: boolean;
   onEdit: () => void;
@@ -35,7 +38,14 @@ export function PredictionMineBox({
   return (
     <div className="bg-accent-soft rounded-card mt-3 p-3.5">
       <div className="flex items-center gap-1.5">
-        <span className="text-label text-accent font-bold">내 예측</span>
+        <span className="text-label text-accent shrink-0 font-bold whitespace-nowrap">
+          내 예측
+        </span>
+        {record && (
+          <span className="text-label text-text-3 truncate tabular-nums">
+            {record}
+          </span>
+        )}
         <div className="flex-1" />
         {editable && (
           <>
