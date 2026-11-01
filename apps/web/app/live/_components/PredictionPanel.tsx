@@ -13,9 +13,7 @@ import {
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { useAuth } from "@/_components/AuthProvider";
-import { PREDICTION_VOTE_LABEL } from "@/_constants/predictions";
-import { PredictionLockedList } from "./PredictionLockedList";
-import { PredictionMineBox } from "./PredictionMineBox";
+import { PredictionOpinions } from "./PredictionOpinions";
 import { PredictionToast } from "./PredictionToast";
 
 /* 팝업 셋은 눌러야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428과 같은 판단) */
@@ -45,12 +43,13 @@ type Dialog =
 
 /**
  * 경기 상세 예측 탭 본문 (KAN-696, 시안 가이드 §4·§5.4, 모바일 `PredictionTab`의 웹 판). 위에서
- * 아래로 상태 줄(참여 수), 3분할 바(36px), 의견 머리글 줄, 내 예측 상자, 잠금 지면이다.
+ * 아래로 상태 줄(참여 수), 3분할 바(36px), 그리고 의견 자리(`PredictionOpinions`: 머리글 줄, 내
+ * 예측 상자, 잠금 지면이나 의견 목록)다.
  *
  * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. UPCOMING은 열림 시각만, OPEN 예측
  * 전은 `?%` 바와 잠금 지면, 예측 뒤는 실제 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기
- * 전용이다. 의견 목록과 정렬, 픽 필터는 KAN-697이 머리글 줄에 붙인다. 정산된 경기의 `랭킹 >`
- * 링크는 랭킹 화면(KAN-701)이 생기면 붙인다.
+ * 전용이다. 의견 목록과 정렬, 픽 필터, 공감, 신고, 차단은 KAN-697이 붙였다. 정산된 경기의
+ * `랭킹 >` 링크는 랭킹 화면(KAN-701)이 생기면 붙인다.
  *
  * 토스트는 웹에 전역 스토어가 없어 이 컴포넌트가 문구와 일련번호를 들고 `PredictionToast`에 넘긴다.
  *
@@ -77,8 +76,6 @@ export function PredictionPanel({
 
   const teams = { home: header.home.name, away: header.away.name };
   const mine = summary.myPrediction;
-  const open = summary.status === "OPEN";
-  const locked = open && mine === null;
   const statusLine = predictionStatusLine(summary, teams);
   const verdict = predictionVerdictLabel(mine?.result);
 
@@ -151,33 +148,13 @@ export function PredictionPanel({
       )}
 
       {summary.status !== "UPCOMING" && (
-        <div className="pb-6">
-          <div className="border-border mt-7.5 flex h-10 items-center gap-3.5 border-b">
-            <h2 className="text-body-lg text-text-strong font-bold">의견</h2>
-            <div className="flex-1" />
-            {locked && (
-              <button
-                type="button"
-                onClick={() => openCompose(false)}
-                className="bg-accent text-on-accent text-body hover:bg-accent-hover focus-visible:outline-accent inline-flex h-8 items-center px-3.5 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                {PREDICTION_VOTE_LABEL}
-              </button>
-            )}
-          </div>
-          {mine && (
-            <PredictionMineBox
-              mine={mine}
-              teams={teams}
-              editable={open}
-              onEdit={() => openCompose(true)}
-              onCancel={() => setDialog({ kind: "cancel" })}
-            />
-          )}
-          {locked && (
-            <PredictionLockedList onCompose={() => openCompose(false)} />
-          )}
-        </div>
+        <PredictionOpinions
+          summary={summary}
+          teams={teams}
+          onCompose={() => openCompose(false)}
+          onEdit={() => openCompose(true)}
+          onCancel={() => setDialog({ kind: "cancel" })}
+        />
       )}
 
       {dialog?.kind === "compose" && (

@@ -12,11 +12,9 @@ import {
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
-import { PREDICTION_VOTE_LABEL } from "@/_constants/predictions";
 import { useAuth } from "@/_components/AuthProvider";
 import { useErrorToast } from "@/_stores/error-toast";
-import { PredictionLockedList } from "./PredictionLockedList";
-import { PredictionMineBox } from "./PredictionMineBox";
+import { PredictionOpinions } from "./PredictionOpinions";
 
 /* 시트 셋은 눌러야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428과 같은 판단) */
 const PredictionComposerSheet = dynamic(
@@ -42,12 +40,12 @@ type Sheet =
 
 /**
  * 경기 상세 예측 탭 (KAN-696, 시안 가이드 §4·§5.4). 위에서 아래로 상태 줄(참여 수), 3분할 바,
- * 의견 머리글, 내 예측 상자, 잠금 지면이다.
+ * 그리고 의견 자리(`PredictionOpinions`: 머리글, 픽 필터, 내 예측 상자, 잠금 지면이나 의견 목록)다.
  *
  * 상태별로 보이는 것이 다르다(§4 표). UPCOMING은 열림 시각만 보이고 바와 작성, 의견이 없다.
  * OPEN에서 예측 전이면 바는 `?%` 균등이고 의견 자리는 잠금 지면이라 거기서 작성이 열린다. 예측
  * 뒤에는 실제 비율에 내 픽 체크, 내 예측 상자(수정, 취소)가 선다. LOCKED 이후는 바와 상자만 읽기
- * 전용이다. 의견 목록과 정렬, 픽 필터는 KAN-697이 이 자리에 붙인다.
+ * 전용이다. 의견 목록과 정렬, 픽 필터, 공감, 신고, 차단은 KAN-697이 붙였다.
  *
  * 작성 전 로그인 분기(§5.5)는 서버에 보내기 전에 `useAuth`로 먼저 가른다. 세션이 없으면 로그인
  * 시트, 게스트면 연동 안내, 소셜이면 작성 시트다. 세션을 아직 모르는 동안은 작성 시트를 열고 서버
@@ -72,8 +70,6 @@ export function PredictionTab({
 
   const teams = { home: header.home.name, away: header.away.name };
   const mine = summary.myPrediction;
-  const open = summary.status === "OPEN";
-  const locked = open && mine === null;
   const statusLine = predictionStatusLine(summary, teams);
   const verdict = predictionVerdictLabel(mine?.result);
 
@@ -147,35 +143,13 @@ export function PredictionTab({
       </div>
 
       {summary.status !== "UPCOMING" && (
-        <div className="px-edge pt-6.5 pb-6">
-          <div className="flex items-center gap-1.5">
-            <h2 className="text-body-lg text-text-strong tracking-section font-bold">
-              의견
-            </h2>
-            <div className="flex-1" />
-            {locked && (
-              <button
-                type="button"
-                onClick={() => openCompose(false)}
-                className="bg-accent text-on-accent rounded-control text-body inline-flex h-9 items-center px-3.5 font-bold active:opacity-80"
-              >
-                {PREDICTION_VOTE_LABEL}
-              </button>
-            )}
-          </div>
-          {mine && (
-            <PredictionMineBox
-              mine={mine}
-              teams={teams}
-              editable={open}
-              onEdit={() => openCompose(true)}
-              onCancel={() => setSheet({ kind: "cancel" })}
-            />
-          )}
-          {locked && (
-            <PredictionLockedList onCompose={() => openCompose(false)} />
-          )}
-        </div>
+        <PredictionOpinions
+          summary={summary}
+          teams={teams}
+          onCompose={() => openCompose(false)}
+          onEdit={() => openCompose(true)}
+          onCancel={() => setSheet({ kind: "cancel" })}
+        />
       )}
 
       {sheet?.kind === "compose" && (

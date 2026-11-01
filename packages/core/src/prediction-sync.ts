@@ -121,3 +121,53 @@ export function applyReplyLike(
   });
   return changed ? { ...data, pages } : data;
 }
+
+/**
+ * 차단한 사용자의 의견을 무한 쿼리 캐시에서 뺀다(시안 가이드 §5.4 "차단한 사용자의 의견, 답글은
+ * 목록에서 빼고 그린다"). 다음 조회부터는 BE가 빼 주지만 이미 받아 둔 페이지에는 남아 있어
+ * 지금 보는 화면부터 치운다. 댓글은 플래그만 세워 안내 문구로 바꾸는데(`useBlockUser`), 예측
+ * 의견은 BE 계약이 "목록에서 뺀다"라 같은 모양으로 맞춘다. 대상이 없는 페이지는 같은 참조를
+ * 돌려준다.
+ *
+ * @param data 무한 쿼리 데이터. 아직 없으면 그대로 undefined
+ * @param userId 차단한 사용자
+ */
+export function removeBlockedOpinions(
+  data: InfiniteData<PredictionOpinionPage, string | null> | undefined,
+  userId: number,
+): InfiniteData<PredictionOpinionPage, string | null> | undefined {
+  if (!data) return data;
+  let changed = false;
+  const pages = data.pages.map((page) => {
+    const items = page.items.filter((item) => item.author.userId !== userId);
+    if (items.length !== page.items.length) {
+      changed = true;
+      return { ...page, items };
+    }
+    return page;
+  });
+  return changed ? { ...data, pages } : data;
+}
+
+/**
+ * 차단한 사용자의 답글을 무한 쿼리 캐시에서 뺀다. {@link removeBlockedOpinions}와 같다.
+ *
+ * @param data 무한 쿼리 데이터
+ * @param userId 차단한 사용자
+ */
+export function removeBlockedReplies(
+  data: InfiniteData<PredictionReplyPage, string | null> | undefined,
+  userId: number,
+): InfiniteData<PredictionReplyPage, string | null> | undefined {
+  if (!data) return data;
+  let changed = false;
+  const pages = data.pages.map((page) => {
+    const items = page.items.filter((item) => item.author.userId !== userId);
+    if (items.length !== page.items.length) {
+      changed = true;
+      return { ...page, items };
+    }
+    return page;
+  });
+  return changed ? { ...data, pages } : data;
+}

@@ -435,6 +435,50 @@ export const PREDICTION_PICKS: readonly PredictionPick[] = [
 ] as const;
 
 /**
+ * 의견 목록 정렬 선택지와 라벨(시안 가이드 §5.4). BE 쿼리 값과 화면 카피가 한 쌍이라
+ * `COMMENT_REPORT_REASONS`처럼 도메인에 둔다. 순서가 곧 화면 순서다.
+ */
+export const PREDICTION_OPINION_SORTS: readonly {
+  value: PredictionOpinionSort;
+  label: string;
+}[] = [
+  { value: "accuracy", label: "적중률순" },
+  { value: "latest", label: "최신순" },
+  { value: "likes", label: "공감순" },
+];
+
+/**
+ * 의견 픽 필터 칩의 순서(시안 가이드 §5.4 "전체, 다른 픽 둘, 내 픽 순"). 전체는 null이고
+ * 호출부가 맨 앞에 둔다. 예측한 사람에게는 반대 픽이 먼저 오고 내 픽이 마지막이다. 내 의견은
+ * 상자로 따로 서 있어 내 픽 칩은 "나와 같은 쪽"을 볼 때만 쓰니 뒤로 보낸다.
+ *
+ * @param myPick 내 픽. 없으면 홈, 무, 원정 순 그대로
+ * @example predictionFilterPicks("AWAY") // ["HOME", "DRAW", "AWAY"]
+ * @example predictionFilterPicks("HOME") // ["DRAW", "AWAY", "HOME"]
+ */
+export function predictionFilterPicks(
+  myPick: PredictionPick | null,
+): PredictionPick[] {
+  if (!myPick) return [...PREDICTION_PICKS];
+  return [...PREDICTION_PICKS.filter((pick) => pick !== myPick), myPick];
+}
+
+/**
+ * 의견 목록 빈 상태 문구(시안 가이드 §5.4·§7). 픽 필터가 걸려 있으면 그 픽이 없다는 뜻이고,
+ * 필터 없이 비었는데 내 의견이 있으면 남의 의견만 없는 것이다.
+ *
+ * @param pickFilter 걸린 픽 필터. 전체면 null
+ * @param hasMine 내 의견이 있는가
+ */
+export function predictionOpinionsEmptyText(
+  pickFilter: PredictionPick | null,
+  hasMine: boolean,
+): string {
+  if (pickFilter) return "이 픽의 의견이 없어요";
+  return hasMine ? "다른 의견이 없어요" : "아직 의견이 없어요";
+}
+
+/**
  * 픽 라벨. 홈과 원정은 `팀명 승`, 무승부는 그대로다. 픽 버튼, 내 예측 배지, MY 기록
  * `내 예측 맨시티 승`이 같은 표기를 쓴다.
  *

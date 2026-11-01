@@ -16,6 +16,8 @@ export const predictionKeys = {
   home: () => ["predictions", "home"] as const,
   /** 경기 하나의 예측 요약(상태·분포·내 예측). 진행 중 경기는 30초마다 다시 받는다. */
   summary: (matchId: number) => ["predictions", "summary", matchId] as const,
+  /** 모든 경기의 의견 목록 - 차단 뒤 그 사용자의 의견을 캐시 전체에서 뺄 때 쓰는 상위 키. */
+  opinionLists: () => ["predictions", "opinions"] as const,
   /** 경기 하나의 의견 목록 전체 - 정렬·픽 필터를 가리지 않고 한 번에 무효화하는 상위 키. */
   opinionsOf: (matchId: number) =>
     ["predictions", "opinions", matchId] as const,
@@ -28,6 +30,8 @@ export const predictionKeys = {
   /** 의견 하나(원 의견 전문). */
   opinion: (predictionId: number) =>
     ["predictions", "opinion", predictionId] as const,
+  /** 모든 의견의 답글 목록 - 차단 뒤 그 사용자의 답글을 캐시 전체에서 뺄 때 쓰는 상위 키. */
+  replyLists: () => ["predictions", "replies"] as const,
   /** 의견 하나의 답글 목록. 답글 등록 뒤 다시 받는다. */
   replies: (predictionId: number) =>
     ["predictions", "replies", predictionId] as const,
