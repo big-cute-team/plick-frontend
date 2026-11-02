@@ -1008,3 +1008,75 @@ export function buildKeyPlayerStatRows(
     ),
   ];
 }
+
+/**
+ * 랭킹에 오르는 정산 경기 수(시안 가이드 §5.7, KAN-701). BE 자격 기준과 같은 값이고 `formatPredictionRecord`가
+ * 퍼센트를 붙이기 시작하는 선도 여기다. 응답에 기준이 실려 오지 않아 FE가 들고 있다. BE가 기준을 바꾸면
+ * `predictionMyRankCell`의 `3/5` 표기가 조용히 틀어지니 같이 고친다.
+ */
+export const PREDICTION_RANKING_MIN_SETTLED = 5;
+
+/**
+ * 랭킹 scope 표기(시안 `2026-27 시즌`). 네 자리 연도면 다음 해 두 자리를 붙이고 `ALL`은 통산이다. 모르는 값은
+ * 그대로 적는다.
+ *
+ * @param scope 랭킹 응답의 `scope`
+ * @example predictionSeasonLabel("2026") // "2026-27 시즌"
+ * @example predictionSeasonLabel("ALL") // "통산"
+ */
+export function predictionSeasonLabel(scope: string): string {
+  if (scope === "ALL") return "통산";
+  if (!/^\d{4}$/.test(scope)) return scope;
+  const next = String((Number(scope) + 1) % 100).padStart(2, "0");
+  return `${scope}-${next} 시즌`;
+}
+
+/**
+ * 랭킹 연속 적중 칸. 3 이상만 숫자로 적고 그 아래는 비운다(시안 가이드 §5.7). 한두 번 연속은 자랑할 거리가
+ * 아니라 칸을 비워 시선을 뺀다.
+ *
+ * @param streak 기록의 `streak`
+ */
+export function predictionStreakLabel(streak: number): string {
+  return streak >= 3 ? String(streak) : "";
+}
+
+/**
+ * 1~3위 강조 여부. 순위 숫자는 900 강조색, 닉네임은 700이고 행 크기는 같다(시안 가이드 §5.7).
+ *
+ * @param rank 행의 순위
+ */
+export function isPredictionTopRank(rank: number): boolean {
+  return rank >= 1 && rank <= 3;
+}
+
+/**
+ * 내 순위 칸 표기. 자격 미달이면 `3/5`처럼 채운 정도(시안 가이드 §5.7), 자격은 됐는데 순위가 아직 없으면
+ * 정산 직후 집계 중이라 `-`로 비우고 안내는 `predictionRankingNotice`가 맡는다. 순위가 있으면 숫자다.
+ *
+ * @param me 랭킹 응답의 `me`
+ * @example predictionMyRankCell({ rank: null, qualified: false, remaining: 2 }) // "3/5"
+ */
+export function predictionMyRankCell(
+  me: Pick<MyPredictionRank, "rank" | "qualified" | "remaining">,
+): string {
+  if (!me.qualified) {
+    const done = Math.max(0, PREDICTION_RANKING_MIN_SETTLED - me.remaining);
+    return `${done}/${PREDICTION_RANKING_MIN_SETTLED}`;
+  }
+  return me.rank === null ? "-" : String(me.rank);
+}
+
+/**
+ * 내 순위 줄의 안내. 자격 미달이면 남은 경기 수(티켓 KAN-701 "n경기 더 예측하면 랭킹에 올라요"), 자격은
+ * 됐는데 순위가 null이면 집계 중, 순위가 있으면 안내가 없다.
+ *
+ * @param me 랭킹 응답의 `me`
+ */
+export function predictionRankingNotice(
+  me: Pick<MyPredictionRank, "rank" | "qualified" | "remaining">,
+): string | null {
+  if (!me.qualified) return `${me.remaining}경기 더 예측하면 랭킹에 올라요`;
+  if (me.rank === null) return "순위를 집계하고 있어요";
+  return null;
+}

@@ -14,7 +14,7 @@ export const DEFAULT_DEBATE_TAB: DebateTab = "open";
  * @param value 쿼리스트링의 `tab` 값 (없으면 null·undefined)
  */
 export function debateTabFrom(value: string | null | undefined): DebateTab {
-  return value === "closed" ? "closed" : DEFAULT_DEBATE_TAB;
+  return value === "closed" || value === "rank" ? value : DEFAULT_DEBATE_TAB;
 }
 
 /** 투표 화면 경로. */

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import type { PredictionFailure } from "@plick/core/prediction-errors";
 import type { MatchSummary } from "@plick/domain/live";
@@ -12,7 +13,10 @@ import {
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
+import { ChevronRightIcon } from "@plick/ui/icons";
 import { useAuth } from "@/_components/AuthProvider";
+import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
+import { debateTabPath } from "@/_utils/debates";
 import { PredictionOpinions } from "./PredictionOpinions";
 import { PredictionToast } from "./PredictionToast";
 
@@ -48,8 +52,8 @@ type Dialog =
  *
  * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. UPCOMING은 열림 시각만, OPEN 예측
  * 전은 `?%` 바와 잠금 지면, 예측 뒤는 실제 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기
- * 전용이다. 의견 목록과 정렬, 픽 필터, 공감, 신고, 차단은 KAN-697이 붙였다. 정산된 경기의
- * `랭킹 >` 링크는 랭킹 화면(KAN-701)이 생기면 붙인다.
+ * 전용이다. 의견 목록과 정렬, 픽 필터, 공감, 신고, 차단은 KAN-697이 붙였다. 정산된 경기는 상태 줄
+ * 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701, 시안 가이드 §4).
  *
  * 토스트는 웹에 전역 스토어가 없어 이 컴포넌트가 문구와 일련번호를 들고 `PredictionToast`에 넘긴다.
  *
@@ -130,6 +134,15 @@ export function PredictionPanel({
           >
             {verdict}
           </span>
+        )}
+        {summary.status === "SETTLED" && (
+          <Link
+            href={debateTabPath("rank")}
+            className="text-body text-accent hover:text-accent-hover focus-visible:outline-accent flex shrink-0 items-center gap-px font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {PREDICTION_RANKING_LINK_LABEL}
+            <ChevronRightIcon size={14} />
+          </Link>
         )}
         <div className="flex-1" />
         <span className="text-body text-text-3 shrink-0 whitespace-nowrap tabular-nums">

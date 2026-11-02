@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useState } from "react";
 import type { PredictionFailure } from "@plick/core/prediction-errors";
 import type { MatchSummary } from "@plick/domain/live";
@@ -12,8 +13,11 @@ import {
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
+import { ChevronRightIcon } from "@plick/ui/icons";
 import { useAuth } from "@/_components/AuthProvider";
+import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
 import { useErrorToast } from "@/_stores/error-toast";
+import { debateTabPath } from "@/_utils/debates";
 import { PredictionOpinions } from "./PredictionOpinions";
 
 /* 시트 셋은 눌러야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428과 같은 판단) */
@@ -52,7 +56,8 @@ type Sheet =
  * 응답(401, 403)이 같은 분기를 다시 탄다. 마감 직전 등록이 409로 돌아오면 토스트 `방금
  * 마감됐어요` 뒤 요약을 다시 받아 LOCKED 화면으로 넘어간다(훅이 무효화, 여기는 토스트).
  *
- * 정산된 경기의 `랭킹 >` 링크는 랭킹 화면(KAN-701)이 생기면 상태 줄에 붙인다.
+ * 정산된 경기는 상태 줄 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701, 시안 가이드
+ * §4). 글자가 작아 세로 패딩으로 터치 목표를 넓히고 음수 마진으로 줄 높이는 그대로 둔다.
  *
  * @param header 경기 헤더(팀명, 엠블럼)
  * @param summary 예측 요약. 탭이 서 있으면 null이 아니다
@@ -125,6 +130,15 @@ export function PredictionTab({
             >
               {verdict}
             </span>
+          )}
+          {summary.status === "SETTLED" && (
+            <Link
+              href={debateTabPath("rank")}
+              className="text-body text-accent -my-3 flex shrink-0 items-center gap-px py-3 font-bold active:opacity-60"
+            >
+              {PREDICTION_RANKING_LINK_LABEL}
+              <ChevronRightIcon size={14} />
+            </Link>
           )}
           <div className="flex-1" />
           <span className="text-label text-text-3 shrink-0 whitespace-nowrap tabular-nums">

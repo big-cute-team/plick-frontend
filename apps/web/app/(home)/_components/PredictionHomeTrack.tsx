@@ -7,13 +7,16 @@ import {
   type PredictionHomeCard as PredictionHomeCardData,
 } from "@plick/domain/prediction";
 import { PredictionHomeCard } from "@plick/ui/PredictionHomeCard";
+import { ChevronRightIcon } from "@plick/ui/icons";
 import { useAuth } from "@/_components/AuthProvider";
 import {
   PREDICTION_HOME_EMPTY,
   PREDICTION_HOME_ERROR,
+  PREDICTION_RANKING_LINK_LABEL,
 } from "@/_constants/predictions";
 import { useMyPredictionStats } from "@/_hooks/useMyPredictionStats";
 import { usePredictionHome } from "@/_hooks/usePredictionHome";
+import { debateTabPath } from "@/_utils/debates";
 import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
 
 /**
@@ -26,8 +29,8 @@ import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
  * §5.2). 티켓은 "픽 버튼을 누르면 작성 시트가 그 픽을 고른 상태로 열림"이라 했지만 시안이 카드에
  * 픽 버튼을 두지 않아 시안을 따랐다.
  *
- * 제목 오른쪽 내 순위는 소셜 계정일 때만 받아 `128위`로 적는다. 랭킹 화면(KAN-701)이 생기면 링크로
- * 바꾸고 비로그인에도 `랭킹`을 둔다.
+ * 제목 오른쪽은 랭킹 탭(`/debates?tab=rank`, KAN-701)으로 가는 링크다. 소셜 계정이고 순위가 있으면
+ * `128위 >`, 그 밖(비로그인, 게스트, 자격 미달, 못 받음)은 `랭킹 >`이다(시안 가이드 §2).
  *
  * @param initial 서버가 받아 둔 카드 목록. 못 받았으면 undefined
  */
@@ -40,7 +43,9 @@ export function PredictionHomeTrack({
   const { isLoggedIn, isGuest } = useAuth();
   const { data: stats } = useMyPredictionStats(isLoggedIn && !isGuest);
   const rank =
-    isLoggedIn && !isGuest && stats ? predictionRankLabel(stats) : null;
+    isLoggedIn && !isGuest && stats
+      ? predictionRankLabel(stats)
+      : PREDICTION_RANKING_LINK_LABEL;
 
   return (
     <section className="pb-8.5">
@@ -49,11 +54,13 @@ export function PredictionHomeTrack({
           승부예측
         </h2>
         <div className="flex-1" />
-        {rank && (
-          <span className="text-body text-accent font-bold tabular-nums">
-            {rank}
-          </span>
-        )}
+        <Link
+          href={debateTabPath("rank")}
+          className="text-body text-accent hover:text-accent-hover focus-visible:outline-accent flex items-center gap-px font-bold tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          {rank}
+          <ChevronRightIcon size={14} />
+        </Link>
       </div>
       {cards === undefined ? (
         isError ? (
