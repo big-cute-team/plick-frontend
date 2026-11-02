@@ -58,3 +58,34 @@ JSDoc은 "사용자가 직접 멈추는 버튼은 두지 않는다"고 고쳐 �
 
 웹(데스크톱)은 같은 `RotatingLine`을 쓰니 코드상 함께 바뀌었지만 브라우저로는 모바일만 밟았다. 호버 중 정지를
 남긴 판단은 피드백이 오면 뒤집을 수 있다. 그때는 `hovered`·`focused` 상태까지 걷어 내면 된다.
+
+## 곁가지: 터져 있던 CI는 무엇이었나
+
+PR을 올리기 전에 Actions에 빨간 게 여럿 보여 먼저 확인했다. 두 종류였다.
+
+하나는 E2E였다. 07:53과 09:15 두 번 모두 모바일 기사 스펙 두 개(`목록 첫 기사를 열면 같은 제목의 상세가 뜬다`,
+`상세의 팀 해시태그를 누르면 그 팀 프로필이 뜬다`)가 `getByRole('article').first()` 안의 h3 링크를 45초 동안 못 찾고
+타임아웃이었다. KAN-703 홈 개편으로 투표 카드가 첫 `article`이 되면서 생긴 드리프트고, 이건 이미 develop에 머지된
+[ADR 0235](0235-e2e-mobile-news-scope.md)(PR #355)가 뉴스 영역으로 범위를 좁혀 고쳤다. 다만 그 머지 뒤 E2E가 다시
+돌지 않아 초록불을 못 봤는데, 이유는 아래 배포 실패로 `workflow_run` 게이트(`conclusion == success`)에 걸려 건너뛰었기
+때문이다. 그래서 로컬에서 dev를 상대로 모바일 기사 스펙을 직접 돌렸고 6개 모두 통과했다. 이 PR에 테스트를 더 고칠 건 없었다.
+
+다른 하나는 PR #355 머지 직후의 Deploy였다. CodeDeploy가 10분을 기다리다 `HEALTH_CONSTRAINTS`로 실패했다. 인스턴스별
+이벤트를 보니 Green 두 대는 `ValidateService`와 `AllowTraffic`까지 전부 성공이고, Blue 두 대 중 한 대(`i-00c3…`)가
+`BeforeBlockTraffic`에서 "CodeDeploy agent was not able to receive the lifecycle event"로 죽어 있었다. 코드 문제가 아니라
+옛 세대 한 대의 에이전트가 응답을 안 한 것이다.
+
+왜 응답을 안 했는지 SSM으로 들어가 봤다. `systemctl`에 `codedeploy-agent.service`가 아예 없었고 `/opt/codedeploy-agent`도
+없었다. 건강한 짝 인스턴스에는 둘 다 있었다. `cloud-init-output.log` 끝을 보니 답이 있었다. user data가 `snap install
+aws-cli --classic`에서 "error: unable to contact snap store"로 멈췄고, 스크립트가 `set -euxo pipefail`이라 그 뒤의
+`pm2 startup`과 에이전트 설치가 통째로 빠진 채 cloud-init이 끝났다. 그 인스턴스는 08:59 배포(PR #354)의 Green으로 태어난
+것인데, 당시 배포 기록에도 그 인스턴스는 `ApplicationStop` 실패로 찍혀 있었다. 그런데 배포 전체는 성공이었다. 배포 그룹의
+설정이 `CodeDeployDefault.AllAtOnce`라 최소 정상 호스트가 0이어서 Green 절반이 죽어도 통과한 것이다. ASG 헬스체크도
+EC2 기준이라 ASG는 그 인스턴스를 Healthy로 봤고, 대상 그룹에서만 두 포트 모두 unhealthy였다. 그러니 11:27 배포에서
+그 인스턴스가 Blue가 되는 순간 터질 수밖에 없었다.
+
+남은 상태는 이렇다. 실패한 배포의 Green ASG(`CodeDeploy_plick-frontend-dg-dev_d-EPEQYC7PL`) 두 대가 대상 그룹에서
+healthy로 dev 트래픽을 받고 있다. 배포 그룹은 여전히 옛 ASG(`…_d-QS94LWXE9`)를 가리키고, 그 안에 고장 난 인스턴스와
+트래픽이 빠진 멀쩡한 인스턴스가 남아 네 대가 돌고 있다. 이대로 다음 배포를 하면 옛 ASG가 다시 Blue라 같은 자리에서
+또 실패한다. 복구 절차와 user data 재시도 루프는 [docs/deploy-v2.md](../deploy-v2.md) §6·§14와 함정 목록에 적었다.
+인프라 조작은 되돌리기 어려워 이 세션에서는 문서까지만 하고 사용자 확인을 받기로 했다.
