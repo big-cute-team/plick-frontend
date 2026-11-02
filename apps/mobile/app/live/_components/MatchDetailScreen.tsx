@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
-import type { PredictionSummary } from "@plick/domain/prediction";
+import type { KeyPlayers, PredictionSummary } from "@plick/domain/prediction";
 import { AppShell } from "@/_components/AppShell";
 import { QueryBoundary } from "@/_components/QueryBoundary";
 import { ScrollArea } from "@/_components/ScrollArea";
@@ -31,17 +31,20 @@ import { PreviewBlocks } from "./PreviewBlocks";
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
  * @param standings 순위 탭에 깔 순위표. 서버가 못 받았으면 null
  * @param prediction 예측 요약 씨앗 (KAN-696). null은 예측 없는 경기, undefined는 서버가 못 받은 것
+ * @param keyPlayers 키플레이어 씨앗 (KAN-699). 프리뷰 탭이 쓴다. null과 undefined의 뜻은 예측 요약과 같다
  */
 export function MatchDetailScreen({
   matchId,
   initial,
   standings,
   prediction,
+  keyPlayers,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   return (
     <AppShell>
@@ -65,6 +68,7 @@ export function MatchDetailScreen({
           initial={initial}
           standings={standings}
           prediction={prediction}
+          keyPlayers={keyPlayers}
         />
       </QueryBoundary>
     </AppShell>
@@ -104,11 +108,13 @@ function MatchDetailBody({
   initial,
   standings,
   prediction: predictionSeed,
+  keyPlayers,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   const { data: detail } = useMatchDetail(matchId, initial);
   const { data: prediction = null } = usePredictionSummary(
@@ -136,6 +142,8 @@ function MatchDetailBody({
         tab={tab}
         standings={standings}
         prediction={prediction}
+        keyPlayers={keyPlayers}
+        onSelectTab={setSelected}
       />
     );
 
@@ -188,6 +196,8 @@ function MatchDetailBody({
                   tab={active}
                   standings={standings}
                   prediction={prediction}
+                  keyPlayers={keyPlayers}
+                  onSelectTab={setSelected}
                 />
               </SwipePager>
             </ScrollArea>

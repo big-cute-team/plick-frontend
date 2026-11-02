@@ -27,9 +27,20 @@ export function PreviewGrid({ preview }: { preview: MatchPreview }) {
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+/**
+ * 프리뷰 섹션 제목(14/900). 팀 비교와 키플레이어(KAN-699, `PreviewPanel`)도 같은 제목을 쓴다.
+ *
+ * @param className 위아래 여백을 바꿀 때
+ */
+export function PreviewSectionTitle({
+  children,
+  className = "pt-4.5 pb-2",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <p className="text-body-md text-text-strong pt-4.5 pb-2 font-black">
+    <p className={`text-body-md text-text-strong font-black ${className}`}>
       {children}
     </p>
   );
@@ -39,7 +50,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function Absentees({ preview }: { preview: MatchPreview }) {
   return (
     <section>
-      <SectionTitle>결장자</SectionTitle>
+      <PreviewSectionTitle>결장자</PreviewSectionTitle>
       {groupAbsenteesByTeam(preview.absentees).map((group) => (
         <div key={group.team.shortName} className="pb-3">
           <p className="flex items-center gap-2 pb-1">
@@ -88,7 +99,7 @@ function Absentees({ preview }: { preview: MatchPreview }) {
 function HeadToHead({ preview }: { preview: MatchPreview }) {
   return (
     <section>
-      <SectionTitle>상대 전적, 최근 5경기</SectionTitle>
+      <PreviewSectionTitle>상대 전적, 최근 5경기</PreviewSectionTitle>
       {preview.headToHead.map((game) => (
         <div
           key={`${game.date}-${game.line}`}
@@ -120,7 +131,7 @@ function HeadToHead({ preview }: { preview: MatchPreview }) {
 function LeaguePositions({ preview }: { preview: MatchPreview }) {
   return (
     <section>
-      <SectionTitle>리그 순위</SectionTitle>
+      <PreviewSectionTitle>리그 순위</PreviewSectionTitle>
       {preview.leaguePositions.map((position) => (
         <div
           key={position.team.shortName}
@@ -153,7 +164,7 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
 function LastLineups({ preview }: { preview: MatchPreview }) {
   return (
     <section>
-      <SectionTitle>직전 경기 선발</SectionTitle>
+      <PreviewSectionTitle>직전 경기 선발</PreviewSectionTitle>
       {/* "직전 경기의 확정 선발" 문구는 명세가 요구하는 FE 표기다 — 지우지 말 것 */}
       <p className="text-label text-text-4 pb-2">
         예상 라인업이 아니라 직전 경기의 확정 선발이에요

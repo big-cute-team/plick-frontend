@@ -3,8 +3,7 @@
 /**
  * @file 승부예측 쓰기 서버 액션 (KAN-696). 웹 `_services/prediction-actions.ts`(KAN-695)의 모바일
  * 복제다. 등록·수정(PUT)과 취소(DELETE)는 KAN-696이, 의견 공감과 신고는 KAN-697이, 답글 다섯(공감,
- * 신고, 등록, 수정, 삭제)은 KAN-698이 옮겼다. 키플레이어 투표는 그 화면 티켓(KAN-699)이 붙을 때 같은
- * 꼴로 더한다.
+ * 신고, 등록, 수정, 삭제)은 KAN-698이, 키플레이어 투표는 KAN-699가 옮겼다. 이제 웹 열두 액션이 다 있다.
  *
  * 보호 API라 HttpOnly 쿠키의 access 토큰을 Bearer로 실어야 하는데 클라는 그 쿠키를 못 읽으므로
  * 서버 액션을 경유한다. 결과는 던지지 않고 값으로 돌려준다. 서버 액션이 던진 에러는 프로덕션에서
@@ -16,12 +15,16 @@
 import { cookies } from "next/headers";
 import { ApiError, apiFetch } from "@plick/core/client";
 import {
+  toKeyPlayers,
   toPredictionReply,
   toPredictionSummary,
+  type KeyPlayersResponse,
   type PredictionReplyResponse,
   type PredictionSummaryResponse,
 } from "@plick/core/predictions";
 import type {
+  KeyPlayerSide,
+  KeyPlayers,
   PredictionActionResult,
   PredictionLikeState,
   PredictionPick,
@@ -282,5 +285,28 @@ export async function deletePredictionReply(
     { method: "DELETE" },
     toNull,
     "답글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  );
+}
+
+/**
+ * 키플레이어에 투표한다 (`PUT /matches/{matchId}/key-players/vote`, KAN-699). 팀별 1표 UPSERT라
+ * 다시 부르면 바꾼다. 마감은 킥오프. 게스트도 된다. 웹 액션과 같은 구현이다.
+ *
+ * @param matchId 경기 id
+ * @param side 홈인지 원정인지
+ * @param playerId 후보 목록(`candidates`)의 선수 id
+ * @returns 성공이면 득표가 반영된 키플레이어 전체(GET과 같은 모양). 스쿼드 밖 선수는
+ *   400 `KEY_PLAYER_NOT_IN_SQUAD`, 마감 뒤는 409 `PREDICTION_CLOSED`
+ */
+export async function voteKeyPlayer(
+  matchId: number,
+  side: KeyPlayerSide,
+  playerId: number,
+): Promise<PredictionActionResult<KeyPlayers>> {
+  return callProtected<KeyPlayersResponse, KeyPlayers>(
+    `/api/v1/matches/${matchId}/key-players/vote`,
+    { method: "PUT", body: { side, playerId } },
+    toKeyPlayers,
+    "투표를 반영하지 못했어요. 잠시 후 다시 시도해 주세요.",
   );
 }
