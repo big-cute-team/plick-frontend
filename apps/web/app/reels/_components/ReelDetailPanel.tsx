@@ -11,6 +11,7 @@ import {
 import type { ReelCard } from "@plick/domain/types";
 import { CloseIcon } from "@plick/ui/icons";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -200,16 +201,22 @@ export function ReelDetailPanel({
                 count={rendered.commentCount + addedComments}
                 className="pt-5 pb-3"
               />
-              <CommentComposer
+              <DebateParticipationGate
                 articleId={rendered.id}
-                onPosted={() => setAddedComments((n) => n + 1)}
-                className="pb-1"
-              />
-              <CommentList
-                articleId={rendered.id}
-                onPosted={() => setAddedComments((n) => n + 1)}
-                onDeleted={() => setAddedComments((n) => n - 1)}
-              />
+                debate={rendered.debate}
+                closed={rendered.contentType === "FINISH"}
+              >
+                <CommentComposer
+                  articleId={rendered.id}
+                  onPosted={() => setAddedComments((n) => n + 1)}
+                  className="pb-1"
+                />
+                <CommentList
+                  articleId={rendered.id}
+                  onPosted={() => setAddedComments((n) => n + 1)}
+                  onDeleted={() => setAddedComments((n) => n - 1)}
+                />
+              </DebateParticipationGate>
             </div>
           </div>
         )}

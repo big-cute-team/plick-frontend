@@ -35,15 +35,25 @@ import type { BouncedMessage } from "@/_types/live";
  * 고정한다. 레일이 sticky라 목록이 메시지 따라 자라면 900px 화면에서 입력 줄이 화면
  * 밖으로 밀려 닿지 않는다
  */
-export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
+export function LiveChatPanel({
+  compact = false,
+  home = false,
+}: {
+  compact?: boolean;
+  home?: boolean;
+}) {
   const { isLoggedIn, isSessionPending, isProfilePending, nickname } =
     useAuth();
-  const minHeight = compact ? "min-h-82.5" : "min-h-113";
+  const minHeight = home ? "min-h-48" : compact ? "min-h-82.5" : "min-h-113";
 
   return (
     <section
       aria-label="채팅방"
-      className="border-border-strong flex flex-col border"
+      className={
+        home
+          ? "bg-elevate rounded-card mb-6 flex flex-col overflow-hidden"
+          : "border-border-strong flex flex-col border"
+      }
     >
       <header className="border-border flex h-9.5 shrink-0 items-center border-b px-3.25">
         <h2 className="text-body text-text-strong font-black">채팅방</h2>
@@ -72,7 +82,9 @@ export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
         />
       ) : (
         <ChatRoom
-          listClassName={compact ? "h-82.5" : "min-h-113 max-h-[70dvh]"}
+          listClassName={
+            home ? "h-48" : compact ? "h-82.5" : "min-h-113 max-h-[70dvh]"
+          }
         />
       )}
     </section>

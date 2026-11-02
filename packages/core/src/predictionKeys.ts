@@ -12,6 +12,7 @@ import type {
 
 export const predictionKeys = {
   all: ["predictions"] as const,
+  feed: () => ["predictions", "feed"] as const,
   /** 홈 승부예측 카드 목록. 예측 등록·취소 뒤 다시 받는다. */
   home: () => ["predictions", "home"] as const,
   /** 경기 하나의 예측 요약(상태·분포·내 예측). 진행 중 경기는 30초마다 다시 받는다. */

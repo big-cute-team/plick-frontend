@@ -53,16 +53,16 @@ const VISIBLE_TABS_WITHOUT_CHAT: Record<MatchStatus, MatchTabKey[]> = {
 };
 
 /**
- * 예측 탭을 맨 끝에 붙인 표 (KAN-696). 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지
+ * 예측 탭을 맨 앞에 붙인 표 (KAN-696). 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지
  * 않는다. 날짜 미정 연기 경기의 예측이 OPEN으로 남는 경우(티켓 참고)는 새 일정이 잡혀 SCHEDULED로
  * 돌아오면 탭이 선다.
  */
 const withPrediction = (
   table: Record<MatchStatus, MatchTabKey[]>,
 ): Record<MatchStatus, MatchTabKey[]> => ({
-  SCHEDULED: [...table.SCHEDULED, "prediction"],
-  LIVE: [...table.LIVE, "prediction"],
-  FINISHED: [...table.FINISHED, "prediction"],
+  SCHEDULED: ["prediction", ...table.SCHEDULED],
+  LIVE: ["prediction", ...table.LIVE],
+  FINISHED: ["prediction", ...table.FINISHED],
   POSTPONED: table.POSTPONED,
   CANCELLED: table.CANCELLED,
 });
@@ -74,7 +74,7 @@ const TABS_WITHOUT_CHAT_WITH_PREDICTION = withPrediction(
 
 /**
  * 지금 화면에 실제로 보이는 상세 탭 목록. 채팅이 닫혀 있으면 `chat`을 빼고, 예측할 수 있는
- * 경기(요약 API가 200)면 `prediction`을 맨 끝에 붙인다 (KAN-696). 상태별로 같은 배열
+ * 경기(요약 API가 200)면 `prediction`을 맨 앞에 붙인다 (KAN-696). 상태별로 같은 배열
  * 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
  *
  * @param status 경기 상태

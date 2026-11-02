@@ -33,6 +33,7 @@ import {
   getMyPredictions,
   getMyPredictionStats,
   getPredictionHome,
+  getPredictionFeed,
   getPredictionOpinions,
   getPredictionRankings,
   getPredictionReplies,
@@ -117,17 +118,21 @@ export function useKeyPlayers(
  * `revealed: false`에 `myPick`이 없다. 마운트되면 브라우저가 다시 받아 내 픽과 분포, 마이팀 우선
  * 순서가 그 사람 기준으로 온다.
  *
- * 예측 등록·취소 뒤에는 `invalidateAfterPredictionWrite`가 이 키를 다시 받는다. 폴링은 없다. 홈에
- * 머무는 동안 분포가 바뀌어도 들어갈 때 다시 받으면 된다.
+ * 예측 등록·취소 뒤에는 `invalidateAfterPredictionWrite`가 이 키를 다시 받는다. 홈 카드가
+ * 화면에 보이는 동안에는 분포 캐시와 같은 30초 간격으로 갱신한다.
  *
  * 실패해도 홈이 에러로 바뀌면 안 되므로 경계로 던지지 않는다. 씨앗이 없고 실패하면 `undefined`라
  * 섹션이 실패 문구를 둔다.
  *
  * @param initial 서버가 받아 둔 카드 목록. 서버가 못 받았으면 undefined
  */
-export function usePredictionHome(initial: PredictionHomeCard[] | undefined) {
+export function usePredictionHome(
+  initial: PredictionHomeCard[] | undefined,
+  visible = false,
+) {
   return useQuery<PredictionHomeCard[]>({
     queryKey: predictionKeys.home(),
+    refetchInterval: visible ? PREDICTION_DISTRIBUTION_REFRESH_MS : false,
     queryFn: () => getPredictionHome(),
     ...(initial !== undefined && { initialData: initial }),
     staleTime: 0,
@@ -291,5 +296,18 @@ export function useMyPredictions(initial?: {
     refetchOnWindowFocus: false,
     throwOnError: false,
     retry: retryUnlessClientError(),
+  });
+}
+
+/** VS 승부예측 목록. 마감 경기까지 이어지는 커서 목록이다. */
+export function usePredictionFeed() {
+  return useInfiniteQuery({
+    queryKey: predictionKeys.feed(),
+    queryFn: ({ pageParam }) => getPredictionFeed(pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    staleTime: 0,
+    retry: retryUnlessClientError(),
+    throwOnError: false,
   });
 }

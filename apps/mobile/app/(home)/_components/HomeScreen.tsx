@@ -1,39 +1,24 @@
 import { Suspense } from "react";
+import { HomeTrends } from "./HomeTrends";
+import { HomeLive } from "./HomeLive";
+import { DebateSection } from "./DebateSection";
 import { TEAM_FULL_NAMES } from "@plick/domain/constants";
 import type { Filter } from "@plick/domain/types";
 import { AdSlot } from "@/_components/AdSlot";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { HomeBanners } from "./HomeBanners";
 import { HomeChatRoom } from "./HomeChatRoom";
 import { HomeFooter } from "./HomeFooter";
 import { HomeIntro } from "./HomeIntro";
 import { HomeScrollArea } from "./HomeScrollArea";
 import { TeamIntro } from "./TeamIntro";
-import { HotSection } from "./HotSection";
-import { HotSectionSkeleton } from "./HotSectionSkeleton";
 import { NewsSection } from "./NewsSection";
 import { NewsSectionSkeleton } from "./NewsSectionSkeleton";
 import { PredictionSection } from "./PredictionSection";
 import { PredictionSectionSkeleton } from "./PredictionSectionSkeleton";
 
-/**
- * 홈 화면 본체 (KAN-163, 시안 KAN-567 "홈") — LIVE·VS 띠, 승부예측 카드(KAN-700), 채팅방 띠(KAN-684),
- * 핫이슈 상자, 지금 올라온 소식.
- *
- * 홈(`/`)과 팀 허브(`/teams/[slug]`)가 같은 화면을 그린다 (KAN-350). 팀 허브는
- * "토트넘 이적 루머" 같은 팀 검색어를 받아줄 크롤러블 URL이 필요해서 만들었는데,
- * UX는 홈에서 팀 탭을 고른 상태와 완전히 같아야 하므로 별도 화면을 만들지 않고
- * 이 컴포넌트를 팀만 바꿔 재사용한다.
- *
- * 껍데기(상단바, 탭바, 제목, 소개, 푸터)는 데이터를 기다리지 않고 바로 나가고, 섹션
- * 셋은 각자 자기 데이터를 받아 Suspense 경계마다 스트리밍된다 (KAN-602). 예전에는
- * 네 조회를 맨 위에서 다 기다려 가장 느린 하나(주로 오늘 경기)가 화면 전체를 붙잡았다.
- * 섹션마다 실패를 스스로 접으므로 한쪽이 실패해도 페이지는 뜬다.
- *
- * @param team 서버 렌더할 팀 필터. 홈은 전체(기본값), 팀 허브는 slug의 팀.
- */
+/** 홈과 팀 허브: 실검 → 경기 → 승부예측 → 투표 → 채팅 → 기사. 섹션은 독립 스트리밍한다. */
 export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   return (
     <AppShell>
@@ -47,24 +32,21 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
             : "해축이모 프리미어리그 이적 루머와 이슈"}
         </h1>
 
-        {/* LIVE·VS 띠는 없는 날과 같게 비워 두고 기다린다 */}
         <Suspense fallback={null}>
-          <HomeBanners />
+          <HomeTrends />
         </Suspense>
-
-        {/* 승부예측 카드 슬라이드 (KAN-700) — 띠 아래, 채팅방 위. 시안 H1 "홈 맨 위" */}
+        <Suspense fallback={null}>
+          <HomeLive />
+        </Suspense>
         <Suspense fallback={<PredictionSectionSkeleton />}>
           <PredictionSection />
         </Suspense>
-
-        {/* 채팅방 띠 (KAN-684) — 핫이슈 바로 위. 클라에서 소켓을 붙여 마지막 세 줄을 흘린다 */}
+        <Suspense fallback={<PredictionSectionSkeleton title="투표" />}>
+          <DebateSection />
+        </Suspense>
         <HomeChatRoom />
 
-        <Suspense fallback={<HotSectionSkeleton />}>
-          <HotSection />
-        </Suspense>
-
-        {/* 광고 (KAN-652) — 핫이슈와 새 이슈 사이, 기사 더 보기 아래. PC를 참고해
+        {/* 광고 (KAN-652) — 채팅방과 기사 사이, 기사 더 보기 아래. PC를 참고해
             최소화한 두 자리다. 자리는 미리 잡혀 광고가 늦게 와도 목록이 밀리지 않는다 */}
         <AdSlot placement="homeFeed" className="px-edge mt-5" />
 

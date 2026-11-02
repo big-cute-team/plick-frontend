@@ -603,20 +603,7 @@ export async function getPredictionHome({
     readInit(accessToken, DISTRIBUTION_REVALIDATE_SECONDS),
   );
 
-  return items.map((card) => ({
-    matchId: card.matchId,
-    kickoffAt: card.kickoffAt,
-    competition: card.competition,
-    home: toPredictionTeam(card.home),
-    away: toPredictionTeam(card.away),
-    status: card.status,
-    revealed: card.revealed,
-    totalCount: card.totalCount,
-    distribution: card.distribution && { ...card.distribution },
-    myPick: card.myPick,
-    topOpinion: card.topOpinion && { ...card.topOpinion },
-    outcome: toOutcome(card.outcome),
-  }));
+  return items.map(toPredictionHomeCard);
 }
 
 /**
@@ -738,6 +725,43 @@ export async function getMyPredictions({
         score: entry.score && { ...entry.score },
       }),
     ),
+    nextCursor: page.nextCursor,
+  };
+}
+
+/** 홈과 VS 목록이 동일한 카드 계약을 공유한다. */
+function toPredictionHomeCard(
+  card: PredictionHomeResponse["items"][number],
+): PredictionHomeCard {
+  return {
+    matchId: card.matchId,
+    kickoffAt: card.kickoffAt,
+    competition: card.competition,
+    home: toPredictionTeam(card.home),
+    away: toPredictionTeam(card.away),
+    status: card.status,
+    revealed: card.revealed,
+    totalCount: card.totalCount,
+    distribution: card.distribution && { ...card.distribution },
+    myPick: card.myPick,
+    topOpinion:
+      card.revealed && card.topOpinion ? { ...card.topOpinion } : null,
+    outcome: toOutcome(card.outcome),
+  };
+}
+
+/** VS 전용 커서 목록. 홈과 조회 범위가 달라 실패 시 홈 목록으로 대체하지 않는다. */
+export async function getPredictionFeed(cursor: string | null = null): Promise<{
+  items: PredictionHomeCard[];
+  nextCursor: string | null;
+}> {
+  const query = new URLSearchParams({ size: "20" });
+  if (cursor) query.set("cursor", cursor);
+  const page = await apiFetch<
+    PredictionHomeResponse & { nextCursor: string | null }
+  >(`/api/v1/predictions?${query}`, { cache: "no-store" });
+  return {
+    items: page.items.map(toPredictionHomeCard),
     nextCursor: page.nextCursor,
   };
 }

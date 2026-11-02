@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import type { Debate } from "@plick/domain/types";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentListSkeleton } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -34,9 +36,13 @@ const CommentList = dynamic(
 export function ArticleComments({
   articleId,
   initialCount,
+  debate,
+  closed,
 }: {
   articleId: string;
   initialCount: number;
+  debate?: Debate | null;
+  closed?: boolean;
 }) {
   const [added, setAdded] = useState(0);
   const bump = () => setAdded((n) => n + 1);
@@ -45,15 +51,21 @@ export function ArticleComments({
   return (
     <>
       <CommentsHeader count={initialCount + added} />
-      <CommentComposer articleId={articleId} onPosted={bump} />
-      {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
-      <QueryBoundary
-        name="ArticleComments"
-        fallback={<CommentListSkeleton />}
-        errorMessage="댓글을 불러오지 못했어요."
+      <DebateParticipationGate
+        articleId={articleId}
+        debate={debate}
+        closed={closed}
       >
-        <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
-      </QueryBoundary>
+        <CommentComposer articleId={articleId} onPosted={bump} />
+        {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
+        <QueryBoundary
+          name="ArticleComments"
+          fallback={<CommentListSkeleton />}
+          errorMessage="댓글을 불러오지 못했어요."
+        >
+          <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
+        </QueryBoundary>
+      </DebateParticipationGate>
     </>
   );
 }

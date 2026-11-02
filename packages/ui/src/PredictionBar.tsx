@@ -16,7 +16,8 @@ import { LiveCrest } from "./LiveCrest";
  * 체크가 붙는다. 색만으로 가르지 않게 칸마다 엠블럼이나 글자가 들어간다.
  *
  * 비공개(`revealed: false`)면 세 칸이 같은 폭에 `?%`다. 서버가 분포를 주지 않으므로 숫자를
- * 만들지 않는다. 참여가 0명이고 예측 전이면 바 대신 빈 면 한 줄이다.
+ * 만들지 않는다. 공개된 분포가 모두 0%면 폭만 균등하게 채우고 숫자는 0%를 유지한다.
+ * 참여가 0명이고 예측 전이면 바 대신 빈 면 한 줄이다.
  *
  * 폭은 `flex: {비율} 1 0px`이고 최소 폭을 둬서 작은 칸에도 글자가 들어간다. 마운트 때 균등에서
  * 실제 비율로 퍼지는 등장(`animate-seg`, 칸마다 60ms 지연)과, 예측 직후 `?%`에서 실제 비율로
@@ -50,6 +51,9 @@ export function PredictionBar({
   className?: string;
 }) {
   const revealed = distribution !== null;
+  const hasVotes =
+    distribution !== null &&
+    (distribution.home > 0 || distribution.draw > 0 || distribution.away > 0);
   if (!revealed && totalCount === 0) {
     return (
       <div
@@ -79,7 +83,7 @@ export function PredictionBar({
               revealed ? "animate-seg" : ""
             }`}
             style={{
-              flex: `${revealed ? Math.max(percent ?? 0, 0) : 1} 1 0px`,
+              flex: `${hasVotes ? Math.max(percent ?? 0, 0) : 1} 1 0px`,
               animationDelay: `${i * 60}ms`,
             }}
           >

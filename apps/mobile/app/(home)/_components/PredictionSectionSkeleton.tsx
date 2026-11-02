@@ -2,11 +2,15 @@
  * 홈 승부예측 섹션의 로딩 자리 (KAN-700). 실제 섹션(`PredictionHomeTrack`)과 같은 제목 줄과 84% 폭
  * 카드 한 장 반의 실루엣이다. 제목은 정적이라 실물을 그대로 쓴다.
  */
-export function PredictionSectionSkeleton() {
+export function PredictionSectionSkeleton({
+  title = "승부예측",
+}: {
+  title?: string;
+}) {
   return (
     <section aria-hidden className="px-edge pt-4.5">
       <h2 className="text-body-lg text-text-strong tracking-section pb-2.5 font-black">
-        승부예측
+        {title}
       </h2>
       <PredictionCardsSkeleton />
     </section>

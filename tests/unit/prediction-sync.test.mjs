@@ -35,6 +35,7 @@ test("예측 쓰기 뒤에는 요약, 그 경기 의견 전체, 홈, 내 기록�
     predictionKeys.summary(1208345),
     predictionKeys.opinionsOf(1208345),
     predictionKeys.home(),
+    predictionKeys.feed(),
     predictionKeys.mine(),
   ]);
   assert.ok(!qc.keys.some((key) => key[1] === "rankings"));

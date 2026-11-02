@@ -100,9 +100,12 @@ export async function getComments(
 
   const page = await apiFetch<CommentListResponse>(
     `/api/v1/articles/${encodeURIComponent(articleId)}/comments?${params}`,
-    accessToken
-      ? { headers: { Authorization: `Bearer ${accessToken}` } }
-      : undefined,
+    {
+      cache: "no-store",
+      ...(accessToken && {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+    },
   );
 
   return {

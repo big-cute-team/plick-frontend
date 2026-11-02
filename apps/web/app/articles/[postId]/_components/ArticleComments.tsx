@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { Debate } from "@plick/domain/types";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -26,9 +28,13 @@ import { CommentsHeader } from "@/_components/CommentsHeader";
 export function ArticleComments({
   articleId,
   initialCount,
+  debate,
+  closed,
 }: {
   articleId: string;
   initialCount: number;
+  debate?: Debate | null;
+  closed?: boolean;
 }) {
   const [added, setAdded] = useState(0);
   const bump = () => setAdded((n) => n + 1);
@@ -37,8 +43,18 @@ export function ArticleComments({
   return (
     <>
       <CommentsHeader count={initialCount + added} className="mt-8.5 pb-3" />
-      <CommentComposer articleId={articleId} onPosted={bump} className="pb-1" />
-      <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
+      <DebateParticipationGate
+        articleId={articleId}
+        debate={debate}
+        closed={closed}
+      >
+        <CommentComposer
+          articleId={articleId}
+          onPosted={bump}
+          className="pb-1"
+        />
+        <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
+      </DebateParticipationGate>
     </>
   );
 }

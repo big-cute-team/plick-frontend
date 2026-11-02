@@ -504,8 +504,7 @@ export interface Debate {
   optionB: string;
   /**
    * 마감 시각 ISO-8601 (KST 오프셋). null이면 남은 시간 표기를 생략한다.
-   * 표시용 힌트일 뿐 마감 판정 기준이 아니다 — BE는 투표 차단을 기사
-   * `contentType`으로만 본다.
+   * KAN-704 계약에서는 이 시각 도달 또는 기사 FINISH 중 하나면 마감이다.
    */
   closesAt: string | null;
   voteCountA: number;
@@ -522,6 +521,8 @@ export interface Debate {
  * 카드가 질문만 보여주는 이유). 페이지네이션 없는 순수 배열로 온다.
  */
 export interface DebateListItem extends Debate {
+  /** 홈·VS 카드 대표 댓글. 참여 전 잠금 또는 유효 댓글이 없으면 null. */
+  topOpinion: { commentId: number; nickname: string; opinion: string } | null;
   /** 소속 기사 id — 릴스·기사의 `articleSummaryId`와 같은 체계를 문자열로. */
   articleId: string;
   /** 소속 기사의 상태 — FINISH면 마감 토론이다. 마감 판정의 실기준. */

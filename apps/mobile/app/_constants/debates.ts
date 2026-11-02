@@ -2,7 +2,7 @@
  * @file 투표 화면 상수 (KAN-418, KAN-567 리디자인).
  */
 
-import type { DebateListTab, DebateTab } from "@/_types/debates";
+import type { DebateTab } from "@/_types/debates";
 
 /**
  * 비로그인 상태로 선택지를 눌렀을 때 로그인 유도 시트에 띄우는 문구.
@@ -21,30 +21,14 @@ export const VOTE_LOGIN_PROMPT = "투표는 로그인한 사용자만 할 수 �
  */
 export const DEBATE_FRESH_MS = 60_000;
 
-/** 기본 탭. URL에 `?tab=`이 없거나 모르는 값이면 진행 중이다. */
+/** 기본 탭. URL에 `?tab=`이 없거나 모르는 값이면 밸런스게임이다. */
 export const DEFAULT_DEBATE_TAB: DebateTab = "open";
 
 /**
- * 탭 나열 순서와 라벨 (시안 투표 탭). 랭킹은 승부예측 시즌 랭킹이다(KAN-701). 시안의 예측 탭(예측 가능
- * 경기 행 목록)은 티켓이 없어 아직 두지 않는다.
+ * 탭 나열 순서와 라벨 (시안 투표 탭). 랭킹은 승부예측 시즌 랭킹이다(KAN-701). 밸런스게임·승부예측·랭킹을 한 지면에서 전환한다(KAN-703).
  */
 export const DEBATE_TABS: { key: DebateTab; label: string }[] = [
-  { key: "open", label: "진행 중" },
-  { key: "closed", label: "마감" },
+  { key: "open", label: "밸런스게임" },
+  { key: "prediction", label: "승부예측" },
   { key: "rank", label: "랭킹" },
 ];
-
-/** 탭별 빈 상태 문구. */
-export const DEBATE_EMPTY_COPY: Record<DebateListTab, string> = {
-  open: "진행 중인 투표가 없어요",
-  closed: "마감된 투표가 없어요",
-};
-
-/**
- * 탭별 목록 머리(스크린리더 전용 h2). 화면 h1과 카드 제목 h3 사이 레벨을 채운다
- * (heading-order, KAN-670).
- */
-export const DEBATE_LIST_HEADING: Record<DebateListTab, string> = {
-  open: "진행 중인 투표",
-  closed: "마감된 투표",
-};

@@ -17,7 +17,7 @@ export const revalidate = 60;
  * `/debates`다.
  */
 export const metadata: Metadata = {
-  title: "투표",
+  title: "VS",
   description: PAGE_DESCRIPTIONS.debates,
   alternates: {
     canonical: "/debates",
