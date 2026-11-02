@@ -1,12 +1,12 @@
 import type { MatchDetail, StandingRow } from "@plick/domain/live";
-import type { PredictionSummary } from "@plick/domain/prediction";
+import type { KeyPlayers, PredictionSummary } from "@plick/domain/prediction";
 import { matchEmptyLabel } from "@/_constants/live";
 import type { MatchTabKey } from "@/_types/live";
 import { GoalsCard } from "./GoalsCard";
 import { LineupCard } from "./LineupCard";
 import { MatchNewsCard } from "./MatchNewsCard";
 import { PredictionPanel } from "./PredictionPanel";
-import { PreviewGrid } from "./PreviewGrid";
+import { PreviewPanel } from "./PreviewPanel";
 import { StandingsTable } from "./StandingsTable";
 import { StatsCard } from "./StatsCard";
 import { TimelineCard } from "./TimelineCard";
@@ -22,22 +22,29 @@ import { TimelineCard } from "./TimelineCard";
  * 킥오프를 기다리라고 말하지 않게 `matchEmptyLabel`이 갈라 준다.
  *
  * 예측 탭(KAN-696)은 요약이 있을 때만 탭 목록에 들어오므로 여기서는 받은 요약을 그대로 그린다.
+ * 프리뷰 탭(KAN-699)은 팀 비교와 키플레이어, 승부예측 묶음을 더해 `PreviewPanel`이 통째로 그린다.
  *
  * @param detail 경기 상세
  * @param tab 지금 탭
  * @param standings 순위 탭의 표. 서버가 못 받았으면 null
  * @param prediction 예측 요약. 예측 탭이 없는 경기는 null
+ * @param keyPlayers 서버가 받아 둔 키플레이어 씨앗(프리뷰 탭). null은 예측 없는 경기, undefined는 서버가 못 받은 것
+ * @param onSelectTab 탭을 바꿀 때. 프리뷰의 승부예측 묶음이 예측 탭으로 보낸다
  */
 export function MatchDetailTabs({
   detail,
   tab,
   standings,
   prediction,
+  keyPlayers,
+  onSelectTab,
 }: {
   detail: MatchDetail;
   tab: MatchTabKey;
   standings: StandingRow[] | null;
   prediction: PredictionSummary | null;
+  keyPlayers: KeyPlayers | null | undefined;
+  onSelectTab: (tab: MatchTabKey) => void;
 }) {
   const { header } = detail;
 
@@ -50,10 +57,13 @@ export function MatchDetailTabs({
   }
 
   if (tab === "preview") {
-    return detail.preview ? (
-      <PreviewGrid preview={detail.preview} />
-    ) : (
-      <EmptyBlock label="프리뷰 정보가 아직 없어요" />
+    return (
+      <PreviewPanel
+        detail={detail}
+        summary={prediction}
+        keyPlayers={keyPlayers}
+        onSelectTab={onSelectTab}
+      />
     );
   }
   if (tab === "news") {

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { ApiError } from "@plick/core/client";
 import { getMatchDetail, getStandings } from "@plick/core/live";
-import { getPredictionSummary } from "@plick/core/predictions";
+import { getKeyPlayers, getPredictionSummary } from "@plick/core/predictions";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
-import type { PredictionSummary } from "@plick/domain/prediction";
+import type { KeyPlayers, PredictionSummary } from "@plick/domain/prediction";
 import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { MatchDetailScreen } from "@/live/_components/MatchDetailScreen";
 
@@ -65,7 +65,8 @@ export async function generateMetadata({
  *
  * 예측 요약(KAN-696)도 같이 받는다. 이 페이지는 익명 ISR이라 토큰 없이 받고, 그 값은 "예측 탭을
  * 만들 경기인가"(404면 null)와 첫 그림의 씨앗이다. 내 예측과 분포는 클라 훅이 마운트 뒤 Bearer를
- * 실어 다시 받는다. 못 받으면 undefined로 내려 클라가 처음부터 받게 한다.
+ * 실어 다시 받는다. 못 받으면 undefined로 내려 클라가 처음부터 받게 한다. 프리뷰 탭의 키플레이어
+ * (KAN-699)도 같은 규약으로 받아 내린다. `myVote`는 클라가 채운다.
  */
 export default async function MatchDetailPage({
   params,
@@ -78,11 +79,13 @@ export default async function MatchDetailPage({
   let initial: InitialMatchDetail | undefined;
   let standings: StandingRow[] | null = null;
   let prediction: PredictionSummary | null | undefined;
-  const [detailResult, standingsResult, predictionResult] =
+  let keyPlayers: KeyPlayers | null | undefined;
+  const [detailResult, standingsResult, predictionResult, keyPlayersResult] =
     await Promise.allSettled([
       getMatchDetail(id),
       getStandings(),
       getPredictionSummary(id),
+      getKeyPlayers(id),
     ]);
 
   if (detailResult.status === "fulfilled") {
@@ -111,12 +114,19 @@ export default async function MatchDetailPage({
     console.error("[live] 예측 요약 로드 실패:", predictionResult.reason);
   }
 
+  if (keyPlayersResult.status === "fulfilled") {
+    keyPlayers = keyPlayersResult.value;
+  } else {
+    console.error("[live] 키플레이어 로드 실패:", keyPlayersResult.reason);
+  }
+
   return (
     <MatchDetailScreen
       matchId={id}
       initial={initial}
       standings={standings}
       prediction={prediction}
+      keyPlayers={keyPlayers}
     />
   );
 }
