@@ -6,6 +6,7 @@ import { debateKeys } from "@plick/core/debateKeys";
 import type { Debate, DebateVoteState } from "@plick/domain/types";
 import { PARTICIPATION_NOTICE } from "@plick/domain/vs";
 import { useDebateClock } from "@plick/core/use-debate-clock";
+import { useDebateOpinion } from "@/_stores/debate-opinion";
 import { useMyArticleState } from "@/_hooks/useMyArticleState";
 
 /** 투표 게시물은 참여하거나 마감된 뒤에만 댓글 조회·작성 UI를 마운트한다. */
@@ -39,6 +40,7 @@ function GatedComments({
   children: ReactNode;
 }) {
   const { vote } = useMyArticleState(articleId);
+  const openOpinion = useDebateOpinion((state) => state.open);
   const now = useDebateClock([debate]);
   // 첫 투표의 낙관적 갱신으로 댓글을 미리 조회하지 않는다.
   const firstVotePending = useMutationState({
@@ -52,13 +54,6 @@ function GatedComments({
     (debate.closesAt !== null && new Date(debate.closesAt).getTime() <= now)
   )
     return children;
-  function goToVote() {
-    const card = document.getElementById(`debate-vote-${articleId}`);
-    card?.scrollIntoView({ behavior: "smooth", block: "center" });
-    card
-      ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
-      ?.focus({ preventScroll: true });
-  }
   return (
     <div className="relative my-5 overflow-hidden py-8">
       <div
@@ -78,7 +73,7 @@ function GatedComments({
         </p>
         <button
           type="button"
-          onClick={goToVote}
+          onClick={() => openOpinion(articleId)}
           className="bg-accent text-on-accent rounded-control min-h-11 px-5 font-bold"
         >
           참여하기

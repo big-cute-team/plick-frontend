@@ -7,29 +7,27 @@ import { SocialLoginActions } from "@/_components/SocialLoginActions";
 import { PREDICTION_LINK_NOTICE } from "@/_constants/predictions";
 
 /**
- * 예측 작성의 로그인·연동 팝업 (KAN-696, 시안 가이드 §5.5 로그인 분기). 비로그인은 `로그인` 제목
- * 아래 소셜 버튼이 바로 서고, 게스트는 `계정 연동 후 예측할 수 있어요`에 취소와 연동하기다.
- * 댓글의 `LoginPromptDialog`는 안내 뒤 로그인 화면으로 보내는 두 단계인데 시안은 팝업에서 소셜
- * 버튼을 바로 누르게 그려 따로 둔다. 가이드는 웹 게스트를 "해당 없음"으로 두지만 웹에도 게스트
- * 세션이 있어(KAN-514) 같은 안내를 둔다.
- *
- * 소셜 로그인은 OAuth 인가 페이지로 나가는 하드 내비게이션이라 돌아오면 이 화면 상태가 없다.
- * 고른 픽과 쓰던 글은 작성 팝업이 경기별 임시 저장에 적어 두어 다시 작성을 누르면 살아난다.
- * body 포털 이유는 `ConfirmDialog`와 같다.
- *
- * @param mode `login`은 비로그인, `link`는 게스트
- * @param onClose 팝업 닫기
+ * 예측 인증 실패와 게스트 제출 성공의 연동 안내. 성공 안내를 닫아도 저장한 예측은 유지한다.
+ * @param mode `login`은 인증 실패, `link`는 권한 거절, `submitted`는 게스트 제출 성공
+ * @param onClose 안내 닫기
  */
 export function PredictionAuthDialog({
   mode,
   onClose,
 }: {
-  mode: "login" | "link";
+  mode: "login" | "link" | "submitted";
   onClose: () => void;
 }) {
   /* 포털 대상(document)은 서버 렌더에 없다. 마운트 뒤에만 그려 hydration을 맞춘다 */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
   if (!mounted) return null;
 
   return createPortal(
@@ -50,8 +48,18 @@ export function PredictionAuthDialog({
           id="prediction-auth-title"
           className="text-body-lg text-text-strong text-center font-bold"
         >
-          {mode === "login" ? "로그인" : PREDICTION_LINK_NOTICE}
+          {mode === "login"
+            ? "로그인"
+            : mode === "submitted"
+              ? "예측이 등록됐어요"
+              : PREDICTION_LINK_NOTICE}
         </p>
+        {mode === "submitted" && (
+          <p className="text-body text-text-3 mt-3 leading-relaxed">
+            계정을 연동하고 예측 기록을 쌓아 보세요. 적중률과 시즌 랭킹도 확인할
+            수 있어요.
+          </p>
+        )}
         {mode === "login" ? (
           <div className="mt-4 flex flex-col gap-2">
             <SocialLoginActions
@@ -67,7 +75,7 @@ export function PredictionAuthDialog({
               onClick={onClose}
               className="bg-chip text-text-2 text-body hover:bg-border-strong focus-visible:outline-accent inline-flex h-9.5 flex-1 items-center justify-center font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              취소
+              {mode === "submitted" ? "나중에" : "취소"}
             </button>
             <Link
               href="/login"

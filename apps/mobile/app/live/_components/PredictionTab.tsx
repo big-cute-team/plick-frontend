@@ -14,7 +14,8 @@ import {
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
-import { useAuth } from "@/_components/AuthProvider";
+import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
+import { readCookie } from "@/_utils/cookie";
 import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
 import { useErrorToast } from "@/_stores/error-toast";
 import { debateTabPath } from "@/_utils/debates";
@@ -38,7 +39,7 @@ const PredictionCancelSheet = dynamic(
 /** 지금 떠 있는 시트. 한 번에 하나만 선다. */
 type Sheet =
   | { kind: "compose"; mine: MyPrediction | null }
-  | { kind: "auth"; mode: "login" | "link" }
+  | { kind: "auth"; mode: "login" | "link" | "submitted" }
   | { kind: "cancel" }
   | null;
 
@@ -51,10 +52,8 @@ type Sheet =
  * 뒤에는 실제 비율에 내 픽 체크, 내 예측 상자(수정, 취소)가 선다. LOCKED 이후는 바와 상자만 읽기
  * 전용이다. 의견 목록과 정렬, 픽 필터, 공감, 신고, 차단은 KAN-697이 붙였다.
  *
- * 작성 전 로그인 분기(§5.5)는 서버에 보내기 전에 `useAuth`로 먼저 가른다. 세션이 없으면 로그인
- * 시트, 게스트면 연동 안내, 소셜이면 작성 시트다. 세션을 아직 모르는 동안은 작성 시트를 열고 서버
- * 응답(401, 403)이 같은 분기를 다시 탄다. 마감 직전 등록이 409로 돌아오면 토스트 `방금
- * 마감됐어요` 뒤 요약을 다시 받아 LOCKED 화면으로 넘어간다(훅이 무효화, 여기는 토스트).
+ * 게스트도 작성 시트를 연다(KAN-705). 제출 성공 뒤에만 연동 안내를 띄운다.
+ * 마감·인증 실패는 서버 응답을 기준으로 처리한다.
  *
  * 정산된 경기는 상태 줄 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701, 시안 가이드
  * §4). 글자가 작아 세로 패딩으로 터치 목표를 넓히고 음수 마진으로 줄 높이는 그대로 둔다.
@@ -69,7 +68,6 @@ export function PredictionTab({
   header: MatchSummary;
   summary: PredictionSummary;
 }) {
-  const { isLoggedIn, isGuest, isSessionPending } = useAuth();
   const showToast = useErrorToast((state) => state.show);
   const [sheet, setSheet] = useState<Sheet>(null);
 
@@ -80,16 +78,6 @@ export function PredictionTab({
 
   /* 고칠 내 예측은 여는 순간의 값을 들고 간다. 열려 있는 동안 요약이 다시 와도 시트가 모드를 바꾸지 않게 */
   function openCompose(editing: boolean) {
-    if (!isSessionPending) {
-      if (!isLoggedIn) {
-        setSheet({ kind: "auth", mode: "login" });
-        return;
-      }
-      if (isGuest) {
-        setSheet({ kind: "auth", mode: "link" });
-        return;
-      }
-    }
     setSheet({ kind: "compose", mine: editing ? mine : null });
   }
 
@@ -172,6 +160,13 @@ export function PredictionTab({
           mine={sheet.mine}
           onClose={() => setSheet(null)}
           onFailure={handleFailure}
+          onSubmitted={() =>
+            setSheet(
+              readCookie(SESSION_KIND_COOKIE) === SESSION_KIND.guest
+                ? { kind: "auth", mode: "submitted" }
+                : null,
+            )
+          }
         />
       )}
       {sheet?.kind === "auth" && (

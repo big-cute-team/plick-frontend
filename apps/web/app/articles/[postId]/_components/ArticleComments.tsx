@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { Debate } from "@plick/domain/types";
 import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
@@ -12,11 +11,8 @@ import { CommentsHeader } from "@/_components/CommentsHeader";
  * 여백은 시안대로 관련 기사 밑 34px, 헤더 밑 12px이다.
  * 모바일 `ArticleComments`와 같은 구성이다.
  *
- * 서버 컴포넌트(`ArticleMain`)에서 이 덩어리만 클라로 내려온다. 카운트를 여기서
- * 들고 있는 이유: 원본(`article.commentCount`)은 서버가 렌더 때 받은 스냅샷이라
- * 방금 단 댓글이 반영되지 않는다. 등록 성공(원 댓글·답글)마다 로컬로 하나씩
- * 올리고, 삭제 성공마다 하나씩 내린다(BE 집계가 삭제를 빼고 센다, KAN-333).
- * 답글 입력바는 각 스레드가 인라인으로 연다.
+ * 댓글 수는 기사별 캐시에서 읽고 작성·삭제 훅이 갱신한다. 투표 의견 창의 저장도
+ * 같은 카운트에 반영된다(KAN-705). 답글 입력바는 각 스레드가 인라인으로 연다.
  *
  * 목록은 브라우저에서만 받는다 (KAN-667, 모바일 KAN-664). 페이지가 익명 ISR이 되면서 서버
  * 씨앗이 없어졌다. 웹의 목록 훅은 suspense가 아니라 서버 렌더에서 아무것도 받지 않고 빈 채로
@@ -36,24 +32,20 @@ export function ArticleComments({
   debate?: Debate | null;
   closed?: boolean;
 }) {
-  const [added, setAdded] = useState(0);
-  const bump = () => setAdded((n) => n + 1);
-  const drop = () => setAdded((n) => n - 1);
-
   return (
     <>
-      <CommentsHeader count={initialCount + added} className="mt-8.5 pb-3" />
+      <CommentsHeader
+        articleId={articleId}
+        count={initialCount}
+        className="mt-8.5 pb-3"
+      />
       <DebateParticipationGate
         articleId={articleId}
         debate={debate}
         closed={closed}
       >
-        <CommentComposer
-          articleId={articleId}
-          onPosted={bump}
-          className="pb-1"
-        />
-        <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
+        <CommentComposer articleId={articleId} className="pb-1" />
+        <CommentList articleId={articleId} />
       </DebateParticipationGate>
     </>
   );
