@@ -7,6 +7,7 @@ import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
 import {
   PREDICTION_TAB_QUERY,
   PREDICTION_TAB_VALUE,
+  type KeyPlayers,
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { LiveChatPanel } from "@/_components/LiveChatPanel";
@@ -35,17 +36,20 @@ import { SiteFooter } from "@/_components/SiteFooter";
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
  * @param standings 순위 탭의 표. 서버가 못 받았으면 null
  * @param prediction 예측 요약 씨앗 (KAN-696). null은 예측 없는 경기, undefined는 서버가 못 받은 것
+ * @param keyPlayers 키플레이어 씨앗 (KAN-699). 프리뷰 탭이 쓴다. null과 undefined의 뜻은 예측 요약과 같다
  */
 export function MatchDetailScreen({
   matchId,
   initial,
   standings,
   prediction,
+  keyPlayers,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   const {
     data: detail,
@@ -82,6 +86,7 @@ export function MatchDetailScreen({
               detail={detail}
               standings={standings}
               prediction={prediction}
+              keyPlayers={keyPlayers}
             />
           )}
         </PageContainer>
@@ -112,10 +117,12 @@ function MatchDetailBody({
   detail,
   standings,
   prediction: predictionSeed,
+  keyPlayers,
 }: {
   detail: NonNullable<ReturnType<typeof useMatchDetail>["data"]>;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   const { header } = detail;
   const { data: prediction = null } = usePredictionSummary(
@@ -178,6 +185,8 @@ function MatchDetailBody({
                         tab={tab}
                         standings={standings}
                         prediction={prediction}
+                        keyPlayers={keyPlayers}
+                        onSelectTab={setSelected}
                       />
                     </TabPanel>
                   )
@@ -193,6 +202,8 @@ function MatchDetailBody({
                       tab={tab}
                       standings={standings}
                       prediction={prediction}
+                      keyPlayers={keyPlayers}
+                      onSelectTab={setSelected}
                     />
                   </TabPanel>
                 ),

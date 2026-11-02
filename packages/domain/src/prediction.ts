@@ -10,7 +10,7 @@
  * 푼 모양(코드 + 3글자 약어 + 전체 이름)이라 새 타입을 만들지 않는다.
  */
 
-import type { LiveTeam } from "./live";
+import type { LiveTeam, MatchPreview, TeamForm } from "./live";
 import type { CommentReportReason, LikeState, TeamCode } from "./types";
 
 /**
@@ -766,4 +766,245 @@ export function predictionRankLabel(
 ): string {
   const rank = stats?.season.rank ?? null;
   return rank === null ? "랭킹" : `${rank}위`;
+}
+
+/**
+ * 프리뷰 팀 비교 표 한 행(KAN-699, 시안 가이드 §5.3). 값은 화면에 그대로 찍는 문자열이고
+ * `better`가 나은 쪽이다. 어느 한쪽이 없거나 같으면 null이라 둘 다 보통 굵기다.
+ */
+export interface TeamCompareRow {
+  key: "rank" | "winRate" | "goalsFor" | "goalsAgainst" | "headToHead";
+  label: string;
+  /** 홈 값. 집계가 없으면 null이라 화면이 `-`로 둔다 */
+  home: string | null;
+  away: string | null;
+  better: "home" | "away" | null;
+}
+
+/** 팀 비교 표 전체. 최근 5경기 칩 두 줄과 비교 행 다섯. */
+export interface TeamCompare {
+  /** 최신이 왼쪽. 집계가 없으면 빈 배열 */
+  homeRecent: ("W" | "D" | "L")[];
+  awayRecent: ("W" | "D" | "L")[];
+  rows: TeamCompareRow[];
+}
+
+/** 순위가 없는 팀(빅6 밖, 순위표 미수신)의 순위 칸 문구. 티켓 완료 조건 그대로다. */
+export const TEAM_COMPARE_NO_RANK = "리그 순위 없음";
+
+/** 최근 5경기 칩의 글자. 색만으로 가르지 않게 칩마다 들어간다(시안 가이드 §5.3). */
+export const TEAM_FORM_LABEL: Record<"W" | "D" | "L", string> = {
+  W: "승",
+  D: "무",
+  L: "패",
+};
+
+/** 표가 없어 시즌 평점 1위가 대표로 선 키플레이어(`isDefault: true`)의 라벨. 티켓 완료 조건 그대로다. */
+export const KEY_PLAYER_DEFAULT_LABEL = "기본: 시즌 평점 1위";
+
+/** 한 팀의 키플레이어가 아직 없을 때(`player: null`) 이름 자리 문구. */
+export const KEY_PLAYER_EMPTY_LABEL = "선수 미정";
+
+/** 후보 목록이 비었을 때(`candidates: []`) 펼친 자리 문구. */
+export const KEY_PLAYER_NO_CANDIDATES = "후보가 없어요";
+
+/**
+ * 화면에 찍는 정밀도로 먼저 반올림한다. 7.45와 7.46은 둘 다 `7.5`로 보이는데 원본으로 비교하면 한쪽만
+ * 굵어져 같은 값이 이긴 것처럼 읽힌다. 나은 쪽 판정과 막대 길이는 이 값으로 한다.
+ */
+function atDisplayPrecision(
+  value: number | null,
+  digits: number,
+): number | null {
+  return value === null ? null : Number(value.toFixed(digits));
+}
+
+/** 두 값 중 나은 쪽. `lowerIsBetter`는 순위와 실점처럼 작을수록 좋은 항목이다. */
+function betterSide(
+  home: number | null,
+  away: number | null,
+  lowerIsBetter: boolean,
+): "home" | "away" | null {
+  if (home === null || away === null || home === away) return null;
+  const homeWins = lowerIsBetter ? home < away : home > away;
+  return homeWins ? "home" : "away";
+}
+
+/**
+ * 프리뷰 팀 비교 표를 만든다(KAN-699, 시안 가이드 §5.3 "리그 순위, 승률, 평균 득점, 평균 실점,
+ * 맞대결. 순위와 실점은 낮은 쪽이 낫다"). 팀 전적(`teamForms`)과 순위(`leaguePositions`)는 팀
+ * 약어로 홈·원정에 맞춘다. 상대가 빅6 밖이면 그 팀 것이 배열에서 빠질 수 있어 한쪽만 있는 경우를
+ * 받는다.
+ *
+ * 비교할 재료가 하나도 없으면 null이라 표를 그리지 않는다. 숫자가 null인 칸은 null로 두고 화면이
+ * `-`를 찍는다(티켓 "`recent`가 비거나 숫자가 null이면 해당 칸 비움"). 순위만 예외로 문구를 넣는다.
+ * 맞대결 행은 요약이 없거나 경기 수가 0이면 빼고, 라벨에 무승부 수를 붙인다(`맞대결 1무`).
+ *
+ * @param preview 경기 상세의 프리뷰
+ * @param teams 홈·원정 팀
+ * @example buildTeamCompare(preview, { home, away })?.rows[0] // { key: "rank", label: "리그 순위", home: "3위", away: "1위", better: "away" }
+ */
+export function buildTeamCompare(
+  preview: Pick<
+    MatchPreview,
+    "teamForms" | "leaguePositions" | "headToHeadSummary"
+  >,
+  teams: { home: LiveTeam; away: LiveTeam },
+): TeamCompare | null {
+  const formOf = (team: LiveTeam) =>
+    preview.teamForms.find((f) => f.team.shortName === team.shortName) ?? null;
+  const rankOf = (team: LiveTeam) =>
+    preview.leaguePositions.find((p) => p.team.shortName === team.shortName)
+      ?.rank ?? null;
+
+  const homeForm = formOf(teams.home);
+  const awayForm = formOf(teams.away);
+  const homeRank = rankOf(teams.home);
+  const awayRank = rankOf(teams.away);
+  const h2h = preview.headToHeadSummary;
+  const hasH2h = h2h !== null && h2h.matches > 0;
+
+  if (
+    !homeForm &&
+    !awayForm &&
+    homeRank === null &&
+    awayRank === null &&
+    !hasH2h
+  ) {
+    return null;
+  }
+
+  const numeric = (
+    key: Exclude<TeamCompareRow["key"], "rank" | "headToHead">,
+    label: string,
+    pick: (form: TeamForm) => number | null,
+    digits: number,
+    format: (value: number) => string,
+    lowerIsBetter: boolean,
+  ): TeamCompareRow => {
+    const home = atDisplayPrecision(homeForm ? pick(homeForm) : null, digits);
+    const away = atDisplayPrecision(awayForm ? pick(awayForm) : null, digits);
+    return {
+      key,
+      label,
+      home: home === null ? null : format(home),
+      away: away === null ? null : format(away),
+      better: betterSide(home, away, lowerIsBetter),
+    };
+  };
+
+  const rows: TeamCompareRow[] = [
+    {
+      key: "rank",
+      label: "리그 순위",
+      home: homeRank === null ? TEAM_COMPARE_NO_RANK : `${homeRank}위`,
+      away: awayRank === null ? TEAM_COMPARE_NO_RANK : `${awayRank}위`,
+      better: betterSide(homeRank, awayRank, true),
+    },
+    numeric(
+      "winRate",
+      "승률",
+      (f) => f.winRate,
+      0,
+      (v) => `${v}%`,
+      false,
+    ),
+    numeric(
+      "goalsFor",
+      "평균 득점",
+      (f) => f.goalsForAvg,
+      1,
+      (v) => v.toFixed(1),
+      false,
+    ),
+    numeric(
+      "goalsAgainst",
+      "평균 실점",
+      (f) => f.goalsAgainstAvg,
+      1,
+      (v) => v.toFixed(1),
+      true,
+    ),
+  ];
+  if (hasH2h) {
+    rows.push({
+      key: "headToHead",
+      label: `맞대결 ${h2h.draws}무`,
+      home: `${h2h.homeWins}승`,
+      away: `${h2h.awayWins}승`,
+      better: betterSide(h2h.homeWins, h2h.awayWins, false),
+    });
+  }
+
+  return {
+    homeRecent: homeForm?.recent ?? [],
+    awayRecent: awayForm?.recent ?? [],
+    rows,
+  };
+}
+
+/**
+ * 키플레이어 VS 스탯 한 줄(KAN-699, 시안 가이드 §5.3 "스탯 4줄 마주보기 막대"). `homeRatio`와
+ * `awayRatio`는 큰 쪽을 100으로 둔 막대 길이(퍼센트)다. 값이 없는 쪽은 `-`에 길이 0이다.
+ */
+export interface KeyPlayerStatRow {
+  key: "appearances" | "goals" | "assists" | "rating";
+  label: string;
+  home: string;
+  away: string;
+  homeRatio: number;
+  awayRatio: number;
+  /** 큰 쪽. 같거나 어느 한쪽이 없으면 null이라 둘 다 회색 막대다 */
+  better: "home" | "away" | null;
+}
+
+/**
+ * 키플레이어 두 명의 시즌 스탯을 마주보기 막대 네 줄로 만든다. 출전, 골, 도움, 평점 순이고 평점은
+ * 소수 한 자리다. 나은 쪽과 막대 길이는 화면에 찍는 정밀도로 반올림한 값으로 정한다(7.45 대 7.46은 같다). 한쪽 `stats`가 null이면(선수가 없거나 집계 전) 그쪽은 `-`와 빈 막대로 두고 반대쪽
+ * 막대만 꽉 채우되 비교가 아니라 `better`는 null이다(회색 막대). 둘 다 0이면 막대는 비고 값은 0이다.
+ *
+ * @param home 홈 키플레이어 스탯. 없으면 null
+ * @param away 원정 키플레이어 스탯. 없으면 null
+ * @example buildKeyPlayerStatRows({ appearances: 7, goals: 2, assists: 3, rating: 7.45 }, null)[0]
+ * // { key: "appearances", label: "출전", home: "7", away: "-", homeRatio: 100, awayRatio: 0, better: "home" }
+ */
+export function buildKeyPlayerStatRows(
+  home: KeyPlayerStats | null,
+  away: KeyPlayerStats | null,
+): KeyPlayerStatRow[] {
+  const row = (
+    key: KeyPlayerStatRow["key"],
+    label: string,
+    pick: (stats: KeyPlayerStats) => number | null,
+    digits: number,
+    format: (value: number) => string,
+  ): KeyPlayerStatRow => {
+    const h = atDisplayPrecision(home ? pick(home) : null, digits);
+    const a = atDisplayPrecision(away ? pick(away) : null, digits);
+    const max = Math.max(h ?? 0, a ?? 0);
+    const ratio = (v: number | null) =>
+      v === null || max === 0 ? 0 : Math.round((v / max) * 100);
+    return {
+      key,
+      label,
+      home: h === null ? "-" : format(h),
+      away: a === null ? "-" : format(a),
+      homeRatio: ratio(h),
+      awayRatio: ratio(a),
+      better: betterSide(h, a, false),
+    };
+  };
+  const integer = (v: number) => String(v);
+  return [
+    row("appearances", "출전", (s) => s.appearances, 0, integer),
+    row("goals", "골", (s) => s.goals, 0, integer),
+    row("assists", "도움", (s) => s.assists, 0, integer),
+    row(
+      "rating",
+      "평점",
+      (s) => s.rating,
+      1,
+      (v) => v.toFixed(1),
+    ),
+  ];
 }
