@@ -18,11 +18,12 @@ export const ACTIVITY_PAGE_SIZE = 10;
 /** 기본 탭. URL에 `?tab=`이 없거나 모르는 값이면 여기로 떨어진다. 시안의 첫 탭이다. */
 export const DEFAULT_ACTIVITY_TAB: ActivityTab = "comments";
 
-/** 탭 나열 순서와 라벨 (시안 `actTabs`). */
+/** 탭 나열 순서와 라벨 (시안 `actTabs`. 내 예측은 KAN-702에서 맨 끝에 붙었다). */
 export const ACTIVITY_TABS: { key: ActivityTab; label: string }[] = [
   { key: "comments", label: "내 댓글" },
   { key: "likes", label: "좋아요" },
   { key: "votes", label: "내 투표" },
+  { key: "predictions", label: "내 예측" },
 ];
 
 /** 탭별 빈 상태 문구. 투표 목록 API가 없어 `votes`는 늘 이 문구다. */
@@ -30,7 +31,14 @@ export const ACTIVITY_EMPTY_COPY: Record<ActivityTab, string> = {
   comments: "아직 쓴 댓글이 없어요",
   likes: "아직 좋아요한 기사가 없어요",
   votes: "아직 참여한 투표가 없어요",
+  predictions: "아직 예측한 경기가 없어요",
 };
+
+/** 내 예측 기록 첫 페이지를 못 받았을 때(KAN-702). */
+export const MY_PREDICTIONS_ERROR = "내 예측을 불러오지 못했어요";
+
+/** 내 예측 기록 다음 페이지를 못 받았을 때. */
+export const MY_PREDICTIONS_NEXT_ERROR = "다음 예측을 불러오지 못했어요";
 
 /**
  * `?tab=` 값을 탭으로 좁힌다. 없거나 모르는 값이면 기본 탭이다.
@@ -38,7 +46,9 @@ export const ACTIVITY_EMPTY_COPY: Record<ActivityTab, string> = {
  * @param value 쿼리스트링의 `tab` 값
  */
 export function activityTabFrom(value: string | undefined): ActivityTab {
-  return value === "likes" || value === "votes" ? value : DEFAULT_ACTIVITY_TAB;
+  return value === "likes" || value === "votes" || value === "predictions"
+    ? value
+    : DEFAULT_ACTIVITY_TAB;
 }
 
 /**

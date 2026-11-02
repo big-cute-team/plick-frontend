@@ -5,13 +5,16 @@
  * 카드와 같은 모양이라 새 타입 없이 `ArticleCard`, `ArticleFeedPage`를 그대로 쓴다.
  */
 
+import type { MyPredictionPage } from "@plick/domain/prediction";
 import type { ArticleFeedPage } from "@plick/domain/types";
 
 /**
  * 활동 탭. URL `?tab=`의 값이자 쿼리키의 스코프다. 시안(KAN-567 MY 575-739행) 순서는
- * 내 댓글, 좋아요, 내 투표인데 투표 목록 API가 없어 `votes`는 빈 상태만 그린다.
+ * 내 댓글, 좋아요, 내 투표인데 투표 목록 API가 없어 `votes`는 빈 상태만 그린다. `predictions`는
+ * 승부예측 기록(KAN-702, 홈 v2 시안 "내 예측" 탭)이고 목록은 `@plick/core/predictions`의
+ * `getMyPredictions`가 받는다.
  */
-export type ActivityTab = "comments" | "likes" | "votes";
+export type ActivityTab = "comments" | "likes" | "votes" | "predictions";
 
 /**
  * 내가 쓴 댓글 한 건 (`GET /api/v1/users/me/comments`).
@@ -69,6 +72,8 @@ export interface InitialActivity {
   likes?: ArticleFeedPage;
   /** 댓글 탭을 보고 있을 때만 있다. */
   comments?: MyCommentPage;
+  /** 내 예측 탭을 보고 있을 때만 있다(KAN-702). */
+  predictions?: MyPredictionPage;
   /** 서버가 응답을 받은 시각(epoch ms). 캐시 신선도의 기준점. */
   fetchedAt: number;
 }

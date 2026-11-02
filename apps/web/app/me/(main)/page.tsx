@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ApiError } from "@plick/core/client";
+import { getMyPredictions } from "@plick/core/predictions";
 import { TEAMS } from "@plick/domain/constants";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { activityTabFrom } from "@/_constants/me";
@@ -16,9 +17,11 @@ import { ActivityTabs } from "@/me/_components/ActivityTabs";
 import { GuestLinkCard } from "@/me/_components/GuestLinkCard";
 import { LikedArticlesList } from "@/me/_components/LikedArticlesList";
 import { LoginPromptCard } from "@/me/_components/LoginPromptCard";
+import { MePredictionStats } from "@/me/_components/MePredictionStats";
 import { MeSessionGate } from "@/me/_components/MeSessionGate";
 import { MeShell } from "@/me/_components/MeShell";
 import { MyCommentsList } from "@/me/_components/MyCommentsList";
+import { MyPredictionsList } from "@/me/_components/MyPredictionsList";
 
 /** 개인화 화면이라 색인 가치가 없다. robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
 export const metadata: Metadata = {
@@ -29,7 +32,8 @@ export const metadata: Metadata = {
 /**
  * 데스크톱 MY, 내 활동 (KAN-244 → KAN-319 API 연결 → KAN-567 리디자인, 시안 MY
  * 575-680행). 좌측 메뉴(`MeShell`) 옆에 닉네임 22/900, 응원팀 엠블럼, 오른쪽에
- * "댓글 N, 좋아요 N"을 두고 그 아래 내 댓글, 좋아요, 내 투표 탭과 목록을 쌓는다.
+ * "댓글 N, 좋아요 N"을 두고 그 아래 승부예측 기록 띠(KAN-702), 내 댓글, 좋아요, 내 투표, 내 예측
+ * 탭과 목록을 쌓는다.
  * 전에는 설정 줄 카드만 있었고 활동 목록은 모바일에만 있었다. 모바일
  * `/me/activity`의 훅, fetcher를 이식했다.
  *
@@ -41,7 +45,7 @@ export const metadata: Metadata = {
  *
  * 활동 개수와 지금 보는 탭(`?tab=`)의 첫 페이지를 여기서 미리 받아 씨앗으로
  * 내려준다. 어느 탭이든 첫 화면이 서버 HTML에 실려 스켈레톤 없이 뜬다. 투표 탭은
- * 내 투표 목록 API가 없어 빈 상태만 둔다. 활동 조회가 401이면 토큰이 무효한 것이라
+ * 내 투표 목록 API가 없어 빈 상태만 둔다. 내 예측 탭은 `GET /me/predictions` 첫 페이지를 받는다. 활동 조회가 401이면 토큰이 무효한 것이라
  * 비로그인과 같이 다루고, 그 밖의 실패는 씨앗 없이 넘겨 클라가 다시 받는다.
  *
  * 비로그인 안내는 `MeSessionGate`로 감싼다 (KAN-667). 게스트 발급이 브라우저로 옮겨 가면서 첫
@@ -87,7 +91,9 @@ export default async function MyPage({
           ? getLikedArticles({ accessToken })
           : tab === "comments"
             ? getMyComments({ accessToken })
-            : Promise.resolve(undefined),
+            : tab === "predictions"
+              ? getMyPredictions({ accessToken })
+              : Promise.resolve(undefined),
       ]);
       initial = {
         counts,
@@ -95,6 +101,10 @@ export default async function MyPage({
         comments:
           tab === "comments"
             ? (page as InitialActivity["comments"])
+            : undefined,
+        predictions:
+          tab === "predictions"
+            ? (page as InitialActivity["predictions"])
             : undefined,
         fetchedAt: Date.now(),
       };
@@ -131,6 +141,8 @@ export default async function MyPage({
         )}
       </div>
 
+      <MePredictionStats />
+
       <ActivityTabs active={tab} />
 
       {tab === "comments" ? (
@@ -147,6 +159,15 @@ export default async function MyPage({
           initial={
             initial?.likes && {
               page: initial.likes,
+              fetchedAt: initial.fetchedAt,
+            }
+          }
+        />
+      ) : tab === "predictions" ? (
+        <MyPredictionsList
+          initial={
+            initial?.predictions && {
+              page: initial.predictions,
               fetchedAt: initial.fetchedAt,
             }
           }

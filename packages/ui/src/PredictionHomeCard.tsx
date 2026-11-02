@@ -1,10 +1,9 @@
-import { TEAMS } from "@plick/domain/constants";
-import type { LiveTeam } from "@plick/domain/live";
 import {
   predictionHomeFooter,
   predictionHomeVerdict,
   predictionKickoffLabel,
   predictionStatusLine,
+  predictionTeamLabel,
   type PredictionHomeCard as PredictionHomeCardData,
 } from "@plick/domain/prediction";
 import { LiveCrest } from "./LiveCrest";
@@ -36,7 +35,10 @@ export function PredictionHomeCard({
   size?: "sm" | "lg";
   now?: Date;
 }) {
-  const teams = { home: teamLabel(card.home), away: teamLabel(card.away) };
+  const teams = {
+    home: predictionTeamLabel(card.home),
+    away: predictionTeamLabel(card.away),
+  };
   const statusLine = predictionStatusLine(card, teams);
   const verdict = predictionHomeVerdict(card);
   const crest = size === "lg" ? 32 : 36;
@@ -136,9 +138,4 @@ export function PredictionHomeCard({
       </p>
     </div>
   );
-}
-
-/** 빅6는 레지스트리의 짧은 한글 표기(맨유), 그 밖은 BE 이름 그대로. */
-function teamLabel(team: LiveTeam): string {
-  return team.code ? TEAMS[team.code].name : team.name;
 }
