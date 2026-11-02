@@ -13,9 +13,10 @@ import { useDebates } from "@/_hooks/useDebates";
 import { useHydrated } from "@/_hooks/useHydrated";
 import { useMyArticleState } from "@/_hooks/useMyArticleState";
 import { useViewState } from "@/_stores/view-state";
-import type { DebateTab } from "@/_types/debates";
+import type { DebateListTab, DebateTab } from "@/_types/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabs } from "./DebateTabs";
+import { PredictionRanking } from "./PredictionRanking";
 
 /**
  * 투표 화면 본체 (KAN-418, KAN-567 리디자인). 탭 줄 + 탭별 투표 카드 리스트.
@@ -29,6 +30,9 @@ import { DebateTabs } from "./DebateTabs";
  * 탭과 경계만 세우고 리스트는 {@link DebateList}가 그린다 (KAN-447). 씨앗 없이
  * 들어와 클라가 받는 동안은 Suspense fallback(스켈레톤)이, 실패는 경계의 에러
  * UI가 받는다.
+ *
+ * 랭킹 탭(KAN-701)은 토론 목록이 아니라 승부예측 시즌 랭킹(`PredictionRanking`)이다. 그 탭을
+ * 열 때 브라우저에서 받고, 내 순위 줄이 스크롤 영역 하단에 붙어야 해서 `px-edge` 섹션 밖에 둔다.
  *
  * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다.
  */
@@ -48,19 +52,23 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   return (
     <>
       <DebateTabs value={tab} onChange={handleChange} />
-      <section className="px-edge">
-        <QueryBoundary
-          name="DebatesFeed"
-          fallback={<DebateListSkeleton />}
-          errorMessage="투표를 불러오지 못했어요"
-        >
-          {initial || hydrated ? (
-            <DebateList tab={tab} initial={initial} />
-          ) : (
-            <DebateListSkeleton />
-          )}
-        </QueryBoundary>
-      </section>
+      {tab === "rank" ? (
+        <PredictionRanking />
+      ) : (
+        <section className="px-edge">
+          <QueryBoundary
+            name="DebatesFeed"
+            fallback={<DebateListSkeleton />}
+            errorMessage="투표를 불러오지 못했어요"
+          >
+            {initial || hydrated ? (
+              <DebateList tab={tab} initial={initial} />
+            ) : (
+              <DebateListSkeleton />
+            )}
+          </QueryBoundary>
+        </section>
+      )}
     </>
   );
 }
@@ -84,7 +92,7 @@ function DebateList({
   tab,
   initial,
 }: {
-  tab: DebateTab;
+  tab: DebateListTab;
   initial?: InitialDebateList;
 }) {
   const { data } = useDebates(initial);

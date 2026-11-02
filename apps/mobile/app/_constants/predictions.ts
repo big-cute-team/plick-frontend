@@ -56,3 +56,30 @@ export const PREDICTION_HOME_EMPTY = "지금 예측할 경기가 없어요";
 
 /** 홈 승부예측 목록을 서버와 브라우저 둘 다 못 받았을 때. */
 export const PREDICTION_HOME_ERROR = "승부예측을 불러오지 못했어요";
+
+/** 투표 화면 랭킹 탭의 제목(KAN-701, 시안 가이드 §5.7). */
+export const PREDICTION_RANKING_TITLE = "시즌 랭킹";
+
+/** 랭킹 표 머리글. 순서는 시안 그대로다. */
+export const PREDICTION_RANKING_COLUMNS = [
+  "순위",
+  "닉네임",
+  "적중률",
+  "적중",
+  "연속",
+] as const;
+
+/** 내 순위 줄의 이름 칸. */
+export const PREDICTION_RANKING_ME_LABEL = "나";
+
+/** 닉네임이 없는 사용자의 랭킹 행. MY 화면의 빈 닉네임 표기와 같은 말이다. */
+export const PREDICTION_RANKING_NO_NICKNAME = "닉네임 미설정";
+
+/** 정산 5경기가 쌓인 사람이 아직 없어 목록이 빈 상태(티켓 KAN-701 "빈 상태 화면"). */
+export const PREDICTION_RANKING_EMPTY = "아직 랭킹이 없어요";
+
+/** 랭킹 첫 페이지를 못 받았을 때. */
+export const PREDICTION_RANKING_ERROR = "랭킹을 불러오지 못했어요";
+
+/** 랭킹으로 가는 링크의 글자. 순위가 있으면 `128위`가 대신 선다(`predictionRankLabel`). */
+export const PREDICTION_RANKING_LINK_LABEL = "랭킹";

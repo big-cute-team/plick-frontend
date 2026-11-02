@@ -7,9 +7,10 @@ import { DebateVoteCard } from "@/_components/DebateVoteCard";
 import { useDebateTab } from "@/_hooks/useDebateTab";
 import { useDebates } from "@/_hooks/useDebates";
 import { DEBATE_LIST_HEADING } from "@/_constants/debates";
-import type { DebateTab } from "@/_types/debates";
+import type { DebateListTab } from "@/_types/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabBar } from "./DebateTabs";
+import { PredictionRanking } from "./PredictionRanking";
 
 /**
  * 투표 탭 줄과 목록 본체 (KAN-418 → KAN-567 시안 투표 1078-1165행). 진행 중 항목은 투표 카드
@@ -28,6 +29,9 @@ import { DebateTabBar } from "./DebateTabs";
  * 서버 HTML에 투표가 한 건도 안 실렸다. 지금은 기본 탭(진행 중) 목록이 서버 HTML에 실리고
  * 탭 줄도 여기서 같이 그려 상태를 나눈다.
  *
+ * 랭킹 탭(KAN-701)은 토론 목록이 아니라 승부예측 시즌 랭킹(`PredictionRanking`)이다. 투표 목록 쿼리는
+ * 탭과 무관하게 돌지만 씨앗이 있어 비용이 없고, 랭킹은 그 탭을 열 때 브라우저에서 받는다.
+ *
  * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다
  */
 export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
@@ -40,7 +44,9 @@ export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   return (
     <>
       <DebateTabBar tab={tab} onSelect={selectTab} />
-      {isPending ? (
+      {tab === "rank" ? (
+        <PredictionRanking />
+      ) : isPending ? (
         <DebateListSkeleton />
       ) : isError ? (
         <div className="flex items-baseline gap-3 py-10">
@@ -77,7 +83,7 @@ function DebateList({
   tab,
   debates,
 }: {
-  tab: DebateTab;
+  tab: DebateListTab;
   debates: DebateListItem[];
 }) {
   return (

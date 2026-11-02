@@ -624,13 +624,14 @@ export async function getPredictionHome({
  *
  * 정산 5경기 이상인 사용자만 오른다. `me`는 첫 페이지에서 쓰고 비로그인이면 null이다.
  *
- * @param scope 시즌(`2026`) 또는 `ALL`. 기본은 이번 시즌
+ * @param scope 시즌(`2026`) 또는 `ALL`. 비우면 쿼리를 붙이지 않아 BE가 이번 시즌으로 고른다(KAN-701).
+ *   FE가 연도를 박아 두면 시즌이 바뀔 때 코드를 고쳐야 해서 응답의 `scope`로 시즌을 읽는다
  * @param cursor 이전 페이지가 준 `nextCursor`. 첫 페이지면 null
  * @param size 한 페이지 건수(1..100)
  * @param accessToken 서버에서 부를 때만 - `me`가 채워진다
  */
 export async function getPredictionRankings({
-  scope = "2026",
+  scope,
   cursor = null,
   size = PREDICTION_RANKINGS_PAGE_SIZE,
   accessToken,
@@ -639,7 +640,8 @@ export async function getPredictionRankings({
   cursor?: string | null;
   size?: number;
 } = {}): Promise<PredictionRanking> {
-  const params = new URLSearchParams({ scope, size: String(size) });
+  const params = new URLSearchParams({ size: String(size) });
+  if (scope) params.set("scope", scope);
   if (cursor) params.set("cursor", cursor);
 
   const page = await apiFetch<PredictionRankingResponse>(

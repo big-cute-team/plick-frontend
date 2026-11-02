@@ -38,8 +38,9 @@ export const predictionKeys = {
   /** 경기 하나의 키플레이어와 VS 스탯. 투표 응답이 같은 모양이라 캐시를 바로 덮는다. */
   keyPlayers: (matchId: number) =>
     ["predictions", "key-players", matchId] as const,
-  /** 시즌 랭킹. BE가 10분 캐시하므로 같은 staleTime을 둔다. */
-  rankings: (scope: string) => ["predictions", "rankings", scope] as const,
+  /** 시즌 랭킹 무한 쿼리. BE가 10분 캐시하므로 같은 staleTime을 둔다. scope를 비우면 이번 시즌(`season`). */
+  rankings: (scope?: string) =>
+    ["predictions", "rankings", scope ?? "season"] as const,
   /** 내 기록 전체(적중률·예측 목록) - 예측 등록·취소 뒤 한 번에 무효화하는 상위 키. */
   mine: () => ["predictions", "me"] as const,
   /** 내 적중률·순위·예측 수. */

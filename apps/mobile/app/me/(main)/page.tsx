@@ -24,6 +24,7 @@ import { MeSessionGate } from "@/me/_components/MeSessionGate";
 import { MeHeader } from "@/me/_components/MeHeader";
 import { MeLinkRow } from "@/me/_components/MeLinkRow";
 import { MeLoginNotice } from "@/me/_components/MeLoginNotice";
+import { MePredictionRankRow } from "@/me/_components/MePredictionRankRow";
 
 /** 개인화 화면이라 색인 가치가 없다. robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
 export const metadata: Metadata = {
@@ -131,11 +132,12 @@ export default async function MyPage({
 
         {isSocial && !needsLogin && (
           <nav className="px-edge">
+            <MePredictionRankRow className="border-border border-t" />
             <MeLinkRow
               href="/me/edit"
               label="계정"
               value={profile?.email ?? undefined}
-              className="border-border border-t"
+              className="border-border-soft border-t"
             />
             <MeLinkRow
               href="/me/blocked"
