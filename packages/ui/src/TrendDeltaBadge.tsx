@@ -1,5 +1,5 @@
 import type { TrendItem } from "@plick/domain/types";
-import { toTrendDelta } from "@/_utils/trends";
+import { toTrendDelta } from "@plick/domain/trends";
 
 /**
  * 변화 표시의 삼각형 (KAN-501). `currentColor`라 부모가 색을 정하고, `down`이면

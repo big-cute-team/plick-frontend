@@ -66,7 +66,7 @@ export function DebateVoteCard({
     });
 
   return (
-    <>
+    <div id={`debate-vote-${articleId}`}>
       <VoteCard
         debate={debate}
         closed={closed || closedByServer}
@@ -80,6 +80,6 @@ export function DebateVoteCard({
           description={VOTE_LOGIN_PROMPT}
         />
       )}
-    </>
+    </div>
   );
 }

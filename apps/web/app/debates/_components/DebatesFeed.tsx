@@ -1,122 +1,70 @@
 "use client";
 
-import { ArticleLink } from "@/_components/ArticleLink";
-import { isDebateClosed } from "@plick/domain/format";
-import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
-import { DebateVoteCard } from "@/_components/DebateVoteCard";
+import { closedLast, isBalanceClosed } from "@plick/domain/vs";
+import type { InitialDebateList } from "@plick/domain/types";
+import { useDebateClock } from "@plick/core/use-debate-clock";
 import { useDebateTab } from "@/_hooks/useDebateTab";
 import { useDebates } from "@/_hooks/useDebates";
-import { DEBATE_LIST_HEADING } from "@/_constants/debates";
-import type { DebateListTab } from "@/_types/debates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabBar } from "./DebateTabs";
 import { PredictionRanking } from "./PredictionRanking";
+import { PredictionFeed } from "./PredictionFeed";
+import { BalanceGameItem } from "./BalanceGameItem";
 
-/**
- * 투표 탭 줄과 목록 본체 (KAN-418 → KAN-567 시안 투표 1078-1165행). 진행 중 항목은 투표 카드
- * md(각진, 바로 투표 가능)와 아래 오른쪽 "기사 보기" 링크, 마감 항목은 카드 sm(마감
- * 상태)이다. 시안의 팀 엠블럼, 출처 기자, 댓글 수, 여론 적중, 실제 결과는 리스트
- * 응답에 없어 뺐다(응답은 질문, 선택지, 표 수, 기사 id뿐).
- *
- * 마감 토론도 리스트에 함께 온다. contentType(FINISH) 마감은 기사 상세와 같은
- * 규약으로 `closed`로 넘기고, closesAt 경과 마감(KAN-436)도 마감 탭으로 보낸다.
- *
- * 리스트는 익명 ISR이라 `myVote`가 늘 null이다 (KAN-667). 내 표는 카드가 기사 id로 내 상태
- * 캐시에서 얹는다. 마감 탭 카드도 같은 `DebateVoteCard`라 따로 두지 않았다.
- *
- * 지금 탭은 `useDebateTab`이 URL `?tab=`에서 읽는다 (KAN-683). 전에는 탭 줄과 목록이 각자
- * `useSearchParams`를 읽었는데, 정적 페이지에서 그 훅은 Suspense 경계까지 클라 렌더로 미뤄
- * 서버 HTML에 투표가 한 건도 안 실렸다. 지금은 기본 탭(진행 중) 목록이 서버 HTML에 실리고
- * 탭 줄도 여기서 같이 그려 상태를 나눈다.
- *
- * 랭킹 탭(KAN-701)은 토론 목록이 아니라 승부예측 시즌 랭킹(`PredictionRanking`)이다. 투표 목록 쿼리는
- * 탭과 무관하게 돌지만 씨앗이 있어 비용이 없고, 랭킹은 그 탭을 열 때 브라우저에서 받는다.
- *
- * @param initial 서버 컴포넌트가 받아 둔 리스트 씨앗. 없으면 클라가 직접 받는다
- */
+/** VS 목록. 탭 안에서만 조회해 선택하지 않은 목록의 요청은 만들지 않는다. */
 export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   const [tab, selectTab] = useDebateTab();
-  const { data, isPending, isError, isFetching, refetch } = useDebates(initial);
-  const debates = (data ?? []).filter(
-    (debate) => (tab === "closed") === isClosed(debate),
-  );
-
   return (
     <>
       <DebateTabBar tab={tab} onSelect={selectTab} />
       {tab === "rank" ? (
         <PredictionRanking />
-      ) : isPending ? (
-        <DebateListSkeleton />
-      ) : isError ? (
-        <div className="flex items-baseline gap-3 py-10">
-          <p className="text-body-md text-text-4">투표를 불러오지 못했어요</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="text-label-lg text-accent hover:text-accent-hover focus-visible:outline-accent font-bold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
-          >
-            다시 시도
-          </button>
-        </div>
-      ) : debates.length === 0 ? (
-        <p className="text-body-md text-text-4 py-10">
-          {tab === "closed"
-            ? "아직 마감된 투표가 없어요"
-            : "진행 중인 투표가 없어요"}
-        </p>
+      ) : tab === "prediction" ? (
+        <PredictionFeed />
       ) : (
-        <DebateList tab={tab} debates={debates} />
+        <DebateList initial={initial} />
       )}
     </>
   );
 }
-
-/**
- * 탭 하나의 목록.
- *
- * @param tab 지금 보는 탭
- * @param debates 그 탭의 항목들
- */
-function DebateList({
-  tab,
-  debates,
-}: {
-  tab: DebateListTab;
-  debates: DebateListItem[];
-}) {
+function DebateList({ initial }: { initial?: InitialDebateList }) {
+  const { data, isPending, isError, isFetching, refetch } = useDebates(initial);
+  const now = useDebateClock(data ?? [], refetch);
+  const items = closedLast(data ?? [], (debate) =>
+    isBalanceClosed(debate, now),
+  );
+  if (isPending) return <DebateListSkeleton />;
+  if (isError && !items.length)
+    return (
+      <div className="py-10">
+        <p className="text-body text-text-3">밸런스게임을 불러오지 못했어요</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="text-accent min-h-11 font-bold"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  if (!items.length)
+    return (
+      <p className="text-body text-text-4 py-10">아직 밸런스게임이 없어요</p>
+    );
   return (
     <>
-      <h2 className="sr-only">{DEBATE_LIST_HEADING[tab]}</h2>
-      <ul>
-        {debates.map((debate) => (
-          <li
-            key={debate.id}
-            className={`border-border-soft border-b ${tab === "closed" ? "py-4.5" : "pt-5 pb-5.5"}`}
-          >
-            <DebateVoteCard
-              articleId={debate.articleId}
+      <h2 className="sr-only">밸런스게임</h2>
+      <ul className="flex flex-col gap-3 py-4">
+        {items.map((debate) => (
+          <li key={debate.id}>
+            <BalanceGameItem
               debate={debate}
-              closed={debate.contentType === "FINISH"}
-              size={tab === "closed" ? "sm" : "md"}
+              closed={isBalanceClosed(debate, now)}
             />
-            <div className="flex justify-end pt-2.5">
-              <ArticleLink
-                articleId={debate.articleId}
-                className="text-label text-accent hover:text-accent-hover font-bold"
-              >
-                기사 보기
-              </ArticleLink>
-            </div>
           </li>
         ))}
       </ul>
     </>
   );
-}
-
-/** 마감 판정 — 기사 상태(FINISH)가 실기준이고, 마감 시각이 지난 것도 마감으로 본다. */
-function isClosed(debate: DebateListItem): boolean {
-  return debate.contentType === "FINISH" || isDebateClosed(debate.closesAt);
 }

@@ -37,6 +37,7 @@ export function invalidateAfterPredictionWrite(
       queryKey: predictionKeys.opinionsOf(matchId),
     }),
     queryClient.invalidateQueries({ queryKey: predictionKeys.home() }),
+    queryClient.invalidateQueries({ queryKey: predictionKeys.feed() }),
     queryClient.invalidateQueries({ queryKey: predictionKeys.mine() }),
   ]);
 }

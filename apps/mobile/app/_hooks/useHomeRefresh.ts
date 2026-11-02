@@ -3,6 +3,10 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { debateKeys } from "@plick/core/debateKeys";
+import { predictionKeys } from "@plick/core/predictionKeys";
+import { homeKeys } from "@plick/core/home-queries";
+import { liveKeys } from "@plick/core/liveKeys";
 import { articleKeys } from "@plick/core/articleKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import { useViewState } from "@/_stores/view-state";
@@ -28,7 +32,7 @@ let inFlight: Promise<void> | null = null;
  * [새 목록]으로 두 번 깜빡였다(KAN-379). 첫 페이지만 받는 이유와 커서 체인
  * 사정은 `restartFeedQuery` 주석 참고.
  *
- * 핫이슈 캐러셀은 서버 컴포넌트가 그리므로 `router.refresh()`로 함께 갱신한다.
+ * 서버에서 받은 홈 섹션은 서버 컴포넌트가 그리므로 `router.refresh()`로 함께 갱신한다.
  * 이건 리로드가 아니라 서버에 RSC 페이로드를 다시 요청해 화면을 갈아 끼우는
  * 소프트 갱신이라 클라 상태(스크롤 위치·필터·스크롤러 ref)는 그대로 남는다.
  * 프로미스를 돌려주지 않아서 기다릴 수는 없다 — 스피너는 목록 쪽에 맞춘다.
@@ -42,12 +46,21 @@ export function useHomeRefresh() {
     // 지금 보고 있는 팀 탭만 다시 받는다. 필터 자체는 새로고침으로 건드리지 않는다
     const { homeFilter } = useViewState.getState();
     router.refresh();
-    inFlight = restartFeedQuery(
-      queryClient,
-      articleKeys.feed(homeFilter),
-    ).finally(() => {
-      inFlight = null;
-    });
+    inFlight = Promise.all([
+      restartFeedQuery(queryClient, articleKeys.feed(homeFilter)),
+      ...[
+        debateKeys.list(),
+        predictionKeys.home(),
+        homeKeys.trends,
+        liveKeys.all,
+      ].map((queryKey) =>
+        queryClient.refetchQueries({ queryKey, type: "active" }),
+      ),
+    ])
+      .then(() => undefined)
+      .finally(() => {
+        inFlight = null;
+      });
     return inFlight;
   }, [queryClient, router]);
 }

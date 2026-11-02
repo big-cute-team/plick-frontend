@@ -1,21 +1,20 @@
 import { test, expect } from "../../fixtures/failure";
 
-/**
- * VS(토론) 목록. 카드가 하나 이상 있고 누르면 기사 상세로 간다. 투표는 로그인이 필요해 여기서 하지 않는다.
- * 진행 중 투표는 비어 있는 날이 있어 늘 카드가 있는 마감 탭을 본다
- */
-test.describe("투표", () => {
-  test("목록이 뜨고 첫 카드가 기사로 이어진다", async ({ page }) => {
-    await page.goto("/debates?tab=closed");
+/** VS의 세 탭과 카드 전체를 통한 게시물 진입을 확인한다. */
+test.describe("VS", () => {
+  test("세 탭을 표시하고 밸런스게임 카드를 누르면 기사로 이어진다", async ({
+    page,
+  }) => {
+    await page.goto("/debates");
     await expect(
-      page.getByRole("heading", { level: 1, name: "투표" }),
+      page.getByRole("heading", { level: 1, name: "VS" }),
     ).toBeVisible();
-    const cards = page
-      .getByRole("main")
-      .getByRole("listitem")
-      .filter({ has: page.getByRole("region", { name: "투표" }) });
-    await expect(cards.first()).toBeVisible();
-    await cards.first().getByRole("link", { name: "투표" }).click();
+    for (const name of ["밸런스게임", "승부예측", "랭킹"]) {
+      await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+    const card = page.getByRole("link", { name: /게시물 보기$/ }).first();
+    await expect(card).toBeVisible();
+    await card.click();
     await expect(page).toHaveURL(/\/articles\/\d+$/);
     await expect(
       page.getByRole("main").getByRole("heading", { level: 1 }),

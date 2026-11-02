@@ -225,7 +225,7 @@ export interface KeyPlayers {
 
 /**
  * 홈 승부예측 카드 한 장(`GET /predictions/home`). `topOpinion`은 적중률순 1위 의견의
- * 앞 40자다. `revealed: false`여도 내려오는 미끼 문구라 예측 전에는 화면이 꼭 블러를 건다.
+ * 앞 40자다. KAN-704 계약에서는 `revealed: false`면 실제 의견을 반환하지 않고 null이다.
  */
 export interface PredictionHomeCard {
   matchId: number;

@@ -12,9 +12,10 @@ for (const [name, utils] of [
   ["web", web],
   ["mobile", mobile],
 ]) {
-  test(`${name}: ?tab= 값은 closed와 rank만 받고 나머지는 진행 중`, () => {
+  test(`${name}: ?tab= 값은 prediction과 rank를 받고 이전 closed 링크는 밸런스게임으로 이동`, () => {
     assert.equal(utils.debateTabFrom("rank"), "rank");
-    assert.equal(utils.debateTabFrom("closed"), "closed");
+    assert.equal(utils.debateTabFrom("prediction"), "prediction");
+    assert.equal(utils.debateTabFrom("closed"), "open");
     assert.equal(utils.debateTabFrom("open"), "open");
     assert.equal(utils.debateTabFrom(null), "open");
     assert.equal(utils.debateTabFrom(undefined), "open");
@@ -23,7 +24,7 @@ for (const [name, utils] of [
 
   test(`${name}: 탭 → URL은 기본 탭만 쿼리가 없다`, () => {
     assert.equal(utils.debateTabPath("open"), "/debates");
-    assert.equal(utils.debateTabPath("closed"), "/debates?tab=closed");
+    assert.equal(utils.debateTabPath("prediction"), "/debates?tab=prediction");
     assert.equal(utils.debateTabPath("rank"), "/debates?tab=rank");
   });
 }

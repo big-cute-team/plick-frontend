@@ -166,6 +166,8 @@ export function ArticleBody({
         <ArticleComments
           articleId={article.id}
           initialCount={article.commentCount}
+          debate={debate}
+          closed={article.contentType === "FINISH"}
         />
       </div>
 

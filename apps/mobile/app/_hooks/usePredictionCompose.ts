@@ -59,6 +59,7 @@ export function usePredictionCompose(
         queryKey: predictionKeys.opinionsOf(matchId),
       });
       void queryClient.invalidateQueries({ queryKey: predictionKeys.home() });
+      void queryClient.invalidateQueries({ queryKey: predictionKeys.feed() });
       void queryClient.invalidateQueries({ queryKey: predictionKeys.mine() });
     },
     onError: (error) => {

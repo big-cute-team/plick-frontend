@@ -366,6 +366,18 @@
 
   /* 투표 트랙 모프 전환 */
   --ease-vote: ease-out;
+  --animate-line-down: line-down 0.4s ease-out both;
+  @keyframes line-down {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   --animate-rise: rise 0.3s ease both;
 
   @keyframes rise {

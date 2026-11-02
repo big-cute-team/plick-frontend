@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
+import { useOnScreen } from "@plick/core/useOnScreen";
 import {
   matchPredictionPath,
   predictionRankLabel,
@@ -39,7 +41,9 @@ export function PredictionHomeTrack({
 }: {
   initial: PredictionHomeCardData[] | undefined;
 }) {
-  const { data: cards, isError } = usePredictionHome(initial);
+  const ref = useRef<HTMLElement>(null);
+  const visible = useOnScreen(ref);
+  const { data: cards, isError } = usePredictionHome(initial, visible);
   const { isLoggedIn, isGuest } = useAuth();
   const { data: stats } = useMyPredictionStats(isLoggedIn && !isGuest);
   const rank =
@@ -48,7 +52,7 @@ export function PredictionHomeTrack({
       : PREDICTION_RANKING_LINK_LABEL;
 
   return (
-    <section className="px-edge pt-4.5">
+    <section ref={ref} aria-label="승부예측" className="px-edge pt-4.5">
       <div className="flex items-baseline gap-2 pb-2.5">
         <h2 className="text-body-lg text-text-strong tracking-section font-black">
           승부예측
@@ -78,10 +82,10 @@ export function PredictionHomeTrack({
       ) : (
         <ul className="no-scrollbar -mx-edge px-edge scroll-px-edge flex snap-x snap-mandatory gap-2.5 overflow-x-auto">
           {cards.map((card) => (
-            <li key={card.matchId} className="w-[84%] shrink-0 snap-start">
+            <li key={card.matchId} className="flex w-[84%] shrink-0 snap-start">
               <Link
                 href={matchPredictionPath(card.matchId)}
-                className="block active:opacity-70"
+                className="focus-visible:outline-accent flex min-w-0 flex-1 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 active:scale-[0.99] motion-reduce:transform-none"
               >
                 <PredictionHomeCard card={card} />
               </Link>

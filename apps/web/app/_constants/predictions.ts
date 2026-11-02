@@ -5,8 +5,7 @@
  */
 
 /** 잠금 지면(OPEN, 예측 전)의 안내. 설명체 금지 규칙의 예외로 기획 확인을 받은 문구다. */
-export const PREDICTION_LOCK_NOTICE =
-  "의견을 남기고 다른 사람들의 의견을 확인해 보세요";
+export { PARTICIPATION_NOTICE as PREDICTION_LOCK_NOTICE } from "@plick/domain/vs";
 
 /** 잠금 지면과 의견 머리글의 작성 버튼 문구. */
 export const PREDICTION_COMPOSE_LABEL = "의견 남기기";

@@ -50,6 +50,7 @@ export function useDebateVote({
   }
 
   const { mutate, isPending } = useMutation({
+    mutationKey: debateKeys.vote(debate.id),
     mutationFn: async (option: VoteOption) => {
       if (!(await ensureSession())) throw sessionUnavailableError();
       const result = await voteDebate(debate.id, option);
@@ -76,7 +77,10 @@ export function useDebateVote({
       });
       return previous;
     },
-    onSuccess: (result) => apply(result),
+    onSuccess: (result) => {
+      apply(result);
+      void queryClient.invalidateQueries({ queryKey: debateKeys.list() });
+    },
     onError: (e, _option, previous) => {
       if (previous) apply(previous);
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {

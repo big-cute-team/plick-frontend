@@ -5,7 +5,7 @@ import { copyrightNotice, homeIntroCopy } from "@plick/domain/brand";
 /** 푸터 링크 — 색인 가치가 있는 정적 페이지만 싣는다(로그인·MY는 noindex라 뺀다). */
 const FOOTER_LINKS = [
   { href: "/reels", label: "릴스" },
-  { href: "/debates", label: "투표" },
+  { href: "/debates", label: "VS" },
   { href: "/about", label: "소개" },
   { href: "/guide/rumour-stages", label: "루머 단계 가이드" },
   { href: "/guide/transfer-terms", label: "이적 용어 사전" },

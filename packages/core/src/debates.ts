@@ -35,6 +35,8 @@ export interface DebateResponse {
 }
 
 interface DebateListItemResponse extends DebateResponse {
+  /** KAN-704: 홈·VS 대표 의견. 잠금 상태 또는 유효 댓글이 없으면 null. */
+  topOpinion: DebateListItem["topOpinion"];
   articleId: number;
   contentType: ArticleContentType;
 }
@@ -68,17 +70,18 @@ export function toDebate(d: DebateResponse): Debate {
 export async function getDebates({
   accessToken,
 }: { accessToken?: string } = {}): Promise<DebateListItem[]> {
-  const items = await apiFetch<DebateListItemResponse[]>(
-    "/api/v1/debates",
-    accessToken
-      ? { headers: { Authorization: `Bearer ${accessToken}` } }
-      : undefined,
-  );
+  const items = await apiFetch<DebateListItemResponse[]>("/api/v1/debates", {
+    cache: "no-store",
+    ...(accessToken && {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }),
+  });
 
   return items.map((d) => ({
     ...toDebate(d),
     articleId: String(d.articleId),
     contentType: d.contentType,
+    topOpinion: d.topOpinion,
   }));
 }
 

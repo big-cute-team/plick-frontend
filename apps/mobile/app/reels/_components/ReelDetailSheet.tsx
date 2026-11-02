@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CloseIcon } from "@plick/ui/icons";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { EntityChips } from "@/_components/EntityChips";
 import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
@@ -165,24 +166,30 @@ export function ReelDetailSheet({
             className="border-border-soft mt-1.5 border-t pt-5 pb-2.5"
           />
 
-          <CommentComposer
+          <DebateParticipationGate
             articleId={reel.id}
-            onPosted={() => setAddedComments((n) => n + 1)}
-            className="pb-1"
-          />
-
-          {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
-          <QueryBoundary
-            name="ReelComments"
-            fallback={<CommentListSkeleton />}
-            errorMessage="댓글을 불러오지 못했어요"
+            debate={reel.debate}
+            closed={reel.contentType === "FINISH"}
           >
-            <CommentList
+            <CommentComposer
               articleId={reel.id}
               onPosted={() => setAddedComments((n) => n + 1)}
-              onDeleted={() => setAddedComments((n) => n - 1)}
+              className="pb-1"
             />
-          </QueryBoundary>
+
+            {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
+            <QueryBoundary
+              name="ReelComments"
+              fallback={<CommentListSkeleton />}
+              errorMessage="댓글을 불러오지 못했어요"
+            >
+              <CommentList
+                articleId={reel.id}
+                onPosted={() => setAddedComments((n) => n + 1)}
+                onDeleted={() => setAddedComments((n) => n - 1)}
+              />
+            </QueryBoundary>
+          </DebateParticipationGate>
         </div>
       </div>
     </div>
