@@ -15,11 +15,8 @@ import type { MatchTabKey } from "@/_types/live";
  */
 export const LIVE_POLL_MS = 20_000;
 
-/**
- * 순단 재시도 횟수. 502(외부 API 실패)는 다시 보내면 캐시가 채워져 성공할 수
- * 있어 한 번은 다시 시도하고, 그 이상은 에러 지면의 다시 시도에 맡긴다.
- */
-export const LIVE_MAX_RETRIES = 1;
+/** 순단 재시도 횟수. 값과 이유는 `@plick/core/query-policy`에 있다(KAN-685). */
+export { LIVE_MAX_RETRIES } from "@plick/core/query-policy";
 
 /**
  * 경기 상태별 상세 탭 구성 (KAN-458). 예정 경기는 프리뷰, 라이브·종료는
@@ -56,14 +53,44 @@ const VISIBLE_TABS_WITHOUT_CHAT: Record<MatchStatus, MatchTabKey[]> = {
 };
 
 /**
- * 지금 화면에 실제로 보이는 상세 탭 목록. 채팅이 닫혀 있으면 `chat`을 뺀다.
- * 상태별로 같은 배열 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
+ * 예측 탭을 맨 앞에 붙인 표 (KAN-696). 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지
+ * 않는다. 날짜 미정 연기 경기의 예측이 OPEN으로 남는 경우(티켓 참고)는 새 일정이 잡혀 SCHEDULED로
+ * 돌아오면 탭이 선다.
+ */
+const withPrediction = (
+  table: Record<MatchStatus, MatchTabKey[]>,
+): Record<MatchStatus, MatchTabKey[]> => ({
+  SCHEDULED: ["prediction", ...table.SCHEDULED],
+  LIVE: ["prediction", ...table.LIVE],
+  FINISHED: ["prediction", ...table.FINISHED],
+  POSTPONED: table.POSTPONED,
+  CANCELLED: table.CANCELLED,
+});
+
+const TABS_WITH_PREDICTION = withPrediction(MATCH_TABS_BY_STATUS);
+const TABS_WITHOUT_CHAT_WITH_PREDICTION = withPrediction(
+  VISIBLE_TABS_WITHOUT_CHAT,
+);
+
+/**
+ * 지금 화면에 실제로 보이는 상세 탭 목록. 채팅이 닫혀 있으면 `chat`을 빼고, 예측할 수 있는
+ * 경기(요약 API가 200)면 `prediction`을 맨 앞에 붙인다 (KAN-696). 상태별로 같은 배열
+ * 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
  *
  * @param status 경기 상태
+ * @param hasPrediction 예측 요약이 있는 경기인가. 빅6 밖 경기는 false
  */
-export function matchTabsFor(status: MatchStatus): MatchTabKey[] {
-  return CHAT_ENABLED
-    ? MATCH_TABS_BY_STATUS[status]
+export function matchTabsFor(
+  status: MatchStatus,
+  hasPrediction = false,
+): MatchTabKey[] {
+  if (CHAT_ENABLED) {
+    return hasPrediction
+      ? TABS_WITH_PREDICTION[status]
+      : MATCH_TABS_BY_STATUS[status];
+  }
+  return hasPrediction
+    ? TABS_WITHOUT_CHAT_WITH_PREDICTION[status]
     : VISIBLE_TABS_WITHOUT_CHAT[status];
 }
 
@@ -123,6 +150,7 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
   stats: "스탯",
   table: "순위",
   news: "뉴스",
+  prediction: "예측",
 };
 
 /**

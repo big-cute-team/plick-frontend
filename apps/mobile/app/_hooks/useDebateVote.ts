@@ -33,9 +33,11 @@ import { voteDebate } from "@/_services/debate-actions";
 export function useDebateVote({
   debate,
   onChange,
+  onFirstVote,
 }: {
   debate: Debate;
   onChange?: (next: DebateVoteState) => void;
+  onFirstVote?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { ensureSession } = useAuth();
@@ -48,6 +50,7 @@ export function useDebateVote({
   }
 
   const { mutate, isPending } = useMutation({
+    mutationKey: debateKeys.vote(debate.id),
     mutationFn: async (option: VoteOption) => {
       if (!(await ensureSession())) throw sessionUnavailableError();
       const result = await voteDebate(debate.id, option);
@@ -74,7 +77,11 @@ export function useDebateVote({
       });
       return previous;
     },
-    onSuccess: (result) => apply(result),
+    onSuccess: (result, _option, previous) => {
+      apply(result);
+      if (previous.myVote === null) onFirstVote?.();
+      void queryClient.invalidateQueries({ queryKey: debateKeys.list() });
+    },
     onError: (e, _option, previous) => {
       if (previous) apply(previous);
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {

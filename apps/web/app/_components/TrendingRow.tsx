@@ -3,7 +3,7 @@ import { TEAMS, TEAM_CODES } from "@plick/domain/constants";
 import { storyPath, teamHubPath } from "@plick/domain/format";
 import type { TrendItem } from "@plick/domain/types";
 import { TeamCrest } from "@plick/ui/TeamCrest";
-import { TrendDeltaBadge } from "@/_components/TrendDeltaBadge";
+import { TrendDeltaBadge } from "@plick/ui/TrendDeltaBadge";
 import { TREND_CREST_SIZE, TREND_HIGHLIGHT_RANK } from "@/_constants/trends";
 
 /**

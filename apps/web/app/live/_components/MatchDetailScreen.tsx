@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CHAT_ENABLED } from "@plick/core/chat";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
+import {
+  PREDICTION_TAB_QUERY,
+  PREDICTION_TAB_VALUE,
+  type KeyPlayers,
+  type PredictionSummary,
+} from "@plick/domain/prediction";
 import { LiveChatPanel } from "@/_components/LiveChatPanel";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
-import { MATCH_TABS_BY_STATUS } from "@/_constants/live";
+import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
+import { usePredictionSummary } from "@plick/core/prediction-queries";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";
@@ -28,15 +35,21 @@ import { SiteFooter } from "@/_components/SiteFooter";
  * @param matchId API-Football fixture id
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
  * @param standings 순위 탭의 표. 서버가 못 받았으면 null
+ * @param prediction 예측 요약 씨앗 (KAN-696). null은 예측 없는 경기, undefined는 서버가 못 받은 것
+ * @param keyPlayers 키플레이어 씨앗 (KAN-699). 프리뷰 탭이 쓴다. null과 undefined의 뜻은 예측 요약과 같다
  */
 export function MatchDetailScreen({
   matchId,
   initial,
   standings,
+  prediction,
+  keyPlayers,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
+  prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   const {
     data: detail,
@@ -69,7 +82,12 @@ export function MatchDetailScreen({
           ) : isError ? (
             <LiveLoadError onRetry={() => refetch()} />
           ) : (
-            <MatchDetailBody detail={detail} standings={standings} />
+            <MatchDetailBody
+              detail={detail}
+              standings={standings}
+              prediction={prediction}
+              keyPlayers={keyPlayers}
+            />
           )}
         </PageContainer>
       </main>
@@ -90,17 +108,39 @@ export function MatchDetailScreen({
  *
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이
  * 사라지면 첫 탭으로 돌아간다.
+ *
+ * 예측 탭(KAN-696)은 요약 쿼리가 값을 줄 때만 맨 앞에 선다. 빅6 밖 경기는 404라 null이고 탭이
+ * 없다. 내 예측이 실리는 유저별 지면이라 뉴스처럼 열 때만 그린다. 숨겨 둔 채 그리면 바 등장
+ * 애니메이션이 안 보이는 사이에 끝난다.
  */
 function MatchDetailBody({
   detail,
   standings,
+  prediction: predictionSeed,
+  keyPlayers,
 }: {
   detail: NonNullable<ReturnType<typeof useMatchDetail>["data"]>;
   standings: StandingRow[] | null;
+  prediction?: PredictionSummary | null;
+  keyPlayers?: KeyPlayers | null;
 }) {
   const { header } = detail;
-  const tabs = MATCH_TABS_BY_STATUS[header.status];
+  const { data: prediction = null } = usePredictionSummary(
+    header.id,
+    predictionSeed,
+  );
+  const tabs = matchTabsFor(header.status, prediction !== null);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
+  /* 홈 카드 같은 진입점이 `?tab=prediction`으로 보내면 예측 탭을 먼저 연다 (KAN-700). 페이지가 익명
+     ISR이라 서버에서 쿼리를 읽을 수 없고, `useSearchParams`는 정적 라우트에서 Suspense 경계까지 클라
+     렌더로 돌려 서버 HTML의 탭 본문(KAN-683)을 잃는다. 마운트 뒤 주소에서 직접 읽는다. 요약이 아직
+     안 와 탭이 없으면 `active`가 첫 탭으로 접히고 탭이 생기는 순간 넘어간다 */
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get(
+      PREDICTION_TAB_QUERY,
+    );
+    if (tab === PREDICTION_TAB_VALUE) setSelected("prediction");
+  }, []);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
   /* 탭 전환은 캐시라 서버 요청이 없어 여기서 화면 전환으로 센다 (KAN-543) */
@@ -132,8 +172,8 @@ function MatchDetailBody({
                   실린다. 뉴스 탭만 열 때 그린다. 열리면 클라에서 받는 목록이라 숨겨 두면 모두에게
                   요청이 나간다 */}
               {tabs.map((tab) =>
-                tab === "news" ? (
-                  active === "news" && (
+                tab === "news" || tab === "prediction" ? (
+                  active === tab && (
                     <TabPanel
                       key={tab}
                       on
@@ -144,6 +184,9 @@ function MatchDetailBody({
                         detail={detail}
                         tab={tab}
                         standings={standings}
+                        prediction={prediction}
+                        keyPlayers={keyPlayers}
+                        onSelectTab={setSelected}
                       />
                     </TabPanel>
                   )
@@ -158,6 +201,9 @@ function MatchDetailBody({
                       detail={detail}
                       tab={tab}
                       standings={standings}
+                      prediction={prediction}
+                      keyPlayers={keyPlayers}
+                      onSelectTab={setSelected}
                     />
                   </TabPanel>
                 ),

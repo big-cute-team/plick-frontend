@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ApiError } from "@plick/core/client";
+import { getMyPredictions } from "@plick/core/predictions";
 import { TEAMS } from "@plick/domain/constants";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
@@ -24,6 +25,8 @@ import { MeSessionGate } from "@/me/_components/MeSessionGate";
 import { MeHeader } from "@/me/_components/MeHeader";
 import { MeLinkRow } from "@/me/_components/MeLinkRow";
 import { MeLoginNotice } from "@/me/_components/MeLoginNotice";
+import { MePredictionRankRow } from "@/me/_components/MePredictionRankRow";
+import { MePredictionStats } from "@/me/_components/MePredictionStats";
 
 /** 개인화 화면이라 색인 가치가 없다. robots disallow 대신 이 noindex가 색인을 막는다 (KAN-384). */
 export const metadata: Metadata = {
@@ -44,8 +47,9 @@ const DOC_LINKS = [
 /**
  * MY (KAN-170, KAN-567 리디자인, 시안 MY 메인).
  *
- * 위에서부터 닉네임·응원팀 엠블럼·활동 개수, 계정과 차단 목록으로 들어가는 행,
- * 내 댓글 / 좋아요 / 투표 탭과 목록, 맨 아래 로그아웃과 회원 탈퇴다. 카드로 쌓던
+ * 위에서부터 닉네임·응원팀 엠블럼·활동 개수, 승부예측 기록 상자(KAN-702), 예측 랭킹과 계정,
+ * 차단 목록으로 들어가는 행, 내 댓글 / 좋아요 / 투표 / 예측 탭과 목록, 맨 아래 로그아웃과
+ * 회원 탈퇴다. 카드로 쌓던
  * 옛 구성(프로필·응원팀·활동 카드, 설정 줄)은 걷어냈고 활동 목록은 별도 화면
  * (`/me/activity`)에서 이 화면의 탭으로 들어왔다(그 주소는 여기로 redirect).
  *
@@ -84,7 +88,7 @@ export default async function MyPage({
 
   if (accessToken && profile) {
     const [activity, blocked] = await Promise.allSettled([
-      loadInitialActivity(accessToken, tab),
+      loadInitialActivity(accessToken, tab, isSocial),
       isSocial ? getBlockedUsers() : Promise.resolve(null),
     ]);
     if (activity.status === "fulfilled") {
@@ -129,13 +133,16 @@ export default async function MyPage({
           <MeLoginNotice mode="guest" guestExpiresAt={guestExpiresAt} />
         )}
 
+        {isSocial && !needsLogin && <MePredictionStats />}
+
         {isSocial && !needsLogin && (
           <nav className="px-edge">
+            <MePredictionRankRow className="border-border border-t" />
             <MeLinkRow
               href="/me/edit"
               label="계정"
               value={profile?.email ?? undefined}
-              className="border-border border-t"
+              className="border-border-soft border-t"
             />
             <MeLinkRow
               href="/me/blocked"
@@ -173,14 +180,18 @@ export default async function MyPage({
 
 /**
  * 지금 보는 탭의 첫 페이지와 개수를 한 번에 받는다. 투표 탭은 목록 API가 없어
- * 개수만 받는다.
+ * 개수만 받는다. 예측 탭(KAN-702)은 소셜 계정이면 `GET /me/predictions` 첫 페이지를 같이 받는다.
+ * 게스트는 예측을 못 해 기록이 없고 화면(`MeActivityFeed`)이 API 없이 빈 상태를 그리니 서버도
+ * 부르지 않는다.
  *
  * @param accessToken 서버 fetch에 실을 토큰
  * @param tab 지금 보는 탭
+ * @param isSocial 소셜 계정인가. 게스트면 예측 첫 페이지를 받지 않는다
  */
 async function loadInitialActivity(
   accessToken: string,
   tab: ReturnType<typeof activityTabFrom>,
+  isSocial: boolean,
 ): Promise<InitialActivity> {
   const fetchedAt = Date.now();
   if (tab === "likes") {
@@ -196,6 +207,13 @@ async function loadInitialActivity(
       getMyComments({ accessToken }),
     ]);
     return { counts, comments, fetchedAt };
+  }
+  if (tab === "predictions" && isSocial) {
+    const [counts, predictions] = await Promise.all([
+      getMyActivityCounts(accessToken),
+      getMyPredictions({ accessToken }),
+    ]);
+    return { counts, predictions, fetchedAt };
   }
   return { counts: await getMyActivityCounts(accessToken), fetchedAt };
 }

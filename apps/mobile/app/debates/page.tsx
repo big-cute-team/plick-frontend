@@ -14,7 +14,7 @@ export const revalidate = 60;
  * 이유는 기사 목록(KAN-386)과 같다. 시그널을 한 도메인에 모은다.
  */
 export const metadata: Metadata = {
-  title: "투표",
+  title: "VS",
   description: PAGE_DESCRIPTIONS.debates,
   alternates: { canonical: `${WEB_SITE_URL}/debates` },
 };

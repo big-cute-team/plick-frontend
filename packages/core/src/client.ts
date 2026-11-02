@@ -301,6 +301,13 @@ export async function apiFetch<T>(
     );
   }
 
-  const envelope = (await res.json()) as ApiEnvelope<T>;
+  /**
+   * 본문이 없는 성공(204)은 봉투도 없다 (KAN-695). 예측 취소와 답글 삭제가 그렇다.
+   * `res.json()`은 빈 본문에서 던지므로 먼저 글자로 읽어 비었으면 null을 돌려준다.
+   * 그동안의 삭제 API는 200에 `data: null` 봉투를 줘서 이 길을 탄 적이 없었다.
+   */
+  const text = await res.text();
+  if (text.length === 0) return null as T;
+  const envelope = JSON.parse(text) as ApiEnvelope<T>;
   return envelope.data;
 }

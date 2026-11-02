@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { activityKeys } from "@plick/core/activityKeys";
 import { ApiError } from "@plick/core/client";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
-import { useFreshSeed } from "@/_hooks/useFreshSeed";
+import { useFreshSeed } from "@plick/core/useFreshSeed";
 import { getMyActivityCounts } from "@/_services/activity";
 import type { MyActivityCounts } from "@/_types/activity";
 

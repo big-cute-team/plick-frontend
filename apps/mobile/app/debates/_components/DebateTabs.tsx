@@ -6,7 +6,7 @@ import type { DebateTab } from "@/_types/debates";
 import { debateTabPath } from "@/_utils/debates";
 
 /**
- * 투표 화면의 탭 줄 (KAN-567, 시안 투표 탭). 진행 중과 마감 둘이고 제어형이라
+ * 투표 화면의 탭 줄 (KAN-567, 시안 투표 탭). 밸런스게임·승부예측·랭킹이며 제어형이라
  * 선택 상태는 부모(`DebatesFeed`)가 URL에서 읽어 준다.
  *
  * MY 활동 탭(`ActivityTabs`)과 같은 생김새다. 앵커인 이유도 같다. 새 탭 열기는

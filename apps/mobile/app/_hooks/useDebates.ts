@@ -31,6 +31,7 @@ export function useDebates(initial?: InitialDebateList) {
     queryKey: debateKeys.list(),
     queryFn: () => getDebates(),
     staleTime: DEBATE_FRESH_MS,
+    refetchOnMount: "always",
     gcTime: FEED_FRESH_MS,
     retry: FEED_MAX_RETRIES,
     ...(initial && {

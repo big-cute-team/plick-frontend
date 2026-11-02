@@ -6,7 +6,7 @@
  * 한 번에 끝내고 화면은 결과만 그린다.
  */
 
-import type { TrendItem } from "@plick/domain/types";
+import type { TrendItem } from "./types";
 
 /** 화면이 그릴 순위 변동. 넷뿐이다: ▲3, ▼2, -, NEW (KAN-523). */
 export type TrendDelta =

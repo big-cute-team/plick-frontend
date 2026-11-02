@@ -11,6 +11,7 @@ import {
 import type { ReelCard } from "@plick/domain/types";
 import { CloseIcon } from "@plick/ui/icons";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentList } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -71,20 +72,12 @@ export function ReelDetailPanel({
   const open = reel != null;
   /** 닫힘 애니메이션 동안에도 내용이 보이도록 마지막 릴을 유지한다. */
   const [rendered, setRendered] = useState<ReelCard | null>(reel);
-  /** 이 패널에서 등록한 댓글 수 — 피드가 준 카운트 스냅샷에 더해 보여준다. */
-  const [addedComments, setAddedComments] = useState(0);
-  const reelId = reel?.id;
   /* 닫힘 애니 중에도 rendered가 남으니 그 기준으로 받는다 — 캐시가 있어 재요청 없음 */
   const reporters = useArticleReporters(rendered?.id);
 
   useEffect(() => {
     if (reel) setRendered(reel);
   }, [reel]);
-
-  /* 다른 릴로 갈아타면 앞 릴에서 센 수는 의미가 없다 */
-  useEffect(() => {
-    if (reelId) setAddedComments(0);
-  }, [reelId]);
 
   useEffect(() => {
     if (!open) return;
@@ -197,19 +190,18 @@ export function ReelDetailPanel({
             {/* 댓글 */}
             <div className="flex flex-col px-5.5 pb-6">
               <CommentsHeader
-                count={rendered.commentCount + addedComments}
+                articleId={rendered.id}
+                count={rendered.commentCount}
                 className="pt-5 pb-3"
               />
-              <CommentComposer
+              <DebateParticipationGate
                 articleId={rendered.id}
-                onPosted={() => setAddedComments((n) => n + 1)}
-                className="pb-1"
-              />
-              <CommentList
-                articleId={rendered.id}
-                onPosted={() => setAddedComments((n) => n + 1)}
-                onDeleted={() => setAddedComments((n) => n - 1)}
-              />
+                debate={rendered.debate}
+                closed={rendered.contentType === "FINISH"}
+              >
+                <CommentComposer articleId={rendered.id} className="pb-1" />
+                <CommentList articleId={rendered.id} />
+              </DebateParticipationGate>
             </div>
           </div>
         )}

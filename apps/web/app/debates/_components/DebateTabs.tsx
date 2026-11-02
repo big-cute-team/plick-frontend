@@ -6,7 +6,7 @@ import { DEBATE_TABS } from "@/_constants/debates";
 import type { DebateTab } from "@/_types/debates";
 
 /**
- * 투표 탭 줄 (KAN-567 시안 투표 1064-1213행). 진행 중, 마감 두 링크이고 지금 탭은 밑줄과
+ * 투표 탭 줄 (KAN-567 시안 투표 1064-1213행). 밸런스게임·승부예측·랭킹 링크이며 지금 탭은 밑줄과
  * 굵은 글자다. 링크 href는 `?tab=`이라 새 탭 열기와 크롤러는 URL을 그대로 쓴다.
  *
  * 지금 탭은 부모(`DebatesFeed`)가 `useDebateTab`으로 읽어 준다 (KAN-683). 전에는 이 줄이
@@ -35,7 +35,7 @@ export function DebateTabBar({
   return (
     <div
       role="tablist"
-      aria-label="투표 상태"
+      aria-label="VS"
       className="border-border flex items-center gap-5 border-b"
     >
       {DEBATE_TABS.map(({ key, label, href }) => {

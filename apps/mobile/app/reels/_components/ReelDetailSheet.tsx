@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { CloseIcon } from "@plick/ui/icons";
 import { formatCount, formatRelativeTime } from "@plick/domain/format";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { EntityChips } from "@/_components/EntityChips";
 import { CommentList, CommentListSkeleton } from "@/_components/CommentList";
@@ -39,8 +39,8 @@ import type { ReelDetailMotion } from "@/_types/reels";
  *
  * 댓글(KAN-303): 릴 카드 id가 곧 BE `articleSummaryId`라 기사와 같은 댓글
  * API를 쓴다. 시트는 클라에서 열리므로 서버 씨앗 없이 열릴 때 목록을 받는다.
- * 헤더 카운트는 피드가 준 스냅샷(`reel.commentCount`)에 이 시트에서 단 수를
- * 로컬로 더한다 — 스냅샷은 방금 단 댓글을 모른다.
+ * 헤더 카운트는 피드 스냅샷으로 시작하고 기사별 캐시에서 작성·삭제를 반영한다.
+ * 투표 의견 창에서 저장한 댓글도 같은 수를 갱신한다(KAN-705).
  *
  * @param reel - 세부를 보여줄 릴
  * @param motion - useReelDetailMotion()이 만든 개폐·드래그 상태 (ReelsFeed 소유)
@@ -52,8 +52,6 @@ export function ReelDetailSheet({
   reel: ReelCard;
   motion: ReelDetailMotion;
 }) {
-  const [addedComments, setAddedComments] = useState(0);
-
   return (
     /* 시트 위쪽 빈 배경(릴이 비치는 자리)을 누르면 닫힌다 (KAN-525). 릴 화면
        전체가 시트를 여는 탭 타깃이 되면서 이 층이 그 탭을 받아 주지 않으면
@@ -161,28 +159,27 @@ export function ReelDetailSheet({
           )}
 
           <CommentsHeader
-            count={reel.commentCount + addedComments}
+            articleId={reel.id}
+            count={reel.commentCount}
             className="border-border-soft mt-1.5 border-t pt-5 pb-2.5"
           />
 
-          <CommentComposer
+          <DebateParticipationGate
             articleId={reel.id}
-            onPosted={() => setAddedComments((n) => n + 1)}
-            className="pb-1"
-          />
-
-          {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
-          <QueryBoundary
-            name="ReelComments"
-            fallback={<CommentListSkeleton />}
-            errorMessage="댓글을 불러오지 못했어요"
+            debate={reel.debate}
+            closed={reel.contentType === "FINISH"}
           >
-            <CommentList
-              articleId={reel.id}
-              onPosted={() => setAddedComments((n) => n + 1)}
-              onDeleted={() => setAddedComments((n) => n - 1)}
-            />
-          </QueryBoundary>
+            <CommentComposer articleId={reel.id} className="pb-1" />
+
+            {/* 씨앗 없이 클라에서 받으므로 로딩·에러 모두 이 경계가 받는다 (KAN-447) */}
+            <QueryBoundary
+              name="ReelComments"
+              fallback={<CommentListSkeleton />}
+              errorMessage="댓글을 불러오지 못했어요"
+            >
+              <CommentList articleId={reel.id} />
+            </QueryBoundary>
+          </DebateParticipationGate>
         </div>
       </div>
     </div>

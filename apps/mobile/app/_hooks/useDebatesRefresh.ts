@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { debateKeys } from "@plick/core/debateKeys";
+import { predictionKeys } from "@plick/core/predictionKeys";
 
 /**
  * 진행 중인 토론 리스트 갱신 — 탭 연타로 겹치면 같은 프로미스를 돌려준다.
@@ -11,12 +12,7 @@ import { debateKeys } from "@plick/core/debateKeys";
  */
 let inFlight: Promise<void> | null = null;
 
-/**
- * 토론 리스트를 다시 받는다 (KAN-418) — 토론 탭 재탭·당겨서 새로고침이 부른다.
- *
- * 피드류(`restartFeedQuery`)와 달리 페이지네이션 없는 단일 배열 쿼리라 페이지를
- * 줄일 것도 없다 — refetch 한 번이면 새 응답이 올 때까지 보던 리스트가 남는다.
- */
+/** VS의 현재 탭에서 사용 중인 목록·랭킹을 갱신한다. */
 export function useDebatesRefresh() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -24,8 +20,25 @@ export function useDebatesRefresh() {
   return useCallback(async () => {
     if (inFlight) return inFlight;
     router.refresh();
-    inFlight = queryClient
-      .refetchQueries({ queryKey: debateKeys.list() })
+    inFlight = Promise.all([
+      queryClient.refetchQueries({
+        queryKey: debateKeys.list(),
+        type: "active",
+      }),
+      queryClient.refetchQueries({
+        queryKey: predictionKeys.feed(),
+        type: "active",
+      }),
+      queryClient.refetchQueries({
+        queryKey: predictionKeys.rankings(),
+        type: "active",
+      }),
+      queryClient.refetchQueries({
+        queryKey: predictionKeys.myStats(),
+        type: "active",
+      }),
+    ])
+      .then(() => undefined)
       .finally(() => {
         inFlight = null;
       });

@@ -9,17 +9,20 @@ import { ChevronRightIcon } from "@plick/ui/icons";
  * @param href 이동할 경로
  * @param label 행 제목
  * @param value 오른쪽 보조 값. 없으면 꺾쇠만
+ * @param tone 보조 값의 색. 기본은 회색 메타, `accent`는 강조색 700(예측 랭킹 줄의 `128위`, KAN-701)
  * @param className 테두리 등 호출부 보정
  */
 export function MeLinkRow({
   href,
   label,
   value,
+  tone = "muted",
   className = "",
 }: {
   href: string;
   label: string;
   value?: string;
+  tone?: "muted" | "accent";
   className?: string;
 }) {
   return (
@@ -31,7 +34,13 @@ export function MeLinkRow({
         {label}
       </span>
       {value && (
-        <span className="text-label-lg text-text-4 truncate">{value}</span>
+        <span
+          className={`text-label-lg truncate tabular-nums ${
+            tone === "accent" ? "text-accent font-bold" : "text-text-4"
+          }`}
+        >
+          {value}
+        </span>
       )}
       <ChevronRightIcon size={16} className="text-text-4 shrink-0" />
     </Link>

@@ -6,6 +6,8 @@
 
 export const debateKeys = {
   all: ["debates"] as const,
+  /** 첫 투표가 서버에서 확정되기 전까지 댓글 잠금을 유지한다. */
+  vote: (debateId: string) => ["debates", "vote", debateId] as const,
   /** 토론 리스트 — BE에 필터·페이지네이션이 없어 파라미터 없는 단일 키다. */
   list: () => ["debates", "list"] as const,
   /** 기사별 토론 전체 — `syncDebateVote`가 한 번에 훑는 상위 키 (KAN-681). */

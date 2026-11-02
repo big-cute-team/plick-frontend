@@ -37,6 +37,9 @@ export function useDeleteComment(articleId: string) {
       return commentId;
     },
     onSuccess: (commentId: number) => {
+      qc.setQueryData<number>(commentKeys.count(articleId), (count) =>
+        count === undefined ? undefined : Math.max(0, count - 1),
+      );
       qc.setQueryData<InfiniteData<CommentPage, string | null>>(
         commentKeys.list(articleId),
         (data) =>

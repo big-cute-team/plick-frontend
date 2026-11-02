@@ -133,6 +133,7 @@ packages/
 
 - **승격 완료**: `Logo` `ThemeToggle` `MediaThumb` `TeamCrest` `PostChips` `ReporterTierBadge` `icons`(전부 게이트 A를 prop로 끊고 B 동일). `apiFetch`·`ApiError`·`BE_PROXY_PREFIX`·`refreshTokens` — web 인증 이식(KAN-318, ADR 0050)으로 두 번째 실사용처가 생겨 **`@plick/core` 신설 승격**(게이트 A는 `BE_PROXY_PREFIX`를 패키지로 들여 해소).
 - **앱별 유지(의도적)**: `CommentThread` 래퍼, `ArticleBody`/`ArticleMain`, 추천 기사(카드 vs 리스트).
+- **승격 완료(2026-11-02, [ADR 0232](0232-prediction-query-hooks-promotion.md))**: 승부예측 읽기 훅 여덟(`usePredictionSummary`·`useKeyPlayers`·`usePredictionHome`·`usePredictionOpinions`·`usePredictionReplies`·`usePredictionRankings`·`useMyPredictionStats`·`useMyPredictions`)과 `useFreshSeed`, 캐시 정책 상수 셋(`FEED_FRESH_MS`·`FEED_MAX_RETRIES`·`LIVE_MAX_RETRIES`)을 `@plick/core`로. core가 처음으로 React 훅을 가진다(`react` 의존, `react-internal` 린트). 쓰기 훅 열하나는 앱 서버 액션(쿠키)과 앱별 `meta.errorHandled`에 묶여 게이트 A 미달로 앱별 유지.
 - **열린 후보(게이트 C 대기)**:
   - `CommentItem`(스레드 **내부 한 줄**) — 웹/모바일이 버튼 상태 클래스(`hover:` vs `active:`) 한 줄만 다르고 나머지 동일. 안쪽만 원자로 올리고 스레드 래퍼는 앱별 유지 검토.
   - `ArticleCard`·`ArticleFeedPage` 타입과 `getArticles` fetcher(KAN-271, ADR 0030) — BE가 확정한 기사 피드 계약이라 모양은 굳었지만 **실사용처가 모바일 홈 하나뿐**이라 게이트 C 미달. `apps/mobile/app/_types/articles.ts`·`_services/articles.ts`에 앱별로 뒀다. web이 같은 엔드포인트를 붙이는 순간(두 번째 실사용처) `@plick/domain`·`@plick/core` 승격을 재검토한다. 이때 퍼블리싱 시절 추정 타입인 `FeedPost`를 실계약에 맞게 정리할지도 같이 본다. (`apiFetch`는 KAN-318에서 승격 완료 — 위 참조.)

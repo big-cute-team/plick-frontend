@@ -5,7 +5,7 @@ import { activityKeys } from "@plick/core/activityKeys";
 import { ApiError } from "@plick/core/client";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
-import { useFreshSeed } from "@/_hooks/useFreshSeed";
+import { useFreshSeed } from "@plick/core/useFreshSeed";
 import { getLikedArticles } from "@/_services/activity";
 
 /**

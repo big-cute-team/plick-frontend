@@ -12,6 +12,9 @@
  *
  * `table`은 리그 순위표다 (KAN-567). 시안의 경기 상세 여섯 탭 가운데 하나로,
  * 목록 화면 맨 아래 순위표와 같은 표를 경기 지면 안에서 본다.
+ *
+ * `prediction`은 승부예측이다 (KAN-696). 빅6가 낀 경기에만 생기고 늘 맨 끝에 선다.
+ * 요약 API가 404(`PREDICTION_NOT_AVAILABLE`)를 주는 경기는 탭 자체가 없다.
  */
 export type MatchTabKey =
   | "preview"
@@ -20,7 +23,8 @@ export type MatchTabKey =
   | "stats"
   | "table"
   | "news"
-  | "chat";
+  | "chat"
+  | "prediction";
 
 /**
  * 채팅방이 붐벼(`ROOM_BUSY`) 방에 나가지 못하고 되돌아온 글 (KAN-572). 입력창이

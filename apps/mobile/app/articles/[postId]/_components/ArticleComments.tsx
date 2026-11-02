@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import type { Debate } from "@plick/domain/types";
+import { DebateParticipationGate } from "@/_components/DebateParticipationGate";
 import { CommentComposer } from "@/_components/CommentComposer";
 import { CommentListSkeleton } from "@/_components/CommentList";
 import { CommentsHeader } from "@/_components/CommentsHeader";
@@ -22,11 +23,8 @@ const CommentList = dynamic(
 /**
  * 기사 세부의 댓글 섹션 (KAN-303) — 헤더 카운트·입력바·목록을 묶는 클라 경계.
  *
- * 서버 컴포넌트(`ArticleBody`)에서 이 덩어리만 클라로 내려온다. 카운트를 여기서
- * 들고 있는 이유: 원본(`article.commentCount`)은 서버가 렌더 때 받은 스냅샷이라
- * 방금 단 댓글이 반영되지 않는다. 등록 성공(원 댓글·답글)마다 로컬로 하나씩
- * 올리고, 삭제 성공마다 하나씩 내린다(BE 집계가 삭제를 빼고 센다, KAN-333).
- * 답글 입력바는 각 스레드가 유튜브처럼 인라인으로 연다.
+ * 댓글 수는 `CommentsHeader`의 기사별 캐시에서 읽는다. 투표 의견 창과 일반 댓글·답글의
+ * 작성·삭제 훅이 이 값을 함께 갱신한다(KAN-705).
  *
  * @param articleId 기사 id
  * @param initialCount 서버가 받은 댓글 수 (대댓글 포함, 삭제 제외)
@@ -34,26 +32,32 @@ const CommentList = dynamic(
 export function ArticleComments({
   articleId,
   initialCount,
+  debate,
+  closed,
 }: {
   articleId: string;
   initialCount: number;
+  debate?: Debate | null;
+  closed?: boolean;
 }) {
-  const [added, setAdded] = useState(0);
-  const bump = () => setAdded((n) => n + 1);
-  const drop = () => setAdded((n) => n - 1);
-
   return (
     <>
-      <CommentsHeader count={initialCount + added} />
-      <CommentComposer articleId={articleId} onPosted={bump} />
-      {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
-      <QueryBoundary
-        name="ArticleComments"
-        fallback={<CommentListSkeleton />}
-        errorMessage="댓글을 불러오지 못했어요."
+      <CommentsHeader articleId={articleId} count={initialCount} />
+      <DebateParticipationGate
+        articleId={articleId}
+        debate={debate}
+        closed={closed}
       >
-        <CommentList articleId={articleId} onPosted={bump} onDeleted={drop} />
-      </QueryBoundary>
+        <CommentComposer articleId={articleId} />
+        {/* 댓글만의 실패는 이 경계가 받는다 (KAN-447) — 기사 본문은 살아남는다 */}
+        <QueryBoundary
+          name="ArticleComments"
+          fallback={<CommentListSkeleton />}
+          errorMessage="댓글을 불러오지 못했어요."
+        >
+          <CommentList articleId={articleId} />
+        </QueryBoundary>
+      </DebateParticipationGate>
     </>
   );
 }

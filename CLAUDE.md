@@ -150,6 +150,10 @@ CI(format:check, test:hooks, test:unit, lint, check-types, build)는 로컬에�
   계약 확인과 검증은 `be-verify` 서브에이전트가 맡고 `scripts/be-verify/report.schema.json` 형태의
   JSON 리포트를 돌려준다. 웹 이식은 모바일 코드가 검증된 계약이라 스킬의 `web-wiring.md`를 따른다.
   단발 읽기는 서버 컴포넌트 fetch, 릴스와 뮤테이션은 TanStack Query. 공용화는 ADR 0011 게이트로 판단한다.
+- 승부예측(KAN-685) API 층: 타입은 `@plick/domain/prediction`, 읽기 fetcher·쿼리 키·오류 분류·무효화는
+  `@plick/core/predictions`·`predictionKeys`·`prediction-errors`·`prediction-sync`, 쓰기 12종은 웹
+  `_services/prediction-actions.ts`. 판단과 검증 요령(dev 읽기, mock 프로필 쓰기)은
+  [ADR 0224](docs/adr/0224-prediction-api-client-web.md). 화면 규칙은 시안 가이드(핸드오프 폴더)
 - 문서 문체: `doc-style` 스킬. ADR 문체: `adr-writing` 스킬
 - PR 본문 틀(구현 사항 / 문제 상황 / 해결 방법 / 검증 / TODO): `pr-writing` 스킬
 - 제품과 UX, 데이터 모델, 화면 IA 전반: [docs/handoff.md](docs/handoff.md)

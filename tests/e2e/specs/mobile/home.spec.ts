@@ -6,17 +6,17 @@ import { tabBar } from "../../fixtures/locators";
  * 트윗 임베드가 계속 폴링해서 networkidle은 끝나지 않는다. 로드 이벤트까지만 기다리고 헤딩으로 판정한다.
  */
 test.describe("홈", () => {
-  test("첫 화면에 핫이슈와 탭바가 뜬다", async ({ page }) => {
+  test("첫 화면에 승부예측과 탭바가 뜬다", async ({ page }) => {
     await page.goto("/");
     await expect(
       page.getByRole("heading", { level: 1, name: /해축이모/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 2, name: "핫이슈" }),
+      page.getByRole("heading", { level: 2, name: "승부예측" }),
     ).toBeVisible();
 
     const nav = tabBar(page);
-    for (const label of ["홈", "LIVE", "릴스", "투표", "MY"]) {
+    for (const label of ["홈", "LIVE", "릴스", "VS", "MY"]) {
       await expect(
         nav.getByRole("link", { name: label, exact: true }),
       ).toBeVisible();

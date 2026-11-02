@@ -11,10 +11,13 @@ import type { DebateTab } from "@/_types/debates";
  */
 export const DEBATE_FRESH_MS = 60_000;
 
-/** 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). */
+/**
+ * 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). 랭킹은 승부예측 시즌 랭킹이다(KAN-701). 밸런스게임·승부예측·랭킹을 전환한다(KAN-703).
+ */
 export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [
-  { key: "open", label: "진행 중", href: "/debates" },
-  { key: "closed", label: "마감", href: "/debates?tab=closed" },
+  { key: "open", label: "밸런스게임", href: "/debates" },
+  { key: "prediction", label: "승부예측", href: "/debates?tab=prediction" },
+  { key: "rank", label: "랭킹", href: "/debates?tab=rank" },
 ];
 
 /**
@@ -22,12 +25,3 @@ export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [
  * 기사 세부와 릴 세부 시트가 같은 문구를 쓴다.
  */
 export const VOTE_LOGIN_PROMPT = "VS 참여는 로그인한 사용자만 할 수 있어요.";
-
-/**
- * 탭별 목록 머리(스크린리더 전용 h2). 화면 h1과 카드 제목 h3 사이 레벨을 채운다
- * (heading-order, KAN-670).
- */
-export const DEBATE_LIST_HEADING: Record<DebateTab, string> = {
-  open: "진행 중인 투표",
-  closed: "마감된 투표",
-};

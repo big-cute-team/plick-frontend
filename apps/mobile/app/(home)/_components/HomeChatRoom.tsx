@@ -11,7 +11,7 @@ import { useOnScreen } from "@/_hooks/useOnScreen";
 import { nextTickerRows, settleTickerRows } from "@/_utils/chat-ticker";
 
 /**
- * 홈 핫이슈 바로 위의 채팅방 띠 (KAN-684). 통합 채팅방(KAN-572)의 마지막 세 줄을 보여주고 누르면
+ * 홈 투표 아래의 채팅방 띠 (KAN-684). 통합 채팅방(KAN-572)의 마지막 세 줄을 보여주고 누르면
  * `/live/chat`으로 간다. 높이는 세 줄로 고정이고, 새 글이 오면 아래에서 한 줄 떠오르며 맨 윗줄이
  * 밀려나 사라진다. LIVE 목록의 `ChatRoomBanner`와 같은 자리 구실인데 글이 흐르는 것을 보여줘
  * 들어오게 하는 게 다르다. 채팅이 꺼져 있으면(`CHAT_ENABLED`) 그리지 않는다.

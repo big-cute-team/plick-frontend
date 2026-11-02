@@ -198,12 +198,38 @@ export interface LastLineup {
   playerNames: string[];
 }
 
+/**
+ * 프리뷰 팀 비교 한 팀의 최근 전적 (KAN-695, BE KAN-690). 전 대회 최근 종료 5경기이고
+ * `recent`는 최신이 왼쪽이다. 집계할 경기가 없거나 조회에 실패하면 `recent`가 비고
+ * 나머지가 null이라 화면은 그 행을 `-`로 둔다.
+ */
+export interface TeamForm {
+  team: LiveTeam;
+  recent: ("W" | "D" | "L")[];
+  /** 승률 퍼센트(정수) */
+  winRate: number | null;
+  goalsForAvg: number | null;
+  goalsAgainstAvg: number | null;
+}
+
+/** 프리뷰 맞대결 요약 (KAN-695). 상세 전적(`headToHead`)을 BE가 세어 준 것. */
+export interface HeadToHeadSummary {
+  homeWins: number;
+  draws: number;
+  awayWins: number;
+  matches: number;
+}
+
 /** 킥오프 전 프리뷰 블록(GET /matches/{id}의 preview). */
 export interface MatchPreview {
   absentees: Absentee[];
   headToHead: HeadToHeadGame[];
   leaguePositions: LeaguePosition[];
   lastLineups: LastLineup[];
+  /** 홈 먼저, 원정 다음. 구버전 BE 응답에는 없어 빈 배열로 접는다 (KAN-695) */
+  teamForms: TeamForm[];
+  /** 맞대결 요약. 전적이 없거나 구버전 BE면 null (KAN-695) */
+  headToHeadSummary: HeadToHeadSummary | null;
 }
 
 /**

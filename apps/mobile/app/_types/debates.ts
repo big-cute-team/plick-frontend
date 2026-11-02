@@ -1,6 +1,2 @@
-/**
- * @file 투표 화면 전용 타입 (KAN-567).
- */
-
-/** 투표 화면의 탭. URL `?tab=`의 값이다. 진행 중과 마감은 같은 리스트를 갈라 보여준다. */
-export type DebateTab = "open" | "closed";
+/** VS 화면 탭. 기존 기본 URL을 유지해 open은 밸런스게임을 가리킨다. */
+export type DebateTab = "open" | "prediction" | "rank";

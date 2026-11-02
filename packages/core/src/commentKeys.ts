@@ -7,6 +7,8 @@
 
 export const commentKeys = {
   all: ["comments"] as const,
+  /** 기사·릴 상세와 투표 의견 창이 공유하는 댓글 수. */
+  count: (articleId: string) => ["comments", "count", articleId] as const,
   /** 기사(릴) 하나의 댓글 목록 — 릴스와 기사 세부가 같은 id로 같은 캐시를 본다. */
   list: (articleId: string) => ["comments", "list", articleId] as const,
 };
