@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/** 한 항목씩 아래로 넘긴다. 읽는 중·화면 밖·움직임 줄이기 설정에서는 자동 전환을 멈춘다. */
+/**
+ * 한 항목씩 아래로 넘긴다. 화면 밖·탭 숨김·움직임 줄이기 설정에서는 자동 전환을
+ * 멈추고, 마우스를 올리거나 안쪽 링크에 포커스가 있는 동안도 멈춰 누르려던 항목이
+ * 달아나지 않게 한다. 사용자가 직접 멈추는 버튼은 두지 않는다 (KAN-707). 오른쪽
+ * 끝의 `N/M`은 다음 항목으로 넘기는 버튼이다.
+ */
 export function RotatingLine({
   label,
   items,
@@ -16,14 +21,13 @@ export function RotatingLine({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const interacting = hovered || focused;
   const count = items.length;
   const current = count ? index % count : 0;
   useEffect(() => {
-    if (count < 2 || paused || interacting) return;
+    if (count < 2 || interacting) return;
     let inView = false;
     const observer = new IntersectionObserver(([entry]) => {
       inView = entry?.isIntersecting ?? false;
@@ -38,7 +42,7 @@ export function RotatingLine({
       clearInterval(timer);
       observer.disconnect();
     };
-  }, [count, interval, paused, interacting]);
+  }, [count, interval, interacting]);
   if (!count) return null;
   return (
     <div
@@ -68,25 +72,14 @@ export function RotatingLine({
         </div>
       </div>
       {count > 1 && (
-        <div className="text-caption text-text-3 flex shrink-0 items-center">
-          <button
-            type="button"
-            aria-label={`${label} 다음 항목, ${current + 1}/${count}`}
-            onClick={() => setIndex((value) => (value + 1) % count)}
-            className="focus-visible:outline-accent hover:text-accent min-h-11 min-w-8 tabular-nums focus-visible:outline-2"
-          >
-            {current + 1}/{count}
-          </button>
-          <button
-            type="button"
-            aria-label={`${label} 자동 넘김 ${paused ? "재생" : "멈춤"}`}
-            aria-pressed={paused}
-            onClick={() => setPaused((value) => !value)}
-            className="focus-visible:outline-accent hover:text-accent min-h-11 min-w-8 focus-visible:outline-2"
-          >
-            {paused ? "재생" : "멈춤"}
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label={`${label} 다음 항목, ${current + 1}/${count}`}
+          onClick={() => setIndex((value) => (value + 1) % count)}
+          className="text-caption text-text-3 focus-visible:outline-accent hover:text-accent min-h-11 min-w-8 shrink-0 tabular-nums focus-visible:outline-2"
+        >
+          {current + 1}/{count}
+        </button>
       )}
     </div>
   );
