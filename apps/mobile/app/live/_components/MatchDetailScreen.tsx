@@ -16,7 +16,7 @@ import { SwipePager } from "@/_components/SwipePager";
 import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
 import { useMatchDetailRefresh } from "@/_hooks/useMatchDetailRefresh";
-import { usePredictionSummary } from "@/_hooks/usePredictionSummary";
+import { usePredictionSummary } from "@plick/core/prediction-queries";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveChatPanel } from "./LiveChatPanel";

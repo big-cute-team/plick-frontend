@@ -14,7 +14,7 @@ import {
   PREDICTION_REPLIES_EMPTY,
 } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { usePredictionReplies } from "@/_hooks/usePredictionReplies";
+import { usePredictionReplies } from "@plick/core/prediction-queries";
 import { PredictionReplyComposer } from "./PredictionReplyComposer";
 import { PredictionReplyRow } from "./PredictionReplyRow";
 

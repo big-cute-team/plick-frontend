@@ -21,7 +21,7 @@ import {
   PREDICTION_RANKING_TITLE,
 } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { usePredictionRankings } from "@/_hooks/usePredictionRankings";
+import { usePredictionRankings } from "@plick/core/prediction-queries";
 
 /** 표 한 줄의 칸 폭(시안 28, 1fr, 52, 48, 36에 간격 8). rem으로 써 전체 배율을 따른다. */
 const GRID =

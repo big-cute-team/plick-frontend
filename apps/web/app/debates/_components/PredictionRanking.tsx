@@ -21,7 +21,7 @@ import {
   PREDICTION_RANKING_TITLE,
 } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { usePredictionRankings } from "@/_hooks/usePredictionRankings";
+import { usePredictionRankings } from "@plick/core/prediction-queries";
 
 /**
  * 표 한 줄의 칸 폭(시안 48, 1fr, 90, 90, 70에 간격 10). rem으로 써 전체 배율을 따른다. `sm` 아래는 숫자 칸을

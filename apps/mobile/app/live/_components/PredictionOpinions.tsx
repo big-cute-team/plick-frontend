@@ -15,7 +15,7 @@ import {
 } from "@plick/domain/prediction";
 import { PREDICTION_VOTE_LABEL } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { usePredictionOpinions } from "@/_hooks/usePredictionOpinions";
+import { usePredictionOpinions } from "@plick/core/prediction-queries";
 import { PredictionLockedList } from "./PredictionLockedList";
 import { PredictionMineBox } from "./PredictionMineBox";
 import { PredictionOpinionRow } from "./PredictionOpinionRow";

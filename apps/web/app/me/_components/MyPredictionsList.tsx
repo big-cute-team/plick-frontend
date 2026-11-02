@@ -10,7 +10,7 @@ import {
   MY_PREDICTIONS_NEXT_ERROR,
 } from "@/_constants/me";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
-import { useMyPredictions } from "@/_hooks/useMyPredictions";
+import { useMyPredictions } from "@plick/core/prediction-queries";
 import { ActivityEmpty } from "./ActivityEmpty";
 import { ActivityRetry } from "./ActivityRetry";
 import { MyPredictionRow } from "./MyPredictionRow";
