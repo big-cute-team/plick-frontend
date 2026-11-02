@@ -108,3 +108,13 @@ LOCKED(맨시티 vs 코번트리), SETTLED 적중(토트넘 2 - 1 맨유), VOID(
 게스트 빈 상태와 비로그인 안내는 mock `/users/me`가 누구에게나 `isGuest: false`라 코드로만 확인했다.
 
 `pnpm lint`, `check-types`, `test:unit`(271건), `format:check`, `test:hooks`, `build`를 로컬에서 돌렸다.
+
+## 헤드리스 리뷰가 잡은 것
+
+`./scripts/review/pr-review.sh`는 CRITICAL 0, WARN 4, INFO 3이었다. 모바일 서버 씨앗이 게스트에게도
+`GET /me/predictions`를 부른다는 지적은 맞았다. 화면은 게스트면 API 없이 빈 상태를 그리는데 서버만 한 번
+더 부르는 셈이라 `loadInitialActivity`에 `isSocial`을 넘겨 게스트는 개수만 받게 했다. 두 앱 `ActivityTabs`
+주석이 탭 셋으로 남아 있던 것과 웹 MY JSDoc의 긴 줄도 고쳤다. 모바일 탭이 넷이 되어 가로 넘침 대비가
+없다는 지적은 330px에서 네 탭 오른쪽 끝이 230px이라 넘치지 않아 주석으로만 남겼다. INFO 셋은 두 앱 훅과
+목록이 같은 구현이라는 것인데, 승부예측 훅 전부가 같은 처지라 에픽이 끝난 지금 한꺼번에 승격을 판단할
+차례다. 이번 PR에서는 하지 않았다.

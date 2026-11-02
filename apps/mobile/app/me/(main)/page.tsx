@@ -88,7 +88,7 @@ export default async function MyPage({
 
   if (accessToken && profile) {
     const [activity, blocked] = await Promise.allSettled([
-      loadInitialActivity(accessToken, tab),
+      loadInitialActivity(accessToken, tab, isSocial),
       isSocial ? getBlockedUsers() : Promise.resolve(null),
     ]);
     if (activity.status === "fulfilled") {
@@ -180,14 +180,18 @@ export default async function MyPage({
 
 /**
  * 지금 보는 탭의 첫 페이지와 개수를 한 번에 받는다. 투표 탭은 목록 API가 없어
- * 개수만 받는다. 예측 탭(KAN-702)은 `GET /me/predictions` 첫 페이지를 같이 받는다.
+ * 개수만 받는다. 예측 탭(KAN-702)은 소셜 계정이면 `GET /me/predictions` 첫 페이지를 같이 받는다.
+ * 게스트는 예측을 못 해 기록이 없고 화면(`MeActivityFeed`)이 API 없이 빈 상태를 그리니 서버도
+ * 부르지 않는다.
  *
  * @param accessToken 서버 fetch에 실을 토큰
  * @param tab 지금 보는 탭
+ * @param isSocial 소셜 계정인가. 게스트면 예측 첫 페이지를 받지 않는다
  */
 async function loadInitialActivity(
   accessToken: string,
   tab: ReturnType<typeof activityTabFrom>,
+  isSocial: boolean,
 ): Promise<InitialActivity> {
   const fetchedAt = Date.now();
   if (tab === "likes") {
@@ -204,7 +208,7 @@ async function loadInitialActivity(
     ]);
     return { counts, comments, fetchedAt };
   }
-  if (tab === "predictions") {
+  if (tab === "predictions" && isSocial) {
     const [counts, predictions] = await Promise.all([
       getMyActivityCounts(accessToken),
       getMyPredictions({ accessToken }),
