@@ -89,3 +89,24 @@ healthy로 dev 트래픽을 받고 있다. 배포 그룹은 여전히 옛 ASG(`�
 트래픽이 빠진 멀쩡한 인스턴스가 남아 네 대가 돌고 있다. 이대로 다음 배포를 하면 옛 ASG가 다시 Blue라 같은 자리에서
 또 실패한다. 복구 절차와 user data 재시도 루프는 [docs/deploy-v2.md](../deploy-v2.md) §6·§14와 함정 목록에 적었다.
 인프라 조작은 되돌리기 어려워 이 세션에서는 문서까지만 하고 사용자 확인을 받기로 했다.
+
+## 인프라 정리 실행
+
+사용자 확인을 받고 dev를 정리했다. 먼저 배포 그룹의 ASG를 옛 `…_d-QS94LWXE9`에서 트래픽을 받고 있던 Green
+`…_d-EPEQYC7PL`로 바꿨다(`aws deploy update-deployment-group --auto-scaling-groups`). CodeDeploy가 그 ASG에 자기
+런치 훅을 새로 달았고, 실패한 배포가 남긴 옛 훅 하나가 같이 붙어 두 개가 됐다. 이어서 옛 ASG를 `--force-delete`로
+지웠다. 고장 난 인스턴스와 트래픽이 빠져 있던 짝이 함께 종료됐고, 대상 그룹에는 Green 두 대만 healthy로 남았다.
+서비스 중단은 없었다.
+
+중복 훅 삭제와 Launch Template 새 버전(dev·prod에 snap 재시도 루프)은 자동 모드 권한 분류기가 공유 자원 수정으로
+막았다. 우회하지 않고 사용자에게 명령을 넘겼다. 중복 훅은 어차피 다음 배포가 성공하면 그 ASG째 사라지는 거라
+문제가 아니었다. CodeDeploy는 Green을 복사할 때 원본 ASG의 훅을 가져오지 않는다는 것도 확인했다(EPEQ ASG에는
+복사 시점에 자기 훅 하나만 있었다).
+
+마지막으로 실패했던 Deploy 워크플로를 `gh run rerun --failed`로 다시 돌렸다. 같은 커밋(72d58c9)이 새 Green으로
+나가 인스턴스 4대 전부 성공했고(`d-9YT6039PL`), 배포 그룹은 그 ASG로 넘어갔으며 EPEQ는 CodeDeploy가 종료
+대기에 넣었다. 뒤따라 돈 E2E는 18개 전부 통과했다. 모바일 기사 스펙 드리프트가 CI에서도 닫힌 것을 이걸로 봤다.
+
+남은 건 Launch Template 두 벌에 재시도 user data를 default로 올리는 것 하나다. 이걸 안 하면 snap 스토어가 또
+흔들리는 날 같은 일이 반복된다. 더 근본적으로는 배포 설정을 최소 정상 호스트 1로 올려 반쪽 Green을 성공으로
+기록하지 않게 하는 것과, ASG 헬스체크를 ELB로 돌리는 것을 검토할 만하다.
