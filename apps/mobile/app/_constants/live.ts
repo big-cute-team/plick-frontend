@@ -15,11 +15,8 @@ import type { MatchTabKey } from "@/_types/live";
  */
 export const LIVE_POLL_MS = 20_000;
 
-/**
- * 순단 재시도 횟수. 502(외부 API 실패)는 다시 보내면 캐시가 채워져 성공할 수
- * 있어 한 번은 다시 시도하고, 그 이상은 에러 지면의 다시 시도에 맡긴다.
- */
-export const LIVE_MAX_RETRIES = 1;
+/** 순단 재시도 횟수. 값과 이유는 `@plick/core/query-policy`에 있다(KAN-685). */
+export { LIVE_MAX_RETRIES } from "@plick/core/query-policy";
 
 /**
  * 경기 상태별 상세 탭 구성 (KAN-458). 예정 경기는 프리뷰, 라이브·종료는

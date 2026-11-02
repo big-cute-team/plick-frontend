@@ -14,8 +14,8 @@ import {
   PREDICTION_HOME_ERROR,
   PREDICTION_RANKING_LINK_LABEL,
 } from "@/_constants/predictions";
-import { useMyPredictionStats } from "@/_hooks/useMyPredictionStats";
-import { usePredictionHome } from "@/_hooks/usePredictionHome";
+import { useMyPredictionStats } from "@plick/core/prediction-queries";
+import { usePredictionHome } from "@plick/core/prediction-queries";
 import { debateTabPath } from "@/_utils/debates";
 import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
 

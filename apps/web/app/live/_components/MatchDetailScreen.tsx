@@ -15,7 +15,7 @@ import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
 import { matchTabsFor } from "@/_constants/live";
 import { useMatchDetail } from "@/_hooks/useMatchDetail";
-import { usePredictionSummary } from "@/_hooks/usePredictionSummary";
+import { usePredictionSummary } from "@plick/core/prediction-queries";
 import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import type { MatchTabKey } from "@/_types/live";
 import { LiveLoadError } from "./LiveLoadError";

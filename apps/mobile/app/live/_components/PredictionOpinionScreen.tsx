@@ -24,8 +24,8 @@ import {
 } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { usePredictionOpinion } from "@/_hooks/usePredictionOpinion";
-import { usePredictionReplies } from "@/_hooks/usePredictionReplies";
-import { usePredictionSummary } from "@/_hooks/usePredictionSummary";
+import { usePredictionReplies } from "@plick/core/prediction-queries";
+import { usePredictionSummary } from "@plick/core/prediction-queries";
 import { PredictionOpinionRow } from "./PredictionOpinionRow";
 import { PredictionReplyComposer } from "./PredictionReplyComposer";
 import { PredictionReplyRow } from "./PredictionReplyRow";

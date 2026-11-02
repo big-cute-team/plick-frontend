@@ -5,7 +5,7 @@ import {
   buildMyPredictionStatCells,
   myPredictionStatsCaption,
 } from "@plick/domain/prediction";
-import { useMyPredictionStats } from "@/_hooks/useMyPredictionStats";
+import { useMyPredictionStats } from "@plick/core/prediction-queries";
 import { debateTabPath } from "@/_utils/debates";
 
 /**

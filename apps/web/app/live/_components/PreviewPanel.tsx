@@ -11,7 +11,7 @@ import {
 } from "@plick/domain/prediction";
 import { KeyPlayerVs } from "@plick/ui/KeyPlayerVs";
 import { TeamCompareTable } from "@plick/ui/TeamCompareTable";
-import { useKeyPlayers } from "@/_hooks/useKeyPlayers";
+import { useKeyPlayers } from "@plick/core/prediction-queries";
 import { useKeyPlayerVote } from "@/_hooks/useKeyPlayerVote";
 import type { MatchTabKey } from "@/_types/live";
 import { PredictionPreviewBand } from "./PredictionPreviewBand";
