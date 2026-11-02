@@ -594,12 +594,15 @@ export function formatPredictionOpensAt(opensAt: string): string {
  * @param teams 홈·원정 팀명
  */
 export function predictionStatusLine(
-  summary: Pick<PredictionSummary, "status" | "opensAt" | "outcome">,
+  summary: Pick<PredictionSummary, "status" | "outcome"> & {
+    /** 열림 시각. 홈 카드처럼 UPCOMING이 오지 않는 자리는 비워도 된다 */
+    opensAt?: string;
+  },
   teams: { home: string; away: string },
 ): string | null {
   switch (summary.status) {
     case "UPCOMING":
-      return formatPredictionOpensAt(summary.opensAt);
+      return summary.opensAt ? formatPredictionOpensAt(summary.opensAt) : null;
     case "OPEN":
       return null;
     case "LOCKED":
@@ -667,4 +670,100 @@ export function parsePredictionDraft(
   } catch {
     return null;
   }
+}
+
+/** 경기 상세 URL에서 처음 열 탭을 고르는 쿼리 이름. */
+export const PREDICTION_TAB_QUERY = "tab";
+
+/** 그 쿼리에 실어 예측 탭을 가리키는 값. 경기 상세가 같은 값으로 비교한다. */
+export const PREDICTION_TAB_VALUE = "prediction";
+
+/**
+ * 경기 상세 예측 탭을 바로 여는 경로(시안 가이드 §3 "홈 카드, 투표 탭 경기 행, MY 기록 행에서 들어오면
+ * 예측 탭으로 바로 연다"). 경기 상세 화면이 마운트 뒤 이 쿼리를 읽어 예측 탭을 고른다(KAN-700).
+ *
+ * @param matchId 경기 id
+ * @example matchPredictionPath(1208345) // "/live/matches/1208345?tab=prediction"
+ */
+export function matchPredictionPath(matchId: number): string {
+  return `/live/matches/${matchId}?${PREDICTION_TAB_QUERY}=${PREDICTION_TAB_VALUE}`;
+}
+
+/**
+ * 홈 카드의 킥오프 표기(시안 가이드 §5.2 `오늘 22:30`, `9월 22일 20:30`). KST 기준 같은 날이면 `오늘`,
+ * 아니면 월일이다. 토론 마감의 `formatDebateCloseAt`과 같은 규칙인데 그쪽은 `마감`이 붙는다.
+ *
+ * @param kickoffAt 킥오프 시각 ISO (KST 오프셋)
+ * @param now 비교 기준. 테스트에서 고정값을 넣는다
+ * @example predictionKickoffLabel("2026-09-22T20:30:00+09:00", new Date("2026-09-22T10:00:00+09:00")) // "오늘 20:30"
+ */
+export function predictionKickoffLabel(
+  kickoffAt: string,
+  now: Date = new Date(),
+): string {
+  const at = new Date(kickoffAt);
+  if (Number.isNaN(at.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(at);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  const hour = get("hour") === "24" ? "00" : get("hour");
+  const time = `${hour}:${get("minute")}`;
+  const dayKey = (d: Date) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      dateStyle: "short",
+    }).format(d);
+  if (dayKey(at) === dayKey(now)) return `오늘 ${time}`;
+  return `${get("month")}월 ${get("day")}일 ${time}`;
+}
+
+/**
+ * 홈 카드 맨 아래 줄(시안 가이드 §7). 정산된 카드는 `예측한 사람 중 55% 적중`, 나머지는 참여 수다.
+ * 비공개면 `?명 예측`.
+ *
+ * @param card 홈 카드
+ */
+export function predictionHomeFooter(
+  card: Pick<PredictionHomeCard, "status" | "outcome" | "totalCount">,
+): string {
+  const hitRate = card.status === "SETTLED" ? card.outcome?.hitRate : null;
+  if (hitRate !== null && hitRate !== undefined) {
+    return `예측한 사람 중 ${hitRate}% 적중`;
+  }
+  return formatPredictionCount(card.totalCount);
+}
+
+/**
+ * 홈 카드의 내 결과(`적중`, `빗나감`). 정산된 경기에 내 픽이 있을 때만이고 요약과 달리 카드는
+ * `result`를 안 주니 픽과 결과를 맞춰 본다. 무효 경기는 null이다.
+ *
+ * @param card 홈 카드
+ */
+export function predictionHomeVerdict(
+  card: Pick<PredictionHomeCard, "status" | "myPick" | "outcome">,
+): "적중" | "빗나감" | null {
+  if (card.status !== "SETTLED" || !card.myPick || !card.outcome) return null;
+  if (card.outcome.result === "VOID") return null;
+  return card.myPick === card.outcome.result ? "적중" : "빗나감";
+}
+
+/**
+ * 홈 승부예측 제목 오른쪽의 내 순위 표기(시안 가이드 §2 "128위 >", 비로그인은 "랭킹 >"). 로그인했지만
+ * 아직 자격이 안 되면(정산 5경기 미만, `rank: null`) 랭킹으로만 적는다.
+ *
+ * @param stats 내 기록. 비로그인이나 게스트, 못 받았으면 null
+ */
+export function predictionRankLabel(
+  stats: Pick<MyPredictionStats, "season"> | null,
+): string {
+  const rank = stats?.season.rank ?? null;
+  return rank === null ? "랭킹" : `${rank}위`;
 }

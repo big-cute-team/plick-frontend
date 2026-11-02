@@ -50,3 +50,9 @@ export const PREDICTION_REPLY_DELETE_TITLE = "답글을 삭제할까요?";
 
 /** 의견 상세를 직접 열었는데 지워졌거나 가려진 의견일 때(404)의 안내. */
 export const PREDICTION_OPINION_GONE = "지워졌거나 볼 수 없는 의견이에요";
+
+/** 홈 승부예측 목록이 비었을 때(KAN-700). BE가 OPEN이 없으면 최근 SETTLED 하나를 넣어 주니 드물다. */
+export const PREDICTION_HOME_EMPTY = "지금 예측할 경기가 없어요";
+
+/** 홈 승부예측 목록을 서버와 브라우저 둘 다 못 받았을 때. */
+export const PREDICTION_HOME_ERROR = "승부예측을 불러오지 못했어요";

@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CHAT_ENABLED } from "@plick/core/chat";
 import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
-import type { PredictionSummary } from "@plick/domain/prediction";
+import {
+  PREDICTION_TAB_QUERY,
+  PREDICTION_TAB_VALUE,
+  type PredictionSummary,
+} from "@plick/domain/prediction";
 import { LiveChatPanel } from "@/_components/LiveChatPanel";
 import { PageContainer } from "@/_components/PageContainer";
 import { SiteHeader } from "@/_components/SiteHeader";
@@ -120,6 +124,16 @@ function MatchDetailBody({
   );
   const tabs = matchTabsFor(header.status, prediction !== null);
   const [selected, setSelected] = useState<MatchTabKey | null>(null);
+  /* 홈 카드 같은 진입점이 `?tab=prediction`으로 보내면 예측 탭을 먼저 연다 (KAN-700). 페이지가 익명
+     ISR이라 서버에서 쿼리를 읽을 수 없고, `useSearchParams`는 정적 라우트에서 Suspense 경계까지 클라
+     렌더로 돌려 서버 HTML의 탭 본문(KAN-683)을 잃는다. 마운트 뒤 주소에서 직접 읽는다. 요약이 아직
+     안 와 탭이 없으면 `active`가 첫 탭으로 접히고 탭이 생기는 순간 넘어간다 */
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get(
+      PREDICTION_TAB_QUERY,
+    );
+    if (tab === PREDICTION_TAB_VALUE) setSelected("prediction");
+  }, []);
   const active =
     selected !== null && tabs.includes(selected) ? selected : tabs[0];
   /* 탭 전환은 캐시라 서버 요청이 없어 여기서 화면 전환으로 센다 (KAN-543) */
