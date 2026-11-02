@@ -15,10 +15,12 @@ import { HotSection } from "./HotSection";
 import { HotSectionSkeleton } from "./HotSectionSkeleton";
 import { NewsSection } from "./NewsSection";
 import { NewsSectionSkeleton } from "./NewsSectionSkeleton";
+import { PredictionSection } from "./PredictionSection";
+import { PredictionSectionSkeleton } from "./PredictionSectionSkeleton";
 
 /**
- * 홈 화면 본체 (KAN-163, 시안 KAN-567 "홈") — LIVE·VS 띠, 채팅방 띠(KAN-684), 핫이슈 상자,
- * 지금 올라온 소식.
+ * 홈 화면 본체 (KAN-163, 시안 KAN-567 "홈") — LIVE·VS 띠, 승부예측 카드(KAN-700), 채팅방 띠(KAN-684),
+ * 핫이슈 상자, 지금 올라온 소식.
  *
  * 홈(`/`)과 팀 허브(`/teams/[slug]`)가 같은 화면을 그린다 (KAN-350). 팀 허브는
  * "토트넘 이적 루머" 같은 팀 검색어를 받아줄 크롤러블 URL이 필요해서 만들었는데,
@@ -48,6 +50,11 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
         {/* LIVE·VS 띠는 없는 날과 같게 비워 두고 기다린다 */}
         <Suspense fallback={null}>
           <HomeBanners />
+        </Suspense>
+
+        {/* 승부예측 카드 슬라이드 (KAN-700) — 띠 아래, 채팅방 위. 시안 H1 "홈 맨 위" */}
+        <Suspense fallback={<PredictionSectionSkeleton />}>
+          <PredictionSection />
         </Suspense>
 
         {/* 채팅방 띠 (KAN-684) — 핫이슈 바로 위. 클라에서 소켓을 붙여 마지막 세 줄을 흘린다 */}

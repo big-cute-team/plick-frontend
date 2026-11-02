@@ -15,10 +15,12 @@ import { HotSection } from "./HotSection";
 import { HotSectionSkeleton } from "./HotSectionSkeleton";
 import { NewsSection } from "./NewsSection";
 import { NewsSectionSkeleton } from "./NewsSectionSkeleton";
+import { PredictionSection } from "./PredictionSection";
+import { PredictionSectionSkeleton } from "./PredictionSectionSkeleton";
 
 /**
- * 데스크톱 홈 화면 본체 (KAN-200, 시안 KAN-567 "홈") — 상단 바, LIVE 띠, 핫이슈 한 줄,
- * "새로 올라온 이슈" 표, 우측 레일, 푸터.
+ * 데스크톱 홈 화면 본체 (KAN-200, 시안 KAN-567 "홈") — 상단 바, LIVE 띠, 승부예측 한 줄(KAN-700),
+ * 핫이슈 한 줄, "새로 올라온 이슈" 표, 우측 레일, 푸터.
  *
  * 홈(`/`)과 팀 허브(`/teams/[slug]`)가 같은 화면을 그린다 (KAN-350). 팀 허브는
  * 팀 검색어를 받아줄 크롤러블 URL이 필요해서 만들었는데, UX는 홈에서 팀 탭을
@@ -51,6 +53,12 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
                   ? `${TEAM_FULL_NAMES[team]} 이적 루머`
                   : "해축이모 프리미어리그 이적 루머와 이슈"}
               </h1>
+
+              {/* 승부예측 카드 한 줄 (KAN-700) — 시안은 핫이슈 자리에 두는데 핫이슈를 걷는 건 이 티켓
+                  밖이라 그 위에 둔다 */}
+              <Suspense fallback={<PredictionSectionSkeleton />}>
+                <PredictionSection />
+              </Suspense>
 
               <Suspense fallback={<HotSectionSkeleton />}>
                 <HotSection />
