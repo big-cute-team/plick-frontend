@@ -1,5 +1,6 @@
 import { LIVE_SCORE_PAUSED } from "../../../../packages/domain/src/live-pause";
 import { test, expect } from "../../fixtures/failure";
+import { mobileNewsFeed } from "../../fixtures/locators";
 
 /**
  * 홈 소식 리스트에서 상세로. 목록의 첫 기사 제목이 상세 h1과 같아야 한다.
@@ -9,7 +10,7 @@ test.describe("기사", () => {
   test("목록 첫 기사를 열면 같은 제목의 상세가 뜬다", async ({ page }) => {
     await page.goto("/");
 
-    const firstTitle = page
+    const firstTitle = mobileNewsFeed(page)
       .getByRole("article")
       .first()
       .getByRole("heading", { level: 3 })
@@ -33,7 +34,7 @@ test.describe("기사", () => {
   test("상세의 팀 해시태그를 누르면 그 팀 프로필이 뜬다", async ({ page }) => {
     await test.step("목록 첫 기사 상세로 간다", async () => {
       await page.goto("/");
-      await page
+      await mobileNewsFeed(page)
         .getByRole("article")
         .first()
         .getByRole("heading", { level: 3 })
@@ -75,21 +76,26 @@ test.describe("기사", () => {
 
   test("팀 필터를 눌러도 홈(팀 허브)에 머문다", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "맨유", exact: true }).click();
+    await mobileNewsFeed(page)
+      .getByRole("link", { name: "맨유", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/teams\/manchester-united$/);
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(
+      mobileNewsFeed(page).getByRole("article").first(),
+    ).toBeVisible();
   });
 
   test("기사 더 보기를 누르면 홈 리스트에 이어 붙는다", async ({ page }) => {
     await page.goto("/");
-    const articles = page.getByRole("article");
+    const feed = mobileNewsFeed(page);
+    const articles = feed.getByRole("article");
     await expect(articles.first()).toBeVisible();
     const before = await articles.count();
     /* 홈이 CDN·ISR 캐시에서 묵은 채 오면(dev는 전날 E2E 런 때 구운 페이지) 씨앗이 30분을 넘어
        마운트 직후 1페이지 재요청이 걸리고, 그동안 버튼이 disabled로 잠긴다. SSR HTML의 활성
        버튼을 보고 바로 누른 클릭이 그 잠금에 떨어지면 삼켜져 다음 페이지가 안 온다. 그래서
        클릭과 개수 확인을 한 묶음으로 두고 개수가 안 늘면 다시 누른다 (KAN-666) */
-    const loadMore = page.getByRole("button", { name: "기사 더 보기" });
+    const loadMore = feed.getByRole("button", { name: "기사 더 보기" });
     await expect(async () => {
       await loadMore.click();
       await expect

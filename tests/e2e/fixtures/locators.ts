@@ -11,6 +11,16 @@ export const tabBar = (page: Page) =>
     .getByRole("navigation")
     .filter({ has: page.getByRole("link", { name: "LIVE", exact: true }) });
 
+/** 모바일 홈·팀 허브의 뉴스 영역. 앞선 투표 카드도 article이라 제목으로 섹션을 좁힌다. */
+export const mobileNewsFeed = (page: Page) =>
+  page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "지금 올라온 소식",
+      level: 2,
+      exact: true,
+    }),
+  });
+
 /** 보고 있는 릴. 이웃 릴은 DOM에 같이 있고 inert다 */
 export const activeReel = (page: Page) =>
   page.locator("main section:not([inert])");
