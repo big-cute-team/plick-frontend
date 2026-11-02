@@ -3,7 +3,7 @@ import { ACTIVITY_TABS, activityTabPath } from "@/_constants/me";
 import type { ActivityTab } from "@/_types/activity";
 
 /**
- * 내 활동 탭 줄 (KAN-567 시안 MY 603-607행) — 내 댓글, 좋아요, 내 투표. 탭의 원본은
+ * 내 활동 탭 줄 (KAN-567 시안 MY 603-607행) — 내 댓글, 좋아요, 내 투표, 내 예측(KAN-702). 탭의 원본은
  * URL `?tab=`이라 링크로 그린다. 활성 탭은 700 제목색에 강조색 2px 밑줄이다.
  *
  * @param active 지금 탭

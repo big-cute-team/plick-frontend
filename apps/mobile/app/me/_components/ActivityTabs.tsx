@@ -6,9 +6,10 @@ import type { ActivityTab } from "@/_types/activity";
 import { activityTabPath } from "@/_utils/activity";
 
 /**
- * MY 활동 탭 줄 (KAN-495, KAN-567 리디자인). 내 댓글·좋아요·투표 셋이고
+ * MY 활동 탭 줄 (KAN-495, KAN-567 리디자인). 내 댓글, 좋아요, 투표, 예측(KAN-702) 넷이고
  * 제어형이라 선택 상태는 부모(`MeActivityFeed`)가 URL에서 읽어 준다. 옛 화면이
- * 라벨 옆에 달던 개수는 머리의 "댓글 N, 좋아요 N"으로 올라갔다.
+ * 라벨 옆에 달던 개수는 머리의 "댓글 N, 좋아요 N"으로 올라갔다. 네 탭이 앱 최소 폭에도
+ * 한 줄에 들어 가로 넘침 처리는 두지 않았다.
  *
  * 앵커인 이유는 팀 필터 탭과 같다. 새 탭 열기는 링크 본연의 동작에 맡기고
  * 보통 클릭만 가로채 `onChange`로 넘긴다. 스크롤 영역 상단에 붙어(sticky)

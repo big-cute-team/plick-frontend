@@ -10,6 +10,7 @@
  * 푼 모양(코드 + 3글자 약어 + 전체 이름)이라 새 타입을 만들지 않는다.
  */
 
+import { TEAMS } from "./constants";
 import type { LiveTeam, MatchPreview, TeamForm } from "./live";
 import type { CommentReportReason, LikeState, TeamCode } from "./types";
 
@@ -1079,4 +1080,133 @@ export function predictionRankingNotice(
   if (!me.qualified) return `${me.remaining}경기 더 예측하면 랭킹에 올라요`;
   if (me.rank === null) return "순위를 집계하고 있어요";
   return null;
+}
+
+/**
+ * 승부예측 화면의 팀 표기. BE가 사전의 전체 이름(맨체스터 유나이티드)을 주므로 빅6는 레지스트리의
+ * 짧은 한글 표기로, 그 밖은 서버 이름 그대로다. 홈 카드(KAN-700)와 MY 기록 행(KAN-702)이 같이 쓴다.
+ *
+ * @param team 홈 카드나 내 기록 행의 팀
+ */
+export function predictionTeamLabel(team: LiveTeam): string {
+  return team.code ? TEAMS[team.code].name : team.name;
+}
+
+/** MY 기록 상자(앱)와 띠(웹)의 칸 하나(KAN-702, 시안 가이드 §5.8). */
+export interface MyPredictionStatCell {
+  key: "rate" | "hits" | "rank" | "count";
+  label: string;
+  /** 화면에 그대로 찍는 값. 아직 못 받았으면 `-` */
+  value: string;
+  /** 시즌 순위 칸만 강조색이다 */
+  accent: boolean;
+}
+
+/**
+ * MY 기록 상자의 네 칸(시안 가이드 §5.8 "적중률 58%, 적중 7/12, 시즌 순위 128위(초록), 예측 14"). 받기
+ * 전이나 실패면 라벨만 두고 값은 `-`라 상자 높이가 흔들리지 않는다. 순위는 자격 미달(정산 5경기 미만,
+ * `rank: null`)이면 `-`다. 티켓(KAN-702)의 연속·최고 연속·통산 기록은 시안의 상자에 자리가 없어
+ * {@link myPredictionStatsCaption}이 한 줄로 받는다.
+ *
+ * @param stats 내 기록. 아직 없으면 null
+ */
+export function buildMyPredictionStatCells(
+  stats: MyPredictionStats | null,
+): MyPredictionStatCell[] {
+  const season = stats?.season ?? null;
+  return [
+    {
+      key: "rate",
+      label: "적중률",
+      value: season ? `${season.rate}%` : "-",
+      accent: false,
+    },
+    {
+      key: "hits",
+      label: "적중",
+      value: season ? formatPredictionHits(season) : "-",
+      accent: false,
+    },
+    {
+      key: "rank",
+      label: "시즌 순위",
+      value: season?.rank == null ? "-" : `${season.rank}위`,
+      accent: true,
+    },
+    {
+      key: "count",
+      label: "예측",
+      value: stats ? String(stats.predictionCount) : "-",
+      accent: false,
+    },
+  ];
+}
+
+/**
+ * 기록 상자 아래 보조 줄. 티켓 KAN-702 완료 조건의 연속, 최고 연속, 통산 기록을 한 줄에 적는다.
+ * 통산은 의견 행과 같은 표기(`31전 17적중 55%`, 정산 0이면 `첫 예측`)다.
+ *
+ * @param stats 내 기록
+ * @example myPredictionStatsCaption(stats) // "연속 적중 1, 최고 4, 통산 31전 17적중 55%"
+ */
+export function myPredictionStatsCaption(stats: MyPredictionStats): string {
+  return `연속 적중 ${stats.season.streak}, 최고 ${stats.season.bestStreak}, 통산 ${formatPredictionRecord(stats.all)}`;
+}
+
+/**
+ * 내 예측 기록 행의 제목(시안 가이드 §5.8 `맨유 1 - 2 맨시티` 또는 `맨유 vs 맨시티`). 정산돼 스코어가
+ * 있을 때만 점수고, 진행 중이나 무효 경기는 `vs`다.
+ *
+ * @param entry 내 예측 기록 한 행
+ */
+export function myPredictionTitle(
+  entry: Pick<MyPredictionEntry, "home" | "away" | "status" | "score">,
+): string {
+  const home = predictionTeamLabel(entry.home);
+  const away = predictionTeamLabel(entry.away);
+  if (entry.status === "SETTLED" && entry.score) {
+    return `${home} ${entry.score.home} - ${entry.score.away} ${away}`;
+  }
+  return `${home} vs ${away}`;
+}
+
+/**
+ * 내 예측 기록 행의 둘째 줄(`내 예측 맨시티 승`).
+ *
+ * @param entry 내 예측 기록 한 행
+ */
+export function myPredictionPickLine(
+  entry: Pick<MyPredictionEntry, "home" | "away" | "pick">,
+): string {
+  const teams = {
+    home: predictionTeamLabel(entry.home),
+    away: predictionTeamLabel(entry.away),
+  };
+  return `내 예측 ${predictionPickLabel(entry.pick, teams)}`;
+}
+
+/** 내 예측 기록 행 오른쪽 결과 칸. `accent`는 적중만이고 나머지는 회색이다(빗나감은 빨강이 아니다). */
+export interface MyPredictionResultLabel {
+  text: string;
+  tone: "accent" | "muted";
+}
+
+/**
+ * 내 예측 기록 행의 결과 표기(시안 가이드 §5.8 `킥오프 전`, `경기 중`, `적중`, `빗나감`, `기록 제외`).
+ * 적중 여부가 있으면 그것이 먼저고, 무효는 `기록 제외`, 그 밖은 경기 상태로 적는다. 정산됐는데 아직
+ * 결과가 PENDING이면(정산 배치 사이) `집계 중`이다.
+ *
+ * @param entry 내 예측 기록 한 행
+ */
+export function myPredictionResultLabel(
+  entry: Pick<MyPredictionEntry, "status" | "result">,
+): MyPredictionResultLabel {
+  if (entry.result === "HIT") return { text: "적중", tone: "accent" };
+  if (entry.result === "MISS") return { text: "빗나감", tone: "muted" };
+  if (entry.result === "VOID" || entry.status === "VOID") {
+    return { text: "기록 제외", tone: "muted" };
+  }
+  if (entry.status === "LOCKED") return { text: "경기 중", tone: "muted" };
+  if (entry.status === "SETTLED") return { text: "집계 중", tone: "muted" };
+  return { text: "킥오프 전", tone: "muted" };
 }

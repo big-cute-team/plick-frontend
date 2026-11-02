@@ -17,7 +17,9 @@ export const ACTIVITY_PATH = "/me";
  * @param value 쿼리스트링의 `tab` 값 (없으면 null·undefined)
  */
 export function activityTabFrom(value: string | null | undefined): ActivityTab {
-  return value === "likes" || value === "votes" ? value : DEFAULT_ACTIVITY_TAB;
+  return value === "likes" || value === "votes" || value === "predictions"
+    ? value
+    : DEFAULT_ACTIVITY_TAB;
 }
 
 /**

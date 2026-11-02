@@ -6,10 +6,12 @@ import { useScreenTabView } from "@/_hooks/useScreenTabView";
 import { useViewState } from "@/_stores/view-state";
 import type { ActivityTab, InitialActivity } from "@/_types/activity";
 import { activityTabFrom, activityTabPath } from "@/_utils/activity";
+import { ActivityEmpty } from "./ActivityEmpty";
 import { ActivityLoginPrompt } from "./ActivityLoginPrompt";
 import { ActivityTabs } from "./ActivityTabs";
 import { LikedArticlesList } from "./LikedArticlesList";
 import { MyCommentsList } from "./MyCommentsList";
+import { MyPredictionsList } from "./MyPredictionsList";
 import { MyVotesList } from "./MyVotesList";
 
 /**
@@ -28,6 +30,9 @@ import { MyVotesList } from "./MyVotesList";
  * 경우는 서버가 같은 값으로 넘겨준다. 브라우저가 게스트를 받아 오는 동안은 안내를 숨긴다(KAN-665).
  * 받고 나면 `MeSessionGate`가 화면을 다시 받아 목록으로 바뀐다.
  *
+ * 예측 탭(KAN-702)은 게스트면 API를 부르지 않고 빈 상태다. 게스트는 예측을 못 하니(연동 안내) 기록이
+ * 없고, 티켓도 "게스트는 빈 기록 처리"라 했다. 소셜 계정은 서버 씨앗이나 브라우저 조회로 목록을 그린다.
+ *
  * @param initial 서버가 미리 받아 둔 개수와 지금 탭의 첫 페이지. 서버 fetch가
  *   실패했으면 없이 들어오고, 그때는 클라가 직접 받아 로딩·에러를 보여준다
  * @param needsLogin 비로그인(토큰 없음·무효)인가
@@ -40,7 +45,7 @@ export function MeActivityFeed({
   needsLogin?: boolean;
 }) {
   const searchParams = useSearchParams();
-  const { isSessionPending } = useAuth();
+  const { isSessionPending, isGuest } = useAuth();
   const tab = activityTabFrom(searchParams.get("tab"));
   /* 탭은 `?tab=`이라 pathname이 안 바뀐다. 라우트 추적이 못 보니 여기서 센다 (KAN-543) */
   useScreenTabView("me_activity", tab);
@@ -74,6 +79,19 @@ export function MeActivityFeed({
             }
           }
         />
+      ) : tab === "predictions" ? (
+        isGuest ? (
+          <ActivityEmpty tab="predictions" />
+        ) : (
+          <MyPredictionsList
+            initial={
+              initial?.predictions && {
+                page: initial.predictions,
+                fetchedAt: initial.fetchedAt,
+              }
+            }
+          />
+        )
       ) : (
         <MyVotesList />
       )}
