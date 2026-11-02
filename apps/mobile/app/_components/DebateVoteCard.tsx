@@ -1,13 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { setMyArticleState } from "@plick/core/article-states";
 import type { Debate } from "@plick/domain/types";
 import { VoteCard } from "@plick/ui/VoteCard";
 import { VOTE_LOGIN_PROMPT } from "@/_constants/debates";
 import { useDebateVote } from "@/_hooks/useDebateVote";
+import { useDebateOpinion } from "@/_stores/debate-opinion";
 import { useMyArticleState } from "@/_hooks/useMyArticleState";
+
+const DebateOpinionDialog = dynamic(
+  () => import("./DebateOpinionDialog").then((m) => m.DebateOpinionDialog),
+  { ssr: false },
+);
 
 /**
  * LoginPromptDialog는 탭해야 뜨는 조건부 UI라 초기 번들에서 뺀다 (KAN-428).
@@ -54,11 +61,27 @@ export function DebateVoteCard({
   size?: "md" | "sm";
 }) {
   const queryClient = useQueryClient();
+  const showOpinion = useDebateOpinion(
+    (state) => state.articleId === articleId,
+  );
+  const openOpinion = useDebateOpinion((state) => state.open);
+  const closeOpinion = useDebateOpinion((state) => state.close);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      closeOpinion(articleId);
+    };
+  }, [articleId, closeOpinion]);
   const { vote: myVote } = useMyArticleState(articleId);
   const debate: Debate = { ...source, myVote };
   const { vote, isPending, needsLogin, dismissLogin, closedByServer } =
     useDebateVote({
       debate,
+      onFirstVote: () => {
+        if (mounted.current) openOpinion(articleId);
+      },
       /* 집계는 훅이 `syncDebateVote`로 캐시에 직접 쓴다. 여기서는 내 표만 적는다 */
       onChange: ({ myVote: next }) => {
         setMyArticleState(queryClient, articleId, { vote: next });
@@ -74,6 +97,16 @@ export function DebateVoteCard({
         isPending={isPending}
         size={size}
       />
+      {showOpinion && !needsLogin && (
+        <DebateOpinionDialog
+          articleId={articleId}
+          debate={debate}
+          onVote={vote}
+          votePending={isPending}
+          closed={closed || closedByServer}
+          onClose={() => closeOpinion(articleId)}
+        />
+      )}
       {needsLogin && (
         <LoginPromptDialog
           onClose={dismissLogin}

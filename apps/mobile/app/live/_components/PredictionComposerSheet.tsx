@@ -38,18 +38,21 @@ import { usePredictionCompose } from "@/_hooks/usePredictionCompose";
  *
  * @param header 경기 헤더(제목과 픽 라벨, 엠블럼)
  * @param mine 고칠 내 예측. 없으면 새로 쓰기
- * @param onClose 시트를 닫을 때(딤, Escape, 등록 성공)
+ * @param onClose 시트를 닫을 때(딤, Escape)
+ * @param onSubmitted 저장 성공 후 연동 안내로 전환한다
  * @param onFailure 입력 문제가 아닌 실패를 넘긴다
  */
 export function PredictionComposerSheet({
   header,
   mine,
   onClose,
+  onSubmitted,
   onFailure,
 }: {
   header: MatchSummary;
   mine: MyPrediction | null;
   onClose: () => void;
+  onSubmitted: () => void;
   onFailure: (failure: PredictionFailure) => void;
 }) {
   const matchId = header.id;
@@ -92,7 +95,7 @@ export function PredictionComposerSheet({
 
   function submit() {
     if (!valid || isPending || pick === null) return;
-    mutate({ pick, opinion: opinion.trim() }, { onSuccess: onClose });
+    mutate({ pick, opinion: opinion.trim() }, { onSuccess: onSubmitted });
   }
 
   return (

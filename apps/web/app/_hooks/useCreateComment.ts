@@ -3,6 +3,7 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
+import { debateKeys } from "@plick/core/debateKeys";
 import { commentKeys } from "@plick/core/commentKeys";
 import type { ArticleComment, CommentPage } from "@plick/domain/types";
 import { createComment } from "@/_services/comment-actions";
@@ -22,9 +23,7 @@ import { createComment } from "@/_services/comment-actions";
  * (`AUTH_REQUIRED`면 로그인 유도 팝업).
  *
  * @param articleId 기사(릴) id
- * @param onPosted 성공 시 호출 — 호출부가 헤더 카운트를 올리는 데 쓴다
- *   (BE `commentCount`는 답글도 센다). 카운트 원본(기사 상세·릴 카드의
- *   `commentCount`)은 서버가 준 스냅샷이라 여기서 캐시로 고칠 수 없다.
+ * @param onPosted 저장 성공 콜백. 댓글 수는 이 훅이 공용 캐시에 반영한다.
  */
 export function useCreateComment(articleId: string, onPosted?: () => void) {
   const qc = useQueryClient();
@@ -44,7 +43,12 @@ export function useCreateComment(articleId: string, onPosted?: () => void) {
       }
       return result.comment;
     },
-    onSuccess: (comment: ArticleComment, input) => {
+    onSuccess: async (comment: ArticleComment, input) => {
+      qc.setQueryData<number>(commentKeys.count(articleId), (count) =>
+        count === undefined ? undefined : count + 1,
+      );
+      await qc.cancelQueries({ queryKey: commentKeys.list(articleId) });
+      void qc.invalidateQueries({ queryKey: debateKeys.list() });
       qc.setQueryData<InfiniteData<CommentPage, string | null>>(
         commentKeys.list(articleId),
         (data) => {
@@ -56,7 +60,13 @@ export function useCreateComment(articleId: string, onPosted?: () => void) {
             return {
               ...data,
               pages: [
-                { ...first, items: [comment, ...first.items] },
+                {
+                  ...first,
+                  items: [
+                    comment,
+                    ...first.items.filter((item) => item.id !== comment.id),
+                  ],
+                },
                 ...data.pages.slice(1),
               ],
             };
@@ -75,6 +85,9 @@ export function useCreateComment(articleId: string, onPosted?: () => void) {
           };
         },
       );
+      if (!qc.getQueryData(commentKeys.list(articleId))) {
+        void qc.invalidateQueries({ queryKey: commentKeys.list(articleId) });
+      }
       onPosted?.();
     },
   });

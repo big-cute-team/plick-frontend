@@ -33,9 +33,11 @@ import { voteDebate } from "@/_services/debate-actions";
 export function useDebateVote({
   debate,
   onChange,
+  onFirstVote,
 }: {
   debate: Debate;
   onChange?: (next: DebateVoteState) => void;
+  onFirstVote?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { ensureSession } = useAuth();
@@ -75,8 +77,9 @@ export function useDebateVote({
       });
       return previous;
     },
-    onSuccess: (result) => {
+    onSuccess: (result, _option, previous) => {
       apply(result);
+      if (previous.myVote === null) onFirstVote?.();
       void queryClient.invalidateQueries({ queryKey: debateKeys.list() });
     },
     onError: (e, _option, previous) => {

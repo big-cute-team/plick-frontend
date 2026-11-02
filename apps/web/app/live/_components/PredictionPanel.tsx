@@ -14,7 +14,8 @@ import {
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
-import { useAuth } from "@/_components/AuthProvider";
+import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
+import { readCookie } from "@/_utils/cookie";
 import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
 import { debateTabPath } from "@/_utils/debates";
 import { PredictionOpinions } from "./PredictionOpinions";
@@ -41,7 +42,7 @@ const PredictionCancelDialog = dynamic(
 /** 지금 떠 있는 팝업. 한 번에 하나만 선다. */
 type Dialog =
   | { kind: "compose"; mine: MyPrediction | null }
-  | { kind: "auth"; mode: "login" | "link" }
+  | { kind: "auth"; mode: "login" | "link" | "submitted" }
   | { kind: "cancel" }
   | null;
 
@@ -67,7 +68,6 @@ export function PredictionPanel({
   header: MatchSummary;
   summary: PredictionSummary;
 }) {
-  const { isLoggedIn, isGuest, isSessionPending } = useAuth();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [toast, setToast] = useState<{ message: string | null; seq: number }>({
     message: null,
@@ -85,16 +85,6 @@ export function PredictionPanel({
 
   /* 고칠 내 예측은 여는 순간의 값을 들고 간다. 열려 있는 동안 요약이 다시 와도 시트가 모드를 바꾸지 않게 */
   function openCompose(editing: boolean) {
-    if (!isSessionPending) {
-      if (!isLoggedIn) {
-        setDialog({ kind: "auth", mode: "login" });
-        return;
-      }
-      if (isGuest) {
-        setDialog({ kind: "auth", mode: "link" });
-        return;
-      }
-    }
     setDialog({ kind: "compose", mine: editing ? mine : null });
   }
 
@@ -176,6 +166,13 @@ export function PredictionPanel({
           mine={dialog.mine}
           onClose={() => setDialog(null)}
           onFailure={handleFailure}
+          onSubmitted={() =>
+            setDialog(
+              readCookie(SESSION_KIND_COOKIE) === SESSION_KIND.guest
+                ? { kind: "auth", mode: "submitted" }
+                : null,
+            )
+          }
         />
       )}
       {dialog?.kind === "auth" && (

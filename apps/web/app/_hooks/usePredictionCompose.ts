@@ -13,6 +13,8 @@ import type {
   PredictionPick,
   PredictionSummary,
 } from "@plick/domain/prediction";
+import { useAuth } from "@/_components/AuthProvider";
+import { sessionUnavailableError } from "@/_apis/guest-session";
 import { upsertPrediction } from "@/_services/prediction-actions";
 
 /**
@@ -30,8 +32,7 @@ import { upsertPrediction } from "@/_services/prediction-actions";
  * 상태가 서버와 어긋난 것이라 요약을 다시 받아 상태 줄과 바를 맞춘다. 서버 액션은 실패를 값으로
  * 돌려주므로 여기서 `ApiError`로 되살려 던진다.
  *
- * 세션 게이트(`ensureSession`)는 쓰지 않는다. 예측은 소셜 계정만 쓸 수 있어 게스트를 받아 와도
- * 403으로 막히고, 그 403이 바로 연동 안내다.
+ * 제출할 때 세션이 없으면 게스트 세션부터 확보한다(KAN-705).
  *
  * @param matchId 경기 id
  * @param onFailure 분류된 실패를 받는다. 시트가 종류별 분기를 한다
@@ -41,18 +42,26 @@ export function usePredictionCompose(
   onFailure: (failure: PredictionFailure) => void,
 ) {
   const queryClient = useQueryClient();
+  const { ensureSession } = useAuth();
 
   return useMutation({
     /* 실패 안내는 시트가 완결 처리한다. 전역 안전망 토스트 제외 (KAN-447) */
     meta: { errorHandled: true },
     mutationFn: async (input: { pick: PredictionPick; opinion: string }) => {
+      if (!(await ensureSession())) throw sessionUnavailableError();
+      await queryClient.cancelQueries({
+        queryKey: predictionKeys.summary(matchId),
+      });
       const result = await upsertPrediction(matchId, input.pick, input.opinion);
       if (!result.ok) {
         throw new ApiError(result.status, result.code, result.message);
       }
       return result.data;
     },
-    onSuccess: (summary: PredictionSummary) => {
+    onSuccess: async (summary: PredictionSummary) => {
+      await queryClient.cancelQueries({
+        queryKey: predictionKeys.summary(matchId),
+      });
       queryClient.setQueryData(predictionKeys.summary(matchId), summary);
       clearPredictionDraft(matchId);
       void queryClient.invalidateQueries({

@@ -9,7 +9,7 @@
  * 서버 액션을 경유한다. 결과는 던지지 않고 값으로 돌려준다. 서버 액션이 던진 에러는 프로덕션에서
  * 메시지가 가려져 클라가 BE 에러 code로 분기할 수 없다. 클라 훅이 실패 값을 `ApiError`로 되살려
  * 던지고 `classifyPredictionError`가 종류를 가른다. 비로그인(쿠키 없음)은 BE까지 안 가고 401
- * `AUTH_REQUIRED`로 돌려주고, 게스트는 BE가 403 `AUTH_GUEST_FORBIDDEN`으로 거절한다.
+ * `AUTH_REQUIRED`로 돌려주고, 게스트 허용 여부는 BE가 판단한다.
  */
 
 import { cookies } from "next/headers";
