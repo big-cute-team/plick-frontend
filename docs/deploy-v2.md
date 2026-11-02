@@ -318,8 +318,14 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt-get install -y nodejs ruby-full
 npm install -g pm2
 
-# 배포 훅이 Parameter Store를 읽을 때 쓰는 aws CLI
-snap install aws-cli --classic
+# 배포 훅이 Parameter Store를 읽을 때 쓰는 aws CLI. snap 스토어는 가끔 접속이 안 된다.
+# 2026-11-02 dev Green 1대가 여기서 "unable to contact snap store"로 죽어 에이전트까지
+# 못 깔렸다(아래 함정 목록). 다섯 번까지 다시 시도하고, 끝내 없으면 여기서 멈춘다
+for attempt in 1 2 3 4 5; do
+  snap install aws-cli --classic && break
+  sleep 20
+done
+command -v aws
 
 # 앱 루트. 배포 훅이 ubuntu로 실행되므로 소유자를 맞춘다
 mkdir -p /srv/plick
@@ -614,6 +620,21 @@ sleep 1; done` 루프를 돌려 무중단인지 본다
   `s-maxage=31536000`이라 이 단계가 없으면 배포해도 1년 동안 옛 HTML이 나간다.
   배포 뒤 확인은 정적 문서의 `age` 헤더가 작게 시작하는지부터 본다. 손으로 할 때는
   콘솔의 배포 → Invalidations에서 `/*` 하나를 만든다
+- 배포가 `HEALTH_CONSTRAINTS`로 실패하고 Blue 1대의 `BeforeBlockTraffic`이 "agent was not able
+  to receive the lifecycle event"면 그 Blue 인스턴스에 에이전트가 없는 것이다(아래 함정 목록의
+  snap 실패). 진단은 SSM `AWS-RunShellScript`로 `systemctl is-active codedeploy-agent`와
+  `tail /var/log/cloud-init-output.log`. Green은 이미 대상 그룹에서 healthy로 트래픽을 받고
+  있으니 배포 그룹을 그 Green ASG로 돌리고 옛 ASG를 지우면 무중단으로 정리된다. 옛 ASG는
+  실패한 배포가 종료 단계를 건너뛰어 그대로 남아 돈을 쓰고 있다
+
+  ```bash
+  aws deploy update-deployment-group --application-name plick-frontend-dev \
+    --current-deployment-group-name plick-frontend-dg-dev \
+    --auto-scaling-groups CodeDeploy_plick-frontend-dg-dev_<실패한 배포 id>
+  aws autoscaling delete-auto-scaling-group --force-delete \
+    --auto-scaling-group-name CodeDeploy_plick-frontend-dg-dev_<옛 배포 id>
+  ```
+
 - 롤백: 직전 커밋 sha의 bundle.zip이 S3에 있으므로, CodeDeploy 콘솔에서 해당
   리비전으로 배포를 새로 만들거나 Actions에서 이전 커밋 기준 re-run. S3 수명
   주기가 7일이라 그 안의 리비전만 가능하다
@@ -646,6 +667,12 @@ v1 문서의 "자주 막히는 곳"에 대응하는, v2에서 새로 생길 만�
 
 - CodeDeploy 에이전트가 안 뜸 — user data에서 ruby 설치 누락이거나 리전 버킷
   다운로드 실패. 인스턴스 시스템 로그와 `/var/log/aws/codedeploy-agent/` 확인
+- Green 1대만 에이전트가 없음 (2026-11-02 dev에서 실제) — user data가 `set -e`라 중간의
+  `snap install aws-cli`가 "unable to contact snap store"로 죽으면 그 뒤의 pm2 startup과
+  에이전트 설치가 통째로 빠진다. ASG 헬스체크가 EC2 기준이라 그 인스턴스는 Healthy로 남고,
+  배포 설정이 `AllAtOnce`(최소 정상 호스트 0)라 그 배포는 Green 절반이 죽은 채 성공으로
+  기록된다. 터지는 건 다음 배포다. 그 인스턴스가 Blue가 되어 `BeforeBlockTraffic`을 못 받고
+  전체가 `HEALTH_CONSTRAINTS`로 실패한다. 복구는 §14, 예방은 §6의 재시도 루프
 - 배포가 Create deployment에서 즉시 실패 — OIDC 롤에 codedeploy 권한 누락,
   또는 애플리케이션·그룹 이름 오타
 - Green 인스턴스가 안 생김 — 서비스 롤의 `iam:PassRole` 누락이 일 순위
