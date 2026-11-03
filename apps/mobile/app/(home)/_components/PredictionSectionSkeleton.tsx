@@ -3,15 +3,11 @@
  * 카드 한 장 반의 실루엣이다. 제목은 정적이라 실물을 그대로 쓴다. 제목 줄 치수(위 13, 14/900, 아래 7)는
  * 실물과 같게 유지한다(KAN-709). 어긋나면 섹션이 도착할 때 아래 소식이 밀린다(CLS).
  */
-export function PredictionSectionSkeleton({
-  title = "승부예측",
-}: {
-  title?: string;
-}) {
+export function PredictionSectionSkeleton() {
   return (
     <section aria-hidden className="px-edge pt-3">
       <h2 className="text-body-md text-text-strong tracking-section pb-1.5 font-black">
-        {title}
+        승부예측
       </h2>
       <PredictionCardsSkeleton />
     </section>

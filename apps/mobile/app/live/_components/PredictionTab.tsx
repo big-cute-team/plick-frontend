@@ -11,13 +11,17 @@ import {
   predictionStatusLine,
   predictionVerdictLabel,
   type MyPrediction,
+  type PredictionPick,
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
 import { readCookie } from "@/_utils/cookie";
-import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
+import {
+  PREDICTION_RANKING_LINK_LABEL,
+  PREDICTION_VOTE_LABEL,
+} from "@/_constants/predictions";
 import { useErrorToast } from "@/_stores/error-toast";
 import { debateTabPath } from "@/_utils/debates";
 import { PredictionOpinions } from "./PredictionOpinions";
@@ -38,9 +42,9 @@ const PredictionCancelSheet = dynamic(
   { ssr: false },
 );
 
-/** 지금 떠 있는 시트. 한 번에 하나만 선다. */
+/** 지금 떠 있는 시트. 한 번에 하나만 선다. 작성 시트의 `pick`은 바 칸에서 열 때 미리 고른 픽이다. */
 type Sheet =
-  | { kind: "compose"; mine: MyPrediction | null }
+  | { kind: "compose"; mine: MyPrediction | null; pick: PredictionPick | null }
   | { kind: "auth"; mode: "login" | "link" | "submitted" }
   | { kind: "cancel" }
   | null;
@@ -57,10 +61,12 @@ type Sheet =
  * 둘 다 없으면 안내 한 줄이다.
  *
  * 투표의 상태별 표시는 전과 같다(§4 표). UPCOMING은 열림 시각만 보이고 바와 작성, 의견이 없다.
- * OPEN에서 예측 전이면 바는 `?%` 균등이고 의견 자리는 잠금 지면이라 거기서 작성이 열린다. 예측
- * 뒤에는 실제 비율에 내 픽 체크, 내 예측 상자(수정, 취소)가 선다. LOCKED 이후는 바와 상자만 읽기
- * 전용이다. 게스트도 작성 시트를 열고(KAN-705) 제출 성공 뒤에만 연동 안내를 띄운다. 정산된 경기는
- * 상태 줄 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
+ * OPEN에서 예측 전이면 바는 `?%` 균등이고 바 바로 아래 `투표하기` 버튼이 서며, 바의 칸을 눌러도
+ * 그 픽이 골라진 작성 시트가 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로
+ * 밀렸다). 의견 자리는 잠금 지면이라 거기서도 작성이 열린다. 예측 뒤에는 실제 비율에 내 픽 체크,
+ * 내 예측 상자(수정, 취소)가 서고 바는 읽기 전용이다. LOCKED 이후는 바와 상자만 읽기 전용이다.
+ * 게스트도 작성 시트를 열고(KAN-705) 제출 성공 뒤에만 연동 안내를 띄운다. 정산된 경기는 상태 줄
+ * 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
  *
  * @param detail 경기 상세(헤더와 프리뷰)
  * @param summary 예측 요약. 예측 없는 경기는 null
@@ -97,10 +103,12 @@ export function PredictionTab({
   const mine = summary?.myPrediction ?? null;
   const statusLine = summary ? predictionStatusLine(summary, teams) : null;
   const verdict = predictionVerdictLabel(mine?.result);
+  /* 예측 전의 OPEN. 바 칸이 버튼이 되고 바 아래 투표하기가 선다 */
+  const votable = summary?.status === "OPEN" && mine === null;
 
   /* 고칠 내 예측은 여는 순간의 값을 들고 간다. 열려 있는 동안 요약이 다시 와도 시트가 모드를 바꾸지 않게 */
-  function openCompose(editing: boolean) {
-    setSheet({ kind: "compose", mine: editing ? mine : null });
+  function openCompose(editing: boolean, pick: PredictionPick | null = null) {
+    setSheet({ kind: "compose", mine: editing ? mine : null, pick });
   }
 
   function handleFailure(failure: PredictionFailure) {
@@ -163,7 +171,17 @@ export function PredictionTab({
               distribution={summary.distribution}
               myPick={mine?.pick ?? null}
               totalCount={summary.totalCount}
+              onPick={votable ? (pick) => openCompose(false, pick) : undefined}
             />
+          )}
+          {votable && (
+            <button
+              type="button"
+              onClick={() => openCompose(false)}
+              className="bg-accent text-on-accent rounded-control text-body-md mt-2.5 flex h-11 w-full items-center justify-center font-bold active:opacity-80"
+            >
+              {PREDICTION_VOTE_LABEL}
+            </button>
           )}
         </div>
       )}
@@ -187,6 +205,7 @@ export function PredictionTab({
         <PredictionComposerSheet
           header={header}
           mine={sheet.mine}
+          initialPick={sheet.pick}
           onClose={() => setSheet(null)}
           onFailure={handleFailure}
           onSubmitted={() =>

@@ -129,16 +129,18 @@ export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
 };
 
 /**
- * 예측/프리뷰 탭에서 2단(팀 비교, 결장자) 아래 접어 둔 프리뷰 블록(상대 전적, 리그 순위)을 펼치는
- * 토글 문구 (KAN-709, 모바일과 같은 말). 기본은 접힘이고 탭을 다시 들어오면 다시 접힌다.
+ * 예측/프리뷰 탭에서 2단(팀 비교, 상대 전적과 리그 순위) 아래 접어 둔 결장자를 펼치는 토글 문구
+ * (KAN-710). KAN-709에서는 결장자가 2단 오른쪽에 서고 토글이 나머지 둘을 펼쳤는데, 결장자 명단이
+ * 열 줄을 넘기면 윗줄 높이를 다 먹어 여론이 첫 화면 밖으로 밀렸다. 모바일은 1단이라 그대로
+ * "프리뷰 더 보기"다. 기본은 접힘이고 탭을 다시 들어오면 다시 접힌다.
  */
-export const PREVIEW_MORE_LABEL = "프리뷰 더 보기";
+export const PREVIEW_ABSENTEES_LABEL = "결장자 확인하기";
 
 /** 토글이 펼쳐진 동안의 문구. */
-export const PREVIEW_LESS_LABEL = "접기";
+export const PREVIEW_LESS_LABEL = "결장자 접기";
 
 /** 토글이 `aria-controls`로 가리키는 펼친 영역의 id. */
-export const PREVIEW_MORE_ID = "match-preview-more";
+export const PREVIEW_ABSENTEES_ID = "match-preview-absentees";
 
 /**
  * 서버 거절 사유 → 입력바 밑 안내 문구. 목록에 없는 사유는 일반 실패 문구로 떨어진다.

@@ -19,6 +19,7 @@ import {
   predictionTextLength,
   type MyPrediction,
   type PredictionDraft,
+  type PredictionPick,
 } from "@plick/domain/prediction";
 import { LiveCrest } from "@plick/ui/LiveCrest";
 import { PREDICTION_OPINION_PLACEHOLDER } from "@/_constants/predictions";
@@ -37,8 +38,12 @@ import { usePredictionCompose } from "@/_hooks/usePredictionCompose";
  *
  * body 포털 이유는 `ConfirmDialog`와 같다. 딤 클릭과 Escape로 닫히고 요청 중에는 잠근다.
  *
+ * 예측 탭의 3분할 바 칸을 눌러 열면(KAN-710) `initialPick`이 그 칸이다. 새로 쓸 때만 쓰고 임시
+ * 저장된 픽이 있어도 지금 누른 칸이 이긴다. 본문은 임시 저장을 그대로 되살린다.
+ *
  * @param header 경기 헤더(제목과 픽 라벨, 엠블럼)
  * @param mine 고칠 내 예측. 없으면 새로 쓰기
+ * @param initialPick 바 칸에서 열 때 미리 고른 픽. 없으면 임시 저장이나 빈 상태
  * @param onClose 팝업을 닫을 때(취소, 딤, Escape)
  * @param onSubmitted 저장 성공 후 연동 안내로 전환한다
  * @param onFailure 입력 문제가 아닌 실패를 넘긴다
@@ -46,12 +51,14 @@ import { usePredictionCompose } from "@/_hooks/usePredictionCompose";
 export function PredictionComposerDialog({
   header,
   mine,
+  initialPick = null,
   onClose,
   onSubmitted,
   onFailure,
 }: {
   header: MatchSummary;
   mine: MyPrediction | null;
+  initialPick?: PredictionPick | null;
   onClose: () => void;
   onSubmitted: () => void;
   onFailure: (failure: PredictionFailure) => void;
@@ -62,11 +69,11 @@ export function PredictionComposerDialog({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const [draft, setDraft] = useState<PredictionDraft>(() =>
-    editing
-      ? { pick: mine.pick, opinion: mine.opinion }
-      : (readPredictionDraft(matchId) ?? { pick: null, opinion: "" }),
-  );
+  const [draft, setDraft] = useState<PredictionDraft>(() => {
+    if (editing) return { pick: mine.pick, opinion: mine.opinion };
+    const saved = readPredictionDraft(matchId) ?? { pick: null, opinion: "" };
+    return initialPick ? { ...saved, pick: initialPick } : saved;
+  });
   const { pick, opinion } = draft;
   const [fieldError, setFieldError] = useState<string | null>(null);
 

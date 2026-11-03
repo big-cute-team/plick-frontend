@@ -18,7 +18,10 @@ import { NewsSectionSkeleton } from "./NewsSectionSkeleton";
 import { PredictionSection } from "./PredictionSection";
 import { PredictionSectionSkeleton } from "./PredictionSectionSkeleton";
 
-/** 홈과 팀 허브: 실검 → 경기 → 승부예측 → 투표 → 채팅 → 기사. 섹션은 독립 스트리밍한다. */
+/**
+ * 홈과 팀 허브: 실검 → 투표 → 경기 → 승부예측 → 채팅 → 기사. 섹션은 독립 스트리밍한다. 투표는
+ * KAN-710에서 승부예측 아래 카드 트랙이던 것을 실검 바로 아래 띠로 올렸다.
+ */
 export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
   return (
     <AppShell>
@@ -36,13 +39,13 @@ export function HomeScreen({ team = "ALL" }: { team?: Filter }) {
           <HomeTrends />
         </Suspense>
         <Suspense fallback={null}>
+          <DebateSection />
+        </Suspense>
+        <Suspense fallback={null}>
           <HomeLive />
         </Suspense>
         <Suspense fallback={<PredictionSectionSkeleton />}>
           <PredictionSection />
-        </Suspense>
-        <Suspense fallback={<PredictionSectionSkeleton title="투표" />}>
-          <DebateSection />
         </Suspense>
         <HomeChatRoom />
 
