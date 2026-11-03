@@ -178,7 +178,7 @@ export function PredictionTab({
             <button
               type="button"
               onClick={() => openCompose(false)}
-              className="bg-accent text-on-accent rounded-control text-body-md mt-2.5 flex h-11 w-full items-center justify-center font-bold active:opacity-80"
+              className="text-body-md text-accent mt-1 -mr-2 ml-auto flex h-9 w-fit items-center px-2 font-bold active:opacity-60"
             >
               {PREDICTION_VOTE_LABEL}
             </button>

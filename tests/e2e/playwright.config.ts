@@ -42,10 +42,15 @@ const webURL = process.env.E2E_WEB_URL ?? TARGETS[target].web;
  * 심는다. local 대상은 도메인이 안 맞아 뺀다.
  */
 const bypassToken = process.env.E2E_BYPASS_TOKEN;
-const storageState =
-  target !== "local"
-    ? {
-        cookies: [
+/**
+ * 앱 다운로드 팝업(KAN-711)은 폰 UA(아래 galaxy 프리셋)에서 홈에 뜨고 딤이 클릭을 삼킨다. 봇 쿠키는
+ * HttpOnly라 브라우저 코드가 못 보므로, 팝업이 "하루 동안 보지 않기"에 쓰는 localStorage 키
+ * (`apps/mobile/app/_constants/app.ts`의 APP_DOWNLOAD_DISMISS_UNTIL_KEY)에 먼 미래 값을 심어 둔다.
+ */
+const storageState = {
+  cookies:
+    target !== "local"
+      ? [
           {
             name: "plick_e2e",
             value: bypassToken ?? "e2e",
@@ -56,10 +61,20 @@ const storageState =
             secure: true,
             sameSite: "Lax" as const,
           },
-        ],
-        origins: [],
-      }
-    : undefined;
+        ]
+      : [],
+  origins: [
+    {
+      origin: mobileURL,
+      localStorage: [
+        {
+          name: "plick-app-download-dismissed-until",
+          value: String(Date.UTC(2099, 0, 1)),
+        },
+      ],
+    },
+  ],
+};
 
 /** 스토어 캡처(scripts/store-shots)와 같은 Galaxy 프리셋. 모바일 웹뷰에서 보는 폭이다 */
 const galaxy = {

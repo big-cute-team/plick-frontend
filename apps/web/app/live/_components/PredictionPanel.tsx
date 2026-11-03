@@ -188,7 +188,7 @@ export function PredictionPanel({
             <button
               type="button"
               onClick={() => openCompose(false)}
-              className="bg-accent text-on-accent text-body-md hover:bg-accent-hover focus-visible:outline-accent mt-2.5 flex h-10 w-full items-center justify-center font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="text-body-md text-accent hover:text-accent-hover focus-visible:outline-accent mt-1 -mr-2 ml-auto flex h-9 w-fit items-center px-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {PREDICTION_VOTE_LABEL}
             </button>

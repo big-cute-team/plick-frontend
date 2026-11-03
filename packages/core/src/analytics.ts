@@ -151,6 +151,31 @@ export function resolveBrowserKind(userAgent: string): BrowserKind {
 }
 
 /**
+ * 스토어가 갈리는 모바일 OS (KAN-711). 앱 다운로드 팝업이 어느 스토어 버튼을 보일지 정한다.
+ */
+export type MobileOs = "ios" | "android";
+
+const ANDROID_PATTERN = /\bAndroid\b/;
+
+/**
+ * UA로 모바일 OS를 정한다 (KAN-711). 둘 다 아니면 null이라 데스크톱·태블릿 브라우저에는 스토어
+ * 버튼을 안 보인다. 아이패드 사파리는 iOS 13부터 UA가 `Macintosh`라 터치 포인트로 가른다
+ * (`navigator.maxTouchPoints`). 데스크톱 맥은 0, 아이패드는 5다.
+ *
+ * @param userAgent `navigator.userAgent`
+ * @param maxTouchPoints `navigator.maxTouchPoints`. 서버에서는 0
+ */
+export function resolveMobileOs(
+  userAgent: string,
+  maxTouchPoints = 0,
+): MobileOs | null {
+  if (ANDROID_PATTERN.test(userAgent)) return "android";
+  if (IOS_PATTERN.test(userAgent)) return "ios";
+  if (/\bMacintosh\b/.test(userAgent) && maxTouchPoints > 1) return "ios";
+  return null;
+}
+
+/**
  * 외부 브라우저로 열기를 권할 인앱 종류 (KAN-610). 광고 유입이 오는 인스타·페이스북부터다. 카카오톡과
  * 네이버는 쿠키를 지우는지 아직 모르고, 우리 앱 셸은 인앱이어도 우리 것이다.
  */
