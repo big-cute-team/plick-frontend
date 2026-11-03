@@ -22,8 +22,10 @@ const DEBATE_LIST_ID = "home-debate-list";
  * 바꿔 돌려받는다. 마감된 투표는 띠에 싣지 않는다. 돌아가는 한 줄에 "마감"이 섞이면 누를 이유가
  * 없는 줄이 자리를 차지한다. 마감 시각이 지나면 `useDebateClock`이 그 줄을 빼고 목록을 다시 받는다.
  *
- * 진행 중인 투표가 하나도 없거나 아직 못 받았으면 아무것도 그리지 않는다(`empty:hidden`). 실검처럼
- * 빈 줄을 세우지 않는 건 이 띠가 없어도 홈이 성립해서다.
+ * 진행 중인 투표가 하나도 없거나 아직 못 받았으면 띠를 그리지 않는다. 실검처럼 빈 줄을 세우지 않는 건
+ * 이 띠가 없어도 홈이 성립해서다. 다만 감시 요소(`ref`)는 높이 0으로 늘 흐름에 남긴다. `empty:hidden`으로
+ * `display: none`을 만들면 `useOnScreen`이 안 보인다고 보고해 30초 폴링이 멈추고, 그 뒤 열린 투표가
+ * 새로고침 전에는 안 뜬다(헤드리스 리뷰 지적). 높이 0인 요소도 뷰포트 안에 있으면 교차로 잡힌다.
  *
  * @param initial 서버가 받아 둔 투표 목록. 못 받았으면 undefined
  */
@@ -39,7 +41,7 @@ export function DebateHomeTicker({
   const [expanded, setExpanded] = useState(false);
   const open = openDebates(data ?? [], now);
   return (
-    <div ref={ref} className="px-edge pt-3 empty:hidden">
+    <div ref={ref} className={open.length > 0 ? "px-edge pt-3" : ""}>
       {open.length > 0 && (
         <>
           <RotatingLine

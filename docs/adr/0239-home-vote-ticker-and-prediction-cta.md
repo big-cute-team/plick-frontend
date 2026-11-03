@@ -36,10 +36,13 @@ KAN-709(ADR 0237)를 올리고 바로 받은 후속 잔손질 셋이다. 티켓 
 돌아가는 한 줄에 "마감"이 섞이면 누를 이유가 없는 줄이 몇 초씩 자리를 차지한다. 카드 트랙은 마감 카드를 뒤에
 붙여도 옆으로 밀면 그만이었지만 띠는 순서대로 다 보여 준다.
 
-진행 중인 투표가 없거나 아직 못 받았으면 아무것도 안 그린다. 바깥 `div`에 `empty:hidden`을 걸어 `pt-3` 여백까지
-사라진다. 실검은 "순위를 불러오지 못했어요" 같은 빈 줄을 세우는데 투표는 그러지 않기로 했다. 실검은 홈의 첫 줄이라
-자리가 비면 레이아웃이 흔들리지만 투표 띠는 없어도 홈이 성립한다. 띠 하나 없는 게 "아직 투표가 없어요" 한 줄보다
-낫다. `useOnScreen`은 `empty:hidden`으로 `display: none`이 된 요소를 안 보이는 걸로 보고하니 30초 폴링도 멈춘다.
+진행 중인 투표가 없거나 아직 못 받았으면 띠를 안 그린다. 실검은 "순위를 불러오지 못했어요" 같은 빈 줄을 세우는데
+투표는 그러지 않기로 했다. 실검은 홈의 첫 줄이라 자리가 비면 레이아웃이 흔들리지만 투표 띠는 없어도 홈이 성립한다.
+띠 하나 없는 게 "아직 투표가 없어요" 한 줄보다 낫다. 처음엔 바깥 `div`에 `empty:hidden`을 걸어 `pt-3` 여백까지
+없앴는데 헤드리스 리뷰가 잡았다. `display: none`이 되면 `useOnScreen`의 IntersectionObserver가 안 보인다고
+보고하고, 그러면 `useHomeDebates`의 30초 폴링(`refetchInterval: visible ? 30_000 : false`)이 꺼진다. 투표가 하나도
+없는 홈을 열어 둔 사람에게는 새로 열린 투표가 새로고침 전까지 안 뜬다. 감시 요소는 높이 0으로 흐름에 남기고 여백
+클래스만 항목이 있을 때 붙이게 바꿨다. 높이 0인 요소도 뷰포트 안에 있으면 교차로 잡힌다.
 
 `HomeScreen`의 순서는 실검, 투표, 경기, 승부예측, 채팅, 기사다. `DebateSection`(서버에서 목록을 씨앗으로 받는
 Suspense 경계)은 그대로 두고 자식만 띠로 바꿨다. `PredictionSectionSkeleton`의 `title` prop은 투표 섹션 스켈레톤
@@ -111,6 +114,11 @@ Arsenal 칸을 누르면 시트가 "Arsenal 승"을 `aria-pressed` 상태로 연
 ## 검증
 
 `format:check`, `test:hooks`, `test:unit`(304개, `openDebates` 셋 추가), `lint`, `check-types`, `build` 통과.
+헤드리스 리뷰(`pr-review.sh`)는 CRITICAL 0, WARN 3이었다. 빈 띠의 `display: none`이 폴링을 멈춘다는 건 위에
+적은 대로 고쳤다. "시트의 `initialPick`은 마운트 시점에만 반영된다"는 맞는 말이지만 시트는 닫힐 때 언마운트되고
+(`sheet?.kind === "compose" &&`) 열려 있는 동안은 모달이라 다른 칸을 누를 수 없어 다시 반영할 일이 없다.
+`PredictionBar`의 `onPick` 경로에 테스트가 없다는 것도 맞다. 이 저장소의 단위 테스트는 `node --test`로 순수 함수만
+돌리고 DOM이 없어, 버튼 역할과 라벨은 E2E 몫으로 남긴다(ADR 0237의 같은 지적과 같은 판단).
 `check-types`는 한 번 걸렸다. `PredictionSectionSkeleton`의 `title`을 지웠는데 두 앱 `(home)/loading.tsx`가
 `title="투표"`를 넘기고 있었다. 거기서도 투표 스켈레톤을 뺐다.
 

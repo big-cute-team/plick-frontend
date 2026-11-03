@@ -19,7 +19,8 @@ const DEBATE_LIST_ID = "home-debate-list";
  *
  * 전에는 승부예측 아래 가로 카드 트랙(`DebateHomeTrack`)이었고 마감된 투표도 뒤에 붙였다. 마감된
  * 투표는 띠에 싣지 않고, 마감 시각이 지나면 `useDebateClock`이 그 줄을 빼고 목록을 다시 받는다.
- * 진행 중인 투표가 없거나 아직 못 받았으면 아무것도 그리지 않는다(`empty:hidden`).
+ * 진행 중인 투표가 없거나 아직 못 받았으면 띠를 그리지 않되 감시 요소는 높이 0으로 흐름에 남긴다.
+ * `display: none`이면 `useOnScreen`이 안 보인다고 보고해 폴링이 멈추고 새 투표가 안 뜬다.
  *
  * @param initial 서버가 받아 둔 투표 목록. 못 받았으면 undefined
  */
@@ -35,7 +36,7 @@ export function DebateHomeTicker({
   const [expanded, setExpanded] = useState(false);
   const open = openDebates(data ?? [], now);
   return (
-    <div ref={ref} className="mb-3 empty:hidden">
+    <div ref={ref} className={open.length > 0 ? "mb-3" : ""}>
       {open.length > 0 && (
         <>
           <RotatingLine
