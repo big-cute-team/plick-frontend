@@ -46,11 +46,13 @@ export function GuestNoticeToast() {
       const guestExpiresAt = readCookie(GUEST_EXPIRES_COOKIE);
 
       setMessage(
-        kind === GUEST_NOTICE.existing
-          ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요."
-          : kind === GUEST_NOTICE.loggedOut
-            ? "로그아웃했어요. 로그인 없이 계속 둘러볼 수 있어요."
-            : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
+        kind === GUEST_NOTICE.merged
+          ? "이미 가입된 계정으로 로그인했어요. 게스트 때 기록도 합쳤어요."
+          : kind === GUEST_NOTICE.existing
+            ? "이미 가입된 계정이라 게스트 때 기록은 이어지지 않았어요."
+            : kind === GUEST_NOTICE.loggedOut
+              ? "로그아웃했어요. 로그인 없이 계속 둘러볼 수 있어요."
+              : `지금부터 기록이 쌓여요. ${guestLinkNotice(guestExpiresAt)}`,
       );
       clearTimeout(timer);
       timer = setTimeout(() => setMessage(null), GUEST_NOTICE_DURATION_MS);
