@@ -97,6 +97,8 @@
   --plk-accent-tint: color-mix(in srgb, var(--plk-accent) 14%, transparent);
   --plk-accent-border: color-mix(in srgb, var(--plk-accent) 40%, transparent);
   --plk-danger-tint: color-mix(in srgb, var(--plk-danger) 14%, transparent);
+  /* 강조 면 위를 훑는 빛줄기(홈 승부예측 카드 스포트라이트, KAN-714) */
+  --plk-beam: color-mix(in srgb, var(--plk-on-accent) 13%, transparent);
 
   --plk-info-tint: color-mix(in srgb, var(--plk-info) 16%, transparent);
   --plk-info-border: color-mix(in srgb, var(--plk-info) 40%, transparent);
@@ -251,6 +253,7 @@
   --color-accent-tint: var(--plk-accent-tint);
   --color-accent-border: var(--plk-accent-border);
   --color-danger-tint: var(--plk-danger-tint);
+  --color-beam: var(--plk-beam);
   --color-info-tint: var(--plk-info-tint);
   --color-info-border: var(--plk-info-border);
   --color-warn-tint: var(--plk-warn-tint);
@@ -425,6 +428,35 @@
   @keyframes seg-label {
     from {
       opacity: 0;
+    }
+  }
+
+  /* 홈 승부예측 카드의 스포트라이트 (KAN-714, 시안 가이드 §5.2). 카드 안에 빛줄기 두 개를 깔고
+     주기가 다른 두 회전(3.4초, 2.9초)이 엇갈리며 훑는다. 오른쪽 줄기는 -1.4초에서 시작해 처음부터
+     어긋난다. 줄기 색은 `--color-beam`이고 움직임 줄이기면 컴포넌트가 고정 각도로 둔다 */
+  --animate-beam-left: beam 3.4s ease-in-out infinite alternate;
+  --animate-beam-right: beam 2.9s ease-in-out -1.4s infinite alternate-reverse;
+
+  @keyframes beam {
+    from {
+      transform: rotate(-22deg);
+    }
+    to {
+      transform: rotate(22deg);
+    }
+  }
+
+  /* 카드 대표 의견 줄 교체 (KAN-714). 새 줄이 아래에서 올라오며 나타난다 */
+  --animate-line-up: line-up 0.42s cubic-bezier(0.23, 1, 0.32, 1) both;
+
+  @keyframes line-up {
+    from {
+      transform: translateY(80%);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
     }
   }
 }

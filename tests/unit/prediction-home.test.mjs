@@ -11,6 +11,7 @@ import {
   predictionKickoffLabel,
   predictionRankLabel,
   predictionStatusLine,
+  sortPredictionCardsByKickoff,
 } from "../../packages/domain/src/prediction.ts";
 
 test("킥오프는 KST 같은 날이면 오늘, 아니면 월일에 24시간 시각", () => {
@@ -113,4 +114,18 @@ test("예측 탭 경로와 열림 시각 없는 상태 줄", () => {
     ),
     null,
   );
+});
+
+test("킥오프 정렬은 안정적이고 못 읽는 시각은 뒤로 보낸다 (KAN-714)", () => {
+  const cards = [
+    { id: "b", kickoffAt: "2026-11-05T05:00:00+09:00" },
+    { id: "x", kickoffAt: "not-a-date" },
+    { id: "a", kickoffAt: "2026-11-04T05:00:00+09:00" },
+    { id: "c", kickoffAt: "2026-11-05T05:00:00+09:00" },
+  ];
+  assert.deepEqual(
+    sortPredictionCardsByKickoff(cards).map((card) => card.id),
+    ["a", "b", "c", "x"],
+  );
+  assert.equal(cards[0].id, "b");
 });

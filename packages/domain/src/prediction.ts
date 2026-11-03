@@ -179,8 +179,19 @@ export interface PredictionReplyPage {
 }
 
 /**
- * 홈 승부예측 카드 한 장(`GET /predictions/home`). `topOpinion`은 적중률순 1위 의견의
- * 앞 40자다. KAN-704 계약에서는 `revealed: false`면 실제 의견을 반환하지 않고 null이다.
+ * 홈·VS 카드에 싣는 의견 한 토막. 본문은 BE가 앞 40자만 준 미끼 문구라 전문이 아니다.
+ */
+export interface PredictionHomeOpinion {
+  predictionId: number;
+  nickname: string;
+  opinion: string;
+}
+
+/**
+ * 홈 승부예측 카드 한 장(`GET /predictions/home`). `opinions`는 카드 한 줄에 돌려 보일 의견들이다.
+ * BE가 `topOpinions`(최근 순 여러 건)를 주면 그대로고, 아직 `topOpinion`(적중률순 1위) 하나만 주는
+ * 동안은 그 하나다(KAN-714). `revealed: false`여도 온다. 예측 전에는 닉네임만 보이고 본문은 흐리게
+ * 가려 궁금하게 만드는 용도라, 전에는 비공개면 null로 지웠지만 이제 그대로 싣는다.
  */
 export interface PredictionHomeCard {
   matchId: number;
@@ -193,11 +204,7 @@ export interface PredictionHomeCard {
   totalCount: number | null;
   distribution: PredictionDistribution | null;
   myPick: PredictionPick | null;
-  topOpinion: {
-    predictionId: number;
-    nickname: string;
-    opinion: string;
-  } | null;
+  opinions: PredictionHomeOpinion[];
   outcome: PredictionOutcome | null;
 }
 
@@ -695,6 +702,24 @@ export function predictionHomeFooter(
     return `예측한 사람 중 ${hitRate}% 적중`;
   }
   return formatPredictionCount(card.totalCount);
+}
+
+/**
+ * 홈 카드를 킥오프 순으로 돌려준다 (KAN-714). BE 홈 목록은 로그인 사용자의 마이팀 경기를 앞으로
+ * 당기는데(`GET /predictions/home`), 그러면 같은 줄에 내일 경기가 오늘 경기보다 앞에 서서 순서가
+ * 뒤죽박죽으로 보인다. 홈은 "다음 경기가 먼저"가 읽기 쉬워 FE가 킥오프로 다시 세운다. 같은
+ * 킥오프는 서버 순서를 지키고(안정 정렬), 못 읽는 시각은 뒤로 보낸다.
+ *
+ * @param cards 홈 카드 목록
+ */
+export function sortPredictionCardsByKickoff<
+  T extends Pick<PredictionHomeCard, "kickoffAt">,
+>(cards: readonly T[]): T[] {
+  const at = (card: T) => {
+    const time = new Date(card.kickoffAt).getTime();
+    return Number.isFinite(time) ? time : Number.POSITIVE_INFINITY;
+  };
+  return [...cards].sort((a, b) => at(a) - at(b));
 }
 
 /**

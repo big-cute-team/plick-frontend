@@ -24,7 +24,8 @@ import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
 /**
  * 홈 승부예측 제목 줄과 카드 슬라이드 (KAN-700, 시안 가이드 §5.2). 카드 폭은 84%고 가로 스냅이라
  * 다음 카드가 걸쳐 보인다. 좌우 패딩은 `px-edge`를 트랙 안쪽으로 옮겨 카드가 화면 끝까지 흐른다.
- * 순서는 서버가 준 그대로다(마이팀 먼저, 킥오프 순).
+ * 순서는 킥오프 순이다. BE는 마이팀 경기를 앞으로 당기는데 그러면 내일 경기가 오늘 경기 앞에 서서 뒤죽박죽으로
+ * 보여 fetcher가 다시 세운다(KAN-714). 카드는 시안의 딥 그린 면과 스포트라이트(`tone="accent"`)다.
  *
  * 카드 어디를 눌러도 그 경기 예측 탭(`?tab=prediction`)으로 간다. 홈에서 바로 작성하지 않는다(가이드
  * §5.2). 티켓은 "픽 버튼을 누르면 작성 시트가 그 픽을 고른 상태로 열림"이라 했지만 시안이 카드에
@@ -91,7 +92,7 @@ export function PredictionHomeTrack({
                 href={matchPredictionPath(card.matchId)}
                 className="focus-visible:outline-accent flex min-w-0 flex-1 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 active:scale-[0.99] motion-reduce:transform-none"
               >
-                <PredictionHomeCard card={card} />
+                <PredictionHomeCard card={card} tone="accent" />
               </Link>
             </li>
           ))}

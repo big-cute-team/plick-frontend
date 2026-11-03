@@ -39,6 +39,8 @@ import { LiveCrest } from "./LiveCrest";
  * @param totalCount 참여 수. 비공개면 null
  * @param size `sm`은 앱과 웹 홈 카드(32px), `lg`는 웹 경기 상세(36px)
  * @param onPick 칸을 눌렀을 때. 넘기면 칸이 버튼이 되고, 없으면 읽기 전용 그림이다
+ * @param onAccent 강조색 면(홈 예측 카드) 위에 놓일 때 true (KAN-714, 시안 가이드 §5.2). 홈 칸이 딥 그린
+ *   그대로면 면에 묻혀서 흰 면에 초록 글자로 바꾼다. 무승부와 원정 칸, 빈 면은 그대로다
  */
 export function PredictionBar({
   home,
@@ -49,6 +51,7 @@ export function PredictionBar({
   size = "sm",
   className = "",
   onPick,
+  onAccent = false,
 }: {
   home: LiveTeam;
   away: LiveTeam;
@@ -58,6 +61,7 @@ export function PredictionBar({
   size?: "sm" | "lg";
   className?: string;
   onPick?: (pick: PredictionPick) => void;
+  onAccent?: boolean;
 }) {
   const revealed = distribution !== null;
   const hasVotes =
@@ -67,7 +71,7 @@ export function PredictionBar({
     return (
       <div
         aria-hidden
-        className={`bg-border rounded-tile ${size === "lg" ? "h-9" : "h-8"} ${className}`}
+        className={`rounded-tile ${onAccent ? "bg-on-accent/20" : "bg-border"} ${size === "lg" ? "h-9" : "h-8"} ${className}`}
       />
     );
   }
@@ -79,7 +83,7 @@ export function PredictionBar({
     const mine = myPick === pick;
     const segmentClass = `flex items-center justify-center transition-[flex-grow] duration-600 ease-out motion-reduce:animate-none motion-reduce:transition-none ${
       size === "lg" ? "min-w-16 gap-1.25" : "min-w-14.5 gap-1"
-    } ${i > 0 ? "ml-0.5" : ""} ${SEGMENT_TONE[pick]} ${
+    } ${i > 0 ? "ml-0.5" : ""} ${onAccent && pick === "HOME" ? ACCENT_HOME_TONE : SEGMENT_TONE[pick]} ${
       revealed ? "animate-seg" : ""
     }`;
     const style = {
@@ -150,6 +154,9 @@ const SEGMENT_TONE: Record<PredictionPick, string> = {
   DRAW: "bg-border-strong text-text-strong",
   AWAY: "bg-accent-bright text-text-strong",
 };
+
+/** 강조색 면 위의 홈 칸. 흰 면에 초록 글자(시안 가이드 §5.2). */
+const ACCENT_HOME_TONE = "bg-on-accent text-accent";
 
 /** 스크린리더용 한 줄. 비공개면 비율을 말하지 않는다. */
 function barLabel(
