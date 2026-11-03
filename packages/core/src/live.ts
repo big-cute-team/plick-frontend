@@ -16,13 +16,13 @@ import {
   dedupeAbsentees,
   eventMinuteLabel,
   HIDDEN_SEASON_COMPETITION,
+  liveTeamLabel,
   teamShortName,
   UCL_ZONE_MAX_RANK,
   type Absentee,
   type BenchPlayer,
   type HeadToHeadGame,
   type HeadToHeadSummary,
-  type LastLineup,
   type LeaguePosition,
   type LineupPlayer,
   type LiveTeam,
@@ -107,13 +107,7 @@ interface MatchDetailResponse {
       type: string | null;
       reason: string | null;
     }[];
-    headToHead: {
-      kickoffAt: string;
-      homeName: string;
-      awayName: string;
-      homeGoals: number | null;
-      awayGoals: number | null;
-    }[];
+    headToHead: HeadToHeadResponse[];
     standings: {
       side: Side;
       rank: number;
@@ -122,6 +116,7 @@ interface MatchDetailResponse {
       goalsDiff: number;
       form: string | null;
     }[];
+    /** 직전 경기 선발. 화면을 지워(KAN-709) 받기만 하고 접지 않는다 */
     lastLineups: {
       side: Side;
       formation: string | null;
@@ -165,6 +160,15 @@ interface MatchDetailResponse {
   stats:
     | { side: Side; items: { type: string; value: string | null }[] }[]
     | null;
+}
+
+/** BE 상대 전적 한 경기. 팀은 이름만 오고 id나 코드가 없다(KAN-553). */
+export interface HeadToHeadResponse {
+  kickoffAt: string;
+  homeName: string;
+  awayName: string;
+  homeGoals: number | null;
+  awayGoals: number | null;
 }
 
 interface PairResponse {
@@ -423,23 +427,7 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
                 }),
               ),
           ),
-          headToHead: detail.preview.headToHead.flatMap(
-            (game): HeadToHeadGame[] => {
-              if (game.homeGoals === null || game.awayGoals === null) {
-                return []; // 아직 안 치른 경기는 전적이 아니다
-              }
-              const ourHomeWasHome = game.homeName === header.home.name;
-              const ours = ourHomeWasHome ? game.homeGoals : game.awayGoals;
-              const theirs = ourHomeWasHome ? game.awayGoals : game.homeGoals;
-              return [
-                {
-                  date: shortDateLabel(game.kickoffAt),
-                  line: `${teamShortName(game.homeName)} ${game.homeGoals} - ${game.awayGoals} ${teamShortName(game.awayName)}`,
-                  result: ours > theirs ? "W" : ours < theirs ? "L" : "D",
-                },
-              ];
-            },
-          ),
+          headToHead: toHeadToHead(detail.preview.headToHead, header),
           leaguePositions: detail.preview.standings.map(
             (row): LeaguePosition => ({
               team: teamOf(row.side),
@@ -447,13 +435,6 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
               points: row.points,
               goalDiff: row.goalsDiff,
               recentForm: toForm(row.form),
-            }),
-          ),
-          lastLineups: detail.preview.lastLineups.map(
-            (lineup): LastLineup => ({
-              team: teamOf(lineup.side),
-              formation: lineup.formation ?? "-",
-              playerNames: lineup.startXI.map((player) => player.name),
             }),
           ),
           teamForms: [...(detail.preview.teamForm ?? [])]
@@ -485,6 +466,48 @@ function toMatchDetail(detail: MatchDetailResponse): MatchDetail {
     stats:
       detail.stats && detail.stats.length > 0 ? toStats(detail.stats) : null,
   };
+}
+
+/**
+ * 상대 전적 응답을 화면 행으로 접는다 (KAN-553 → KAN-709). 아직 안 치른 경기(스코어 null)는
+ * 전적이 아니라 뺀다. `result`는 이 경기 홈 팀 기준이다.
+ *
+ * 팀명은 전체를 싣는다. h2h 응답에 코드가 없어 전에는 `teamShortName`으로 앞 세 글자를
+ * 잘랐는데 한글 팀명이 "맨체스"가 됐다. 상대 전적의 두 팀은 상세 헤더의 두 팀이라 이름이
+ * 헤더와 같으면 그 팀의 짧은 표기(`liveTeamLabel`, 빅6는 "맨시티")를 쓰고, 다르면(사전
+ * 표기가 달라졌거나 제3의 팀) 응답 이름 그대로다. 넘치면 화면이 말줄임한다.
+ *
+ * @param games BE 상대 전적 목록
+ * @param header 이 경기의 헤더(두 팀의 이름과 코드)
+ * @example
+ * toHeadToHead([{ homeName: "맨체스터 시티", awayName: "아스날", homeGoals: 3, awayGoals: 2, kickoffAt }], header)
+ * // [{ date: "25.03.10", homeName: "맨시티", homeGoals: 3, awayGoals: 2, awayName: "아스날", result: "W" }]
+ */
+export function toHeadToHead(
+  games: HeadToHeadResponse[],
+  header: MatchSummary,
+): HeadToHeadGame[] {
+  const labelOf = (name: string) => {
+    if (name === header.home.name) return liveTeamLabel(header.home);
+    if (name === header.away.name) return liveTeamLabel(header.away);
+    return name;
+  };
+  return games.flatMap((game): HeadToHeadGame[] => {
+    if (game.homeGoals === null || game.awayGoals === null) return [];
+    const ourHomeWasHome = game.homeName === header.home.name;
+    const ours = ourHomeWasHome ? game.homeGoals : game.awayGoals;
+    const theirs = ourHomeWasHome ? game.awayGoals : game.homeGoals;
+    return [
+      {
+        date: shortDateLabel(game.kickoffAt),
+        homeName: labelOf(game.homeName),
+        homeGoals: game.homeGoals,
+        awayGoals: game.awayGoals,
+        awayName: labelOf(game.awayName),
+        result: ours > theirs ? "W" : ours < theirs ? "L" : "D",
+      },
+    ];
+  });
 }
 
 /** 득점 요약의 부가 표기 — 일반 골은 표기 없음. */

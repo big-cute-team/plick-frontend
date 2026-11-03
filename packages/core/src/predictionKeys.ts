@@ -36,9 +36,6 @@ export const predictionKeys = {
   /** 의견 하나의 답글 목록. 답글 등록 뒤 다시 받는다. */
   replies: (predictionId: number) =>
     ["predictions", "replies", predictionId] as const,
-  /** 경기 하나의 키플레이어와 VS 스탯. 투표 응답이 같은 모양이라 캐시를 바로 덮는다. */
-  keyPlayers: (matchId: number) =>
-    ["predictions", "key-players", matchId] as const,
   /** 시즌 랭킹 무한 쿼리. BE가 10분 캐시하므로 같은 staleTime을 둔다. scope를 비우면 이번 시즌(`season`). */
   rankings: (scope?: string) =>
     ["predictions", "rankings", scope ?? "season"] as const,

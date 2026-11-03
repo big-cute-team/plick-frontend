@@ -1,11 +1,10 @@
 /**
- * @file 프리뷰 팀 비교와 키플레이어 스탯 막대 빌더 테스트 (KAN-699). 나은 쪽 판정(순위와 실점은
- * 낮은 쪽), 한 팀 집계가 빠진 경우, 순위 없음 문구, 맞대결 행 유무, 막대 길이 비율을 본다.
+ * @file 프리뷰 팀 비교 빌더 테스트 (KAN-699). 나은 쪽 판정(순위와 실점은 낮은 쪽), 한 팀 집계가
+ * 빠진 경우, 순위 없음 문구, 맞대결 행 유무를 본다. 키플레이어 막대는 KAN-709에서 기능과 함께 지웠다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildKeyPlayerStatRows,
   buildTeamCompare,
   TEAM_COMPARE_NO_RANK,
 } from "../../packages/domain/src/prediction.ts";
@@ -127,49 +126,5 @@ test("화면 정밀도로 반올림해 같아지는 값은 어느 쪽도 낫지 
   assert.deepEqual(
     [goalsAgainst.home, goalsAgainst.away, goalsAgainst.better],
     ["1.0", "1.0", null],
-  );
-
-  const [, , , rating] = buildKeyPlayerStatRows(
-    { appearances: 1, goals: 0, assists: 0, rating: 7.45 },
-    { appearances: 1, goals: 0, assists: 0, rating: 7.46 },
-  );
-  assert.deepEqual(
-    [
-      rating.home,
-      rating.away,
-      rating.homeRatio,
-      rating.awayRatio,
-      rating.better,
-    ],
-    ["7.5", "7.5", 100, 100, null],
-  );
-});
-
-test("키플레이어 스탯은 큰 쪽이 100이고 없는 쪽은 - 에 빈 막대", () => {
-  const rows = buildKeyPlayerStatRows(
-    { appearances: 8, goals: 2, assists: 4, rating: 7.45 },
-    { appearances: 4, goals: 2, assists: 0, rating: null },
-  );
-  assert.deepEqual(
-    rows.map((r) => [
-      r.key,
-      r.home,
-      r.away,
-      r.homeRatio,
-      r.awayRatio,
-      r.better,
-    ]),
-    [
-      ["appearances", "8", "4", 100, 50, "home"],
-      ["goals", "2", "2", 100, 100, null],
-      ["assists", "4", "0", 100, 0, "home"],
-      ["rating", "7.5", "-", 100, 0, null],
-    ],
-  );
-  const empty = buildKeyPlayerStatRows(null, null);
-  assert.equal(empty.length, 4);
-  assert.deepEqual(
-    [empty[0].home, empty[0].away, empty[0].homeRatio, empty[0].awayRatio],
-    ["-", "-", 0, 0],
   );
 });

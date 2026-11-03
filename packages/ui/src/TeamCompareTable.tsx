@@ -8,10 +8,13 @@ import {
 import { LiveCrest } from "./LiveCrest";
 
 /**
- * 프리뷰 팀 비교 표 (KAN-699, 시안 가이드 §5.3). 3열(홈 값, 항목, 원정 값)이고 행은 40px다. 머리
- * 줄은 엠블럼과 팀명, 둘째 줄은 최근 5경기 칩(승 초록, 무 회색, 패 연회색에 글자도 함께), 그 아래
- * 리그 순위, 승률, 평균 득점, 평균 실점, 맞대결이다. 나은 쪽은 900에 제목색, 나머지는 500에 보조색이다.
- * 값이 없는 칸은 `-`, 순위가 없는 팀은 `리그 순위 없음`이다.
+ * 프리뷰 팀 비교 표 (KAN-699, 시안 가이드 §5.3). 3열(홈 값, 항목, 원정 값)이다. 머리 줄은 엠블럼과
+ * 팀명, 둘째 줄은 최근 5경기 칩(승 초록, 무 회색, 패 연회색에 글자도 함께), 그 아래 리그 순위, 승률,
+ * 평균 득점, 평균 실점, 맞대결이다. 나은 쪽은 900에 제목색, 나머지는 500에 보조색이다. 값이 없는 칸은
+ * `-`, 순위가 없는 팀은 `리그 순위 없음`이다.
+ *
+ * 행 높이는 시안의 40px에서 값 행 32, 머리와 칩 줄 36으로 줄였다 (KAN-709). 예측/프리뷰 탭이 첫 화면
+ * (앱 iPhone 15, 웹 1280×800)에 투표, 이 표, 여론 머리글까지 보여야 해서다.
  *
  * 어느 쪽이 나은지는 도메인(`buildTeamCompare`)이 정해 오고 여기는 그리기만 한다. 앱과 웹이 같은 자리에
  * 같은 모양을 그려 처음부터 공용이다(ADR 0011). 모서리는 토큰이라 웹에서 각지고, 가운데 열 폭과 머리 줄
@@ -40,12 +43,14 @@ export function TeamCompareTable({
       ? "grid-cols-[minmax(0,1fr)_6.875rem_minmax(0,1fr)]"
       : "grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]";
   const rowClass = `grid ${cols} items-center`;
+  const headRow = "h-9";
+  const valueRow = "h-8";
 
   return (
     <div role="table" aria-label="팀 비교" className={className}>
       <div
         role="row"
-        className={`${rowClass} h-10 border-b ${
+        className={`${rowClass} ${headRow} border-b ${
           size === "lg" ? "border-border-table" : "border-border"
         }`}
       >
@@ -55,7 +60,7 @@ export function TeamCompareTable({
       </div>
       <div
         role="row"
-        className={`${rowClass} border-border-soft h-11 border-b`}
+        className={`${rowClass} border-border-soft ${headRow} border-b`}
       >
         <FormChips results={compare.homeRecent} />
         <span role="rowheader" className="text-label text-text-3 text-center">
@@ -67,7 +72,7 @@ export function TeamCompareTable({
         <div
           key={row.key}
           role="row"
-          className={`${rowClass} border-border-soft h-10 border-b`}
+          className={`${rowClass} border-border-soft ${valueRow} border-b`}
         >
           <Value row={row} side="home" />
           <span role="rowheader" className="text-label text-text-3 text-center">

@@ -104,7 +104,7 @@ export function PredictionOpinions({
 
   return (
     <div className="pb-6">
-      <div className="border-border mt-7.5 flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 border-b py-1">
+      <div className="border-border mt-4 flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 border-b py-1">
         <h2 className="text-body-lg text-text-strong shrink-0 font-bold">
           의견
         </h2>

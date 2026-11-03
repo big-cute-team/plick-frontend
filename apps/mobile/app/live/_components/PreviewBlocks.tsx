@@ -5,30 +5,39 @@ import { PlayerPhoto } from "@plick/ui/PlayerPhoto";
 import { TeamProfileLink } from "./TeamProfileLink";
 
 /**
- * 킥오프 전 프리뷰 지면(피그마 L5, KAN-567 톤). 결장자·상대전적·리그 순위·직전 경기
- * 선발 네 블록. 각 블록은 비어 있으면 그리지 않는다(서버가 조각 실패 시
- * 그 조각만 빼고 내리는 구조).
+ * 킥오프 전 프리뷰 블록 묶음(피그마 L5, KAN-567 톤). 결장자, 상대 전적, 리그 순위 세 블록이다.
+ * 각 블록은 비어 있으면 그리지 않는다(서버가 조각 실패 시 그 조각만 빼고 내리는 구조).
+ *
+ * 예측/프리뷰 탭(KAN-709)에서는 `PreviewSection`이 팀 비교 아래 "프리뷰 더 보기" 토글 안에 이걸
+ * 넣고, 연기 경기처럼 탭이 없는 지면은 `MatchDetailScreen`이 바로 그린다. "직전 경기 선발" 블록은
+ * KAN-709에서 지웠다.
  *
  * 시안에 프리뷰 화면은 없어 다른 탭과 같은 어법으로 맞췄다. 채운 면 카드 대신
  * 15/900 섹션 제목과 행 구분선이다.
  *
  * @param preview 프리뷰 블록
+ * @param className 바깥 여백. 기본은 좌우 `px-edge`에 아래 24고, 토글 안에서는 호출부가 바꾼다
  */
-export function PreviewBlocks({ preview }: { preview: MatchPreview }) {
+export function PreviewBlocks({
+  preview,
+  className = "px-edge pb-6",
+}: {
+  preview: MatchPreview;
+  className?: string;
+}) {
   return (
-    <div className="px-edge flex flex-col pb-6">
+    <div className={`flex flex-col ${className}`}>
       {preview.absentees.length > 0 && <Absentees preview={preview} />}
       {preview.headToHead.length > 0 && <HeadToHead preview={preview} />}
       {preview.leaguePositions.length > 0 && (
         <LeaguePositions preview={preview} />
       )}
-      {preview.lastLineups.length > 0 && <LastLineups preview={preview} />}
     </div>
   );
 }
 
 /**
- * 프리뷰 섹션 제목(15/900). 팀 비교와 키플레이어(KAN-699, `PreviewTab`)도 같은 제목을 쓴다.
+ * 프리뷰 섹션 제목(15/900). 팀 비교(KAN-699, `PreviewSection`)도 같은 제목을 쓴다.
  *
  * @param className 위아래 여백을 바꿀 때
  */
@@ -99,20 +108,31 @@ function Absentees({ preview }: { preview: MatchPreview }) {
   );
 }
 
+/**
+ * 상대 전적. 날짜, 홈 팀명, 스코어, 원정 팀명, 결과 다섯 칸이다 (KAN-709). 전에는 "AS 3 - 2 맨체스"
+ * 한 줄이었는데 h2h 응답에 코드가 없어 한글 팀명이 앞 세 글자로 잘렸다. 팀명 두 칸은 `min-w-0
+ * truncate`로 넘치면 말줄임하고 가운데 스코어는 고정폭이라 행 높이(한 줄, py-2)는 그대로다.
+ */
 function HeadToHead({ preview }: { preview: MatchPreview }) {
   return (
     <section>
       <PreviewSectionTitle>상대 전적</PreviewSectionTitle>
       {preview.headToHead.map((game) => (
         <div
-          key={`${game.date}-${game.line}`}
+          key={`${game.date}-${game.homeName}-${game.awayName}`}
           className="border-border-soft flex items-center gap-2 border-b py-2"
         >
           <span className="text-caption-lg text-text-4 w-14 shrink-0">
             {game.date}
           </span>
-          <span className="text-label-lg text-text flex-1 text-center font-medium">
-            {game.line}
+          <span className="text-label-lg text-text min-w-0 flex-1 truncate text-right font-medium">
+            {game.homeName}
+          </span>
+          <span className="text-label-lg text-text-strong w-12 shrink-0 text-center font-bold tabular-nums">
+            {game.homeGoals} - {game.awayGoals}
+          </span>
+          <span className="text-label-lg text-text min-w-0 flex-1 truncate font-medium">
+            {game.awayName}
           </span>
           <span
             className={`text-caption-lg w-5 shrink-0 text-center font-black ${
@@ -170,42 +190,6 @@ function LeaguePositions({ preview }: { preview: MatchPreview }) {
               />
             ))}
           </span>
-        </div>
-      ))}
-    </section>
-  );
-}
-
-function LastLineups({ preview }: { preview: MatchPreview }) {
-  return (
-    <section>
-      <PreviewSectionTitle>직전 경기 선발</PreviewSectionTitle>
-      {/* "직전 경기의 확정 선발" 문구는 명세가 요구하는 FE 표기다. 지우지 말 것 */}
-      <p className="text-caption-lg text-text-3 pb-1">
-        예상 라인업이 아니라 직전 경기의 확정 선발이에요
-      </p>
-      {preview.lastLineups.map((lineup) => (
-        <div
-          key={lineup.team.shortName}
-          className="border-border-soft border-b py-2.5"
-        >
-          <p className="flex items-center gap-2 pb-1">
-            <TeamProfileLink
-              team={lineup.team}
-              className="flex items-center gap-1.5 active:opacity-70"
-            >
-              <LiveCrest team={lineup.team} size={16} decorative />
-              <span className="text-body text-text-strong font-bold">
-                {lineup.team.name}
-              </span>
-            </TeamProfileLink>
-            <span className="text-caption-lg text-text-3">
-              {lineup.formation}
-            </span>
-          </p>
-          <p className="text-label-lg text-text leading-body">
-            {lineup.playerNames.join(", ")}
-          </p>
         </div>
       ))}
     </section>

@@ -7,7 +7,6 @@ import type { InitialMatchDetail, StandingRow } from "@plick/domain/live";
 import {
   PREDICTION_TAB_QUERY,
   PREDICTION_TAB_VALUE,
-  type KeyPlayers,
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { LiveChatPanel } from "@/_components/LiveChatPanel";
@@ -36,20 +35,17 @@ import { SiteFooter } from "@/_components/SiteFooter";
  * @param initial 서버가 받아 둔 상세 씨앗. 없으면 클라가 직접 받는다
  * @param standings 순위 탭의 표. 서버가 못 받았으면 null
  * @param prediction 예측 요약 씨앗 (KAN-696). null은 예측 없는 경기, undefined는 서버가 못 받은 것
- * @param keyPlayers 키플레이어 씨앗 (KAN-699). 프리뷰 탭이 쓴다. null과 undefined의 뜻은 예측 요약과 같다
  */
 export function MatchDetailScreen({
   matchId,
   initial,
   standings,
   prediction,
-  keyPlayers,
 }: {
   matchId: number;
   initial?: InitialMatchDetail;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
-  keyPlayers?: KeyPlayers | null;
 }) {
   const {
     data: detail,
@@ -86,7 +82,6 @@ export function MatchDetailScreen({
               detail={detail}
               standings={standings}
               prediction={prediction}
-              keyPlayers={keyPlayers}
             />
           )}
         </PageContainer>
@@ -97,9 +92,9 @@ export function MatchDetailScreen({
 }
 
 /**
- * 상태로 좌측 본문이 갈린다. SCHEDULED는 프리뷰, 순위, 뉴스, LIVE·FINISHED는
- * 요약, 라인업, 스탯, 순위, 뉴스, POSTPONED는 프리뷰가 있으면 프리뷰, 없으면 안내만,
- * CANCELLED는 안내만(`MATCH_TABS_BY_STATUS`). 우측 채팅 aside는 상태와 무관하게
+ * 상태로 좌측 본문이 갈린다. SCHEDULED는 예측/프리뷰, 순위, 뉴스, LIVE·FINISHED는
+ * (요약이 있으면 예측/프리뷰) 요약, 라인업, 스탯, 순위, 뉴스, POSTPONED는 프리뷰가 있으면
+ * 프리뷰, 없으면 안내만, CANCELLED는 안내만(`MATCH_TABS_BY_STATUS`). 우측 채팅 aside는 상태와 무관하게
  * 늘 같은 자리에 있어 탭을 바꿔도 리마운트되지 않는다. 방은 경기별이 아니라 홈
  * 레일과 같은 통합 방이다(KAN-572).
  *
@@ -109,20 +104,20 @@ export function MatchDetailScreen({
  * 탭은 컴포넌트 상태다. 폴링으로 상태가 바뀌어(예정 → 라이브) 지금 탭이
  * 사라지면 첫 탭으로 돌아간다.
  *
- * 예측 탭(KAN-696)은 요약 쿼리가 값을 줄 때만 맨 앞에 선다. 빅6 밖 경기는 404라 null이고 탭이
- * 없다. 내 예측이 실리는 유저별 지면이라 뉴스처럼 열 때만 그린다. 숨겨 둔 채 그리면 바 등장
- * 애니메이션이 안 보이는 사이에 끝난다.
+ * 예측/프리뷰 탭(KAN-696, 통합 KAN-709)은 예정 경기면 늘 맨 앞에 서고, 라이브·종료 경기는 요약
+ * 쿼리가 값을 줄 때만 선다. 빅6 밖 경기는 요약이 404라 null이고 그때 예정 경기의 탭은 프리뷰만
+ * 든다. 내 예측이 실리는 유저별 지면이라 뉴스처럼 열 때만 그린다. 숨겨 둔 채 그리면 바 등장
+ * 애니메이션이 안 보이는 사이에 끝난다. 예정 경기는 이 탭이 기본이라 프리뷰(팀 비교, 결장자)는
+ * 전처럼 서버 HTML에 실린다.
  */
 function MatchDetailBody({
   detail,
   standings,
   prediction: predictionSeed,
-  keyPlayers,
 }: {
   detail: NonNullable<ReturnType<typeof useMatchDetail>["data"]>;
   standings: StandingRow[] | null;
   prediction?: PredictionSummary | null;
-  keyPlayers?: KeyPlayers | null;
 }) {
   const { header } = detail;
   const { data: prediction = null } = usePredictionSummary(
@@ -150,7 +145,7 @@ function MatchDetailBody({
     <>
       <MatchHeaderCard header={header} />
       <div
-        className={`grid grid-cols-1 gap-8 pt-5.5 ${
+        className={`grid grid-cols-1 gap-8 pt-4 ${
           CHAT_ENABLED ? "lg:grid-cols-[minmax(0,1fr)_18.75rem] lg:gap-10" : ""
         }`}
       >
@@ -185,8 +180,6 @@ function MatchDetailBody({
                         tab={tab}
                         standings={standings}
                         prediction={prediction}
-                        keyPlayers={keyPlayers}
-                        onSelectTab={setSelected}
                       />
                     </TabPanel>
                   )
@@ -202,8 +195,6 @@ function MatchDetailBody({
                       tab={tab}
                       standings={standings}
                       prediction={prediction}
-                      keyPlayers={keyPlayers}
-                      onSelectTab={setSelected}
                     />
                   </TabPanel>
                 ),
@@ -221,20 +212,20 @@ function MatchDetailBody({
   );
 }
 
-/** 스코어 헤더 자리 스켈레톤 — 양 팀 엠블럼 72와 가운데 스코어의 실루엣. */
+/** 스코어 헤더 자리 스켈레톤. 한 줄 헤더(`MatchHeaderCard`, KAN-709)와 같은 높이로 엠블럼 44와 스코어 실루엣. */
 function HeaderSkeleton() {
   return (
-    <div className="border-border flex animate-pulse items-center gap-6.5 border-b pb-6.5">
-      <div className="flex flex-1 flex-col items-center gap-2.75">
-        <div className="bg-chip size-18 rounded-full" />
+    <div className="border-border flex animate-pulse items-center gap-4 border-b pb-4 lg:gap-6.5">
+      <div className="flex flex-1 items-center justify-end gap-2.5">
         <div className="bg-chip h-4 w-24" />
+        <div className="bg-chip size-11 rounded-full" />
       </div>
-      <div className="flex min-w-52.5 flex-col items-center gap-2.25">
-        <div className="bg-chip h-3.5 w-28" />
-        <div className="bg-chip h-11.5 w-32" />
+      <div className="flex min-w-40 flex-col items-center gap-2">
+        <div className="bg-chip h-6 w-20" />
+        <div className="bg-chip h-3 w-28" />
       </div>
-      <div className="flex flex-1 flex-col items-center gap-2.75">
-        <div className="bg-chip size-18 rounded-full" />
+      <div className="flex flex-1 items-center gap-2.5">
+        <div className="bg-chip size-11 rounded-full" />
         <div className="bg-chip h-4 w-24" />
       </div>
     </div>

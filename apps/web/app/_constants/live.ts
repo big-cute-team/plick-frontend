@@ -23,12 +23,15 @@ export { LIVE_MAX_RETRIES } from "@plick/core/query-policy";
  * 안내만 그린다. 채팅은 탭이 아니라 우측 패널이다.
  *
  * 뉴스는 KAN-484에서 붙였다 — 경기를 보다가 그 팀 소식이 궁금해지는 자리라
- * 기사 목록으로 나갔다 오는 대신 같은 지면에서 본다. 덕분에 예정 경기도 탭이
- * 둘(프리뷰·뉴스)이라 탭 줄이 선다. 순위 탭은 KAN-567 시안(경기 상세 탭 줄)대로
- * 붙였다. 시안의 채팅 탭은 웹에서 우측 aside가 맡으므로 탭에 없다.
+ * 기사 목록으로 나갔다 오는 대신 같은 지면에서 본다. 순위 탭은 KAN-567 시안(경기 상세
+ * 탭 줄)대로 붙였다. 시안의 채팅 탭은 웹에서 우측 aside가 맡으므로 탭에 없다.
+ *
+ * 예측 탭과 프리뷰 탭은 KAN-709에서 `prediction` 하나로 합쳤다. 예정 경기는 요약 유무와
+ * 무관하게 늘 이 탭이 맨 앞에 서고(프리뷰 재료가 있어서), 라이브·종료는 요약이 있을 때만
+ * {@link matchTabsFor}가 맨 앞에 붙인다.
  */
 export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["preview", "table", "news"],
+  SCHEDULED: ["prediction", "table", "news"],
   LIVE: ["summary", "lineups", "stats", "table", "news"],
   FINISHED: ["summary", "lineups", "stats", "table", "news"],
   POSTPONED: [],
@@ -36,12 +39,12 @@ export const MATCH_TABS_BY_STATUS: Record<MatchStatus, MatchTabKey[]> = {
 };
 
 /**
- * 예측 탭을 맨 앞에 붙인 표 (KAN-696). 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지
- * 않는다. 날짜 미정 연기 경기의 예측이 OPEN으로 남는 경우(티켓 참고)는 새 일정이 잡혀 SCHEDULED로
- * 돌아오면 탭이 선다.
+ * 라이브·종료 경기에 예측 탭을 맨 앞에 붙인 표 (KAN-696). 예정 경기는 기본 표에 이미 들어 있다.
+ * 연기·취소 경기는 탭 없이 안내만 그리는 지면이라 붙이지 않는다. 날짜 미정 연기 경기의 예측이
+ * OPEN으로 남는 경우(티켓 참고)는 새 일정이 잡혀 SCHEDULED로 돌아오면 탭이 선다.
  */
 const TABS_WITH_PREDICTION: Record<MatchStatus, MatchTabKey[]> = {
-  SCHEDULED: ["prediction", ...MATCH_TABS_BY_STATUS.SCHEDULED],
+  SCHEDULED: MATCH_TABS_BY_STATUS.SCHEDULED,
   LIVE: ["prediction", ...MATCH_TABS_BY_STATUS.LIVE],
   FINISHED: ["prediction", ...MATCH_TABS_BY_STATUS.FINISHED],
   POSTPONED: [],
@@ -49,8 +52,9 @@ const TABS_WITH_PREDICTION: Record<MatchStatus, MatchTabKey[]> = {
 };
 
 /**
- * 지금 화면에 보이는 상세 탭 목록. 예측할 수 있는 경기(요약 API가 200)면 `prediction`을 맨 앞에
- * 붙인다 (KAN-696). 상태별로 같은 배열 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
+ * 지금 화면에 보이는 상세 탭 목록. 라이브·종료 경기는 예측할 수 있을 때(요약 API가 200)만
+ * `prediction`을 맨 앞에 붙인다 (KAN-696). 예정 경기의 `prediction`은 프리뷰를 겸해 늘 있다
+ * (KAN-709). 상태별로 같은 배열 인스턴스를 돌려줘 렌더마다 새 배열이 생기지 않는다.
  *
  * @param status 경기 상태
  * @param hasPrediction 예측 요약이 있는 경기인가. 빅6 밖 경기는 false
@@ -111,16 +115,30 @@ export function matchEmptyLabel(
  */
 export const MATCH_NEWS_SKELETON_COUNT = 4;
 
-/** 탭 라벨. */
+/**
+ * 탭 라벨. 통합 탭(KAN-709)만 예측 유무와 무관하게 "예측/프리뷰"다. 예측 없는 경기에서 "프리뷰"로
+ * 바꾸면 탭 이름이 경기마다 달라진다.
+ */
 export const MATCH_TAB_LABEL: Record<MatchTabKey, string> = {
-  preview: "프리뷰",
   summary: "요약",
   lineups: "라인업",
   stats: "스탯",
   table: "순위",
   news: "뉴스",
-  prediction: "예측",
+  prediction: "예측/프리뷰",
 };
+
+/**
+ * 예측/프리뷰 탭에서 2단(팀 비교, 결장자) 아래 접어 둔 프리뷰 블록(상대 전적, 리그 순위)을 펼치는
+ * 토글 문구 (KAN-709, 모바일과 같은 말). 기본은 접힘이고 탭을 다시 들어오면 다시 접힌다.
+ */
+export const PREVIEW_MORE_LABEL = "프리뷰 더 보기";
+
+/** 토글이 펼쳐진 동안의 문구. */
+export const PREVIEW_LESS_LABEL = "접기";
+
+/** 토글이 `aria-controls`로 가리키는 펼친 영역의 id. */
+export const PREVIEW_MORE_ID = "match-preview-more";
 
 /**
  * 서버 거절 사유 → 입력바 밑 안내 문구. 목록에 없는 사유는 일반 실패 문구로 떨어진다.
