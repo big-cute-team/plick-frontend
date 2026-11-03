@@ -8,11 +8,11 @@ import { FIGURE_TYPE_LABEL } from "@plick/domain/constants";
 import type { InitialArticleFeed } from "@plick/domain/types";
 import { AppShell } from "@/_components/AppShell";
 import { ProfileScrollArea } from "@/_components/ProfileScrollArea";
+import { ScopedArticlesFeed } from "@/_components/ScopedArticlesFeed";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { TabBar } from "@/_components/TabBar";
 import { ProfileSectionTitle } from "@/_components/ProfileSectionTitle";
 import { WEB_SITE_URL } from "@/_constants/site";
-import { FigureArticlesFeed } from "./_components/FigureArticlesFeed";
 import { FigureFacts } from "./_components/FigureFacts";
 import { FigureHeader } from "./_components/FigureHeader";
 
@@ -117,7 +117,11 @@ export default async function FigurePage({
           <div className="px-edge">
             <ProfileSectionTitle>관련 이슈</ProfileSectionTitle>
           </div>
-          <FigureArticlesFeed figureId={figure.id} initial={initial} />
+          <ScopedArticlesFeed
+            scope={{ kind: "figure", id: figure.id }}
+            initial={initial}
+            emptyText="아직 올라온 이슈가 없어요"
+          />
         </section>
         <section className="px-edge">
           <ProfileSectionTitle>기본 정보</ProfileSectionTitle>

@@ -4,6 +4,7 @@ import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS, TEAM_ORDER } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
+import { TEAM_TAB_KEEP_PAD } from "@/_constants/team-filter";
 
 /**
  * 팀 탭 (전체 + 빅6) — 표 위의 글자 탭 줄. 홈과 기사 페이지가 공용으로 쓴다.
@@ -48,17 +49,27 @@ export function TeamFilterTabs({
    * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386, 모바일과 같은 판단).
    * 좁은 폭에서 반쯤 잘린 탭을 클릭해도 그대로 잘려 있어 어디를 골랐는지 안
    * 보인다. `value` 변화에 반응하므로 클릭이든 URL 직접 진입이든 다 잡고,
-   * `nearest`라 이미 다 보이는 탭에는 아무 일도 하지 않는다.
+   * 이미 다 보이는 탭에는 아무 일도 하지 않는다.
+   *
+   * `scrollIntoView`를 쓰지 않고 `scrollLeft`를 직접 계산한다 (KAN-709). `block:
+   * "nearest"`라도 탭 줄이 첫 화면 아래면 문서 스크롤러까지 세로로 끌어와,
+   * 새로고침마다 홈이 탭 줄을 화면 바닥에 맞춘 자리(scrollY 600~700)에서 시작했다.
+   * 날짜 줄(`useDateStripScroll`)과 같은 방식이다.
    */
   const listRef = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
   useEffect(() => {
-    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
-      behavior: mounted.current ? "smooth" : "auto",
-      block: "nearest",
-      inline: "nearest",
-    });
+    const list = listRef.current;
+    const tab = list?.querySelector<HTMLElement>("[aria-current]");
+    const behavior = mounted.current ? "smooth" : "auto";
     mounted.current = true;
+    if (!list || !tab) return;
+    const listRect = list.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    const overLeft = listRect.left + TEAM_TAB_KEEP_PAD - tabRect.left;
+    const overRight = tabRect.right - (listRect.right - TEAM_TAB_KEEP_PAD);
+    const by = overLeft > 0 ? -overLeft : overRight > 0 ? overRight : 0;
+    if (by !== 0) list.scrollBy({ left: by, behavior });
   }, [value]);
 
   return (
@@ -75,7 +86,7 @@ export function TeamFilterTabs({
             href={teamHubPath(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-label-lg focus-visible:outline-accent shrink-0 scroll-mx-6 pr-3.75 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
+            className={`text-label-lg focus-visible:outline-accent shrink-0 pr-3.75 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
               on
                 ? "text-accent font-bold"
                 : "text-text-3 hover:text-text-strong font-medium"

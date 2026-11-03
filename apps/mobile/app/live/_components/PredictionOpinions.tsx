@@ -99,7 +99,7 @@ export function PredictionOpinions({
   );
 
   return (
-    <div className="px-edge pt-6.5 pb-6">
+    <div className="px-edge pt-4 pb-6">
       <div className="flex items-center gap-1.5">
         <h2 className="text-body-lg text-text-strong tracking-section font-bold">
           의견

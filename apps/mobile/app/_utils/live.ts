@@ -5,8 +5,6 @@
 import {
   dateKeyParts,
   dateKeyYearMonth,
-  kickoffDateLabel,
-  kickoffTimeLabel,
   matchStatusLabel,
   type LineupPlayer,
   type LiveTeam,
@@ -65,16 +63,6 @@ export function scoreTone(
   const mine = match.score[side] ?? 0;
   const other = match.score[side === "home" ? "away" : "home"] ?? 0;
   return mine >= other ? "strong" : "muted";
-}
-
-/**
- * 경기 상세 헤더의 킥오프 한 줄 (KAN-567). 시안은 "9월 21일 21:00"이다. 도메인의
- * 날짜 표기("9월 21일 (일)")와 시각 표기를 이어 붙인다.
- *
- * @param kickoffAt 킥오프 ISO 문자열
- */
-export function kickoffFullLabel(kickoffAt: string): string {
-  return `${kickoffDateLabel(kickoffAt)} ${kickoffTimeLabel(kickoffAt)}`;
 }
 
 /**

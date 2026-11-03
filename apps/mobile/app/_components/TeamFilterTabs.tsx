@@ -4,7 +4,7 @@ import { useEffect, useRef, type MouseEvent } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { teamHubPath } from "@plick/domain/format";
 import type { Filter } from "@plick/domain/types";
-import { FILTER_ORDER } from "@/_constants/team-filter";
+import { FILTER_ORDER, TEAM_TAB_KEEP_PAD } from "@/_constants/team-filter";
 
 /**
  * 팀 탭 (전체 + 빅6) — 제어형: 선택 상태는 부모(NewsFeed)가 소유한다.
@@ -49,18 +49,28 @@ export function TeamFilterTabs({
 
   /**
    * 선택된 탭을 가로 스크롤 안으로 끌어온다 (KAN-386). 클릭이든 URL 직접
-   * 진입이든 `value`가 정하므로 value 변화에 반응한다. `nearest`라 이미 다
-   * 보이는 탭에는 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
+   * 진입이든 `value`가 정하므로 value 변화에 반응한다. 이미 다 보이는 탭에는
+   * 아무 일도 하지 않고, 첫 렌더만 애니메이션 없이 즉시 맞춘다.
+   *
+   * `scrollIntoView`를 쓰지 않고 `scrollLeft`를 직접 계산한다 (KAN-709). `block:
+   * "nearest"`라도 탭 줄이 화면 밖(소식 섹션은 첫 화면 아래)이면 조상 스크롤러인
+   * `<main>`을 세로로 끌어와, 새로고침마다 홈이 탭 줄을 화면 바닥에 맞춘 어중간한
+   * 자리에서 시작했다. 날짜 줄(`useDateStripScroll`)과 같은 방식이다.
    */
   const listRef = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
   useEffect(() => {
-    listRef.current?.querySelector("[aria-current]")?.scrollIntoView({
-      behavior: mounted.current ? "smooth" : "auto",
-      block: "nearest",
-      inline: "nearest",
-    });
+    const list = listRef.current;
+    const tab = list?.querySelector<HTMLElement>("[aria-current]");
+    const behavior = mounted.current ? "smooth" : "auto";
     mounted.current = true;
+    if (!list || !tab) return;
+    const listRect = list.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    const overLeft = listRect.left + TEAM_TAB_KEEP_PAD - tabRect.left;
+    const overRight = tabRect.right - (listRect.right - TEAM_TAB_KEEP_PAD);
+    const by = overLeft > 0 ? -overLeft : overRight > 0 ? overRight : 0;
+    if (by !== 0) list.scrollBy({ left: by, behavior });
   }, [value]);
 
   return (
@@ -78,7 +88,7 @@ export function TeamFilterTabs({
             href={hrefFor(key)}
             onClick={(e) => intercept(e, key)}
             aria-current={on ? "page" : undefined}
-            className={`text-body shrink-0 scroll-mx-4 py-1.75 pr-3 whitespace-nowrap ${
+            className={`text-body shrink-0 py-1.75 pr-3 whitespace-nowrap ${
               on ? "text-accent font-bold" : "text-text-3 font-medium"
             }`}
           >

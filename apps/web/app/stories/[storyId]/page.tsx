@@ -10,6 +10,7 @@ import { ScopedArticlesFeed } from "@/_components/ScopedArticlesFeed";
 import { SideRail } from "@/_components/SideRail";
 import { SiteFooter } from "@/_components/SiteFooter";
 import { SiteHeader } from "@/_components/SiteHeader";
+import { MOBILE_ALTERNATE_MEDIA, MOBILE_SITE_URL } from "@/_constants/site";
 import { StoryHeader } from "./_components/StoryHeader";
 
 /**
@@ -24,10 +25,10 @@ export function generateStaticParams(): { storyId: string }[] {
 /**
  * 이슈별 메타데이터 (KAN-523). 이슈 제목이 곧 "히샬리송", "맨체스터 더비" 같은
  * 짧은 키워드라(KAN-533) title에 그대로 쓴다. 키워드가 이적설만이 아니라 경기나
- * 대표팀 명단일 수도 있어 설명에는 기사 종류를 적지 않는다. 모바일에는 이슈
- * 화면이 없어 alternate는 두지 않는다. 없는 이슈는 빈 메타데이터로 두면 본문이
- * notFound()로 떨어진다. 익명 fetch라 본문의 같은 호출과 렌더 안에서 중복
- * 제거된다.
+ * 대표팀 명단일 수도 있어 설명에는 기사 종류를 적지 않는다. 이 URL이 canonical이고
+ * 대응 모바일 이슈 페이지(KAN-709에서 이식)를 alternate로 선언한다(인물 페이지와 같은
+ * 규약). 없는 이슈는 빈 메타데이터로 두면 본문이 notFound()로 떨어진다. 익명 fetch라
+ * 본문의 같은 호출과 렌더 안에서 중복 제거된다.
  */
 export async function generateMetadata({
   params,
@@ -40,7 +41,12 @@ export async function generateMetadata({
     return {
       title: story.title,
       description: `${story.title} 관련 기사 ${story.articleCount}건 모아보기`,
-      alternates: { canonical: `/stories/${storyId}` },
+      alternates: {
+        canonical: `/stories/${storyId}`,
+        media: {
+          [MOBILE_ALTERNATE_MEDIA]: `${MOBILE_SITE_URL}/stories/${storyId}`,
+        },
+      },
     };
   } catch {
     return {};

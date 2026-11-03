@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * @file 승부예측 쓰기 서버 액션 12종 (KAN-695, BE `docs/specs/prediction-api.md` §4).
+ * @file 승부예측 쓰기 서버 액션 11종 (KAN-695, BE `docs/specs/prediction-api.md` §4).
  *
  * 보호 API라 HttpOnly 쿠키의 access 토큰을 Bearer로 실어야 하는데 클라는 그
  * 쿠키를 못 읽으므로 서버 액션을 경유한다. 댓글·토론·신고 액션과 같은 이유, 같은
@@ -12,27 +12,23 @@
  * 결과는 던지지 않고 값으로 돌려준다. 서버 액션이 던진 에러는 프로덕션에서 메시지가
  * 가려져 클라가 BE 에러 code로 분기할 수 없다. 클라 훅이 실패 값을 `ApiError`로
  * 되살려 던지고 `classifyPredictionError`가 종류를 가른다. 비로그인(쿠키 없음)은
- * BE까지 안 가고 401 `AUTH_REQUIRED`로 돌려주고, 게스트 허용 여부는 BE가 판단한다. 공감 둘(의견, 답글)과 키플레이어 투표만
- * 게스트도 된다.
+ * BE까지 안 가고 401 `AUTH_REQUIRED`로 돌려주고, 게스트 허용 여부는 BE가 판단한다. 공감 둘(의견, 답글)만 게스트도 된다.
+ * 키플레이어 투표(KAN-699)는 KAN-709에서 기능과 함께 지웠다.
  *
  * 멱등성: 예측 등록(PUT)은 사용자당 경기당 1건 UPSERT라 다시 부르면 픽과 의견을
  * 바꾼다. 공감 POST·DELETE는 이미 눌렀거나 안 누른 상태에 또 보내도 200에 현재
- * 값이 온다. 키플레이어 투표는 팀별 1표 UPSERT다.
+ * 값이 온다.
  */
 
 import { cookies } from "next/headers";
 import { ApiError, apiFetch } from "@plick/core/client";
 import {
-  toKeyPlayers,
   toPredictionReply,
   toPredictionSummary,
-  type KeyPlayersResponse,
   type PredictionReplyResponse,
   type PredictionSummaryResponse,
 } from "@plick/core/predictions";
 import type {
-  KeyPlayerSide,
-  KeyPlayers,
   PredictionActionResult,
   PredictionLikeState,
   PredictionPick,
@@ -295,28 +291,5 @@ export async function deletePredictionReply(
     { method: "DELETE" },
     toNull,
     "답글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
-  );
-}
-
-/**
- * 키플레이어에 투표한다 (`PUT /matches/{matchId}/key-players/vote`). 팀별 1표 UPSERT라
- * 다시 부르면 바꾼다. 마감은 킥오프. 게스트도 된다.
- *
- * @param matchId 경기 id
- * @param side 홈인지 원정인지
- * @param playerId 후보 목록(`candidates`)의 선수 id
- * @returns 성공이면 득표가 반영된 키플레이어 전체(GET과 같은 모양). 스쿼드 밖 선수는
- *   400 `KEY_PLAYER_NOT_IN_SQUAD`, 마감 뒤는 409 `PREDICTION_CLOSED`
- */
-export async function voteKeyPlayer(
-  matchId: number,
-  side: KeyPlayerSide,
-  playerId: number,
-): Promise<PredictionActionResult<KeyPlayers>> {
-  return callProtected<KeyPlayersResponse, KeyPlayers>(
-    `/api/v1/matches/${matchId}/key-players/vote`,
-    { method: "PUT", body: { side, playerId } },
-    toKeyPlayers,
-    "투표를 반영하지 못했어요. 잠시 후 다시 시도해 주세요.",
   );
 }

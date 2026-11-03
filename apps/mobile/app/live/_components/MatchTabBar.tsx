@@ -10,6 +10,10 @@ import type { MatchTabKey } from "@/_types/live";
  * 섹션 구분선이 깔린다. 제어형이다. 선택은 `MatchDetailScreen`이 갖는다. 헤더와
  * 함께 스크롤 밖에 고정된다(`shrink-0`).
  *
+ * 탭이 일곱 개(예측/프리뷰, 채팅, 요약, 라인업, 스탯, 순위, 뉴스)면 390px에 다 들어가지 않아
+ * 줄이 가로로 스크롤된다 (KAN-709). 전에는 글자가 두 줄로 꺾여 탭 줄이 두 배로 솟았다. 팀 탭처럼
+ * 스크롤바는 숨긴다.
+ *
  * @param tabs 이 경기 상태에서 보이는 탭들(순서대로)
  * @param active 지금 탭
  * @param onSelect 탭을 눌렀을 때
@@ -27,7 +31,7 @@ export function MatchTabBar({
     <div
       role="tablist"
       aria-label="경기 상세 보기"
-      className="border-border px-edge flex shrink-0 gap-5 border-b"
+      className="border-border px-edge no-scrollbar flex shrink-0 gap-5 overflow-x-auto border-b"
     >
       {tabs.map((key) => {
         const on = key === active;
@@ -38,7 +42,7 @@ export function MatchTabBar({
             role="tab"
             aria-selected={on}
             onClick={() => onSelect(key)}
-            className={`text-body -mb-px border-b-2 pt-3 pb-2.5 ${
+            className={`text-body -mb-px shrink-0 border-b-2 pt-3 pb-2.5 whitespace-nowrap ${
               on
                 ? "border-accent text-text-strong font-bold"
                 : "text-text-3 border-transparent font-medium"

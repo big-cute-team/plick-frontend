@@ -36,8 +36,12 @@ for (const [app, tabsFor] of [
   ["mobile", mobileTabs],
   ["web", webTabs],
 ]) {
-  test(`${app}: 예측이 있는 경기만 예측을 첫 탭으로 연다`, () => {
-    for (const status of ["SCHEDULED", "LIVE", "FINISHED"]) {
+  test(`${app}: 예정 경기는 늘, 라이브·종료는 예측이 있을 때만 예측/프리뷰가 첫 탭이다`, () => {
+    /* 예정 경기는 프리뷰 재료가 있어 요약 유무와 무관하게 통합 탭이 선다 (KAN-709) */
+    assert.equal(tabsFor("SCHEDULED", true)[0], "prediction");
+    assert.deepEqual(tabsFor("SCHEDULED", false), tabsFor("SCHEDULED", true));
+    assert.ok(!tabsFor("SCHEDULED", true).includes("preview"));
+    for (const status of ["LIVE", "FINISHED"]) {
       assert.equal(tabsFor(status, true)[0], "prediction");
       assert.ok(!tabsFor(status, false).includes("prediction"));
       assert.deepEqual(tabsFor(status, true).slice(1), tabsFor(status, false));

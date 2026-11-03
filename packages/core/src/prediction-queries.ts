@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * @file 승부예측 읽기 쿼리 훅 여덟 개 (KAN-685. KAN-696~702가 두 앱 `_hooks/`에 바이트 단위로 같게
+ * @file 승부예측 읽기 쿼리 훅 일곱 개 (KAN-685. KAN-696~702가 두 앱 `_hooks/`에 바이트 단위로 같게
  * 복제해 둔 것을 에픽이 끝난 뒤 한 번에 올렸다. 판단은 ADR 0232).
  *
- * 읽기만 여기 있다. 쓰기 훅(등록·취소, 공감, 신고, 답글, 키플레이어 투표, 차단)은 앱의 서버 액션
+ * 읽기만 여기 있다. 쓰기 훅(등록·취소, 공감, 신고, 답글, 차단)은 앱의 서버 액션
  * (`_services/prediction-actions.ts`, 쿠키 이름이 앱에 박혀 있다)과 앱별 전역 에러 안전망
  * (`meta.errorHandled`)에 묶여 있어 ADR 0011 게이트 A를 못 넘는다. 앱 `_hooks/`에 그대로 둔다.
  *
@@ -19,7 +19,6 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   PREDICTION_DISTRIBUTION_REFRESH_MS,
   PREDICTION_RANKING_STALE_MS,
-  type KeyPlayers,
   type MyPredictionPage,
   type MyPredictionStats,
   type PredictionHomeCard,
@@ -29,7 +28,6 @@ import {
 } from "@plick/domain/prediction";
 import { predictionKeys } from "./predictionKeys";
 import {
-  getKeyPlayers,
   getMyPredictions,
   getMyPredictionStats,
   getPredictionHome,
@@ -82,34 +80,6 @@ export function usePredictionSummary(
         ? PREDICTION_DISTRIBUTION_REFRESH_MS
         : false;
     },
-  });
-}
-
-/**
- * 경기 하나의 키플레이어와 VS 스탯 쿼리 (KAN-699). 프리뷰 탭의 키플레이어 묶음이 쓴다.
- *
- * 서버 씨앗은 토큰 없이 받은 값이라 `myVote`가 비어 있고, 마운트되면 브라우저가 다시 받아 내 표를
- * 채운다(`usePredictionSummary`와 같은 구조). 투표 응답이 GET과 같은 모양이라 뮤테이션이 캐시를
- * 바로 덮고, 폴링은 두지 않는다. 득표는 분포처럼 빠르게 움직이는 값이 아니고 가이드 §8도 투표
- * 때만 다시 받는다.
- *
- * null은 404 `PREDICTION_NOT_AVAILABLE`(빅6 밖 경기)이라 묶음을 그리지 않는다. 실패해도 프리뷰의
- * 다른 블록은 멀쩡해야 하므로 경계로 던지지 않는다.
- *
- * @param matchId 경기 id
- * @param initial 서버가 받아 둔 값. null은 예측 없는 경기, undefined는 서버가 못 받은 것
- */
-export function useKeyPlayers(
-  matchId: number,
-  initial: KeyPlayers | null | undefined,
-) {
-  return useQuery<KeyPlayers | null>({
-    queryKey: predictionKeys.keyPlayers(matchId),
-    queryFn: () => getKeyPlayers(matchId),
-    ...(initial !== undefined && { initialData: initial }),
-    staleTime: 0,
-    retry: LIVE_MAX_RETRIES,
-    throwOnError: false,
   });
 }
 

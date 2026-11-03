@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { ApiError } from "@plick/core/client";
 import { getTrends, TRENDS_COUNT } from "@plick/core/trends";
 import { formatChatTime } from "@plick/domain/format";
 import type { TrendRanking } from "@plick/domain/types";
+import { TrendingRow } from "@plick/ui/TrendingRow";
 import { TrendingEmptyRow } from "@/_components/TrendingEmptyRow";
-import { TrendingRow } from "@/_components/TrendingRow";
 
 /**
  * 이슈 랭킹을 받고, BE가 STORY를 몰라 400을 주면 구단 랭킹으로 대신한다.
@@ -103,6 +104,7 @@ export async function TrendingRail() {
               key={item.entityId}
               item={item}
               type={ranking.type === "TEAM" ? "TEAM" : "STORY"}
+              Link={Link}
             />
           ))}
           {emptyRanks.map((rank) => (

@@ -5,7 +5,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  toKeyPlayers,
   toPredictionOpinion,
   toPredictionSummary,
   toPredictionTeam,
@@ -101,32 +100,4 @@ test("팀은 id가 있으면 빅6 코드를, 없으면 소문자 코드로 빅6�
   const byCode = toPredictionTeam({ name: "맨시티", code: "mci" });
   assert.equal(byCode.code, "MCI");
   assert.equal(byCode.id, null);
-});
-
-test("키플레이어는 평점 문자열을 숫자로, 비어 있는 쪽은 null로 접는다", () => {
-  const players = toKeyPlayers({
-    status: "OPEN",
-    home: {
-      player: { playerId: 186, name: "브루노", photo: null, position: "MF" },
-      votePercent: 64,
-      isDefault: false,
-      stats: { appearances: 7, goals: 2, assists: 3, rating: "7.45" },
-      candidates: [
-        { playerId: 186, name: "브루노", photo: null, votePercent: 64 },
-      ],
-    },
-    away: {
-      player: null,
-      votePercent: 0,
-      isDefault: false,
-      stats: null,
-      candidates: [],
-    },
-    myVote: { home: 186, away: null },
-  });
-  assert.equal(players.home.player.id, 186);
-  assert.equal(players.home.stats.rating, 7.45);
-  assert.equal(players.home.candidates[0].id, 186);
-  assert.equal(players.away.player, null);
-  assert.equal(players.away.stats, null);
 });

@@ -20,7 +20,6 @@
  * | duplicate-report | 409 `REPORT_DUPLICATED` | "이미 신고한 글이에요" 안내 팝업 |
  * | self-report | 400 `PREDICTION_SELF_REPORT` | 내 글. 화면이 신고 버튼을 안 그리지만 받으면 안내 |
  * | forbidden | 403 `PREDICTION_REPLY_FORBIDDEN` | 남의 답글 수정·삭제. 목록을 다시 받는다 |
- * | not-in-squad | 400 `KEY_PLAYER_NOT_IN_SQUAD` | 후보 목록을 다시 받는다 |
  * | busy | 503 `COMMON_SERVICE_BUSY` | 1초 뒤 한 번 재시도(`SERVICE_BUSY_RETRY_DELAY_MS`) |
  * | network | status 0 | 되돌리고 "잠시 후 다시 시도해 주세요" |
  * | unknown | 그 밖 | BE 문구 그대로 토스트 |
@@ -44,7 +43,6 @@ export const PREDICTION_ERROR_CODE = {
   replyLength: "PREDICTION_REPLY_LENGTH",
   replyBlocked: "PREDICTION_REPLY_BLOCKED",
   reportDuplicated: "REPORT_DUPLICATED",
-  keyPlayerNotInSquad: "KEY_PLAYER_NOT_IN_SQUAD",
   authRequired: "AUTH_REQUIRED",
   guestForbidden: "AUTH_GUEST_FORBIDDEN",
 } as const;
@@ -64,7 +62,6 @@ export type PredictionFailureKind =
   | "duplicate-report"
   | "self-report"
   | "forbidden"
-  | "not-in-squad"
   | "busy"
   | "network"
   | "unknown";
@@ -96,7 +93,6 @@ const KIND_BY_CODE: Record<string, PredictionFailureKind> = {
   [PREDICTION_ERROR_CODE.reportDuplicated]: "duplicate-report",
   [PREDICTION_ERROR_CODE.selfReport]: "self-report",
   [PREDICTION_ERROR_CODE.replyForbidden]: "forbidden",
-  [PREDICTION_ERROR_CODE.keyPlayerNotInSquad]: "not-in-squad",
 };
 
 /**

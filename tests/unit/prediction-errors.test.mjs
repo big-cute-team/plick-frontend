@@ -55,7 +55,6 @@ test("공통 처리 다섯 code가 각자 종류로 간다", () => {
     REPORT_DUPLICATED: "duplicate-report",
     PREDICTION_REPLY_BLOCKED: "blocked-word",
     PREDICTION_REPLY_NOT_FOUND: "not-found",
-    KEY_PLAYER_NOT_IN_SQUAD: "not-in-squad",
     COMMON_SERVICE_BUSY: "busy",
   };
   for (const [code, kind] of Object.entries(kinds)) {
