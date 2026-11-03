@@ -38,3 +38,26 @@ export const WEB_SUGGEST_MEDIA = "(min-width: 1024px)";
  * `app/onboarding`으로 되돌리고 로그인(`_services/auth.ts`)의 분기를 복원한다.
  */
 export const ONBOARDING_ENTRY = "/onboarding/nickname";
+
+/**
+ * 앱 다운로드 팝업(KAN-711)의 "하루 동안 보지 않기"가 적는 localStorage 키. 값은 다시 띄울 수
+ * 있는 시각(epoch ms)이다. 그 전에는 안 띄운다. E2E는 playwright.config의 storageState가 먼 미래
+ * 값을 미리 심어 팝업이 클릭을 삼키지 않게 한다. 키 이름을 바꾸면 그쪽도 같이 바꾼다.
+ */
+export const APP_DOWNLOAD_DISMISS_UNTIL_KEY =
+  "plick-app-download-dismissed-until";
+
+/** 앱 다운로드 팝업의 "하루 동안 보지 않기" 길이. 24시간 */
+export const APP_DOWNLOAD_DISMISS_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * 앱 다운로드 팝업의 "닫기"가 적는 sessionStorage 키. 탭을 닫기 전까지는 다시 안 띄운다.
+ * 페이지를 오갈 때마다 다시 뜨면 팝업이 아니라 방해다.
+ */
+export const APP_DOWNLOAD_CLOSED_KEY = "plick-app-download-closed";
+
+/**
+ * 앱 다운로드 팝업을 띄우지 않는 경로 접두어. 로그인·가입·OAuth 콜백은 그 흐름을 끝내는 게 먼저고,
+ * 그 위에 팝업이 서면 소셜 로그인 리다이렉트와 겹친다.
+ */
+export const APP_DOWNLOAD_SKIP_PATHS = ["/login", "/signup", "/oauth"];

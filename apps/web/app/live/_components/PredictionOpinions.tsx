@@ -12,7 +12,6 @@ import {
   type PredictionPick,
   type PredictionSummary,
 } from "@plick/domain/prediction";
-import { PREDICTION_VOTE_LABEL } from "@/_constants/predictions";
 import { useInfiniteScroll } from "@/_hooks/useInfiniteScroll";
 import { usePredictionOpinions } from "@plick/core/prediction-queries";
 import { PredictionLockedList } from "./PredictionLockedList";
@@ -32,7 +31,8 @@ function chipClass(on: boolean): string {
  * 예측 탭의 의견 자리 (KAN-697, 시안 가이드 §5.4, 모바일 `PredictionOpinions`의 웹 판). 머리글
  * 줄(`의견`, 픽 필터, 정렬), 내 예측 상자, 그 아래 의견 행들이다. 머리글 줄은 40px 높이에 밑선이
  * 있고 웹은 정렬 셋을 글자로 나열한다. 픽 필터는 전체, 다른 픽 둘, 내 픽 순이고 예측 전에는
- * 숨긴다. 정렬이나 필터를 바꾸면 쿼리 키가 갈려 커서가 처음부터다.
+ * 필터와 정렬을 숨긴다. 정렬이나 필터를 바꾸면 쿼리 키가 갈려 커서가 처음부터다. 예측 전의
+ * `투표하기`는 머리글 오른쪽에 있었는데 KAN-710에서 3분할 바 바로 아래(`PredictionPanel`)로 올렸다.
  *
  * 잠금은 서버가 정한다. 목록 응답의 `locked`가 true면 잠금 지면이고, 아직 응답이 없으면 요약
  * (OPEN에 내 예측 없음)으로 먼저 판단한다. 등록 직후에는 요약은 내 예측이 있는데 옛 목록 캐시가
@@ -50,7 +50,7 @@ function chipClass(on: boolean): string {
  *
  * @param summary 예측 요약. 상태와 내 예측을 본다
  * @param teams 홈·원정 팀명(픽 라벨용)
- * @param onCompose 작성 팝업을 열 때(잠금 지면, 투표하기)
+ * @param onCompose 작성 팝업을 열 때(잠금 지면의 의견 남기기)
  * @param onEdit 내 예측 수정을 눌렀을 때
  * @param onCancel 내 예측 취소를 눌렀을 때
  */
@@ -104,7 +104,7 @@ export function PredictionOpinions({
 
   return (
     <div className="pb-6">
-      <div className="border-border mt-7.5 flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 border-b py-1">
+      <div className="border-border mt-4 flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 border-b py-1">
         <h2 className="text-body-lg text-text-strong shrink-0 font-bold">
           의견
         </h2>
@@ -136,15 +136,7 @@ export function PredictionOpinions({
           </div>
         )}
         <div className="flex-1" />
-        {locked ? (
-          <button
-            type="button"
-            onClick={onCompose}
-            className="bg-accent text-on-accent text-body hover:bg-accent-hover focus-visible:outline-accent inline-flex h-8 items-center px-3.5 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            {PREDICTION_VOTE_LABEL}
-          </button>
-        ) : (
+        {!locked && (
           <div
             role="group"
             aria-label="정렬"

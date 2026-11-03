@@ -16,6 +16,10 @@
  *                        같은 크기를 여기서 만들면 10.8KB라 그쪽이 작다. 134·201은 원본 PNG에서
  *                        만든다(로그인 67×2, 67×3). `Logo.tsx`가 srcset으로 고른다.
  *                        PNG 200은 OG 이미지(scripts/og-image)용으로 남긴다
+ *   logo-square-{144,216}.webp
+ *                        앱 다운로드 팝업(KAN-711)의 정사각 로고. 72px 자리의 ×2·×3이라 두 단계다.
+ *                        `src/app-icon.png`에서 만들고 모서리는 CSS가 둥글린다 → packages/ui/src/assets/brand/.
+ *                        `Logo.tsx`의 `SquareLogo`가 import해 srcset으로 고른다
  *   icon.png             512, 모서리 22% 둥글게 투명 (manifest·파비콘 링크).
  *                        팔레트 품질 65 (KAN-624, 152KB → 38KB). 아이콘은 전 화면이
  *                        `<link rel="icon">`으로 받는다
@@ -75,6 +79,16 @@ async function crest(code, size) {
 /** 원본 PNG에서 만드는 webp 높이. 67×2, 67×3. 100은 디자이너 파일을 복사한다 */
 const LOGO_WEBP_HEIGHTS = [134, 201];
 
+/** 정사각 로고 webp 한 변 (KAN-711). 팝업 72px 자리의 ×2, ×3 */
+const LOGO_SQUARE_SIZES = [144, 216];
+
+/** 앱 아이콘 원본을 정사각 webp로. 모서리는 안 깎는다 (CSS가 둥글린다) */
+const squareLogoWebp = (size) =>
+  sharp(join(SRC, "app-icon.png"))
+    .resize(size, size)
+    .webp({ quality: 82 })
+    .toBuffer();
+
 /** PNG 엔트리를 담는 ICO 컨테이너 — 모든 현행 브라우저가 읽는다 */
 function ico(entries) {
   const header = Buffer.alloc(6);
@@ -119,6 +133,13 @@ const webps = await Promise.all(
   }),
 );
 
+const squareLogos = await Promise.all(
+  LOGO_SQUARE_SIZES.map(async (size) => ({
+    size,
+    buffer: await squareLogoWebp(size),
+  })),
+);
+
 const icon512 = await squareIcon(512, { rounded: true });
 const apple180 = await squareIcon(180, { rounded: false });
 const favicon = ico([
@@ -159,6 +180,9 @@ copyFileSync(
 );
 for (const { height, buffer } of webps) {
   writeFileSync(join(brandDir, `logo-horizontal-${height}.webp`), buffer);
+}
+for (const { size, buffer } of squareLogos) {
+  writeFileSync(join(brandDir, `logo-square-${size}.webp`), buffer);
 }
 for (const { code, files } of crests) {
   for (const { size, buffer } of files) {

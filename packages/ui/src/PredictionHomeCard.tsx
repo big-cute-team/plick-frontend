@@ -89,9 +89,10 @@ export function PredictionHomeCard({
         )}
       </div>
 
+      {/* 앱은 팀 줄 위아래를 14에서 10으로 줄였다 (KAN-709). 홈 첫 화면에 아래 소식이 더 가까워지게 */}
       <div
-        className={`grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-3.5 ${
-          size === "lg" ? "gap-2.5" : "gap-3"
+        className={`grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center ${
+          size === "lg" ? "gap-2.5 py-3.5" : "gap-3 py-2.5"
         }`}
       >
         <span className="flex min-w-0 items-center justify-end gap-2">
@@ -127,7 +128,7 @@ export function PredictionHomeCard({
 
       <p
         className={`text-label text-text-3 mt-auto flex items-center tabular-nums ${
-          size === "lg" ? "min-h-9" : "min-h-10"
+          size === "lg" ? "min-h-9" : "min-h-8"
         }`}
       >
         <span

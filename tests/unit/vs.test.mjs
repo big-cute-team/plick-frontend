@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { closedLast, isBalanceClosed } from "../../packages/domain/src/vs.ts";
+import {
+  closedLast,
+  isBalanceClosed,
+  openDebates,
+} from "../../packages/domain/src/vs.ts";
 import { matchTabsFor as mobileTabs } from "../../apps/mobile/app/_constants/live.ts";
 import { matchTabsFor as webTabs } from "../../apps/web/app/_constants/live.ts";
 import { getPredictionFeed } from "../../packages/core/src/predictions.ts";
@@ -32,12 +36,38 @@ test("VS 목록은 원본을 바꾸지 않고 진행 중 → 마감 순서를 �
   );
 });
 
+test("홈 투표 띠는 진행 중인 투표만 서버 순서대로 남긴다 (KAN-710)", () => {
+  const now = Date.parse("2026-11-02T00:00:00Z");
+  const items = [
+    { id: 1, contentType: "FINISH", closesAt: null },
+    { id: 2, contentType: "DEBATE", closesAt: "2026-11-03T00:00:00Z" },
+    { id: 3, contentType: "DEBATE", closesAt: "2026-11-01T00:00:00Z" },
+    { id: 4, contentType: "DEBATE", closesAt: null },
+  ];
+  assert.deepEqual(
+    openDebates(items, now).map((item) => item.id),
+    [2, 4],
+  );
+  /* 마감 시각이 지나면 그 줄이 빠진다. 띠의 시계(useDebateClock)가 now를 앞당긴 경우다 */
+  assert.deepEqual(
+    openDebates(items, Date.parse("2026-11-03T00:00:00Z")).map(
+      (item) => item.id,
+    ),
+    [4],
+  );
+  assert.deepEqual(openDebates([], now), []);
+});
+
 for (const [app, tabsFor] of [
   ["mobile", mobileTabs],
   ["web", webTabs],
 ]) {
-  test(`${app}: 예측이 있는 경기만 예측을 첫 탭으로 연다`, () => {
-    for (const status of ["SCHEDULED", "LIVE", "FINISHED"]) {
+  test(`${app}: 예정 경기는 늘, 라이브·종료는 예측이 있을 때만 예측/프리뷰가 첫 탭이다`, () => {
+    /* 예정 경기는 프리뷰 재료가 있어 요약 유무와 무관하게 통합 탭이 선다 (KAN-709) */
+    assert.equal(tabsFor("SCHEDULED", true)[0], "prediction");
+    assert.deepEqual(tabsFor("SCHEDULED", false), tabsFor("SCHEDULED", true));
+    assert.ok(!tabsFor("SCHEDULED", true).includes("preview"));
+    for (const status of ["LIVE", "FINISHED"]) {
       assert.equal(tabsFor(status, true)[0], "prediction");
       assert.ok(!tabsFor(status, false).includes("prediction"));
       assert.deepEqual(tabsFor(status, true).slice(1), tabsFor(status, false));

@@ -145,8 +145,9 @@ export const SESSION_COOKIE_BASE = {
  *
  * 왜 필요한가: 로그아웃이 게스트로 전환하면 방금 로그아웃한 소셜 사용자도 게스트가
  * 된다. 그 사람의 `/login`은 연동 화면이 되고 소셜 버튼은 `/auth/link`를 타는데,
- * 기존 계정이면 BE가 `EXISTING_ACCOUNT`로 기존 계정 로그인을 시킨다. 동작은 맞지만
- * "카카오로 연동" 문구와 "기록이 이어지지 않았어요" 토스트는 그 사람에게 틀린 말이다.
+ * 기존 계정이면 BE가 `EXISTING_ACCOUNT`로 기존 계정 로그인을 시킨다(KAN-706부터는 로그아웃
+ * 뒤 게스트로 쌓은 기록도 그 계정에 합친다). 동작은 맞지만 "카카오로 연동" 문구와
+ * "기록을 합쳤어요"·"이어지지 않았어요" 토스트는 방금 로그아웃한 사람에게 틀린 말이다.
  * 이 표식이 있으면 로그인 화면은 "로그인" 문구로, 연동 액션은 토스트 없이 간다.
  * HttpOnly인 이유는 토큰 쿠키와 같다. 읽는 쪽이 전부 서버다.
  */
@@ -170,13 +171,16 @@ export const GUEST_NOTICE_MAX_AGE = 60 * 5; // 5분
 /**
  * 게스트 안내 토스트 종류 (KAN-514).
  * - `issued`: 첫 진입에 게스트를 발급했다 → 마감까지 연동하면 기록이 이어진다는 안내
- * - `existing`: 연동했는데 그 소셜 계정이 이미 있어(`linked=false`, `EXISTING_ACCOUNT`)
- *   기존 계정으로 로그인됐다 → 게스트 기록은 안 넘어왔다는 안내
+ * - `merged`: 연동했는데 그 소셜 계정이 이미 있어(`linked=false`, `EXISTING_ACCOUNT`)
+ *   기존 계정으로 로그인됐고, 게스트 기록을 그 계정에 합쳤다(`merged=true`, KAN-706)
+ * - `existing`: 위와 같이 기존 계정으로 로그인됐지만 병합이 안 됐다(`merged=false`) →
+ *   게스트 기록은 안 넘어왔다는 안내. KAN-706 전에는 기존 계정 로그인이 전부 여기였다
  * - `loggedOut`: 로그아웃하면서 새 게스트로 전환했다 (KAN-658) → 게스트로 계속
  *   둘러볼 수 있다는 안내. `issued`의 "지금부터 기록이 쌓여요"는 로그아웃 직후에 어색하다
  */
 export const GUEST_NOTICE = {
   issued: "issued",
+  merged: "merged",
   existing: "existing",
   loggedOut: "loggedOut",
 } as const;

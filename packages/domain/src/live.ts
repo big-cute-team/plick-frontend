@@ -169,12 +169,21 @@ export interface AbsenteeGroup {
   players: Absentee[];
 }
 
-/** 프리뷰 상대전적 한 경기 — result는 이 경기 홈 팀 기준 승·무·패다. */
+/**
+ * 프리뷰 상대전적 한 경기. `result`는 이 경기 홈 팀 기준 승·무·패다.
+ *
+ * 전에는 `"LIV 2 - 1 MCI"` 한 줄(`line`)이었는데 h2h 응답에 팀명만 있고 코드가 없어
+ * 한글 팀명을 앞 세 글자로 자른 `"AS 3 - 2 맨체스"`가 나왔다(KAN-709). 팀명과 스코어를
+ * 세 조각으로 갈라 화면이 양쪽 팀명을 말줄임하고 가운데 스코어는 고정폭으로 그린다.
+ */
 export interface HeadToHeadGame {
   /** "25.03.10" 표기 */
   date: string;
-  /** "LIV 2 - 1 MCI" 표기 */
-  line: string;
+  /** 그 경기 홈 팀 표기. 상세 헤더의 두 팀이면 빅6 약칭(`liveTeamLabel`), 아니면 응답 팀명 그대로 */
+  homeName: string;
+  homeGoals: number;
+  awayGoals: number;
+  awayName: string;
   result: "W" | "D" | "L";
 }
 
@@ -185,17 +194,6 @@ export interface LeaguePosition {
   points: number;
   goalDiff: number;
   recentForm: ("W" | "D" | "L")[];
-}
-
-/**
- * 프리뷰의 직전 경기 선발. 예상 라인업이 아니라 직전 경기의 확정 선발이고,
- * 이 구분을 화면에 문구로 명시하는 게 명세 요구사항이다. 상대가 빅6 밖이면
- * 그 팀 것은 배열에서 빠진다 — 한 팀만 렌더되는 경우를 처리한다.
- */
-export interface LastLineup {
-  team: LiveTeam;
-  formation: string;
-  playerNames: string[];
 }
 
 /**
@@ -220,16 +218,30 @@ export interface HeadToHeadSummary {
   matches: number;
 }
 
-/** 킥오프 전 프리뷰 블록(GET /matches/{id}의 preview). */
+/**
+ * 킥오프 전 프리뷰 블록(GET /matches/{id}의 preview). BE가 함께 주는 직전 경기 선발
+ * (`lastLineups`)은 KAN-709에서 화면을 지우며 받지 않는다.
+ */
 export interface MatchPreview {
   absentees: Absentee[];
   headToHead: HeadToHeadGame[];
   leaguePositions: LeaguePosition[];
-  lastLineups: LastLineup[];
   /** 홈 먼저, 원정 다음. 구버전 BE 응답에는 없어 빈 배열로 접는다 (KAN-695) */
   teamForms: TeamForm[];
   /** 맞대결 요약. 전적이 없거나 구버전 BE면 null (KAN-695) */
   headToHeadSummary: HeadToHeadSummary | null;
+}
+
+/**
+ * 토글 안에 접어 두는 프리뷰 블록(결장자, 상대 전적, 리그 순위)이 하나라도 있는지 (KAN-709).
+ * 셋이 다 비면 "프리뷰 더 보기" 토글을 세울 이유가 없다.
+ */
+export function hasPreviewBlocks(preview: MatchPreview): boolean {
+  return (
+    preview.absentees.length > 0 ||
+    preview.headToHead.length > 0 ||
+    preview.leaguePositions.length > 0
+  );
 }
 
 /**
@@ -349,8 +361,9 @@ export const POSITION_ORDER: Position[] = ["GK", "DF", "MF", "FW"];
  * 팀명 → 축약 코드 폴백. 첫 세 글자 이상 단어의 앞 세 글자를 대문자로 쓴다.
  *
  * 서버가 카드용 코드 `shortName`을 전 팀에 주게 되면서(KAN-550) 정상 경로에선
- * 쓰지 않는다. `@plick/core/live`가 그 필드가 없는 구버전 응답과, 팀명만 실리는
- * 상대 전적(headToHead) 줄에서만 부른다(KAN-553). 예전에
+ * 쓰지 않는다. `@plick/core/live`가 그 필드가 없는 구버전 응답에서, `@plick/core/predictions`가
+ * 코드 없이 온 팀에서만 부른다. 팀명만 실리는 상대 전적 줄도 이걸로 잘랐는데 한글 팀명이
+ * "맨체스"로 잘려 KAN-709에서 팀명 전체를 싣는 쪽으로 바꿨다. 예전에
  * 여기 있던 빅6 밖 EPL 팀 영문명 표(Brighton → BHA 등)는 서버 팀명이 한글로
  * 바뀌어(KAN-528) 한 번도 맞지 않게 됐고 서버 코드가 대신하므로 지웠다.
  *

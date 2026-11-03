@@ -34,6 +34,10 @@ import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
  * 있으면 `128위 >`, 그 밖(비로그인, 게스트, 자격 미달, 못 받음)은 `랭킹 >`이다(시안 가이드 §2). 글자가
  * 작아 세로 패딩으로 터치 목표를 44px로 넓히고 음수 마진으로 제목 줄 높이는 그대로 둔다(시안 그대로).
  *
+ * 제목 줄은 KAN-709에서 낮췄다. 섹션 위 여백 20에 제목 15, 아래 11이던 것을 위 13, 제목 14, 아래 7로
+ * 줄여 투표 섹션과 함께 첫 화면에서 30px 남짓을 돌려받는다. 제목을 카드 안에 넣는 안은 랭킹 링크가
+ * 카드 링크 안에 중첩되어 접었다.
+ *
  * @param initial 서버가 받아 둔 카드 목록. 못 받았으면 undefined
  */
 export function PredictionHomeTrack({
@@ -52,9 +56,9 @@ export function PredictionHomeTrack({
       : PREDICTION_RANKING_LINK_LABEL;
 
   return (
-    <section ref={ref} aria-label="승부예측" className="px-edge pt-4.5">
-      <div className="flex items-baseline gap-2 pb-2.5">
-        <h2 className="text-body-lg text-text-strong tracking-section font-black">
+    <section ref={ref} aria-label="승부예측" className="px-edge pt-3">
+      <div className="flex items-baseline gap-2 pb-1.5">
+        <h2 className="text-body-md text-text-strong tracking-section font-black">
           승부예측
         </h2>
         <div className="flex-1" />

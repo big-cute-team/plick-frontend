@@ -38,9 +38,6 @@ export type PredictionResult = "PENDING" | "HIT" | "MISS" | "VOID";
 /** 의견 목록 정렬. BE 쿼리 파라미터 값 그대로다. 기본은 적중률순. */
 export type PredictionOpinionSort = "accuracy" | "latest" | "likes";
 
-/** 키플레이어 투표의 팀 쪽. */
-export type KeyPlayerSide = "HOME" | "AWAY";
-
 /** 예측 의견·답글 신고 사유. 댓글 신고와 같은 BE enum을 쓴다. */
 export type PredictionReportReason = CommentReportReason;
 
@@ -179,48 +176,6 @@ export interface PredictionReply {
 export interface PredictionReplyPage {
   items: PredictionReply[];
   nextCursor: string | null;
-}
-
-/** 키플레이어 한 명. */
-export interface KeyPlayer {
-  id: number;
-  name: string;
-  photo: string | null;
-  position: string | null;
-}
-
-/** 키플레이어 시즌 스탯(이번 시즌 이 대회 기준). 평점은 문자열을 숫자로 접는다. */
-export interface KeyPlayerStats {
-  appearances: number;
-  goals: number;
-  assists: number;
-  rating: number | null;
-}
-
-/** 키플레이어 후보 한 명. 직전 선발 11명이 먼저, 득표율 내림차순. */
-export interface KeyPlayerCandidate {
-  id: number;
-  name: string;
-  photo: string | null;
-  votePercent: number;
-}
-
-/** 한 팀의 키플레이어 묶음. 표가 없으면 시즌 평점 1위가 `isDefault: true`로 온다. */
-export interface KeyPlayerSideInfo {
-  player: KeyPlayer | null;
-  votePercent: number;
-  isDefault: boolean;
-  stats: KeyPlayerStats | null;
-  candidates: KeyPlayerCandidate[];
-}
-
-/** 키플레이어와 VS 스탯(`GET /matches/{id}/key-players`). */
-export interface KeyPlayers {
-  status: PredictionStatus;
-  home: KeyPlayerSideInfo;
-  away: KeyPlayerSideInfo;
-  /** 팀별 내 표(선수 id). 없으면 null */
-  myVote: { home: number | null; away: number | null };
 }
 
 /**
@@ -800,15 +755,6 @@ export const TEAM_FORM_LABEL: Record<"W" | "D" | "L", string> = {
   L: "패",
 };
 
-/** 표가 없어 시즌 평점 1위가 대표로 선 키플레이어(`isDefault: true`)의 라벨. 티켓 완료 조건 그대로다. */
-export const KEY_PLAYER_DEFAULT_LABEL = "기본: 시즌 평점 1위";
-
-/** 한 팀의 키플레이어가 아직 없을 때(`player: null`) 이름 자리 문구. */
-export const KEY_PLAYER_EMPTY_LABEL = "선수 미정";
-
-/** 후보 목록이 비었을 때(`candidates: []`) 펼친 자리 문구. */
-export const KEY_PLAYER_NO_CANDIDATES = "후보가 없어요";
-
 /**
  * 화면에 찍는 정밀도로 먼저 반올림한다. 7.45와 7.46은 둘 다 `7.5`로 보이는데 원본으로 비교하면 한쪽만
  * 굵어져 같은 값이 이긴 것처럼 읽힌다. 나은 쪽 판정과 막대 길이는 이 값으로 한다.
@@ -942,72 +888,6 @@ export function buildTeamCompare(
     awayRecent: awayForm?.recent ?? [],
     rows,
   };
-}
-
-/**
- * 키플레이어 VS 스탯 한 줄(KAN-699, 시안 가이드 §5.3 "스탯 4줄 마주보기 막대"). `homeRatio`와
- * `awayRatio`는 큰 쪽을 100으로 둔 막대 길이(퍼센트)다. 값이 없는 쪽은 `-`에 길이 0이다.
- */
-export interface KeyPlayerStatRow {
-  key: "appearances" | "goals" | "assists" | "rating";
-  label: string;
-  home: string;
-  away: string;
-  homeRatio: number;
-  awayRatio: number;
-  /** 큰 쪽. 같거나 어느 한쪽이 없으면 null이라 둘 다 회색 막대다 */
-  better: "home" | "away" | null;
-}
-
-/**
- * 키플레이어 두 명의 시즌 스탯을 마주보기 막대 네 줄로 만든다. 출전, 골, 도움, 평점 순이고 평점은
- * 소수 한 자리다. 나은 쪽과 막대 길이는 화면에 찍는 정밀도로 반올림한 값으로 정한다(7.45 대 7.46은 같다). 한쪽 `stats`가 null이면(선수가 없거나 집계 전) 그쪽은 `-`와 빈 막대로 두고 반대쪽
- * 막대만 꽉 채우되 비교가 아니라 `better`는 null이다(회색 막대). 둘 다 0이면 막대는 비고 값은 0이다.
- *
- * @param home 홈 키플레이어 스탯. 없으면 null
- * @param away 원정 키플레이어 스탯. 없으면 null
- * @example buildKeyPlayerStatRows({ appearances: 7, goals: 2, assists: 3, rating: 7.45 }, null)[0]
- * // { key: "appearances", label: "출전", home: "7", away: "-", homeRatio: 100, awayRatio: 0, better: "home" }
- */
-export function buildKeyPlayerStatRows(
-  home: KeyPlayerStats | null,
-  away: KeyPlayerStats | null,
-): KeyPlayerStatRow[] {
-  const row = (
-    key: KeyPlayerStatRow["key"],
-    label: string,
-    pick: (stats: KeyPlayerStats) => number | null,
-    digits: number,
-    format: (value: number) => string,
-  ): KeyPlayerStatRow => {
-    const h = atDisplayPrecision(home ? pick(home) : null, digits);
-    const a = atDisplayPrecision(away ? pick(away) : null, digits);
-    const max = Math.max(h ?? 0, a ?? 0);
-    const ratio = (v: number | null) =>
-      v === null || max === 0 ? 0 : Math.round((v / max) * 100);
-    return {
-      key,
-      label,
-      home: h === null ? "-" : format(h),
-      away: a === null ? "-" : format(a),
-      homeRatio: ratio(h),
-      awayRatio: ratio(a),
-      better: betterSide(h, a, false),
-    };
-  };
-  const integer = (v: number) => String(v);
-  return [
-    row("appearances", "출전", (s) => s.appearances, 0, integer),
-    row("goals", "골", (s) => s.goals, 0, integer),
-    row("assists", "도움", (s) => s.assists, 0, integer),
-    row(
-      "rating",
-      "평점",
-      (s) => s.rating,
-      1,
-      (v) => v.toFixed(1),
-    ),
-  ];
 }
 
 /**

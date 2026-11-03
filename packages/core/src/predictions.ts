@@ -1,5 +1,5 @@
 /**
- * @file 승부예측 읽기 fetcher 9종 (KAN-695, BE `docs/specs/prediction-api.md`).
+ * @file 승부예측 읽기 fetcher 8종 (KAN-695, BE `docs/specs/prediction-api.md`).
  *
  * 웹이 첫 사용처지만 모바일도 같은 계약을 쓸 기능이라 토론·라이브처럼 앱 폴더를
  * 거치지 않고 바로 여기 둔다(ADR 0011 게이트 C). 서버 컴포넌트(첫 렌더 씨앗)와
@@ -15,7 +15,7 @@
  *
  * 서버 데이터 캐시는 익명 GET에만 걸리는데(`apiFetch`), 예측은 종류마다 신선도가 달라
  * 호출마다 정한다. 의견 목록은 BE가 캐시하지 않는 값이라 저장하지 않고, 분포가 실리는
- * 요약·홈·키플레이어는 BE 캐시(30초)에, 랭킹은 BE 캐시(10분)에 맞춘다. 토큰을 실은
+ * 요약·홈은 BE 캐시(30초)에, 랭킹은 BE 캐시(10분)에 맞춘다. 토큰을 실은
  * 호출은 `apiFetch`가 `no-store`로 돌리므로 `next` 옵션을 함께 넘기면 안 된다 -
  * 겹치면 Next가 충돌로 보고 둘 다 무시한다.
  */
@@ -27,8 +27,6 @@ import {
   PREDICTION_OPINIONS_PAGE_SIZE,
   PREDICTION_RANKINGS_PAGE_SIZE,
   PREDICTION_REPLIES_PAGE_SIZE,
-  type KeyPlayerSideInfo,
-  type KeyPlayers,
   type MyPrediction,
   type MyPredictionEntry,
   type MyPredictionOpinion,
@@ -52,9 +50,8 @@ import {
 } from "@plick/domain/prediction";
 import type { TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "./client";
-import { parseRating } from "./live";
 
-/** 요약·홈·키플레이어의 익명 서버 fetch 캐시 수명(초). BE 분포 캐시(30초)와 같다. */
+/** 요약·홈의 익명 서버 fetch 캐시 수명(초). BE 분포 캐시(30초)와 같다. */
 const DISTRIBUTION_REVALIDATE_SECONDS = 30;
 
 /** 랭킹의 익명 서버 fetch 캐시 수명(초). BE 랭킹 캐시(10분)와 같다. */
@@ -132,37 +129,6 @@ export interface PredictionReplyResponse {
   isEdited: boolean;
   isMine: boolean;
   createdAt: string;
-}
-
-/** BE `KeyPlayersResponse`. 투표(PUT)도 같은 모양을 돌려준다. */
-export interface KeyPlayersResponse {
-  status: PredictionStatus;
-  home: KeyPlayerSideResponse;
-  away: KeyPlayerSideResponse;
-  myVote: { home: number | null; away: number | null };
-}
-
-interface KeyPlayerSideResponse {
-  player: {
-    playerId: number;
-    name: string;
-    photo: string | null;
-    position: string | null;
-  } | null;
-  votePercent: number;
-  isDefault: boolean;
-  stats: {
-    appearances: number;
-    goals: number;
-    assists: number;
-    rating: string | null;
-  } | null;
-  candidates: {
-    playerId: number;
-    name: string;
-    photo: string | null;
-    votePercent: number;
-  }[];
 }
 
 /** 홈 카드·내 기록의 팀. 빅6 밖은 `teamId`가 null이고 `code`는 소문자 3글자다. */
@@ -388,41 +354,6 @@ export function toPredictionReply(r: PredictionReplyResponse): PredictionReply {
   };
 }
 
-function toKeyPlayerSide(side: KeyPlayerSideResponse): KeyPlayerSideInfo {
-  return {
-    player: side.player && {
-      id: side.player.playerId,
-      name: side.player.name,
-      photo: side.player.photo,
-      position: side.player.position,
-    },
-    votePercent: side.votePercent,
-    isDefault: side.isDefault,
-    stats: side.stats && {
-      appearances: side.stats.appearances,
-      goals: side.stats.goals,
-      assists: side.stats.assists,
-      rating: parseRating(side.stats.rating),
-    },
-    candidates: side.candidates.map((c) => ({
-      id: c.playerId,
-      name: c.name,
-      photo: c.photo,
-      votePercent: c.votePercent,
-    })),
-  };
-}
-
-/** BE → 도메인 경계 변환. 투표 액션(PUT)도 같은 응답을 받아 이걸로 접는다. */
-export function toKeyPlayers(r: KeyPlayersResponse): KeyPlayers {
-  return {
-    status: r.status,
-    home: toKeyPlayerSide(r.home),
-    away: toKeyPlayerSide(r.away),
-    myVote: { ...r.myVote },
-  };
-}
-
 /**
  * 예측 요약을 가져온다 (`GET /matches/{matchId}/prediction`).
  *
@@ -554,36 +485,6 @@ export async function getPredictionReplies(
     items: page.items.map(toPredictionReply),
     nextCursor: page.nextCursor,
   };
-}
-
-/**
- * 키플레이어와 VS 스탯을 가져온다 (`GET /matches/{matchId}/key-players`).
- *
- * 예측 요약과 같은 이유로 404 `PREDICTION_NOT_AVAILABLE`은 null이다. 프리뷰 탭이
- * 키플레이어 묶음을 그릴지 이걸로 정한다.
- *
- * @param matchId 경기 id
- * @param accessToken 서버에서 부를 때만 - `myVote`가 그 유저 기준으로 온다
- */
-export async function getKeyPlayers(
-  matchId: number,
-  { accessToken }: ReadOptions = {},
-): Promise<KeyPlayers | null> {
-  try {
-    const players = await apiFetch<KeyPlayersResponse>(
-      `/api/v1/matches/${matchId}/key-players`,
-      readInit(accessToken, DISTRIBUTION_REVALIDATE_SECONDS),
-    );
-    return toKeyPlayers(players);
-  } catch (error) {
-    if (
-      error instanceof ApiError &&
-      error.code === "PREDICTION_NOT_AVAILABLE"
-    ) {
-      return null;
-    }
-    throw error;
-  }
 }
 
 /**
