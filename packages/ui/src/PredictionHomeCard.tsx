@@ -113,7 +113,7 @@ export function PredictionHomeCard({
               accent
                 ? verdict === "적중"
                   ? "text-on-accent"
-                  : "text-on-accent/70"
+                  : "text-on-accent/80"
                 : verdict === "적중"
                   ? "text-accent"
                   : "text-text-4"

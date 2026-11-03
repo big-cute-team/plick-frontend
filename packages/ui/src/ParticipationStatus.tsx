@@ -42,7 +42,7 @@ export function ParticipationStatus({
       <span className="shrink-0">{deadline === "마감" ? "마감" : label}</span>
       {deadline && deadline !== "마감" && (
         <span
-          className={`ml-auto truncate tabular-nums ${accent ? "text-on-accent/70" : "text-text-3"}`}
+          className={`ml-auto truncate tabular-nums ${accent ? "text-on-accent/80" : "text-text-3"}`}
         >
           {deadline}
         </span>

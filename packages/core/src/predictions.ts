@@ -632,7 +632,7 @@ export async function getMyPredictions({
 }
 
 /**
- * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 있으면 그 목록, 없으면
+ * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 있으면 그 목록, 없거나 비면
  * `topOpinion` 하나다. 비공개(`revealed: false`)여도 싣는다. 카드가 닉네임은 보이고 본문만 흐리게
  * 가리는 데 쓴다(KAN-714). 본문이 비거나 닉네임이 없는 토막은 거른다.
  */
@@ -650,7 +650,12 @@ function toPredictionHomeCard(
     totalCount: card.totalCount,
     distribution: card.distribution && { ...card.distribution },
     myPick: card.myPick,
-    opinions: (card.topOpinions ?? (card.topOpinion ? [card.topOpinion] : []))
+    opinions: (card.topOpinions?.length
+      ? card.topOpinions
+      : card.topOpinion
+        ? [card.topOpinion]
+        : []
+    )
       .filter((opinion) => opinion.nickname && opinion.opinion)
       .map((opinion) => ({ ...opinion })),
     outcome: toOutcome(card.outcome),
