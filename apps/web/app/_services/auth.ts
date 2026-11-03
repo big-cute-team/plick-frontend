@@ -23,6 +23,7 @@ import {
 } from "@/_constants/api";
 import { buildAuthorizeUrl, getRedirectUri, packOAuthState } from "./oauth";
 import type { SocialProvider } from "@/_types/api";
+import { linkNoticeKind } from "@/_utils/guest-link";
 
 /** BE 응답 shape (이 파일 로컬 — 스웨거 `LoginResponse` 그대로). */
 interface LoginResponse {
@@ -131,6 +132,19 @@ interface LinkResponse {
   linked: boolean;
   /** `linked`가 false일 때 `EXISTING_ACCOUNT`. 아니면 null. */
   reason: string | null;
+  /**
+   * 기존 계정으로 로그인되면서 게스트 기록을 그 계정에 병합했는지 (KAN-706). `linked=true`면
+   * 같은 행이 소셜로 바뀐 것이라 병합할 게 없어 false다. 병합 중 오류가 나도 로그인은
+   * 성공하고 false가 온다. BE 배포 전 응답에는 필드 자체가 없어 optional이다 — 없으면
+   * 병합도 없던 때라 false와 같이 다룬다.
+   */
+  merged?: boolean;
+  /**
+   * 병합 결과 집계 (KAN-706). 옮긴 건수, 충돌로 버린 건수, 되살린 예측 수(`predictionsRevived`)
+   * 등이 숫자로 온다. `merged=false`면 null, 배포 전 응답에는 없다. 지금은 읽지 않는다 —
+   * 충돌로 버린 기록을 따로 안내하지 않기로 했다.
+   */
+  mergeSummary?: Record<string, number> | null;
 }
 
 /**
@@ -143,11 +157,19 @@ interface LinkResponse {
  *
  * 응답 토큰은 어느 갈래든 소셜 사용자의 것이라(게스트 표식 없음) 마감 쿠키를 지운다.
  * 그 소셜 계정으로 이미 가입한 사용자가 있으면 BE가 기존 계정으로 로그인시키고
- * `linked=false`를 준다 — 게스트 기록은 안 넘어오므로 안내 토스트 표식을 심는다.
+ * `linked=false`를 준다. 이때 게스트 기록은 KAN-706부터 그 계정으로 **병합**된다(전에는
+ * 버려졌다). 같은 경기·토론에 양쪽 기록이 있으면 소셜 쪽을 남기고, 소셜 쪽 예측이 취소
+ * 상태면 게스트 예측으로 되살린다. 병합 여부는 `merged`로 오고, 병합 중 오류가 나도 로그인은
+ * 성공하며 `merged=false`다. 그래서 토스트 표식은 `merged`로 가른다 — 합쳤으면 "기록도
+ * 합쳤어요", 못 합쳤으면 전처럼 "이어지지 않았어요". 판정 자체는 `linkNoticeKind`에 있다.
  * 단 로그아웃이 발급한 게스트(`GUEST_FROM_LOGOUT_COOKIE`)면 심지 않는다 (KAN-658).
- * 그 사람은 방금 로그아웃한 사용자가 다시 로그인한 것이라 "기록이 이어지지 않았어요"가
- * 틀린 말이고, 로그아웃 뒤 게스트로 쌓은 게 있더라도 자기 계정으로 돌아가는 쪽이 뜻에 맞다.
+ * 그 사람은 방금 로그아웃한 사용자가 다시 로그인한 것이라 두 문구 모두 틀린 말이다.
  * 연동 자체는 그대로 탄다. 새 소셜 계정이면 `linked=true`로 그 기록이 이어지기 때문이다.
+ *
+ * 토큰 교체는 BE 호출 직후, 다른 API를 부르기 전에 여기서 끝낸다 (KAN-706). 병합이 끝나면
+ * 게스트 계정은 닫히는데 게스트 access 토큰은 만료 전까지 서버가 유효하다고 보므로, 옛
+ * 토큰으로 예측·댓글을 보내면 닫힌 계정에 저장되고 다시는 병합되지 않는다. 홈으로의
+ * redirect는 전체 내비게이션이라 내 예측·투표 목록도 새 토큰으로 다시 읽힌다.
  *
  * 게스트가 아닌 토큰으로 부르면 BE가 400 `AUTH_LINK_NOT_GUEST`를 준다. 화면이 `isGuest`로
  * 버튼을 가르니 정상 흐름에선 안 나오지만, 마감 쿠키와 실제 토큰이 어긋난 경우(수동 삭제,
@@ -206,8 +228,9 @@ export async function linkSocial(
   });
   const fromLogout = jar.has(GUEST_FROM_LOGOUT_COOKIE);
   jar.delete(GUEST_FROM_LOGOUT_COOKIE);
-  if (!data.linked && !fromLogout) {
-    jar.set(GUEST_NOTICE_COOKIE, GUEST_NOTICE.existing, {
+  const notice = linkNoticeKind(data, fromLogout);
+  if (notice) {
+    jar.set(GUEST_NOTICE_COOKIE, notice, {
       ...AUTH_COOKIE_BASE,
       httpOnly: false,
       maxAge: GUEST_NOTICE_MAX_AGE,

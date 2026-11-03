@@ -9,7 +9,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { linkSocial, login } from "@/_services/auth";
-import { GUEST_EXPIRES_COOKIE, OAUTH_STATE_COOKIE } from "@/_constants/api";
+import {
+  GUEST_EXPIRES_COOKIE,
+  OAUTH_STATE_COOKIE,
+  SESSION_KIND_COOKIE,
+} from "@/_constants/api";
+import { isGuestSession } from "@/_utils/guest-link";
 import { parseOAuthState } from "@/_services/oauth";
 
 /** 검증 실패·BE 실패 공통 착지 — 로그인 화면이 `?error=oauth`를 읽어 안내를 띄운다 */
@@ -62,8 +67,16 @@ export async function GET(request: NextRequest) {
    *
    * 토큰을 갈아끼우는 일은 두 갈래가 똑같고, 다른 건 어느 엔드포인트를 부르냐와
    * 게스트 기록이 이어지느냐다.
+   *
+   * 세션 종류 쿠키도 함께 본다 (KAN-706). 마감 쿠키는 HttpOnly가 아니라 토큰 쿠키와 따로
+   * 사라질 수 있는데, 게스트 토큰이 있는 채로 `/auth/login`을 타면 BE가 그 게스트의 기록을
+   * 병합할 길이 없어 그대로 버려진다. 반대 방향(소셜 토큰인데 게스트로 판정)은 400으로 한 번
+   * 실패하고 끝난다. 어느 쪽으로 틀릴지의 저울질은 `isGuestSession` 주석에 있다.
    */
-  const wasGuest = jar.has(GUEST_EXPIRES_COOKIE);
+  const wasGuest = isGuestSession(
+    jar.has(GUEST_EXPIRES_COOKIE),
+    jar.get(SESSION_KIND_COOKIE)?.value,
+  );
   const result = wasGuest
     ? await linkSocial(stored.provider, code)
     : await login(stored.provider, code);
