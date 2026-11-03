@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { closedLast, isBalanceClosed } from "../../packages/domain/src/vs.ts";
+import {
+  closedLast,
+  isBalanceClosed,
+  openDebates,
+} from "../../packages/domain/src/vs.ts";
 import { matchTabsFor as mobileTabs } from "../../apps/mobile/app/_constants/live.ts";
 import { matchTabsFor as webTabs } from "../../apps/web/app/_constants/live.ts";
 import { getPredictionFeed } from "../../packages/core/src/predictions.ts";
@@ -30,6 +34,28 @@ test("VS 목록은 원본을 바꾸지 않고 진행 중 → 마감 순서를 �
     ),
     true,
   );
+});
+
+test("홈 투표 띠는 진행 중인 투표만 서버 순서대로 남긴다 (KAN-710)", () => {
+  const now = Date.parse("2026-11-02T00:00:00Z");
+  const items = [
+    { id: 1, contentType: "FINISH", closesAt: null },
+    { id: 2, contentType: "DEBATE", closesAt: "2026-11-03T00:00:00Z" },
+    { id: 3, contentType: "DEBATE", closesAt: "2026-11-01T00:00:00Z" },
+    { id: 4, contentType: "DEBATE", closesAt: null },
+  ];
+  assert.deepEqual(
+    openDebates(items, now).map((item) => item.id),
+    [2, 4],
+  );
+  /* 마감 시각이 지나면 그 줄이 빠진다. 띠의 시계(useDebateClock)가 now를 앞당긴 경우다 */
+  assert.deepEqual(
+    openDebates(items, Date.parse("2026-11-03T00:00:00Z")).map(
+      (item) => item.id,
+    ),
+    [4],
+  );
+  assert.deepEqual(openDebates([], now), []);
 });
 
 for (const [app, tabsFor] of [

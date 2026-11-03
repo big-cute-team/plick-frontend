@@ -3,6 +3,7 @@ import {
   formatPredictionPercent,
   PREDICTION_PICKS,
   predictionPercentOf,
+  predictionPickLabel,
   type PredictionDistribution,
   type PredictionPick,
 } from "@plick/domain/prediction";
@@ -19,6 +20,11 @@ import { LiveCrest } from "./LiveCrest";
  * 만들지 않는다. 공개된 분포가 모두 0%면 폭만 균등하게 채우고 숫자는 0%를 유지한다.
  * 참여가 0명이고 예측 전이면 바 대신 빈 면 한 줄이다.
  *
+ * `onPick`을 넘기면 칸이 버튼이 된다 (KAN-710). 예측 탭이 OPEN에 예측 전일 때 넘겨서 칸을 누르면
+ * 그 픽이 골라진 작성 시트가 열린다. 그때는 참여 0명이어도 빈 면 대신 `?%` 세 칸을 그려 누를 자리를
+ * 둔다. 버튼 셋을 `role="img"` 안에 넣을 수 없어 묶음은 `role="group"`이고 분포 설명은 묶음의
+ * 라벨, 칸마다 `맨시티 승 예측하기` 같은 라벨이 붙는다.
+ *
  * 폭은 `flex: {비율} 1 0px`이고 최소 폭을 둬서 작은 칸에도 글자가 들어간다. 마운트 때 균등에서
  * 실제 비율로 퍼지는 등장(`animate-seg`, 칸마다 60ms 지연)과, 예측 직후 `?%`에서 실제 비율로
  * 바뀔 때의 `transition`을 함께 둔다. 움직임 줄이기 설정이면 둘 다 끈다.
@@ -32,6 +38,7 @@ import { LiveCrest } from "./LiveCrest";
  * @param myPick 내 픽. 없으면 null
  * @param totalCount 참여 수. 비공개면 null
  * @param size `sm`은 앱과 웹 홈 카드(32px), `lg`는 웹 경기 상세(36px)
+ * @param onPick 칸을 눌렀을 때. 넘기면 칸이 버튼이 되고, 없으면 읽기 전용 그림이다
  */
 export function PredictionBar({
   home,
@@ -41,6 +48,7 @@ export function PredictionBar({
   totalCount,
   size = "sm",
   className = "",
+  onPick,
 }: {
   home: LiveTeam;
   away: LiveTeam;
@@ -49,12 +57,13 @@ export function PredictionBar({
   totalCount: number | null;
   size?: "sm" | "lg";
   className?: string;
+  onPick?: (pick: PredictionPick) => void;
 }) {
   const revealed = distribution !== null;
   const hasVotes =
     distribution !== null &&
     (distribution.home > 0 || distribution.draw > 0 || distribution.away > 0);
-  if (!revealed && totalCount === 0) {
+  if (!revealed && totalCount === 0 && !onPick) {
     return (
       <div
         aria-hidden
@@ -63,55 +72,74 @@ export function PredictionBar({
     );
   }
 
-  return (
-    <div
-      role="img"
-      aria-label={barLabel(distribution, home, away)}
-      className={`rounded-tile flex overflow-hidden ${
-        size === "lg" ? "h-9" : "h-8"
-      } ${className}`}
-    >
-      {PREDICTION_PICKS.map((pick, i) => {
-        const percent = predictionPercentOf(distribution, pick);
-        const mine = myPick === pick;
-        return (
-          <div
-            key={pick}
-            className={`flex items-center justify-center transition-[flex-grow] duration-600 ease-out motion-reduce:animate-none motion-reduce:transition-none ${
-              size === "lg" ? "min-w-16 gap-1.25" : "min-w-14.5 gap-1"
-            } ${i > 0 ? "ml-0.5" : ""} ${SEGMENT_TONE[pick]} ${
-              revealed ? "animate-seg" : ""
-            }`}
-            style={{
-              flex: `${hasVotes ? Math.max(percent ?? 0, 0) : 1} 1 0px`,
-              animationDelay: `${i * 60}ms`,
-            }}
+  const teams = { home: home.name, away: away.name };
+  const label = barLabel(distribution, home, away);
+  const segments = PREDICTION_PICKS.map((pick, i) => {
+    const percent = predictionPercentOf(distribution, pick);
+    const mine = myPick === pick;
+    const segmentClass = `flex items-center justify-center transition-[flex-grow] duration-600 ease-out motion-reduce:animate-none motion-reduce:transition-none ${
+      size === "lg" ? "min-w-16 gap-1.25" : "min-w-14.5 gap-1"
+    } ${i > 0 ? "ml-0.5" : ""} ${SEGMENT_TONE[pick]} ${
+      revealed ? "animate-seg" : ""
+    }`;
+    const style = {
+      flex: `${hasVotes ? Math.max(percent ?? 0, 0) : 1} 1 0px`,
+      animationDelay: `${i * 60}ms`,
+    };
+    const body = (
+      <>
+        {pick === "DRAW" ? (
+          <span
+            aria-hidden
+            className={`font-bold ${size === "lg" ? "text-label" : "text-caption"}`}
           >
-            {pick === "DRAW" ? (
-              <span
-                aria-hidden
-                className={`font-bold ${size === "lg" ? "text-label" : "text-caption"}`}
-              >
-                무
-              </span>
-            ) : (
-              <LiveCrest
-                team={pick === "HOME" ? home : away}
-                size={size === "lg" ? 16 : 14}
-                decorative
-              />
-            )}
-            <span
-              className={`font-bold tabular-nums motion-reduce:animate-none ${
-                size === "lg" ? "text-body" : "text-label"
-              } ${revealed ? "animate-seg-label" : ""}`}
-            >
-              {formatPredictionPercent(percent)}
-            </span>
-            {mine && <CheckIcon size={13} role="img" aria-label="내 예측" />}
-          </div>
-        );
-      })}
+            무
+          </span>
+        ) : (
+          <LiveCrest
+            team={pick === "HOME" ? home : away}
+            size={size === "lg" ? 16 : 14}
+            decorative
+          />
+        )}
+        <span
+          className={`font-bold tabular-nums motion-reduce:animate-none ${
+            size === "lg" ? "text-body" : "text-label"
+          } ${revealed ? "animate-seg-label" : ""}`}
+        >
+          {formatPredictionPercent(percent)}
+        </span>
+        {mine && <CheckIcon size={13} role="img" aria-label="내 예측" />}
+      </>
+    );
+    return onPick ? (
+      <button
+        key={pick}
+        type="button"
+        aria-label={`${predictionPickLabel(pick, teams)} 예측하기`}
+        onClick={() => onPick(pick)}
+        className={`${segmentClass} focus-visible:outline-accent focus-visible:outline-2 focus-visible:-outline-offset-2 active:opacity-80`}
+        style={style}
+      >
+        {body}
+      </button>
+    ) : (
+      <div key={pick} className={segmentClass} style={style}>
+        {body}
+      </div>
+    );
+  });
+
+  const frame = `rounded-tile flex overflow-hidden ${
+    size === "lg" ? "h-9" : "h-8"
+  } ${className}`;
+  return onPick ? (
+    <div role="group" aria-label={label} className={frame}>
+      {segments}
+    </div>
+  ) : (
+    <div role="img" aria-label={label} className={frame}>
+      {segments}
     </div>
   );
 }

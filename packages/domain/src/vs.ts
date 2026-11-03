@@ -21,6 +21,16 @@ export function isBalanceClosed(
   );
 }
 
+/**
+ * 진행 중인 항목만 남긴다 (KAN-710). 홈 투표 띠가 마감된 투표를 빼고 돌릴 때 쓴다. 판정은
+ * {@link isBalanceClosed}와 같고 순서는 서버 순서 그대로다.
+ */
+export function openDebates<
+  T extends Pick<DebateListItem, "contentType" | "closesAt">,
+>(items: readonly T[], now = Date.now()): T[] {
+  return items.filter((item) => !isBalanceClosed(item, now));
+}
+
 export const PARTICIPATION_NOTICE = "참여하고 여론을 확인하세요!";
 
 /** 실제 마감 시각으로 남은 시간을 분 단위로 표시한다. */

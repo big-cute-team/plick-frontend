@@ -53,8 +53,79 @@ export function PreviewSectionTitle({
  *
  * @param preview 프리뷰
  * @param titleClassName 제목 여백. 2단에서 옆 팀 비교 표와 윗선을 맞출 때 넘긴다
+ * @param split 팀 그룹 둘을 좌우로 나란히 놓는다. 예측/프리뷰 탭이 토글 아래 전체 폭으로 펼칠 때
+ *   (KAN-710) 한 줄이 1000px 넘게 늘어지지 않게 한다. 좁은 폭에서는 다시 한 단이다
  */
 export function Absentees({
+  preview,
+  titleClassName,
+  split = false,
+}: {
+  preview: MatchPreview;
+  titleClassName?: string;
+  split?: boolean;
+}) {
+  return (
+    <section className="min-w-0">
+      <PreviewSectionTitle className={titleClassName}>
+        결장자
+      </PreviewSectionTitle>
+      <div className={split ? "grid grid-cols-1 gap-x-10 md:grid-cols-2" : ""}>
+        {groupAbsenteesByTeam(preview.absentees).map((group) => (
+          <div key={group.team.shortName} className="pb-3">
+            <p className="flex items-center gap-2 pb-1">
+              <TeamProfileLink
+                team={group.team}
+                className="hover:text-accent flex items-center gap-1.75 transition-colors"
+              >
+                <LiveCrest team={group.team} size={18} decorative />
+                <span className="text-body text-text-strong font-bold">
+                  {group.team.name}
+                </span>
+              </TeamProfileLink>
+              <span className="text-caption-lg text-text-4">
+                {group.players.length}명
+              </span>
+            </p>
+            {group.players.map((absentee) => (
+              <div
+                key={absentee.playerName}
+                className="border-border-soft flex items-center gap-3 border-b py-2"
+              >
+                <PlayerLink
+                  playerId={absentee.playerId}
+                  className="text-body text-text-strong min-w-0 flex-1 truncate font-medium"
+                  linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
+                >
+                  {absentee.playerName}
+                </PlayerLink>
+                <span
+                  className={`text-caption-lg font-bold ${
+                    absentee.kind === "SUSPENSION"
+                      ? "text-danger-strong"
+                      : "text-warn"
+                  }`}
+                >
+                  {absentee.reason}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 상대 전적, 최근 5경기. 날짜, 홈 팀명, 스코어, 원정 팀명, 결과 다섯 칸이다 (KAN-709). 전에는
+ * "AS 3 - 2 맨체스" 한 줄이었는데 h2h 응답에 코드가 없어 한글 팀명이 앞 세 글자로 잘렸다. 팀명 두
+ * 칸은 `min-w-0 truncate`로 넘치면 말줄임하고 가운데 스코어는 고정폭이라 행 높이(py-2)는 그대로다.
+ *
+ * @param preview 프리뷰
+ * @param titleClassName 제목 여백. 2단 오른쪽 첫 블록으로 설 때 옆 팀 비교 표와 윗선을 맞춘다 (KAN-710)
+ */
+export function HeadToHead({
   preview,
   titleClassName,
 }: {
@@ -64,62 +135,8 @@ export function Absentees({
   return (
     <section className="min-w-0">
       <PreviewSectionTitle className={titleClassName}>
-        결장자
+        상대 전적, 최근 5경기
       </PreviewSectionTitle>
-      {groupAbsenteesByTeam(preview.absentees).map((group) => (
-        <div key={group.team.shortName} className="pb-3">
-          <p className="flex items-center gap-2 pb-1">
-            <TeamProfileLink
-              team={group.team}
-              className="hover:text-accent flex items-center gap-1.75 transition-colors"
-            >
-              <LiveCrest team={group.team} size={18} decorative />
-              <span className="text-body text-text-strong font-bold">
-                {group.team.name}
-              </span>
-            </TeamProfileLink>
-            <span className="text-caption-lg text-text-4">
-              {group.players.length}명
-            </span>
-          </p>
-          {group.players.map((absentee) => (
-            <div
-              key={absentee.playerName}
-              className="border-border-soft flex items-center gap-3 border-b py-2"
-            >
-              <PlayerLink
-                playerId={absentee.playerId}
-                className="text-body text-text-strong min-w-0 flex-1 truncate font-medium"
-                linkClassName="hover:text-accent focus-visible:outline-accent transition-colors focus-visible:outline-2"
-              >
-                {absentee.playerName}
-              </PlayerLink>
-              <span
-                className={`text-caption-lg font-bold ${
-                  absentee.kind === "SUSPENSION"
-                    ? "text-danger-strong"
-                    : "text-warn"
-                }`}
-              >
-                {absentee.reason}
-              </span>
-            </div>
-          ))}
-        </div>
-      ))}
-    </section>
-  );
-}
-
-/**
- * 상대 전적, 최근 5경기. 날짜, 홈 팀명, 스코어, 원정 팀명, 결과 다섯 칸이다 (KAN-709). 전에는
- * "AS 3 - 2 맨체스" 한 줄이었는데 h2h 응답에 코드가 없어 한글 팀명이 앞 세 글자로 잘렸다. 팀명 두
- * 칸은 `min-w-0 truncate`로 넘치면 말줄임하고 가운데 스코어는 고정폭이라 행 높이(py-2)는 그대로다.
- */
-export function HeadToHead({ preview }: { preview: MatchPreview }) {
-  return (
-    <section className="min-w-0">
-      <PreviewSectionTitle>상대 전적, 최근 5경기</PreviewSectionTitle>
       {preview.headToHead.map((game) => (
         <div
           key={`${game.date}-${game.homeName}-${game.awayName}`}

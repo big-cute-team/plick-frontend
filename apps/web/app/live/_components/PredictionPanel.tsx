@@ -11,13 +11,17 @@ import {
   predictionStatusLine,
   predictionVerdictLabel,
   type MyPrediction,
+  type PredictionPick,
   type PredictionSummary,
 } from "@plick/domain/prediction";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
 import { readCookie } from "@/_utils/cookie";
-import { PREDICTION_RANKING_LINK_LABEL } from "@/_constants/predictions";
+import {
+  PREDICTION_RANKING_LINK_LABEL,
+  PREDICTION_VOTE_LABEL,
+} from "@/_constants/predictions";
 import { debateTabPath } from "@/_utils/debates";
 import { PredictionOpinions } from "./PredictionOpinions";
 import { PredictionToast } from "./PredictionToast";
@@ -41,9 +45,9 @@ const PredictionCancelDialog = dynamic(
   { ssr: false },
 );
 
-/** 지금 떠 있는 팝업. 한 번에 하나만 선다. */
+/** 지금 떠 있는 팝업. 한 번에 하나만 선다. 작성 팝업의 `pick`은 바 칸에서 열 때 미리 고른 픽이다. */
 type Dialog =
-  | { kind: "compose"; mine: MyPrediction | null }
+  | { kind: "compose"; mine: MyPrediction | null; pick: PredictionPick | null }
   | { kind: "auth"; mode: "login" | "link" | "submitted" }
   | { kind: "cancel" }
   | null;
@@ -59,8 +63,10 @@ type Dialog =
  * 재료도 없으면(라이브·종료 경기는 `preview`가 null) 투표와 여론만이고, 둘 다 없으면 안내 한 줄이다.
  *
  * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. UPCOMING은 열림 시각만, OPEN 예측
- * 전은 `?%` 바와 잠금 지면, 예측 뒤는 실제 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기
- * 전용이다. 정산된 경기는 상태 줄 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
+ * 전은 `?%` 바와 그 바로 아래 `투표하기` 버튼, 잠금 지면이다. 바의 칸을 눌러도 그 픽이 골라진 작성
+ * 팝업이 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로 밀렸다). 예측 뒤는 실제
+ * 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기 전용이다. 정산된 경기는 상태 줄 오른쪽에 투표
+ * 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
  *
  * 토스트는 웹에 전역 스토어가 없어 이 컴포넌트가 문구와 일련번호를 들고 `PredictionToast`에 넘긴다.
  *
@@ -106,10 +112,12 @@ export function PredictionPanel({
   const mine = summary?.myPrediction ?? null;
   const statusLine = summary ? predictionStatusLine(summary, teams) : null;
   const verdict = predictionVerdictLabel(mine?.result);
+  /* 예측 전의 OPEN. 바 칸이 버튼이 되고 바 아래 투표하기가 선다 */
+  const votable = summary?.status === "OPEN" && mine === null;
 
   /* 고칠 내 예측은 여는 순간의 값을 들고 간다. 열려 있는 동안 요약이 다시 와도 시트가 모드를 바꾸지 않게 */
-  function openCompose(editing: boolean) {
-    setDialog({ kind: "compose", mine: editing ? mine : null });
+  function openCompose(editing: boolean, pick: PredictionPick | null = null) {
+    setDialog({ kind: "compose", mine: editing ? mine : null, pick });
   }
 
   function handleFailure(failure: PredictionFailure) {
@@ -173,7 +181,17 @@ export function PredictionPanel({
               myPick={mine?.pick ?? null}
               totalCount={summary.totalCount}
               size="lg"
+              onPick={votable ? (pick) => openCompose(false, pick) : undefined}
             />
+          )}
+          {votable && (
+            <button
+              type="button"
+              onClick={() => openCompose(false)}
+              className="bg-accent text-on-accent text-body-md hover:bg-accent-hover focus-visible:outline-accent mt-2.5 flex h-10 w-full items-center justify-center font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {PREDICTION_VOTE_LABEL}
+            </button>
           )}
         </>
       )}
@@ -196,6 +214,7 @@ export function PredictionPanel({
         <PredictionComposerDialog
           header={header}
           mine={dialog.mine}
+          initialPick={dialog.pick}
           onClose={() => setDialog(null)}
           onFailure={handleFailure}
           onSubmitted={() =>
