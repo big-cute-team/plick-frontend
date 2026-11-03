@@ -154,7 +154,7 @@ interface PredictionHomeResponse {
     myPick: PredictionPick | null;
     /** 적중률순 1위 한 건. `revealed: false`여도 앞 40자가 온다 */
     topOpinion: PredictionHomeOpinion | null;
-    /** 최근 순 여러 건. BE가 KAN-714 후속으로 붙이기 전에는 안 온다 */
+    /** 최근 순 최대 5건(KAN-715). 요청자가 차단한 사용자는 빠진다. 옛 BE에는 없다 */
     topOpinions?: PredictionHomeOpinion[] | null;
     outcome: PredictionSummaryResponse["outcome"];
   }[];
@@ -632,9 +632,15 @@ export async function getMyPredictions({
 }
 
 /**
- * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 있으면 그 목록, 없거나 비면
- * `topOpinion` 하나다. 비공개(`revealed: false`)여도 싣는다. 카드가 닉네임은 보이고 본문만 흐리게
- * 가리는 데 쓴다(KAN-714). 본문이 비거나 닉네임이 없는 토막은 거른다.
+ * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 오면 그 목록이고(빈 배열이어도
+ * 그대로), 필드 자체가 없는 옛 BE면 `topOpinion` 하나다. 비공개(`revealed: false`)여도 싣는다. 카드가
+ * 닉네임은 보이고 본문만 흐리게 가리는 데 쓴다(KAN-714). 본문이 비거나 닉네임이 없는 토막은 거른다.
+ *
+ * 빈 `topOpinions`에서 `topOpinion`으로 내려가지 않는 건 차단 처리가 두 필드에서 달라서다(KAN-715 BE
+ * 답글). `topOpinion`은 모든 사용자가 같이 쓰는 캐시 값이라 요청자의 차단을 반영하지 않고,
+ * `topOpinions`는 매 요청 조회하며 차단한 사용자를 뺀다. 남은 의견이 전부 차단한 사용자 것이면
+ * `topOpinions`는 비고 `topOpinion`에는 그 사람이 남아 있으니, 그때 폴백하면 차단한 사람의 글이
+ * 카드에 선다.
  */
 function toPredictionHomeCard(
   card: PredictionHomeResponse["items"][number],
@@ -650,12 +656,7 @@ function toPredictionHomeCard(
     totalCount: card.totalCount,
     distribution: card.distribution && { ...card.distribution },
     myPick: card.myPick,
-    opinions: (card.topOpinions?.length
-      ? card.topOpinions
-      : card.topOpinion
-        ? [card.topOpinion]
-        : []
-    )
+    opinions: (card.topOpinions ?? (card.topOpinion ? [card.topOpinion] : []))
       .filter((opinion) => opinion.nickname && opinion.opinion)
       .map((opinion) => ({ ...opinion })),
     outcome: toOutcome(card.outcome),

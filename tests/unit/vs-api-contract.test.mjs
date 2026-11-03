@@ -154,6 +154,15 @@ test("비공개 예측 응답의 의견도 카드에 싣고, 여러 건이 오�
   );
   assert.deepEqual((await getPredictionHome())[0].opinions, [many[0], many[3]]);
 
+  /* 빈 topOpinions는 차단으로 다 걸러진 결과일 수 있어 topOpinion으로 내려가지 않는다 (KAN-715) */
+  t.mock.method(globalThis, "fetch", async () =>
+    ok({
+      items: [{ ...match, topOpinion: single, topOpinions: [] }],
+      nextCursor: null,
+    }),
+  );
+  assert.deepEqual((await getPredictionHome())[0].opinions, []);
+
   t.mock.method(globalThis, "fetch", async () =>
     ok({ items: [{ ...match, topOpinion: null }], nextCursor: null }),
   );
