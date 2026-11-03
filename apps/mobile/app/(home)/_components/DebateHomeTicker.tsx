@@ -4,7 +4,7 @@ import { useHomeDebates } from "@plick/core/home-queries";
 import { useOnScreen } from "@plick/core/useOnScreen";
 import { useDebateClock } from "@plick/core/use-debate-clock";
 import type { DebateListItem, InitialDebateList } from "@plick/domain/types";
-import { openDebates } from "@plick/domain/vs";
+import { DEBATE_TICKER_INTERVAL_MS, openDebates } from "@plick/domain/vs";
 import { RotatingLine } from "@plick/ui/RotatingLine";
 import { ArticleLink } from "@/_components/ArticleLink";
 
@@ -14,7 +14,8 @@ const DEBATE_LIST_ID = "home-debate-list";
 /**
  * 진행 중인 투표를 한 줄에 하나씩 순서대로 넘기는 홈 투표 띠 (KAN-710). 실검 띠 바로 아래 서고
  * 오른쪽 끝 화살표를 누르면 띠 아래로 진행 중인 투표 전체가 펼쳐진다. 펼친 동안 자동 회전은
- * 멈춘다(실검과 같은 `RotatingLine`). 한 줄은 질문과 참여 수, 펼친 줄은 질문 아래에 선택지 둘과
+ * 멈춘다(실검과 같은 `RotatingLine`). 전환은 3초마다다. 실검(4.5초)과 같은 속도였는데 투표는 한 줄이
+ * 질문뿐이라 더 느리게 보여 당겼다(KAN-714). 한 줄은 질문과 참여 수, 펼친 줄은 질문 아래에 선택지 둘과
  * 참여 수다. 누르면 그 기사(`ArticleLink`)로 가서 거기서 투표한다. 홈에서 바로 투표하지 않는다.
  *
  * 전에는 승부예측 아래 가로 카드 트랙(`DebateHomeTrack`)이었고 마감된 투표도 뒤에 붙였다. 카드가
@@ -63,6 +64,7 @@ export function DebateHomeTicker({
                 </ArticleLink>
               ),
             }))}
+            interval={DEBATE_TICKER_INTERVAL_MS}
             expanded={expanded}
             onToggle={() => setExpanded((value) => !value)}
             expandControls={DEBATE_LIST_ID}

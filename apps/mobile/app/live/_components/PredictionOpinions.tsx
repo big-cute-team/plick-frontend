@@ -32,7 +32,8 @@ const PredictionSortSheet = dynamic(
  * 갈려 커서가 처음부터다. 예측 전의 `투표하기`는 머리글에 있었는데 KAN-710에서 3분할 바 바로
  * 아래(`PredictionTab`)로 올렸다. 프리뷰 아래라 첫 화면에서 안 보였다.
  *
- * 잠금은 서버가 정한다. 목록 응답의 `locked`가 true면 잠금 지면이고, 아직 응답이 없으면 요약
+ * 잠금은 서버가 정한다. 목록 응답의 `locked`가 true면 잠금 지면이고(그때 `items`에 닉네임만 실린
+ * 행이 오면 잠금 지면이 그 이름들을 보인다, KAN-714), 아직 응답이 없으면 요약
  * (OPEN에 내 예측 없음)으로 먼저 판단한다. 등록 직후에는 요약은 내 예측이 있는데 옛 목록 캐시가
  * 아직 `locked: true`라 다시 받는 중이다. 그 한순간 잠금 지면이 스치지 않게 그 조건은 받는 중으로
  * 보고 상자만 그린다.
@@ -157,7 +158,7 @@ export function PredictionOpinions({
       )}
 
       {locked && !refreshing ? (
-        <PredictionLockedList onCompose={onCompose} />
+        <PredictionLockedList onCompose={onCompose} opinions={items} />
       ) : isPending || refreshing ? null : isError && items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-8">
           <p className="text-body text-text-4">의견을 불러오지 못했어요</p>

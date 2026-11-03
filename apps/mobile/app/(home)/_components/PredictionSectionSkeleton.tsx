@@ -24,18 +24,18 @@ export function PredictionCardsSkeleton() {
       {Array.from({ length: 2 }, (_, i) => (
         <div
           key={i}
-          className="bg-elevate rounded-card w-[84%] shrink-0 px-3.5 pt-3.5 pb-2.5"
+          className="bg-accent rounded-card w-[84%] shrink-0 px-3.5 pt-3.5 pb-2.5"
         >
-          <div className="bg-avatar rounded-pill h-3 w-16" />
+          <div className="bg-on-accent/25 rounded-pill h-3 w-16" />
           <div className="flex items-center justify-center gap-3 py-3.5">
-            <div className="bg-avatar rounded-pill h-4 w-14" />
-            <div className="bg-avatar size-9 rounded-full" />
-            <div className="bg-avatar size-9 rounded-full" />
-            <div className="bg-avatar rounded-pill h-4 w-14" />
+            <div className="bg-on-accent/25 rounded-pill h-4 w-14" />
+            <div className="bg-on-accent/25 size-9 rounded-full" />
+            <div className="bg-on-accent/25 size-9 rounded-full" />
+            <div className="bg-on-accent/25 rounded-pill h-4 w-14" />
           </div>
-          <div className="bg-avatar rounded-tile h-8" />
-          <div className="bg-avatar rounded-pill mt-3 h-3 w-3/4" />
-          <div className="bg-avatar rounded-pill my-3.5 h-3 w-20" />
+          <div className="bg-on-accent/25 rounded-tile h-8" />
+          <div className="bg-on-accent/25 rounded-pill mt-3 h-3 w-3/4" />
+          <div className="bg-on-accent/25 rounded-pill my-3.5 h-3 w-20" />
         </div>
       ))}
     </div>

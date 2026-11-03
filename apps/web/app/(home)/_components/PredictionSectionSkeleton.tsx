@@ -20,18 +20,18 @@ export function PredictionCardsSkeleton() {
       {Array.from({ length: 3 }, (_, i) => (
         <div
           key={i}
-          className="bg-elevate w-[88%] shrink-0 px-4 pt-4 pb-2 sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)]"
+          className="bg-accent w-[88%] shrink-0 px-4 pt-4 pb-2 sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)]"
         >
-          <div className="bg-avatar h-3 w-16" />
+          <div className="bg-on-accent/25 h-3 w-16" />
           <div className="flex items-center justify-center gap-2.5 py-3.5">
-            <div className="bg-avatar h-4 w-14" />
-            <div className="bg-avatar size-8 rounded-full" />
-            <div className="bg-avatar size-8 rounded-full" />
-            <div className="bg-avatar h-4 w-14" />
+            <div className="bg-on-accent/25 h-4 w-14" />
+            <div className="bg-on-accent/25 size-8 rounded-full" />
+            <div className="bg-on-accent/25 size-8 rounded-full" />
+            <div className="bg-on-accent/25 h-4 w-14" />
           </div>
-          <div className="bg-avatar h-8" />
-          <div className="bg-avatar mt-3 h-3 w-3/4" />
-          <div className="bg-avatar my-3 h-3 w-20" />
+          <div className="bg-on-accent/25 h-8" />
+          <div className="bg-on-accent/25 mt-3 h-3 w-3/4" />
+          <div className="bg-on-accent/25 my-3 h-3 w-20" />
         </div>
       ))}
     </div>

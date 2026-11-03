@@ -35,6 +35,7 @@ import {
   type PredictionAuthor,
   type PredictionDistribution,
   type PredictionHomeCard,
+  type PredictionHomeOpinion,
   type PredictionOpinion,
   type PredictionOpinionDetail,
   type PredictionOpinionPage,
@@ -47,6 +48,7 @@ import {
   type PredictionResult,
   type PredictionStatus,
   type PredictionSummary,
+  sortPredictionCardsByKickoff,
 } from "@plick/domain/prediction";
 import type { TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "./client";
@@ -150,11 +152,10 @@ interface PredictionHomeResponse {
     totalCount: number | null;
     distribution: PredictionDistribution | null;
     myPick: PredictionPick | null;
-    topOpinion: {
-      predictionId: number;
-      nickname: string;
-      opinion: string;
-    } | null;
+    /** 적중률순 1위 한 건. `revealed: false`여도 앞 40자가 온다 */
+    topOpinion: PredictionHomeOpinion | null;
+    /** 최근 순 여러 건. BE가 KAN-714 후속으로 붙이기 전에는 안 온다 */
+    topOpinions?: PredictionHomeOpinion[] | null;
     outcome: PredictionSummaryResponse["outcome"];
   }[];
 }
@@ -490,9 +491,9 @@ export async function getPredictionReplies(
 /**
  * 홈 승부예측 카드 목록을 가져온다 (`GET /predictions/home`).
  *
- * 오늘부터 7일 안에 킥오프하는 OPEN 경기 전부가 킥오프 순으로 온다. 로그인 사용자는
- * 마이팀 경기가 앞으로 오고, OPEN 경기가 하나도 없으면 가장 최근 SETTLED 경기 하나가
- * 온다. 빈 배열이면 섹션을 그리지 않는다.
+ * 오늘부터 7일 안에 킥오프하는 OPEN 경기 전부가 온다. BE는 로그인 사용자의 마이팀 경기를 앞으로
+ * 당기는데 FE가 킥오프 순으로 다시 세운다(`sortPredictionCardsByKickoff`, KAN-714). OPEN 경기가
+ * 하나도 없으면 가장 최근 SETTLED 경기 하나가 온다. 빈 배열이면 섹션을 그리지 않는다.
  *
  * @param accessToken 서버에서 부를 때만 - `myPick`·`revealed`와 마이팀 정렬이 그 유저 기준이다
  */
@@ -504,7 +505,7 @@ export async function getPredictionHome({
     readInit(accessToken, DISTRIBUTION_REVALIDATE_SECONDS),
   );
 
-  return items.map(toPredictionHomeCard);
+  return sortPredictionCardsByKickoff(items.map(toPredictionHomeCard));
 }
 
 /**
@@ -630,7 +631,11 @@ export async function getMyPredictions({
   };
 }
 
-/** 홈과 VS 목록이 동일한 카드 계약을 공유한다. */
+/**
+ * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 있으면 그 목록, 없으면
+ * `topOpinion` 하나다. 비공개(`revealed: false`)여도 싣는다. 카드가 닉네임은 보이고 본문만 흐리게
+ * 가리는 데 쓴다(KAN-714). 본문이 비거나 닉네임이 없는 토막은 거른다.
+ */
 function toPredictionHomeCard(
   card: PredictionHomeResponse["items"][number],
 ): PredictionHomeCard {
@@ -645,8 +650,9 @@ function toPredictionHomeCard(
     totalCount: card.totalCount,
     distribution: card.distribution && { ...card.distribution },
     myPick: card.myPick,
-    topOpinion:
-      card.revealed && card.topOpinion ? { ...card.topOpinion } : null,
+    opinions: (card.topOpinions ?? (card.topOpinion ? [card.topOpinion] : []))
+      .filter((opinion) => opinion.nickname && opinion.opinion)
+      .map((opinion) => ({ ...opinion })),
     outcome: toOutcome(card.outcome),
   };
 }
