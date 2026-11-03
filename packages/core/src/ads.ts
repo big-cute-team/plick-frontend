@@ -55,7 +55,26 @@ export function resolveAdsMode(
   return kind === "plick_app" ? "off" : base;
 }
 
-/** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
+/**
+ * 이 모드에서 광고 단위를 그리나 (KAN-713).
+ * - `off`면 안 그린다.
+ * - `live`인데 단위 번호가 비어 있으면 안 그린다. 승인 전이거나 광고를 꺼 둔 prod에 빈 칸을
+ *   남기지 않으려는 것이다.
+ * - 그 밖(`placeholder`, 번호 있는 `live`)은 그린다.
+ *
+ * 광고 자리(`AdSlot`)와 릴스 피드의 광고 슬라이드 끼우기가 같은 판정을 써야 한다. 전에는
+ * `AdSlot`만 이 판정을 하고 피드는 `off`만 봐서, prod에서 번호가 비어 있으면 8장마다 광고
+ * 없는 빈 슬라이드가 섰다.
+ *
+ * @param mode 이번 요청의 광고 모드
+ * @param unit 자리의 광고 단위. `slot`이 애드센스 단위 번호고 비어 있으면 미발급이다
+ */
+export function isAdUnitShown(mode: AdsMode, unit: { slot: string }): boolean {
+  if (mode === "off") return false;
+  if (mode === "live" && !unit.slot) return false;
+  return true;
+}
+
 /**
  * 앱 셸에서 애드센스 광고 요청을 막는 head 인라인 스크립트 본문 (KAN-632).
  *
@@ -77,6 +96,7 @@ export function adsPauseScript(): string {
   );
 }
 
+/** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
 export const REELS_AD_INTERVAL = 8;
 
 /**

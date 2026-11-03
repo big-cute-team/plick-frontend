@@ -1,6 +1,7 @@
 /**
  * @file `@plick/core/ads` 회귀 테스트 (KAN-652). 릴스 전면광고 끼워 넣기와 순번 환산,
- * 앱 셸 끄기, ads.txt 한 줄, 앱 셸에서 광고 요청을 멈추는 head 스크립트(KAN-632).
+ * 앱 셸 끄기, ads.txt 한 줄, 앱 셸에서 광고 요청을 멈추는 head 스크립트(KAN-632),
+ * 단위 번호가 비면 live에서 안 그리는 판정(KAN-713).
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,6 +10,7 @@ import {
   adsPauseScript,
   adsTxt,
   interleaveReelAds,
+  isAdUnitShown,
   isAdsMode,
   reelIndexAt,
   resolveAdsMode,
@@ -61,6 +63,33 @@ test("앱 셸이면 off, 그 밖은 기본 모드", () => {
   assert.equal(resolveAdsMode("live", "browser"), "live");
   assert.equal(resolveAdsMode("placeholder", null), "placeholder");
   assert.equal(resolveAdsMode("placeholder", undefined), "placeholder");
+});
+
+test("live인데 단위 번호가 비면 안 그리고, placeholder는 번호 없이도 그린다", () => {
+  const unset = { slot: "" };
+  const set = { slot: "1234567890" };
+  assert.equal(isAdUnitShown("live", unset), false);
+  assert.equal(isAdUnitShown("live", set), true);
+  assert.equal(isAdUnitShown("placeholder", unset), true);
+  assert.equal(isAdUnitShown("placeholder", set), true);
+  assert.equal(isAdUnitShown("off", unset), false);
+  assert.equal(isAdUnitShown("off", set), false);
+});
+
+test("prod에서 번호가 비면 릴스에 광고 슬라이드를 끼우지 않는다 (KAN-713)", () => {
+  /* ReelsFeed·ReelsWorkspace가 쓰는 조합: 판정이 false면 interval이 null이다 */
+  const interval = (mode, unit) => (isAdUnitShown(mode, unit) ? 8 : null);
+  assert.ok(
+    interleaveReelAds(reels(20), interval("live", { slot: "" })).every(
+      (s) => s.kind === "reel",
+    ),
+  );
+  assert.equal(
+    interleaveReelAds(reels(20), interval("live", { slot: "1" })).filter(
+      (s) => s.kind === "ad",
+    ).length,
+    2,
+  );
 });
 
 test("isAdsMode는 세 값만 통과시킨다", () => {

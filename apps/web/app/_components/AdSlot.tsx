@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { ADSENSE_CLIENT } from "@plick/core/ads";
+import { ADSENSE_CLIENT, isAdUnitShown } from "@plick/core/ads";
 import { AD_UNITS, type AdPlacement, type AdUnit } from "@/_constants/ads";
 import { useAdsMode } from "@/_hooks/useAdsMode";
 import { useMediaQuery } from "@/_hooks/useMediaQuery";
@@ -14,6 +14,9 @@ import type { AdsWindow } from "@/_types/ads";
  *   빈 칸을 남기지 않으려고 아예 그리지 않는다.
  * - `placeholder`: 같은 크기의 점선 상자에 AD만 쓴다. 레이아웃 확인용.
  * - `off`: 아무것도 그리지 않는다.
+ *
+ * 그릴지 말지는 `isAdUnitShown`이 정한다 (KAN-713). 릴스 워크스페이스가 광고 슬라이드를
+ * 끼울지도 같은 함수로 정해서, 이 자리가 비면 슬라이드도 안 선다.
  *
  * 자리는 wrapper가 `min-height`로 미리 잡아 광고가 늦게 와도 본문이 밀리지 않는다.
  *
@@ -41,8 +44,7 @@ export function AdSlot({
   const mode = useAdsMode();
   const pathname = usePathname();
   const unit = AD_UNITS[placement];
-  if (mode === "off") return null;
-  if (mode === "live" && !unit.slot) return null;
+  if (!isAdUnitShown(mode, unit)) return null;
 
   const fill = unit.height === undefined;
   return (
