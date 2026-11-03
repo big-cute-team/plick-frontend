@@ -122,3 +122,18 @@ export function copyrightNotice(
 ): string {
   return `Copyright ⓒ ${year} Plick. All rights reserved.`;
 }
+
+/**
+ * 앱 스토어 페이지 (KAN-711). 모바일 웹 앱 다운로드 팝업이 OS에 맞는 쪽으로 보낸다. 앱 셸
+ * 저장소(plick-AppShell)의 `eas.json` App Store Connect ID와 `app.config.ts` 패키지명이 출처다.
+ * 앱 셸이 바뀌면 여기도 같이 고친다.
+ *
+ * 플레이스토어 주소에는 설치 리퍼러(`referrer=utm_*`)를 실어 Play Console이 모바일 웹 팝업
+ * 유입을 따로 세게 한다. 앱스토어는 캠페인 링크에 제공자 토큰(`pt`)이 있어야 하고 아직
+ * 발급 전이라 주소만 둔다.
+ */
+export const APP_STORE_URL = "https://apps.apple.com/kr/app/id6804931339";
+
+export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=kr.co.plick.app&referrer=${encodeURIComponent(
+  "utm_source=plick_mweb&utm_medium=popup&utm_campaign=app_download",
+)}`;

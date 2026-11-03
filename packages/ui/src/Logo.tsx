@@ -2,6 +2,8 @@ import { BRAND_NAME_KO } from "@plick/domain/brand";
 import logo100 from "./assets/brand/logo-horizontal-100.webp";
 import logo134 from "./assets/brand/logo-horizontal-134.webp";
 import logo201 from "./assets/brand/logo-horizontal-201.webp";
+import square144 from "./assets/brand/logo-square-144.webp";
+import square216 from "./assets/brand/logo-square-216.webp";
 
 /**
  * 가로형 로고 원본 비율 — `scripts/brand-assets`가 만든 원본(581x200)이다. 높이만 받고
@@ -53,6 +55,40 @@ export function Logo({
       alt={BRAND_NAME_KO}
       width={width}
       height={height}
+      decoding="async"
+      className={`block ${className}`}
+    />
+  );
+}
+
+/** 정사각 로고 webp 후보. 팝업 72px 자리의 ×2·×3이다(`scripts/brand-assets`) */
+const SQUARE_SRCSET = [square144, square216]
+  .map((image) => `${image.src} ${image.width}w`)
+  .join(", ");
+
+/**
+ * 해축이모 정사각 로고 (KAN-711) — 앱 아이콘과 같은 그림(초록 바탕, 사자 캐릭터, 글자).
+ * 앱 다운로드 팝업이 스토어 아이콘 자리에 쓴다. 모서리는 호출부가 둥글린다(파일은 안 깎여
+ * 있다). `Logo`와 같은 이유로 `next/image`를 안 쓴다.
+ *
+ * @param size - 렌더 한 변 px
+ * @param className - img에 더할 클래스
+ */
+export function SquareLogo({
+  size = 72,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <img
+      src={square144.src}
+      srcSet={SQUARE_SRCSET}
+      sizes={`${size}px`}
+      alt={`${BRAND_NAME_KO} 앱 아이콘`}
+      width={size}
+      height={size}
       decoding="async"
       className={`block ${className}`}
     />
