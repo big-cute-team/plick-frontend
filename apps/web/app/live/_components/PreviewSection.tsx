@@ -76,7 +76,7 @@ export function PreviewSection({
           <button
             type="button"
             aria-expanded={expanded}
-            aria-controls={PREVIEW_MORE_ID}
+            aria-controls={expanded ? PREVIEW_MORE_ID : undefined}
             onClick={() => setExpanded((value) => !value)}
             className="text-body text-text-2 hover:text-text-strong focus-visible:outline-accent mt-1 flex h-10 w-full items-center justify-center gap-1 font-bold transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
           >

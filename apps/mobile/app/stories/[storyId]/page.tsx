@@ -74,8 +74,8 @@ export default async function StoryPage({
 
   if (storyResult.status === "rejected") {
     const error = storyResult.reason;
-    // 없는 이슈·어드민이 숨긴 이슈(404)와 정수가 아닌 id(400)는 옛 링크나 손으로
-    // 친 주소의 정상 경로다. 에러 화면이 아니라 not-found로 보낸다
+    /* 없는 이슈·어드민이 숨긴 이슈(404)와 정수가 아닌 id(400)는 옛 링크나 손으로
+       친 주소의 정상 경로다. 에러 화면이 아니라 not-found로 보낸다 */
     if (
       error instanceof ApiError &&
       (error.code === "STORY_NOT_FOUND" ||

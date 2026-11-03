@@ -104,7 +104,7 @@ export function RotatingLine({
         <button
           type="button"
           aria-expanded={expanded}
-          aria-controls={expandControls}
+          aria-controls={expanded ? expandControls : undefined}
           aria-label={expanded ? `${label} 접기` : `${label} 전체 보기`}
           onClick={onToggle}
           className="text-text-3 focus-visible:outline-accent hover:text-accent -mr-1.5 flex min-h-11 min-w-8 shrink-0 items-center justify-center focus-visible:outline-2"

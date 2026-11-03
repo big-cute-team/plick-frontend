@@ -64,7 +64,7 @@ export function PreviewSection({
           <button
             type="button"
             aria-expanded={expanded}
-            aria-controls={PREVIEW_MORE_ID}
+            aria-controls={expanded ? PREVIEW_MORE_ID : undefined}
             onClick={() => setExpanded((value) => !value)}
             className="text-body text-text-2 flex min-h-11 w-full items-center justify-center gap-1 font-bold active:opacity-60"
           >
