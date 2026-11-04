@@ -42,6 +42,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     // 토론 리스트 (KAN-418) — 릴스처럼 탐색 진입점으로만 싣는다
     { url: `${SITE_URL}/debates`, changeFrequency: "daily", priority: 0.6 },
+    // 승부예측 시즌 랭킹 (KAN-701, 별도 페이지는 KAN-724 PR) — 표는 브라우저가 받아 본문은 셸뿐이다
+    { url: `${SITE_URL}/rankings`, changeFrequency: "daily", priority: 0.5 },
     // 팀 허브 (KAN-350) — 팀 검색어의 랜딩. KAN-652부터 팀 소개 글이 본문에 실린다
     ...TEAM_ORDER.map((code) => ({
       url: `${SITE_URL}/teams/${TEAMS[code].slug}`,

@@ -1,21 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import {
   formatPredictionHits,
   isPredictionTopRank,
   predictionMyRankCell,
   predictionRankingNotice,
+  predictionRankingRateCell,
   predictionSeasonLabel,
   predictionStreakLabel,
   type MyPredictionRank,
   type PredictionRankRow,
 } from "@plick/domain/prediction";
 import { TeamCrest } from "@plick/ui/TeamCrest";
+import { useAuth } from "@/_components/AuthProvider";
 import {
   PREDICTION_RANKING_COLUMNS,
   PREDICTION_RANKING_EMPTY,
   PREDICTION_RANKING_ERROR,
+  PREDICTION_RANKING_LOCK_BODY,
+  PREDICTION_RANKING_LOCK_LINK_LABEL,
+  PREDICTION_RANKING_LOCK_LOGIN_LABEL,
+  PREDICTION_RANKING_LOCK_TITLE,
   PREDICTION_RANKING_ME_LABEL,
   PREDICTION_RANKING_NO_NICKNAME,
   PREDICTION_RANKING_TITLE,
@@ -40,19 +47,27 @@ function alignClass(index: number): string {
 }
 
 /**
- * 투표 화면 랭킹 탭의 시즌 랭킹 (KAN-701, 시안 가이드 §5.7, 홈 v2 시안 1427-1458행). 제목 `시즌 랭킹`과
+ * 랭킹 페이지의 시즌 랭킹 (KAN-701, 시안 가이드 §5.7, 홈 v2 시안 1427-1458행. 투표 화면의 탭이었다가
+ * KAN-724 PR에서 `/rankings` 페이지로 나왔다). 제목 `시즌 랭킹`과
  * 시즌 라벨, 머리글 행(순위, 닉네임, 적중률, 적중, 연속), 행 높이 44px의 순위 행들, 그 아래 14px 띄운 내
  * 순위 줄이다. 1~3위는 순위 숫자가 900 강조색이고 닉네임이 700이다. 행 크기는 같다. 숫자 칸은 전부 오른쪽
  * 정렬에 `tabular-nums`다.
  *
  * 다음 페이지는 끝 감시 요소가 보이면 받고(`useInfiniteScroll`), 더 받기 실패는 데이터가 있는 실패라
- * 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다. 정산 5경기가 쌓인 사람이 아직 없으면
- * 머리글 아래 빈 문구만 둔다.
+ * 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다. 정산된 사람이 아직 없으면 머리글 아래
+ * 빈 문구만 둔다. 자격이 정산 1경기라(BE KAN-701 후속) 목록이 길어지는데 한 페이지 50행 무한 스크롤이라
+ * 한 번에 그리지 않는다. 적중률 칸은 정산 5경기 전이면 `-`다(`predictionRankingRateCell`).
  *
  * 내 순위 줄은 첫 페이지의 `me`로 그린다. 비로그인은 `me: null`이라 줄이 없다. 자격 미달
- * (`qualified: false`)은 순위 칸이 `3/5`고 줄 아래 `2경기 더 예측하면 랭킹에 올라요`가 붙는다. 자격은
+ * (`qualified: false`)은 순위 칸이 `-`고 줄 아래 `첫 경기 결과가 나오면 랭킹에 올라요`가 붙는다. 자격은
  * 됐는데 정산 직후라 순위가 아직 없으면 `-`에 집계 중 안내다. `me`에는 마이팀이 없어 시안의 엠블럼은
  * 그리지 않는다.
+ *
+ * 소셜 계정이 아니면(비로그인, 게스트) 표를 블러로 가리고 위에 로그인(게스트는 연동) 안내를 덮는다
+ * (KAN-724 PR, `RankingLock`). 적중률 높은 사람들의 기록이 로그인의 이유가 되게 하려는 것이다. 가린 표는
+ * `aria-hidden`과 포인터 이벤트 꺼짐이라 보조기술과 클릭 모두 안내만 만난다. 내 순위 줄과 다음 페이지는
+ * 그리지 않는다. 세션 판정이 끝나기 전(`isSessionPending`)에는 가리지 않아 소셜 계정이 첫 그림에서 블러를
+ * 보지 않는다.
  *
  * 표는 `role="table"` 그리드다. 시안이 고정 높이의 그리드 행이고 머리글과 내 순위 줄이 같은 칸 구성이라
  * `<table>`보다 그리드가 맞는다. 머리글, 행, 내 순위 줄은 모두 `role="row"`라 보조기술이 표로 읽는다.
@@ -69,6 +84,8 @@ export function PredictionRanking() {
     fetchNextPage,
     refetch,
   } = usePredictionRankings();
+  const { isLoggedIn, isGuest, isSessionPending } = useAuth();
+  const locked = !isSessionPending && (!isLoggedIn || isGuest);
 
   const first = data?.pages[0];
   const rows = data?.pages.flatMap((page) => page.items) ?? [];
@@ -77,7 +94,10 @@ export function PredictionRanking() {
 
   const sentinelRef = useInfiniteScroll(
     () => fetchNextPage(),
-    Boolean(hasNextPage) && !isFetchingNextPage && !isFetchNextPageError,
+    !locked &&
+      Boolean(hasNextPage) &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError,
   );
 
   return (
@@ -109,58 +129,93 @@ export function PredictionRanking() {
           </button>
         </div>
       ) : (
-        <>
-          <div role="table" aria-label={PREDICTION_RANKING_TITLE}>
-            <div
-              role="row"
-              className={`${GRID} border-border-table text-label text-text-4 h-7.5 border-b`}
-            >
-              {PREDICTION_RANKING_COLUMNS.map((label, i) => (
-                <span
-                  key={label}
-                  role="columnheader"
-                  className={`whitespace-nowrap ${alignClass(i)}`}
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-            {rows.length > 0 && (
-              <div role="rowgroup">
-                {rows.map((row) => (
-                  <RankRow key={`${row.rank}-${row.userId}`} row={row} />
+        <div className={locked ? "relative" : undefined}>
+          <div
+            aria-hidden={locked || undefined}
+            className={
+              locked ? "pointer-events-none blur-[0.375rem] select-none" : ""
+            }
+          >
+            <div role="table" aria-label={PREDICTION_RANKING_TITLE}>
+              <div
+                role="row"
+                className={`${GRID} border-border-table text-label text-text-4 h-7.5 border-b`}
+              >
+                {PREDICTION_RANKING_COLUMNS.map((label, i) => (
+                  <span
+                    key={label}
+                    role="columnheader"
+                    className={`whitespace-nowrap ${alignClass(i)}`}
+                  >
+                    {label}
+                  </span>
                 ))}
               </div>
+              {rows.length > 0 && (
+                <div role="rowgroup">
+                  {rows.map((row) => (
+                    <RankRow key={`${row.rank}-${row.userId}`} row={row} />
+                  ))}
+                </div>
+              )}
+              {me && !locked && (
+                <div role="rowgroup" className="bg-accent-soft mt-3.5">
+                  <MyRankRow me={me} />
+                </div>
+              )}
+            </div>
+            {rows.length === 0 && (
+              <p className="text-body-md text-text-3 py-11 text-center">
+                {PREDICTION_RANKING_EMPTY}
+              </p>
             )}
-            {me && (
-              <div role="rowgroup" className="bg-accent-soft mt-3.5">
-                <MyRankRow me={me} />
-              </div>
+            {notice && !locked && (
+              <p className="text-label text-text-3 pt-2 text-right">{notice}</p>
+            )}
+            {locked ? null : isFetchNextPageError ? (
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="text-label-lg text-text-3 hover:text-accent focus-visible:outline-accent mt-3.5 h-9 w-full text-center font-bold focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:opacity-40"
+              >
+                더 불러오지 못했어요, 다시 시도
+              </button>
+            ) : (
+              <div ref={sentinelRef} aria-hidden className="h-px" />
             )}
           </div>
-          {rows.length === 0 && (
-            <p className="text-body-md text-text-3 py-11 text-center">
-              {PREDICTION_RANKING_EMPTY}
-            </p>
-          )}
-          {notice && (
-            <p className="text-label text-text-3 pt-2 text-right">{notice}</p>
-          )}
-          {isFetchNextPageError ? (
-            <button
-              type="button"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="text-label-lg text-text-3 hover:text-accent focus-visible:outline-accent mt-3.5 h-9 w-full text-center font-bold focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:opacity-40"
-            >
-              더 불러오지 못했어요, 다시 시도
-            </button>
-          ) : (
-            <div ref={sentinelRef} aria-hidden className="h-px" />
-          )}
-        </>
+          {locked && <RankingLock isGuest={isGuest} />}
+        </div>
       )}
     </section>
+  );
+}
+
+/**
+ * 소셜 계정이 아닐 때 표 위에 덮는 안내. 제목, 한 줄 설명, 로그인(게스트는 연동) 버튼이다. 버튼은
+ * `/login`으로 가고 게스트는 그 화면이 연동을 처리한다.
+ *
+ * @param isGuest 게스트 세션인가. 버튼 글자가 갈린다
+ */
+function RankingLock({ isGuest }: { isGuest: boolean }) {
+  return (
+    <div className="absolute inset-x-0 top-0 flex flex-col items-center gap-2.5 px-4 pt-14">
+      <p className="text-body-lg text-text-strong text-center font-bold text-pretty">
+        {PREDICTION_RANKING_LOCK_TITLE}
+      </p>
+      <p className="text-body text-text-3 text-center text-pretty">
+        {PREDICTION_RANKING_LOCK_BODY}
+      </p>
+      <Link
+        href="/login"
+        className="bg-accent text-on-accent text-body-md hover:bg-accent-hover focus-visible:outline-accent mt-1 inline-flex h-9.5 items-center px-4.5 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        {isGuest
+          ? PREDICTION_RANKING_LOCK_LINK_LABEL
+          : PREDICTION_RANKING_LOCK_LOGIN_LABEL}
+      </Link>
+    </div>
   );
 }
 
@@ -202,7 +257,7 @@ function RankRow({ row }: { row: PredictionRankRow }) {
         role="cell"
         className="text-body-md text-text-strong text-right font-bold tabular-nums"
       >
-        {row.record.rate}%
+        {predictionRankingRateCell(row.record)}
       </span>
       <span
         role="cell"
@@ -241,7 +296,7 @@ function MyRankRow({ me }: { me: MyPredictionRank }) {
         role="cell"
         className="text-body-md text-text-strong text-right font-bold tabular-nums"
       >
-        {me.record.rate}%
+        {predictionRankingRateCell(me.record)}
       </span>
       <span
         role="cell"

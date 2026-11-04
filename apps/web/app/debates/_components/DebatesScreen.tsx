@@ -9,7 +9,7 @@ import { SiteFooter } from "@/_components/SiteFooter";
 import { LiveStrip } from "@/_components/LiveStrip";
 import { SideRail } from "@/_components/SideRail";
 
-/** VS 셸. 서버는 밸런스게임 씨앗을 받고, 클라이언트에서 세 탭을 전환한다. */
+/** VS 셸. 서버는 밸런스게임 씨앗을 받고, 클라이언트에서 두 탭을 전환한다. 랭킹은 `/rankings`다. */
 export function DebatesScreen() {
   return (
     <>

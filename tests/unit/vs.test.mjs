@@ -4,6 +4,9 @@ import {
   closedLast,
   isBalanceClosed,
   openDebates,
+  OPINION_TEASER_INTERVAL_MS,
+  shuffledTeaserOrder,
+  teaserFirstDelayMs,
 } from "../../packages/domain/src/vs.ts";
 import { matchTabsFor as mobileTabs } from "../../apps/mobile/app/_constants/live.ts";
 import { matchTabsFor as webTabs } from "../../apps/web/app/_constants/live.ts";
@@ -124,4 +127,42 @@ test("예측 목록 커서는 응답 그대로 다음 요청에 전달할 수 �
     items: [],
     nextCursor: "page-2",
   });
+});
+
+test("대표 의견 순서는 첫 줄을 고정하고 나머지만 섞은 순열이다", () => {
+  assert.deepEqual(shuffledTeaserOrder(0), []);
+  assert.deepEqual(shuffledTeaserOrder(1), [0]);
+  /* 항상 자기 자리를 고르는 난수면 그대로, 항상 첫 칸을 고르면 뒤에서부터 밀린다 */
+  assert.deepEqual(
+    shuffledTeaserOrder(4, () => 0.999),
+    [0, 1, 2, 3],
+  );
+  assert.deepEqual(
+    shuffledTeaserOrder(4, () => 0),
+    [0, 2, 3, 1],
+  );
+  for (let i = 0; i < 20; i += 1) {
+    const order = shuffledTeaserOrder(6);
+    assert.equal(order[0], 0);
+    assert.deepEqual(
+      [...order].sort((a, b) => a - b),
+      [0, 1, 2, 3, 4, 5],
+    );
+  }
+});
+
+test("첫 전환 지연은 간격의 0.5배에서 1.5배 사이다", () => {
+  assert.equal(
+    teaserFirstDelayMs(() => 0),
+    OPINION_TEASER_INTERVAL_MS / 2,
+  );
+  assert.equal(
+    teaserFirstDelayMs(() => 0.5),
+    OPINION_TEASER_INTERVAL_MS,
+  );
+  const delay = teaserFirstDelayMs();
+  assert.ok(
+    delay >= OPINION_TEASER_INTERVAL_MS / 2 &&
+      delay < OPINION_TEASER_INTERVAL_MS * 1.5,
+  );
 });
