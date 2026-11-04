@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useMatchBriefing } from "@plick/core/match-briefing-queries";
 import type { PredictionFailure } from "@plick/core/prediction-errors";
 import { hasPreviewBlocks, type MatchDetail } from "@plick/domain/live";
 import {
@@ -14,6 +15,7 @@ import {
   type PredictionPick,
   type PredictionSummary,
 } from "@plick/domain/prediction";
+import { MatchBriefingCard } from "@plick/ui/MatchBriefingCard";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
@@ -68,6 +70,10 @@ type Sheet =
  * 게스트도 작성 시트를 열고(KAN-705) 제출 성공 뒤에만 연동 안내를 띄운다. 정산된 경기는 상태 줄
  * 오른쪽에 투표 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
  *
+ * 투표와 팀 비교 사이에 AI 경기 브리핑 카드(KAN-724)가 선다. 예정 경기에서 브라우저가 따로 받는
+ * 값이라 서버 HTML에는 없고, 없거나 만료됐거나 킥오프가 지나면 자리 자체가 사라진다
+ * (`useMatchBriefing`). 기본은 접힘이라 투표 진입이 밀리지 않는다.
+ *
  * @param detail 경기 상세(헤더와 프리뷰)
  * @param summary 예측 요약. 예측 없는 경기는 null
  */
@@ -80,6 +86,7 @@ export function PredictionTab({
 }) {
   const { header, preview } = detail;
   const showToast = useErrorToast((state) => state.show);
+  const briefing = useMatchBriefing(header);
   const [sheet, setSheet] = useState<Sheet>(null);
   const compare = useMemo(
     () =>
@@ -183,6 +190,12 @@ export function PredictionTab({
               {PREDICTION_VOTE_LABEL}
             </button>
           )}
+        </div>
+      )}
+
+      {briefing && (
+        <div className="px-edge pt-3">
+          <MatchBriefingCard briefing={briefing} Link={Link} />
         </div>
       )}
 

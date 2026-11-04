@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
+import { useMatchBriefing } from "@plick/core/match-briefing-queries";
 import type { PredictionFailure } from "@plick/core/prediction-errors";
 import { hasPreviewBlocks, type MatchDetail } from "@plick/domain/live";
 import {
@@ -14,6 +15,7 @@ import {
   type PredictionPick,
   type PredictionSummary,
 } from "@plick/domain/prediction";
+import { MatchBriefingCard } from "@plick/ui/MatchBriefingCard";
 import { PredictionBar } from "@plick/ui/PredictionBar";
 import { ChevronRightIcon } from "@plick/ui/icons";
 import { SESSION_KIND, SESSION_KIND_COOKIE } from "@/_constants/api";
@@ -68,6 +70,9 @@ type Dialog =
  * 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기 전용이다. 정산된 경기는 상태 줄 오른쪽에 투표
  * 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
  *
+ * 투표와 프리뷰 사이에 AI 경기 브리핑 카드(KAN-724)가 선다. 모바일과 같은 훅(`useMatchBriefing`)이
+ * 예정 경기에서만 브라우저로 받고, 없거나 만료됐거나 킥오프가 지나면 자리 자체가 사라진다.
+ *
  * 토스트는 웹에 전역 스토어가 없어 이 컴포넌트가 문구와 일련번호를 들고 `PredictionToast`에 넘긴다.
  *
  * @param detail 경기 상세(헤더와 프리뷰)
@@ -81,6 +86,7 @@ export function PredictionPanel({
   summary: PredictionSummary | null;
 }) {
   const { header, preview } = detail;
+  const briefing = useMatchBriefing(header);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [toast, setToast] = useState<{ message: string | null; seq: number }>({
     message: null,
@@ -194,6 +200,15 @@ export function PredictionPanel({
             </button>
           )}
         </>
+      )}
+
+      {briefing && (
+        <MatchBriefingCard
+          briefing={briefing}
+          size="lg"
+          Link={Link}
+          className="mt-4"
+        />
       )}
 
       {preview && hasPreview && (
