@@ -28,7 +28,15 @@ export const FEED_SURFACE_BY_PATH: Record<string, PostListVariant> = {
 };
 
 /**
- * GNB 링크 — 시안(KAN-567) 상단 바 2줄째 순서다: 홈, 릴스, LIVE, 투표, MY.
+ * 승부예측 시즌 랭킹 페이지 경로. 전에는 VS의 `?tab=rank`였는데 데스크톱에서는 GNB 탭으로 뺐다
+ * (KAN-724 PR). 모바일은 그대로 `/debates?tab=rank`다. 홈 제목 줄, MY 기록 띠, 예측 탭의 랭킹 링크가
+ * 여기로 간다.
+ */
+export const RANKINGS_PATH = "/rankings";
+
+/**
+ * GNB 링크 — 시안(KAN-567) 상단 바 2줄째 순서다: 홈, 릴스, LIVE, 투표, MY. 랭킹은 VS 안의 탭이었다가
+ * 별도 탭으로 나왔다(KAN-724 PR).
  * KAN-435 때 기사 뒤에 끼웠던 LIVE가 릴스 뒤로 왔고 기사 링크는 뺐다. 홈 안의
  * 표 목록이 기사 목록을 겸한다(`/articles` 라우트는 KAN-569에서 없앴다).
  * LIVE는 빨간 점과 빨간 글자로 그린다(`NavItem`이 href로 판정한다).
@@ -38,6 +46,7 @@ export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/reels", label: "릴스" },
   { href: "/live", label: "LIVE" },
   { href: "/debates", label: "VS" },
+  { href: RANKINGS_PATH, label: "랭킹" },
   { href: "/me", label: "MY" },
 ];
 

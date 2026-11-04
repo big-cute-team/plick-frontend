@@ -10,8 +10,8 @@ import { TeamProfileLink } from "./TeamProfileLink";
  * 14/900과 여백으로 끊는다. 각 블록은 비어 있으면 그리지 않는다(서버가 조각 실패 시
  * 그 조각만 빼고 내리는 구조).
  *
- * 예측/프리뷰 탭(KAN-709)은 이 묶음이 아니라 `PreviewSection`이 세 블록을 팀 비교와 함께 다시
- * 배치해 그린다. 연기 경기처럼 탭이 없는 지면만 이걸 쓴다. "직전 경기 선발" 블록은 KAN-709에서 지웠다.
+ * 프리뷰 탭은 이 묶음이 아니라 `PreviewPanel`이 세 블록을 팀 비교와 함께 다시 배치해 그린다. 연기
+ * 경기처럼 탭이 없는 지면만 이걸 쓴다. "직전 경기 선발" 블록은 KAN-709에서 지웠다.
  */
 export function PreviewGrid({ preview }: { preview: MatchPreview }) {
   return (
@@ -30,7 +30,7 @@ export function PreviewGrid({ preview }: { preview: MatchPreview }) {
 }
 
 /**
- * 프리뷰 섹션 제목(14/900). 팀 비교(KAN-699, `PreviewSection`)도 같은 제목을 쓴다.
+ * 프리뷰 섹션 제목(14/900). 팀 비교(KAN-699, `PreviewPanel`)도 같은 제목을 쓴다.
  *
  * @param className 위아래 여백을 바꿀 때
  */
@@ -53,7 +53,7 @@ export function PreviewSectionTitle({
  *
  * @param preview 프리뷰
  * @param titleClassName 제목 여백. 2단에서 옆 팀 비교 표와 윗선을 맞출 때 넘긴다
- * @param split 팀 그룹 둘을 좌우로 나란히 놓는다. 예측/프리뷰 탭이 토글 아래 전체 폭으로 펼칠 때
+ * @param split 팀 그룹 둘을 좌우로 나란히 놓는다. 프리뷰 탭이 2단 아래 전체 폭으로 펼칠 때
  *   (KAN-710) 한 줄이 1000px 넘게 늘어지지 않게 한다. 좁은 폭에서는 다시 한 단이다
  */
 export function Absentees({

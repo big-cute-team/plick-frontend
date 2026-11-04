@@ -511,7 +511,7 @@ export async function getPredictionHome({
 /**
  * 시즌 랭킹 한 페이지를 가져온다 (`GET /predictions/rankings`).
  *
- * 정산 5경기 이상인 사용자만 오른다. `me`는 첫 페이지에서 쓰고 비로그인이면 null이다.
+ * 정산 1경기 이상인 사용자만 오른다(BE KAN-701 후속, 전에는 5경기). `me`는 첫 페이지에서 쓰고 비로그인이면 null이다.
  *
  * @param scope 시즌(`2026`) 또는 `ALL`. 비우면 쿼리를 붙이지 않아 BE가 이번 시즌으로 고른다(KAN-701).
  *   FE가 연도를 박아 두면 시즌이 바뀔 때 코드를 고쳐야 해서 응답의 `scope`로 시즌을 읽는다

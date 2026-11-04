@@ -44,6 +44,40 @@ export const DEBATE_TICKER_INTERVAL_MS = 3000;
  */
 export const OPINION_TEASER_INTERVAL_MS = 3000;
 
+/**
+ * 대표 의견 줄이 넘기는 순서. 첫 줄(서버가 준 첫 의견)은 그대로 두고 나머지만 섞는다(KAN-724 PR).
+ *
+ * 홈 카드가 셋 나란히 서면 BE가 준 순서(최근 순)로 같은 박자에 넘어가 세 카드가 한 몸처럼 움직였다.
+ * 카드마다 나머지 순서를 브라우저에서 무작위로 정해 제각각 돌게 한다. 첫 줄을 고정하는 건 서버 HTML과
+ * 하이드레이션 첫 그림을 같게 두기 위해서다. 섞는 건 마운트 뒤다.
+ *
+ * @param count 의견 수
+ * @param random 0 이상 1 미만의 난수. 테스트가 고정값을 넣는다
+ * @returns 0으로 시작하는 인덱스 순열
+ * @example shuffledTeaserOrder(4, () => 0) // [0, 1, 2, 3]
+ */
+export function shuffledTeaserOrder(
+  count: number,
+  random: () => number = Math.random,
+): number[] {
+  const rest = Array.from({ length: Math.max(0, count - 1) }, (_, i) => i + 1);
+  for (let i = rest.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [rest[i], rest[j]] = [rest[j] as number, rest[i] as number];
+  }
+  return count > 0 ? [0, ...rest] : [];
+}
+
+/**
+ * 대표 의견 줄의 첫 전환까지 기다리는 시간(ms). 간격의 절반에서 1.5배 사이를 카드마다 다르게 뽑아
+ * 나란한 카드들이 같은 순간에 넘어가지 않게 한다. 그 뒤로는 간격대로 돈다.
+ *
+ * @param random 0 이상 1 미만의 난수. 테스트가 고정값을 넣는다
+ */
+export function teaserFirstDelayMs(random: () => number = Math.random): number {
+  return Math.round(OPINION_TEASER_INTERVAL_MS * (0.5 + random()));
+}
+
 /** 실제 마감 시각으로 남은 시간을 분 단위로 표시한다. */
 export function participationDeadline(
   closesAt: string,

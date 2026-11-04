@@ -18,7 +18,7 @@ import {
 } from "@/_constants/predictions";
 import { useMyPredictionStats } from "@plick/core/prediction-queries";
 import { usePredictionHome } from "@plick/core/prediction-queries";
-import { debateTabPath } from "@/_utils/debates";
+import { RANKINGS_PATH } from "@/_constants/app";
 import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
 
 /**
@@ -32,7 +32,7 @@ import { PredictionCardsSkeleton } from "./PredictionSectionSkeleton";
  * §5.2). 티켓은 "픽 버튼을 누르면 작성 시트가 그 픽을 고른 상태로 열림"이라 했지만 시안이 카드에
  * 픽 버튼을 두지 않아 시안을 따랐다.
  *
- * 제목 오른쪽은 랭킹 탭(`/debates?tab=rank`, KAN-701)으로 가는 링크다. 소셜 계정이고 순위가 있으면
+ * 제목 오른쪽은 랭킹 페이지(`/rankings`, KAN-701. VS 탭이었다가 KAN-724 PR에서 GNB로 뺐다)로 가는 링크다. 소셜 계정이고 순위가 있으면
  * `128위 >`, 그 밖(비로그인, 게스트, 자격 미달, 못 받음)은 `랭킹 >`이다(시안 가이드 §2).
  *
  * @param initial 서버가 받아 둔 카드 목록. 못 받았으면 undefined
@@ -60,7 +60,7 @@ export function PredictionHomeTrack({
         </h2>
         <div className="flex-1" />
         <Link
-          href={debateTabPath("rank")}
+          href={RANKINGS_PATH}
           className="text-body text-accent hover:text-accent-hover focus-visible:outline-accent flex items-center gap-px font-bold tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {rank}

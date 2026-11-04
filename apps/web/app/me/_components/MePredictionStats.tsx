@@ -6,12 +6,12 @@ import {
   myPredictionStatsCaption,
 } from "@plick/domain/prediction";
 import { useMyPredictionStats } from "@plick/core/prediction-queries";
-import { debateTabPath } from "@/_utils/debates";
+import { RANKINGS_PATH } from "@/_constants/app";
 
 /**
  * MY의 승부예측 기록 띠 (KAN-702, 시안 가이드 §5.8, 홈 v2 시안 650-657행). 적중률, 적중 `7/12`, 시즌 순위
  * `128위`(강조색), 예측 수 네 칸을 `elevate` 면 각진 띠에 나란히 두고(라벨 위, 값 아래 26px 900) 어디를
- * 눌러도 투표 화면 랭킹 탭으로 간다. 비로그인과 게스트는 페이지가 먼저 걸러 여기까지 오지 않는다.
+ * 눌러도 랭킹 페이지(`/rankings`)로 간다. 비로그인과 게스트는 페이지가 먼저 걸러 여기까지 오지 않는다.
  *
  * 값은 `GET /me/prediction-stats`를 브라우저에서 받아 적는다(홈 제목 줄과 같은 쿼리라 한 번만 간다).
  * 유저별 값이라 서버 씨앗이 없고, 받기 전이나 실패면 라벨만 두고 값은 `-`라 띠 높이가 흔들리지
@@ -25,7 +25,7 @@ export function MePredictionStats() {
   return (
     <section className="pb-6">
       <Link
-        href={debateTabPath("rank")}
+        href={RANKINGS_PATH}
         aria-label="예측 랭킹"
         className="bg-elevate hover:bg-elevate-2 focus-visible:outline-accent grid grid-cols-2 gap-y-4 py-4.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 sm:grid-cols-4 sm:gap-y-0"
       >

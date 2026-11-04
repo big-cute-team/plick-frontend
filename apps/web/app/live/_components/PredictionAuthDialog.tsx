@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { SocialLoginActions } from "@/_components/SocialLoginActions";
-import { PREDICTION_LINK_NOTICE } from "@/_constants/predictions";
+import {
+  PREDICTION_LINK_NOTICE,
+  PREDICTION_SUBMITTED_BODY,
+  PREDICTION_SUBMITTED_TITLE,
+} from "@/_constants/predictions";
 
 /**
- * 예측 인증 실패와 게스트 제출 성공의 연동 안내. 성공 안내를 닫아도 저장한 예측은 유지한다.
+ * 예측 인증 실패와 게스트 제출 성공의 연동 안내. 성공 안내를 닫아도 저장한 예측은 유지한다. 제출 성공
+ * 문구는 랭킹의 고수 기록을 보라는 연동 유도다(`PREDICTION_SUBMITTED_TITLE`).
  * @param mode `login`은 인증 실패, `link`는 권한 거절, `submitted`는 게스트 제출 성공
  * @param onClose 안내 닫기
  */
@@ -51,13 +56,12 @@ export function PredictionAuthDialog({
           {mode === "login"
             ? "로그인"
             : mode === "submitted"
-              ? "예측이 등록됐어요"
+              ? PREDICTION_SUBMITTED_TITLE
               : PREDICTION_LINK_NOTICE}
         </p>
         {mode === "submitted" && (
           <p className="text-body text-text-3 mt-3 leading-relaxed">
-            계정을 연동하고 예측 기록을 쌓아 보세요. 적중률과 시즌 랭킹도 확인할
-            수 있어요.
+            {PREDICTION_SUBMITTED_BODY}
           </p>
         )}
         {mode === "login" ? (

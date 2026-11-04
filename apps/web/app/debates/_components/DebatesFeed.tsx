@@ -7,19 +7,16 @@ import { useDebateTab } from "@/_hooks/useDebateTab";
 import { useDebates } from "@/_hooks/useDebates";
 import { DebateListSkeleton } from "./DebateListSkeleton";
 import { DebateTabBar } from "./DebateTabs";
-import { PredictionRanking } from "./PredictionRanking";
 import { PredictionFeed } from "./PredictionFeed";
 import { BalanceGameItem } from "./BalanceGameItem";
 
-/** VS 목록. 탭 안에서만 조회해 선택하지 않은 목록의 요청은 만들지 않는다. */
+/** VS 목록. 탭 안에서만 조회해 선택하지 않은 목록의 요청은 만들지 않는다. 랭킹은 `/rankings`로 나갔다. */
 export function DebatesFeed({ initial }: { initial?: InitialDebateList }) {
   const [tab, selectTab] = useDebateTab();
   return (
     <>
       <DebateTabBar tab={tab} onSelect={selectTab} />
-      {tab === "rank" ? (
-        <PredictionRanking />
-      ) : tab === "prediction" ? (
+      {tab === "prediction" ? (
         <PredictionFeed />
       ) : (
         <DebateList initial={initial} />

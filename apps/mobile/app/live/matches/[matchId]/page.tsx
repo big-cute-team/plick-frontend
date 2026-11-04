@@ -63,7 +63,7 @@ export async function generateMetadata({
  * 예측 요약(KAN-696)도 같이 받는다. 이 페이지는 익명 ISR이라 토큰 없이 받고, 그 값은 "예측 탭을
  * 만들 경기인가"(404면 null)와 첫 그림의 씨앗이다. 내 예측과 분포는 클라 훅이 마운트 뒤 Bearer를
  * 실어 다시 받는다. 못 받으면 undefined로 내려 클라가 처음부터 받게 한다. 요약이 404(빅6 밖)면
- * null이고, 그래도 예정 경기는 프리뷰만 든 예측/프리뷰 탭이 선다(KAN-709).
+ * null이고 예측 탭이 없다. 예정 경기의 프리뷰 탭은 요약과 무관하게 선다(KAN-729).
  */
 export default async function MatchDetailPage({
   params,

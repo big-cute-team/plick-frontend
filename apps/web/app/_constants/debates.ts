@@ -12,12 +12,13 @@ import type { DebateTab } from "@/_types/debates";
 export const DEBATE_FRESH_MS = 60_000;
 
 /**
- * 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). 랭킹은 승부예측 시즌 랭킹이다(KAN-701). 밸런스게임·승부예측·랭킹을 전환한다(KAN-703).
+ * 투표 화면 탭 나열 순서와 라벨, 목적지 (시안 `pollTabs`). 밸런스게임·승부예측을 전환한다(KAN-703).
+ * 랭킹(KAN-701)은 여기 셋째 탭이었다가 데스크톱에서는 GNB의 `/rankings`로 나갔다(KAN-724 PR). 모바일은
+ * 그대로 셋째 탭이다.
  */
 export const DEBATE_TABS: { key: DebateTab; label: string; href: string }[] = [
   { key: "open", label: "밸런스게임", href: "/debates" },
   { key: "prediction", label: "승부예측", href: "/debates?tab=prediction" },
-  { key: "rank", label: "랭킹", href: "/debates?tab=rank" },
 ];
 
 /**

@@ -12,12 +12,13 @@ import { MatchNewsBlock } from "./MatchNewsBlock";
 import { PlayerMatchStatsSheet } from "./PlayerMatchStatsSheet";
 import { PlayerStatsTable } from "./PlayerStatsTable";
 import { PredictionTab } from "./PredictionTab";
+import { PreviewTab } from "./PreviewTab";
 import { StandingsTable } from "./StandingsTable";
 import { StatsCompare } from "./StatsCompare";
 import { TimelineBlock } from "./TimelineBlock";
 
 /**
- * 경기 상세 탭의 본문(피그마 L5~L9, 시안 KAN-567). 예측/프리뷰·요약·라인업·스탯·순위·
+ * 경기 상세 탭의 본문(피그마 L5~L9, 시안 KAN-567). 예측·프리뷰·요약·라인업·스탯·순위·
  * 뉴스를 그린다. 채팅 탭은 스크롤 영역 밖에 따로 서야 해서(`LiveChatPanel`)
  * 여기 없다. 탭 선택은 `MatchDetailScreen`이 갖고 여기는 받은 탭만 그린다(KAN-458
  * 에서 제어형으로). 각 블록은 서버가 조각 실패 시 null로 내릴 수 있어 블록별
@@ -32,13 +33,14 @@ import { TimelineBlock } from "./TimelineBlock";
  * 빈 자리 문구는 경기 상태를 본다 (KAN-484). 끝난 경기에 라인업이 안 실려 와도
  * 킥오프를 기다리라고 말하지 않게 `matchEmptyLabel`이 갈라 준다.
  *
- * 예측/프리뷰 탭(KAN-696, KAN-699, 통합 KAN-709)은 `PredictionTab`이 투표, 팀 비교와 접힌
- * 프리뷰 블록, 여론을 통째로 그린다. 요약이 없는 경기는 프리뷰만 든다.
+ * 예측 탭(KAN-696)은 요약이 있을 때만 탭 목록에 들어오므로 받은 요약을 그대로 그린다. 프리뷰 탭
+ * (KAN-699)은 팀 비교와 결장자·상대 전적·리그 순위를 `PreviewTab`이 토글 없이 다 펼친다. 둘은
+ * KAN-709에서 한 탭이었다가 KAN-729에서 다시 갈라졌다.
  *
  * @param detail 경기 상세
  * @param tab 지금 탭. `chat`은 오지 않는다
  * @param standings 순위 탭의 순위표. 서버가 못 받았으면 null이라 문구만 둔다
- * @param prediction 예측 요약. 예측 없는 경기는 null
+ * @param prediction 예측 요약. 예측 탭이 없는 경기는 null
  */
 export function MatchDetailTabs({
   detail,
@@ -57,7 +59,15 @@ export function MatchDetailTabs({
   const onPlayerTap = (id: number, team: LiveTeam) => setPlayer({ id, team });
 
   if (tab === "prediction") {
-    return <PredictionTab detail={detail} summary={prediction} />;
+    return prediction ? (
+      <PredictionTab header={detail.header} summary={prediction} />
+    ) : (
+      <EmptyBlock label="예측할 수 없는 경기예요" />
+    );
+  }
+
+  if (tab === "preview") {
+    return <PreviewTab detail={detail} />;
   }
 
   if (tab === "table") {

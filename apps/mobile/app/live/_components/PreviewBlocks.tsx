@@ -8,15 +8,16 @@ import { TeamProfileLink } from "./TeamProfileLink";
  * 킥오프 전 프리뷰 블록 묶음(피그마 L5, KAN-567 톤). 결장자, 상대 전적, 리그 순위 세 블록이다.
  * 각 블록은 비어 있으면 그리지 않는다(서버가 조각 실패 시 그 조각만 빼고 내리는 구조).
  *
- * 예측/프리뷰 탭(KAN-709)에서는 `PreviewSection`이 팀 비교 아래 "프리뷰 더 보기" 토글 안에 이걸
- * 넣고, 연기 경기처럼 탭이 없는 지면은 `MatchDetailScreen`이 바로 그린다. "직전 경기 선발" 블록은
- * KAN-709에서 지웠다.
+ * 프리뷰 탭(`PreviewTab`)이 팀 비교 아래 이걸 다 펼쳐 그리고, 연기 경기처럼 탭이 없는 지면은
+ * `MatchDetailScreen`이 바로 그린다. KAN-709에서 예측 탭에 합쳐질 때 "프리뷰 더 보기" 토글 안에
+ * 접혀 있었는데 KAN-729에서 탭이 다시 갈라지며 토글은 없어졌다. "직전 경기 선발" 블록은 KAN-709에서
+ * 지웠다.
  *
  * 시안에 프리뷰 화면은 없어 다른 탭과 같은 어법으로 맞췄다. 채운 면 카드 대신
  * 15/900 섹션 제목과 행 구분선이다.
  *
  * @param preview 프리뷰 블록
- * @param className 바깥 여백. 기본은 좌우 `px-edge`에 아래 24고, 토글 안에서는 호출부가 바꾼다
+ * @param className 바깥 여백. 기본은 좌우 `px-edge`에 아래 24다
  */
 export function PreviewBlocks({
   preview,
@@ -37,7 +38,7 @@ export function PreviewBlocks({
 }
 
 /**
- * 프리뷰 섹션 제목(15/900). 팀 비교(KAN-699, `PreviewSection`)도 같은 제목을 쓴다.
+ * 프리뷰 섹션 제목(15/900). 팀 비교(KAN-699, `PreviewTab`)도 같은 제목을 쓴다.
  *
  * @param className 위아래 여백을 바꿀 때
  */
