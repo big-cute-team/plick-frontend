@@ -6,6 +6,7 @@ import {
   isPredictionTopRank,
   predictionMyRankCell,
   predictionRankingNotice,
+  predictionRankingRateCell,
   predictionSeasonLabel,
   predictionStreakLabel,
   type MyPredictionRank,
@@ -44,12 +45,13 @@ function alignClass(index: number): string {
  * 내 순위 줄은 시안대로 화면 하단에 고정한다. `ScrollArea`가 스크롤 컨테이너라 그 안 마지막 자식에
  * `sticky bottom-0`을 주면 목록을 내리는 동안 탭 바 위에 붙어 있고, 목록이 짧으면 목록 끝에 놓인다.
  * 첫 페이지의 `me`로 그리고 비로그인은 `me: null`이라 줄이 없다. 자격 미달(`qualified: false`)은 순위 칸이
- * `3/5`고 줄 위에 `2경기 더 예측하면 랭킹에 올라요`가 붙는다. 자격은 됐는데 정산 직후라 순위가 아직 없으면
+ * `-`고 줄 위에 `첫 경기 결과가 나오면 랭킹에 올라요`가 붙는다. 자격은 됐는데 정산 직후라 순위가 아직 없으면
  * `-`에 집계 중 안내다. `me`에는 마이팀이 없어 시안의 엠블럼은 그리지 않는다.
  *
  * 다음 페이지는 끝 감시 요소가 보이면 받고(`useInfiniteScroll`), 더 받기 실패는 데이터가 있는 실패라
- * 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다. 정산 5경기가 쌓인 사람이 아직 없으면
- * 머리글 아래 빈 문구만 둔다.
+ * 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다. 정산된 사람이 아직 없으면 머리글 아래
+ * 빈 문구만 둔다. 자격이 정산 1경기라(BE KAN-701 후속) 목록이 길어지는데 한 페이지 50행 무한 스크롤이라
+ * 한 번에 그리지 않는다. 적중률 칸은 정산 5경기 전이면 `-`다(`predictionRankingRateCell`).
  *
  * 표는 `role="table"` 그리드다. 시안이 고정 높이의 그리드 행이고 머리글과 내 순위 줄이 같은 칸 구성이라
  * `<table>`보다 그리드가 맞는다. 내 순위 줄은 표 밖에 고정되는 요소라 `role`을 달지 않고 라벨 글자
@@ -194,7 +196,7 @@ function RankRow({ row }: { row: PredictionRankRow }) {
         role="cell"
         className="text-body-md text-text-strong text-right font-bold tabular-nums"
       >
-        {row.record.rate}%
+        {predictionRankingRateCell(row.record)}
       </span>
       <span
         role="cell"
@@ -233,7 +235,7 @@ function MyRankBar({ me }: { me: MyPredictionRank }) {
           {PREDICTION_RANKING_ME_LABEL}
         </span>
         <span className="text-body-md text-text-strong text-right font-bold tabular-nums">
-          {me.record.rate}%
+          {predictionRankingRateCell(me.record)}
         </span>
         <span className="text-label text-text-3 text-right tabular-nums">
           {formatPredictionHits(me.record)}
