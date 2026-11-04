@@ -24,7 +24,7 @@ import {
   PREDICTION_RANKING_LINK_LABEL,
   PREDICTION_VOTE_LABEL,
 } from "@/_constants/predictions";
-import { debateTabPath } from "@/_utils/debates";
+import { RANKINGS_PATH } from "@/_constants/app";
 import { PredictionOpinions } from "./PredictionOpinions";
 import { PredictionToast } from "./PredictionToast";
 import { PreviewSection } from "./PreviewSection";
@@ -67,8 +67,8 @@ type Dialog =
  * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. UPCOMING은 열림 시각만, OPEN 예측
  * 전은 `?%` 바와 그 바로 아래 `투표하기` 버튼, 잠금 지면이다. 바의 칸을 눌러도 그 픽이 골라진 작성
  * 팝업이 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로 밀렸다). 예측 뒤는 실제
- * 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기 전용이다. 정산된 경기는 상태 줄 오른쪽에 투표
- * 화면 랭킹 탭으로 가는 `랭킹 >` 링크가 선다(KAN-701).
+ * 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기 전용이다. 정산된 경기는 상태 줄 오른쪽에 랭킹
+ * 페이지로 가는 `랭킹 >` 링크가 선다(KAN-701).
  *
  * 투표와 프리뷰 사이에 AI 경기 브리핑 카드(KAN-724)가 선다. 모바일과 같은 훅(`useMatchBriefing`)이
  * 예정 경기에서만 브라우저로 받고, 없거나 만료됐거나 킥오프가 지나면 자리 자체가 사라진다.
@@ -167,7 +167,7 @@ export function PredictionPanel({
             )}
             {summary.status === "SETTLED" && (
               <Link
-                href={debateTabPath("rank")}
+                href={RANKINGS_PATH}
                 className="text-body text-accent hover:text-accent-hover focus-visible:outline-accent flex shrink-0 items-center gap-px font-bold focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {PREDICTION_RANKING_LINK_LABEL}

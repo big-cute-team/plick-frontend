@@ -92,6 +92,17 @@ export const PREDICTION_RANKING_NO_NICKNAME = "닉네임 미설정";
 /** 정산된 사람이 아직 없어 목록이 빈 상태(티켓 KAN-701 "빈 상태 화면"). */
 export const PREDICTION_RANKING_EMPTY = "아직 랭킹이 없어요";
 
+/**
+ * 소셜 계정이 아닐 때(비로그인, 게스트) 랭킹 표 위에 덮는 안내와 버튼 글자(KAN-724 PR). 표는 블러로
+ * 가리고 로그인(게스트는 연동)으로 보낸다. 게스트 제출 안내(`PREDICTION_SUBMITTED_*`)와 같은 결의 문구다.
+ */
+export const PREDICTION_RANKING_LOCK_TITLE =
+  "고수들의 적중 기록은 로그인하면 볼 수 있어요";
+export const PREDICTION_RANKING_LOCK_BODY =
+  "적중률 높은 사람들의 기록을 보고 승부를 더 쉽게 가늠해 보세요.";
+export const PREDICTION_RANKING_LOCK_LOGIN_LABEL = "로그인하고 보기";
+export const PREDICTION_RANKING_LOCK_LINK_LABEL = "연동하고 보기";
+
 /** 랭킹 첫 페이지를 못 받았을 때. */
 export const PREDICTION_RANKING_ERROR = "랭킹을 불러오지 못했어요";
 
