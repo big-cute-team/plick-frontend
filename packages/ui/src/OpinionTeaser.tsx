@@ -79,7 +79,11 @@ export function OpinionTeaser({
 
   const accent = tone === "accent";
   const position = count ? index % count : 0;
-  const current = count ? list[order?.[position] ?? position] : undefined;
+  /* 재조회로 의견이 줄면 섞어 둔 순서가 범위를 넘을 수 있다. 다시 섞기 전 한 렌더는 원래 자리로 */
+  const mapped = order?.[position];
+  const current = count
+    ? list[mapped !== undefined && mapped < count ? mapped : position]
+    : undefined;
 
   if (!current) {
     if (locked) {
