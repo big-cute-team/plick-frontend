@@ -58,6 +58,13 @@ export const MATCH_BRIEFING_EVIDENCE_CLOSE_LABEL = "근거 접기";
 /** 주의사항 줄 머리말. */
 export const MATCH_BRIEFING_CAUTION_LABEL = "주의";
 
+/**
+ * 카드 맨 아래 작고 연하게 한 줄 서는 고정 안내 (KAN-729). 모델이 쓴 주의사항(`cautions`)과 달리
+ * 브리핑 내용과 무관하게 늘 있다. AI 요약이라 틀릴 수 있다는 걸 읽는 사람이 알게 한다.
+ */
+export const MATCH_BRIEFING_DISCLAIMER =
+  "AI가 만든 요약이라 사실과 다를 수 있어요";
+
 /** 출처 종류 표기. 근거 목록의 링크 앞에 선다. */
 export const MATCH_BRIEFING_SOURCE_KIND_LABEL: Record<
   MatchBriefingSourceKind,
