@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { InitialReelFeed } from "@plick/domain/types";
 import {
-  REELS_AD_INTERVAL,
   interleaveReelAds,
+  reelAdInterval,
   reelIndexAt,
 } from "@plick/core/ads";
 import { ApiError } from "@plick/core/client";
@@ -13,6 +13,7 @@ import { trackScreenViewed } from "@plick/core/events";
 import { reelKeys } from "@plick/core/reelKeys";
 import { restartFeedQuery } from "@plick/core/feed-refresh";
 import type { ReelSeedTweet } from "@plick/core/tweet";
+import { AD_UNITS } from "@/_constants/ads";
 import {
   REELS_PANEL_DESKTOP_QUERY,
   REELS_PREFETCH_AHEAD,
@@ -92,11 +93,12 @@ export function ReelsWorkspace({
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
   /* 8장마다 전면광고 슬라이드를 끼운다 (KAN-652). 이 아래 인덱스는 전부 슬라이드 순번이고
      릴 순번이 필요한 곳(조회 기록 rank, 남은 장수)만 `reelIndexAt`으로 환산한다.
-     광고 슬라이드가 활성이면 activeReel은 없다 — 주소와 조회 기록은 직전 릴에 머문다 */
+     광고 슬라이드가 활성이면 activeReel은 없다. 주소와 조회 기록은 직전 릴에 머문다.
+     광고 상자를 그릴 수 없는 모드(off, 단위 번호 없는 live)면 슬라이드도 끼우지 않는다 (KAN-730) */
   const adsMode = useAdsMode();
   const slides = interleaveReelAds(
     reels,
-    adsMode === "off" ? null : REELS_AD_INTERVAL,
+    reelAdInterval(adsMode, AD_UNITS.reel.slot),
   );
   const activeSlide = slides[activeIndex];
   const activeReel =

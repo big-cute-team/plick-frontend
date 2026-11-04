@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { ADSENSE_CLIENT } from "@plick/core/ads";
+import { ADSENSE_CLIENT, isAdUnitDrawn } from "@plick/core/ads";
 import { AD_UNITS, type AdPlacement, type AdUnit } from "@/_constants/ads";
 import { useAdsMode } from "@/_hooks/useAdsMode";
 import { useMediaQuery } from "@/_hooks/useMediaQuery";
@@ -11,7 +11,7 @@ import type { AdsWindow } from "@/_types/ads";
 /**
  * 광고 자리 하나 (KAN-652). 모드에 따라 세 가지로 그린다.
  * - `live`: 애드센스 `<ins>`를 두고 마운트 때 로더에 push한다. 단위 번호가 비어 있으면
- *   빈 칸을 남기지 않으려고 아예 그리지 않는다.
+ *   빈 칸을 남기지 않으려고 아예 그리지 않는다(`isAdUnitDrawn`, KAN-730).
  * - `placeholder`: 같은 크기의 점선 상자에 AD만 쓴다. 레이아웃 확인용.
  * - `off`: 아무것도 그리지 않는다.
  *
@@ -41,8 +41,7 @@ export function AdSlot({
   const mode = useAdsMode();
   const pathname = usePathname();
   const unit = AD_UNITS[placement];
-  if (mode === "off") return null;
-  if (mode === "live" && !unit.slot) return null;
+  if (!isAdUnitDrawn(mode, unit.slot)) return null;
 
   const fill = unit.height === undefined;
   return (
