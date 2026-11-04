@@ -11,7 +11,7 @@ test.describe("홈", () => {
       page.getByRole("heading", { level: 2, name: "승부예측" }),
     ).toBeVisible();
     const nav = page.getByRole("navigation", { name: "주 메뉴" });
-    for (const label of ["홈", "릴스", "LIVE", "VS", "MY"]) {
+    for (const label of ["홈", "릴스", "LIVE", "VS", "랭킹", "MY"]) {
       await expect(
         nav.getByRole("link", { name: label, exact: true }),
       ).toBeVisible();
