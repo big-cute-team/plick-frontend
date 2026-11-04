@@ -163,6 +163,33 @@ push 직전에 두 가지가 더 들어왔다. 둘 다 작아서 브랜치를 �
 빼 시트와 팝업이 같은 글자를 쓴다. 게스트 분기는 mock으로 못 보는 줄 알았는데(ADR 0225) 시트를 여는 조건이
 `sessionKind` 쿠키 하나라 Playwright로 그 쿠키만 심고 등록하니 떴다.
 
+## 또 얹은 셋 (웹 랭킹 분리, 게스트 블러, 홈 카드 회전 순서)
+
+push 뒤에 세 가지가 더 들어와 같은 브랜치에 실었다.
+
+웹은 랭킹을 VS의 셋째 탭에서 꺼내 GNB 탭 `/rankings`로 세웠다. 모바일은 그대로 `/debates?tab=rank`다.
+웹 `DebateTab` 타입에서 `rank`를 빼고 `DEBATE_TABS`도 둘만 남겼다. 홈 제목 줄, MY 기록 띠, 예측 탭의 랭킹
+링크는 `RANKINGS_PATH`로 간다. 옛 주소 `/debates?tab=rank`는 모바일 링크와 북마크가 아직 쓰니
+`useDebateTab`이 마운트 뒤 `router.replace`로 보낸다. 페이지는 서버가 셸만 그리는 정적 라우트다. 표는
+사람마다 다른 `me`가 실려 브라우저에서 받는다. 사이트맵에 넣고 모바일 탭을 alternate로 달았다.
+`PredictionRanking` 컴포넌트는 `debates/_components`에서 `rankings/_components`로 옮겼다.
+
+소셜 계정이 아니면(비로그인, 게스트) 두 앱 모두 랭킹 표를 블러로 가리고 "고수들의 적중 기록은 로그인하면
+볼 수 있어요"와 로그인(게스트는 연동하기) 버튼을 덮는다. 의견 잠금 지면(`PredictionLockedList`)과 같은
+`blur-[0.375rem]`, `aria-hidden`, 포인터 이벤트 꺼짐이다. 내 순위 줄과 다음 페이지는 그리지 않는다. 판정은
+`useAuth`의 `isLoggedIn`과 `isGuest`인데 세션 판정이 끝나기 전(`isSessionPending`)에는 가리지 않아 소셜
+계정이 첫 그림에서 블러를 보지 않는다. 표 데이터는 공개 값이라 그대로 받아 가린다. 검증은 mock BE가
+`/users/me`를 누구에게나 `isGuest: false`로 줘서 Playwright가 그 응답을 `isGuest: true`로 바꾸고, 비로그인은
+게스트 발급(`/api/session/guest`)을 503으로 막아 만들었다. 게스트는 연동하기, 비로그인은 로그인하기,
+소셜은 표와 내 줄이 그대로였다.
+
+홈 승부예측 카드의 대표 의견 줄은 카드마다 순서와 박자가 달라졌다. BE가 주는 `topOpinions`가 최근 순이라
+나란한 카드 셋이 같은 순서로 같은 순간에 넘어가 한 몸처럼 보였다. `shuffledTeaserOrder`가 첫 줄을 고정하고
+나머지를 섞으며, 첫 전환까지의 시간을 간격의 0.5배에서 1.5배 사이로 뽑는다(`teaserFirstDelayMs`). 첫 줄을
+고정하는 이유는 하이드레이션이다. 서버 HTML은 원래 순서의 첫 의견을 그리므로 브라우저 첫 그림도 같아야
+한다. 섞는 건 마운트 뒤 effect에서 한다. 두 앱 홈에 같은 의견 넷을 심고 12초 동안 0.5초마다 닉네임을 읽어
+카드 둘이 서로 다른 순서로 돌고 전환 시점이 어긋나는 걸 확인했다.
+
 ## 남긴 것
 
 - 생성 flag나 조회 flag는 FE에 없다. 서버가 UNAVAILABLE이나 4xx를 주면 그게 OFF다.

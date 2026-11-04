@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   OPINION_TEASER_INTERVAL_MS,
   PARTICIPATION_NOTICE,
+  shuffledTeaserOrder,
+  teaserFirstDelayMs,
 } from "@plick/domain/vs";
 
 /** 카드 한 줄에 보일 의견 한 토막. 홈 예측 카드와 VS 카드가 같은 모양을 준다. */
@@ -16,6 +18,10 @@ interface TeaserOpinion {
  * 카드 아래 대표 의견 한 줄. 닉네임 굵게에 본문 말줄임이고, 의견이 여럿이면 3초마다 다음 의견으로
  * 넘긴다(KAN-714). 새 줄은 아래에서 올라오며 나타난다(`animate-line-up`). 화면 밖·탭 숨김·움직임
  * 줄이기 설정에서는 자동 전환을 멈춘다(`RotatingLine`과 같은 조건).
+ *
+ * 순서와 박자는 카드마다 다르다(KAN-724 PR). 첫 줄은 서버가 준 첫 의견이고(서버 HTML과 같게) 마운트 뒤
+ * 나머지를 섞으며(`shuffledTeaserOrder`), 첫 전환까지의 시간도 카드마다 다르게 뽑는다
+ * (`teaserFirstDelayMs`). 전에는 나란한 카드 셋이 같은 순서로 같은 순간에 넘어가 한 몸처럼 보였다.
  *
  * 잠금(`locked`, 참여 전)은 닉네임은 그대로 보이고 본문만 흐리게 가린다. 전에는 줄 전체를 실루엣으로
  * 덮고 안내만 띄웠는데, 누가 쓰고 있는지는 보여야 궁금해진다는 피드백으로 바꿨다. 흐린 본문은
@@ -47,26 +53,33 @@ export function OpinionTeaser({
   const count = list.length;
   const ref = useRef<HTMLParagraphElement>(null);
   const [index, setIndex] = useState(0);
+  /* 넘기는 순서. 서버와 첫 그림은 원래 순서고 마운트 뒤 나머지를 섞는다 */
+  const [order, setOrder] = useState<number[] | null>(null);
   useEffect(() => {
     if (count < 2) return;
+    setOrder(shuffledTeaserOrder(count));
     let inView = false;
     const observer = new IntersectionObserver(([entry]) => {
       inView = entry?.isIntersecting ?? false;
     });
     if (ref.current) observer.observe(ref.current);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const timer = setInterval(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
       if (inView && !document.hidden && !reduced.matches)
         setIndex((value) => (value + 1) % count);
-    }, OPINION_TEASER_INTERVAL_MS);
+      timer = setTimeout(tick, OPINION_TEASER_INTERVAL_MS);
+    };
+    timer = setTimeout(tick, teaserFirstDelayMs());
     return () => {
-      clearInterval(timer);
+      clearTimeout(timer);
       observer.disconnect();
     };
   }, [count]);
 
   const accent = tone === "accent";
-  const current = count ? list[index % count] : undefined;
+  const position = count ? index % count : 0;
+  const current = count ? list[order?.[position] ?? position] : undefined;
 
   if (!current) {
     if (locked) {
@@ -107,7 +120,7 @@ export function OpinionTeaser({
     >
       {locked && <span className="sr-only">{PARTICIPATION_NOTICE}</span>}
       <span
-        key={`${index % count}-${current.nickname}`}
+        key={`${position}-${current.nickname}`}
         className="animate-line-up flex min-w-0 flex-1 items-center gap-1.5 motion-reduce:animate-none"
       >
         <span
