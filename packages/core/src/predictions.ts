@@ -35,6 +35,7 @@ import {
   type PredictionAuthor,
   type PredictionDistribution,
   type PredictionHomeCard,
+  type PredictionHomeOpinion,
   type PredictionOpinion,
   type PredictionOpinionDetail,
   type PredictionOpinionPage,
@@ -47,6 +48,7 @@ import {
   type PredictionResult,
   type PredictionStatus,
   type PredictionSummary,
+  sortPredictionCardsByKickoff,
 } from "@plick/domain/prediction";
 import type { TeamCode } from "@plick/domain/types";
 import { ApiError, apiFetch } from "./client";
@@ -150,11 +152,10 @@ interface PredictionHomeResponse {
     totalCount: number | null;
     distribution: PredictionDistribution | null;
     myPick: PredictionPick | null;
-    topOpinion: {
-      predictionId: number;
-      nickname: string;
-      opinion: string;
-    } | null;
+    /** 적중률순 1위 한 건. `revealed: false`여도 앞 40자가 온다 */
+    topOpinion: PredictionHomeOpinion | null;
+    /** 최근 순 최대 5건(KAN-715). 요청자가 차단한 사용자는 빠진다. 옛 BE에는 없다 */
+    topOpinions?: PredictionHomeOpinion[] | null;
     outcome: PredictionSummaryResponse["outcome"];
   }[];
 }
@@ -490,9 +491,9 @@ export async function getPredictionReplies(
 /**
  * 홈 승부예측 카드 목록을 가져온다 (`GET /predictions/home`).
  *
- * 오늘부터 7일 안에 킥오프하는 OPEN 경기 전부가 킥오프 순으로 온다. 로그인 사용자는
- * 마이팀 경기가 앞으로 오고, OPEN 경기가 하나도 없으면 가장 최근 SETTLED 경기 하나가
- * 온다. 빈 배열이면 섹션을 그리지 않는다.
+ * 오늘부터 7일 안에 킥오프하는 OPEN 경기 전부가 온다. BE는 로그인 사용자의 마이팀 경기를 앞으로
+ * 당기는데 FE가 킥오프 순으로 다시 세운다(`sortPredictionCardsByKickoff`, KAN-714). OPEN 경기가
+ * 하나도 없으면 가장 최근 SETTLED 경기 하나가 온다. 빈 배열이면 섹션을 그리지 않는다.
  *
  * @param accessToken 서버에서 부를 때만 - `myPick`·`revealed`와 마이팀 정렬이 그 유저 기준이다
  */
@@ -504,7 +505,7 @@ export async function getPredictionHome({
     readInit(accessToken, DISTRIBUTION_REVALIDATE_SECONDS),
   );
 
-  return items.map(toPredictionHomeCard);
+  return sortPredictionCardsByKickoff(items.map(toPredictionHomeCard));
 }
 
 /**
@@ -630,7 +631,17 @@ export async function getMyPredictions({
   };
 }
 
-/** 홈과 VS 목록이 동일한 카드 계약을 공유한다. */
+/**
+ * 홈과 VS 목록이 동일한 카드 계약을 공유한다. 의견은 `topOpinions`가 오면 그 목록이고(빈 배열이어도
+ * 그대로), 필드 자체가 없는 옛 BE면 `topOpinion` 하나다. 비공개(`revealed: false`)여도 싣는다. 카드가
+ * 닉네임은 보이고 본문만 흐리게 가리는 데 쓴다(KAN-714). 본문이 비거나 닉네임이 없는 토막은 거른다.
+ *
+ * 빈 `topOpinions`에서 `topOpinion`으로 내려가지 않는 건 차단 처리가 두 필드에서 달라서다(KAN-715 BE
+ * 답글). `topOpinion`은 모든 사용자가 같이 쓰는 캐시 값이라 요청자의 차단을 반영하지 않고,
+ * `topOpinions`는 매 요청 조회하며 차단한 사용자를 뺀다. 남은 의견이 전부 차단한 사용자 것이면
+ * `topOpinions`는 비고 `topOpinion`에는 그 사람이 남아 있으니, 그때 폴백하면 차단한 사람의 글이
+ * 카드에 선다.
+ */
 function toPredictionHomeCard(
   card: PredictionHomeResponse["items"][number],
 ): PredictionHomeCard {
@@ -645,8 +656,9 @@ function toPredictionHomeCard(
     totalCount: card.totalCount,
     distribution: card.distribution && { ...card.distribution },
     myPick: card.myPick,
-    topOpinion:
-      card.revealed && card.topOpinion ? { ...card.topOpinion } : null,
+    opinions: (card.topOpinions ?? (card.topOpinion ? [card.topOpinion] : []))
+      .filter((opinion) => opinion.nickname && opinion.opinion)
+      .map((opinion) => ({ ...opinion })),
     outcome: toOutcome(card.outcome),
   };
 }

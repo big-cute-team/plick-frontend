@@ -33,6 +33,17 @@ export function openDebates<
 
 export const PARTICIPATION_NOTICE = "참여하고 여론을 확인하세요!";
 
+/**
+ * 홈 투표 띠의 자동 전환 간격(ms) (KAN-714). 실검 띠(`RotatingLine` 기본 4.5초)보다 빠르게 넘긴다.
+ * 질문 한 줄이라 읽는 데 오래 걸리지 않고, 느리면 띠가 멈춘 것처럼 보인다.
+ */
+export const DEBATE_TICKER_INTERVAL_MS = 3000;
+
+/**
+ * 홈·VS 카드의 대표 의견 줄이 다음 의견으로 넘어가는 간격(ms) (KAN-714). 의견이 둘 이상일 때만 돈다.
+ */
+export const OPINION_TEASER_INTERVAL_MS = 3000;
+
 /** 실제 마감 시각으로 남은 시간을 분 단위로 표시한다. */
 export function participationDeadline(
   closesAt: string,

@@ -117,11 +117,11 @@ test("예측 목록은 두 페이지의 OPEN·마감 항목, 대표 의견과 �
     [...first.items, ...last.items].map((item) => item.matchId),
     [101, 102],
   );
-  assert.equal(first.items[0].topOpinion, null);
+  assert.deepEqual(first.items[0].opinions, []);
   assert.equal(first.items[0].distribution, null);
   assert.equal(first.items[0].home.code, "MUN");
   assert.equal(first.items[0].away.code, null);
-  assert.deepEqual(last.items[0].topOpinion, settled.topOpinion);
+  assert.deepEqual(last.items[0].opinions, [settled.topOpinion]);
   assert.deepEqual(last.items[0].outcome, settled.outcome);
   assert.equal(requests[1].query.searchParams.get("cursor"), cursor);
   assert.ok(
@@ -132,24 +132,57 @@ test("예측 목록은 두 페이지의 OPEN·마감 항목, 대표 의견과 �
   );
 });
 
-test("비공개 예측 응답에 의견이 잘못 포함돼도 홈·VS 카드 데이터에는 남기지 않는다", async (t) => {
+test("비공개 예측 응답의 의견도 카드에 싣고, 여러 건이 오면 그 목록을 쓴다 (KAN-714)", async (t) => {
+  const single = { predictionId: 92, nickname: "숨김", opinion: "비공개 본문" };
+  t.mock.method(globalThis, "fetch", async () =>
+    ok({ items: [{ ...match, topOpinion: single }], nextCursor: null }),
+  );
+  assert.deepEqual((await getPredictionFeed()).items[0].opinions, [single]);
+  assert.deepEqual((await getPredictionHome())[0].opinions, [single]);
+
+  const many = [
+    { predictionId: 93, nickname: "첫째", opinion: "a" },
+    { predictionId: 94, nickname: "", opinion: "닉네임 없음" },
+    { predictionId: 95, nickname: "셋째", opinion: "" },
+    { predictionId: 96, nickname: "넷째", opinion: "d" },
+  ];
   t.mock.method(globalThis, "fetch", async () =>
     ok({
-      items: [
-        {
-          ...match,
-          topOpinion: {
-            predictionId: 92,
-            nickname: "숨김",
-            opinion: "비공개 본문",
-          },
-        },
-      ],
+      items: [{ ...match, topOpinion: single, topOpinions: many }],
       nextCursor: null,
     }),
   );
-  assert.equal((await getPredictionFeed()).items[0].topOpinion, null);
-  assert.equal((await getPredictionHome())[0].topOpinion, null);
+  assert.deepEqual((await getPredictionHome())[0].opinions, [many[0], many[3]]);
+
+  /* 빈 topOpinions는 차단으로 다 걸러진 결과일 수 있어 topOpinion으로 내려가지 않는다 (KAN-715) */
+  t.mock.method(globalThis, "fetch", async () =>
+    ok({
+      items: [{ ...match, topOpinion: single, topOpinions: [] }],
+      nextCursor: null,
+    }),
+  );
+  assert.deepEqual((await getPredictionHome())[0].opinions, []);
+
+  t.mock.method(globalThis, "fetch", async () =>
+    ok({ items: [{ ...match, topOpinion: null }], nextCursor: null }),
+  );
+  assert.deepEqual((await getPredictionHome())[0].opinions, []);
+});
+
+test("홈 카드는 BE의 마이팀 우선 순서를 킥오프 순으로 다시 세운다 (KAN-714)", async (t) => {
+  t.mock.method(globalThis, "fetch", async () =>
+    ok({
+      items: [
+        { ...match, matchId: 3, kickoffAt: "2026-11-05T05:00:00+09:00" },
+        { ...match, matchId: 1, kickoffAt: "2026-11-04T05:00:00+09:00" },
+        { ...match, matchId: 2, kickoffAt: "2026-11-05T05:00:00+09:00" },
+      ],
+    }),
+  );
+  assert.deepEqual(
+    (await getPredictionHome()).map((card) => card.matchId),
+    [1, 3, 2],
+  );
 });
 
 test("댓글의 참여 필요 403은 빈 목록으로 바꾸지 않고 전달하며 공개 재조회는 캐시하지 않는다", async (t) => {

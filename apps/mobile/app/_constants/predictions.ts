@@ -19,6 +19,12 @@ export const PREDICTION_VOTE_LABEL = "투표하기";
  */
 export const PREDICTION_FAKE_ROWS = 4;
 
+/**
+ * 잠금 지면이 닉네임을 보이며 그리는 의견 행 수 (KAN-714). 서버가 잠금 응답에 닉네임만 실린 행을
+ * 주면 이만큼 그린다. 지면 높이가 길어지지 않을 만큼이다.
+ */
+export const PREDICTION_LOCKED_NAMED_ROWS = 6;
+
 /** 작성 시트 입력란 안내. */
 export const PREDICTION_OPINION_PLACEHOLDER = "의견 5자 이상";
 
