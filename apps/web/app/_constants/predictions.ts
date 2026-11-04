@@ -34,6 +34,15 @@ export const PREDICTION_CANCEL_TITLE = "예측을 취소할까요?";
 /** 게스트가 작성을 누르면 띄우는 연동 안내. */
 export const PREDICTION_LINK_NOTICE = "계정 연동 후 예측할 수 있어요";
 
+/**
+ * 게스트가 예측을 등록한 직후 뜨는 연동 안내의 제목과 본문. 전에는 "예측이 등록됐어요"에 기록을 쌓으라는
+ * 한 줄이었는데, 랭킹에서 적중률 높은 사람들의 기록을 보고 예측하기 쉬워진다는 쪽으로 바꿨다(KAN-724 PR에
+ * 같이 실은 문구 변경). 등록은 이미 끝났으니 사실만 덧붙인다.
+ */
+export const PREDICTION_SUBMITTED_TITLE = "고수들은 어떻게 예측할까요?";
+export const PREDICTION_SUBMITTED_BODY =
+  "계정을 연동하면 시즌 랭킹에서 적중률 높은 사람들의 기록을 보고 승부를 더 쉽게 가늠할 수 있어요. 방금 등록한 예측은 그대로 남아요.";
+
 /** 의견 신고 시트·팝업 제목. 댓글 신고와 같은 사유를 쓰고 제목만 다르다. */
 export const PREDICTION_REPORT_TITLE = "의견 신고";
 
@@ -80,7 +89,7 @@ export const PREDICTION_RANKING_ME_LABEL = "나";
 /** 닉네임이 없는 사용자의 랭킹 행. MY 화면의 빈 닉네임 표기와 같은 말이다. */
 export const PREDICTION_RANKING_NO_NICKNAME = "닉네임 미설정";
 
-/** 정산 5경기가 쌓인 사람이 아직 없어 목록이 빈 상태(티켓 KAN-701 "빈 상태 화면"). */
+/** 정산된 사람이 아직 없어 목록이 빈 상태(티켓 KAN-701 "빈 상태 화면"). */
 export const PREDICTION_RANKING_EMPTY = "아직 랭킹이 없어요";
 
 /** 랭킹 첫 페이지를 못 받았을 때. */
