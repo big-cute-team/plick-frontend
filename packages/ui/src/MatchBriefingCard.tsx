@@ -3,6 +3,7 @@
 import { useId, useState, type ComponentType, type ReactNode } from "react";
 import {
   MATCH_BRIEFING_CAUTION_LABEL,
+  MATCH_BRIEFING_DISCLAIMER,
   MATCH_BRIEFING_EVIDENCE_CLOSE_LABEL,
   MATCH_BRIEFING_EVIDENCE_LABEL,
   MATCH_BRIEFING_SOURCE_KIND_LABEL,
@@ -38,13 +39,15 @@ function Anchor({
 }
 
 /**
- * AI 경기 브리핑 카드 (KAN-724). 예측/프리뷰 탭의 투표 아래, 팀 비교 위에 선다. 위에서 아래로 제목과
- * 자료 기준 시각("11월 4일 12:00 기준"), 핵심 문장 1~3개, 주의사항 한 줄, "근거 보기" 토글이다. 토글을
- * 펼치면 문장들이 가리키는 출처가 종류(기사, 경기)와 제목으로 줄줄이 서고 각 줄이 기존 기사 상세나
- * 경기 상세로 간다. 기본은 접힘이라 모바일에서 투표 진입이 긴 글에 밀리지 않는다.
+ * AI 경기 브리핑 카드 (KAN-724). 예측 탭의 투표 아래, 여론 위에 선다. 위에서 아래로 제목과 자료
+ * 기준 시각("11월 4일 12:00 기준"), 핵심 문장 1~3개, 주의사항 한 줄, "근거 보기" 토글, 맨 아래 AI
+ * 요약이라 틀릴 수 있다는 고정 안내 한 줄(KAN-729)이다. 토글을 펼치면 문장들이 가리키는 출처가
+ * 종류(기사, 경기)와 제목으로 줄줄이 서고 각 줄이 기존 기사 상세나 경기 상세로 간다. 기본은 접힘이라
+ * 모바일에서 여론 진입이 긴 글에 밀리지 않는다.
  *
  * 모델이 만든 문자열은 전부 JSX 텍스트 노드로만 그린다. HTML로 렌더하지 않는다. 출처 목록에 있는
- * 근거만 링크가 되고(검증은 `parseMatchBriefing`), 근거가 하나도 없으면 토글을 두지 않는다.
+ * 근거만 링크가 되고(검증은 `parseMatchBriefing`), 근거가 하나도 없으면 토글을 두지 않는다. 고정
+ * 안내는 모델 문구(`cautions`)와 달리 내용과 무관하게 늘 있고, 보조 글자 하한(`text-4`)에 캡션 크기다.
  *
  * 면은 `bg-elevate`에 `rounded-card`라 웹에서 각지고 테두리는 없다(홈 예측 카드와 같은 판단). 토글은
  * `button`에 `aria-expanded`와 `aria-controls`를 달아 키보드로 열고 닫는다. 링크 컴포넌트는 이
@@ -77,7 +80,7 @@ export function MatchBriefingCard({
     <section
       aria-label={MATCH_BRIEFING_TITLE}
       className={`rounded-card bg-elevate min-w-0 ${
-        large ? "px-4 pt-3.5 pb-2" : "px-3.5 pt-3 pb-1.5"
+        large ? "px-4 pt-3.5 pb-2.5" : "px-3.5 pt-3 pb-2"
       } ${className}`}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -171,6 +174,13 @@ export function MatchBriefingCard({
           )}
         </>
       )}
+      <p
+        className={`text-caption text-text-4 leading-relaxed ${
+          evidence.length > 0 ? "" : "mt-1.5"
+        }`}
+      >
+        {MATCH_BRIEFING_DISCLAIMER}
+      </p>
     </section>
   );
 }
