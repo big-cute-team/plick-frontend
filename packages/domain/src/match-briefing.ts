@@ -109,8 +109,9 @@ function parseSource(raw: unknown): MatchBriefingSource | null {
   if (!isNonEmptyString(id) || !isNonEmptyString(title)) return null;
   if (kind !== "ARTICLE" && kind !== "MATCH") return null;
   if (!isValidIso(observedAt)) return null;
-  const article = articleId === null ? null : articleId;
-  const match = matchId === null ? null : matchId;
+  /* BE가 null 필드를 생략하면 undefined다. 명시된 null과 같게 본다 */
+  const article = articleId ?? null;
+  const match = matchId ?? null;
   if (kind === "ARTICLE") {
     if (!isNonEmptyString(article) || match !== null) return null;
   } else if (!isNonEmptyString(match) || article !== null) {

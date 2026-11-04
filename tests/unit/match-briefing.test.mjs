@@ -158,6 +158,41 @@ test("종류와 id가 어긋난 출처는 그 하나만 버린다", () => {
   assert.deepEqual(briefing.points[0].evidenceIds, ["article:100", "match:1"]);
 });
 
+test("반대쪽 id 필드가 생략된 출처(undefined)는 null과 같게 통과한다", () => {
+  const briefing = parseMatchBriefing(
+    {
+      ...FIXTURE,
+      points: [{ text: "a", evidenceIds: ["article:100", "match:1"] }],
+      sources: [
+        {
+          id: "article:100",
+          kind: "ARTICLE",
+          title: "t",
+          articleId: "100",
+          observedAt: "2026-11-04T03:00:00Z",
+        },
+        {
+          id: "match:1",
+          kind: "MATCH",
+          title: "t",
+          matchId: "1",
+          observedAt: "2026-11-04T03:00:00Z",
+        },
+      ],
+    },
+    900002,
+  );
+  assert.ok(briefing);
+  assert.deepEqual(
+    briefing.sources.map((s) => [s.articleId, s.matchId]),
+    [
+      ["100", null],
+      [null, "1"],
+    ],
+  );
+  assert.equal(matchBriefingEvidence(briefing).length, 2);
+});
+
 test("문장 3개, 80자, 주의사항 1개 60자로 자른다", () => {
   const long = "가".repeat(100);
   const briefing = parseMatchBriefing(

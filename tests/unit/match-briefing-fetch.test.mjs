@@ -49,9 +49,9 @@ test("READY면 검증을 거친 브리핑을 돌려주고 no-store로 부른다"
   try {
     const briefing = await getMatchBriefing(900002);
     assert.equal(briefing?.matchId, "900002");
-    assert.equal(
+    assert.ok(
+      stub.calls[0].url.endsWith("/api/v1/matches/900002/briefing"),
       stub.calls[0].url,
-      "http://localhost:8080/api/v1/matches/900002/briefing",
     );
     assert.equal(stub.calls[0].init.cache, "no-store");
     assert.equal(stub.calls[0].init.next, undefined);

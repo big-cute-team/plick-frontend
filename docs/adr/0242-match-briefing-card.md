@@ -109,6 +109,27 @@ Playwright로 열한 가지 상태를 돌렸다. READY만 카드가 서고 UNAVA
 
 dev에 올라가면 BE가 401을 주므로 카드는 없고 다른 화면은 그대로다. KAN-719가 들어오면 그때부터 보인다.
 
+## 헤드리스 리뷰가 잡은 것
+
+push 전 `pr-review.sh`가 CRITICAL 하나와 WARN 셋을 냈다. CRITICAL은 시계 훅이었다. effect 의존성에
+`now`까지 넣어 두어서, 기한이 이미 지난 브리핑(서버가 만료된 READY를 계속 주거나, 킥오프는 지났는데 상세
+폴링이 아직 LIVE로 바꾸기 전)이면 0ms 타이머가 `setNow`를 부르고 `now`가 바뀌어 effect가 다시 돌고 또 0ms
+타이머가 걸리는 루프였다. 카드는 숨겨진 채 탭 전체가 몇 ms마다 다시 그려진다. Playwright 매트릭스의
+"이미 만료" 케이스가 바로 그 상태였는데 화면만 보고 통과시켰다. 의존성을 `deadline` 하나로 줄이고, 기한이
+지났으면 타이머 없이 현재 시각만 한 번 올리게 했다. 상한에서 일찍 깬 경우는 상태를 건드리지 않고
+타이머만 다시 건다. 고친 뒤 같은 케이스에서 `setTimeout` 호출 수를 세어 루프가 사라진 걸 확인했다.
+
+WARN 하나는 출처 검증이었다. 반대쪽 id가 "정확히 null"이어야 통과시켰는데 BE 직렬화가 null 필드를
+생략하면 undefined라 기사 출처가 전부 탈락하고 근거 토글이 조용히 사라진다. `?? null`로 정규화하고 생략
+케이스 테스트를 넣었다. 다른 하나는 fetcher 테스트가 `http://localhost:8080`을 통째로 단언해 `API_BASE_URL`이
+있는 환경에서 깨질 수 있다는 것이라 경로 끝만 보게 바꿨다. 훅과 카드에 단위 테스트가 없다는 WARN은
+맞다. 이 저장소에 React 테스트 러너가 없어 Playwright 확인으로 두고, 시계 로직은 위처럼 effect 하나에
+가둬 읽기 쉽게 했다.
+
+INFO는 세 개다. 4xx 전부를 null로 접어 429나 408도 숨긴다는 지적은 retry 0에 60초 재조회가 있어 그대로
+둔다. `matchBriefingKeys.ts`의 camelCase는 `predictionKeys.ts`, `liveKeys.ts` 선례를 따른 것이고, 아이콘
+`size={14}`는 같은 탭의 `ChevronRightIcon` 호출과 같은 관례다.
+
 ## 남긴 것
 
 - 생성 flag나 조회 flag는 FE에 없다. 서버가 UNAVAILABLE이나 4xx를 주면 그게 OFF다.

@@ -34,8 +34,13 @@ const MAX_TIMEOUT_MS = 0x7fffffff;
  * 현재 시각을 돌려준다. 화면을 보고 있는 동안 만료나 킥오프에 도달하면 카드가 그 자리에서 사라진다.
  * 서버가 다음 재조회에서 UNAVAILABLE을 주기 전에도 FE 가드가 먼저 닫는다.
  *
- * 상한보다 먼 기한은 상한에서 한 번 깨어나 다시 잰다. 일찍 깨어난 때는 아직 기한 전이라
- * {@link isMatchBriefingVisible}이 그대로 true다.
+ * 기한이 이미 지났으면 타이머 없이 현재 시각만 한 번 올린다. 첫 렌더의 시각이 응답보다 앞서 있어
+ * 그 사이에 기한이 끼었을 수 있어서다. 기한이 그대로인 동안 effect는 다시 돌지 않으므로(의존성은
+ * `deadline`뿐) 서버가 만료된 READY를 계속 주거나 킥오프 뒤 상세 폴링이 아직 LIVE로 바꾸기 전이어도
+ * 재렌더가 되풀이되지 않는다. 처음엔 `now`도 의존성에 넣었다가 헤드리스 리뷰가 0ms 타이머 루프를
+ * 짚어 고쳤다.
+ *
+ * 상한보다 먼 기한은 상한에서 한 번 깨어나 기한 전이면 상태를 건드리지 않고 다시 잰다.
  *
  * @param deadline 감출 시각. null이면 타이머를 걸지 않는다
  */
@@ -43,13 +48,18 @@ function useDeadlineClock(deadline: number | null): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (deadline === null || !Number.isFinite(deadline)) return;
-    const wait = deadline - Date.now();
-    const timer = setTimeout(
-      () => setNow(Date.now()),
-      Math.min(Math.max(wait, 0), MAX_TIMEOUT_MS),
-    );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      const wait = deadline - Date.now();
+      if (wait <= 0) {
+        setNow(Date.now());
+        return;
+      }
+      timer = setTimeout(arm, Math.min(wait, MAX_TIMEOUT_MS));
+    };
+    arm();
     return () => clearTimeout(timer);
-  }, [deadline, now]);
+  }, [deadline]);
   return now;
 }
 
