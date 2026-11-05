@@ -93,8 +93,9 @@ test("객체가 아니거나 시각이 깨지거나 문장이 없으면 null이�
 test("출처와 근거 id가 없거나 깨져 있어도 문장은 그대로 통과한다", () => {
   const texts = (raw) =>
     parseMatchBriefing(raw, 900002)?.points.map((p) => p.text);
-  const { sources: _sources, ...withoutSources } = FIXTURE;
-  assert.deepEqual(texts(withoutSources), [FIXTURE.points[0].text]);
+  assert.deepEqual(texts({ ...FIXTURE, sources: undefined }), [
+    FIXTURE.points[0].text,
+  ]);
   assert.deepEqual(
     texts({
       ...FIXTURE,
