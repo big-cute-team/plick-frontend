@@ -10,7 +10,9 @@ import {
   isMatchBriefingEligible,
   isMatchBriefingPrematch,
   isMatchBriefingVisible,
+  MATCH_BRIEFING_STALE_MS,
   matchBriefingAsOfLabel,
+  matchBriefingStaleTime,
   parseMatchBriefing,
 } from "../../packages/domain/src/match-briefing.ts";
 
@@ -221,6 +223,22 @@ test("예정이 아니거나 킥오프가 깨지면 킥오프 전이 아니다",
     isMatchBriefingPrematch(host({ kickoffAt: "TBD" }), before),
     false,
   );
+});
+
+test("신선도: 킥오프 전 예정 경기만 60초, 그 밖에는 낡지 않는다", () => {
+  const h = host();
+  const kickoff = at(h.kickoffAt);
+  assert.equal(MATCH_BRIEFING_STALE_MS, 60_000);
+  assert.equal(matchBriefingStaleTime(h, kickoff - 1), MATCH_BRIEFING_STALE_MS);
+  /* 화면을 켜 둔 채 킥오프를 넘겨 헤더가 SCHEDULED로 남은 경우 */
+  assert.equal(matchBriefingStaleTime(h, kickoff), Infinity);
+  for (const status of ["LIVE", "FINISHED"]) {
+    assert.equal(
+      matchBriefingStaleTime(host({ status }), kickoff - 1),
+      Infinity,
+      status,
+    );
+  }
 });
 
 test("자료 기준 문구는 dataAsOf를 KST로 적는다", () => {

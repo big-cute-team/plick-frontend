@@ -19,16 +19,13 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   isMatchBriefingEligible,
-  isMatchBriefingPrematch,
   isMatchBriefingVisible,
+  matchBriefingStaleTime,
   type MatchBriefing,
   type MatchBriefingHost,
 } from "@plick/domain/match-briefing";
 import { getMatchBriefing } from "./match-briefings";
 import { matchBriefingKeys } from "./matchBriefingKeys";
-
-/** 킥오프 전 브리핑을 신선하게 보는 시간(ms). 이 안에는 탭을 오가거나 창에 돌아와도 다시 받지 않는다. */
-export const MATCH_BRIEFING_STALE_MS = 60_000;
 
 /**
  * 이 경기 화면에 지금 보여 줄 브리핑. 없으면 null이고 화면은 카드를 세우지 않는다.
@@ -38,8 +35,8 @@ export const MATCH_BRIEFING_STALE_MS = 60_000;
  * 걸어 닫았는데(`useDeadlineClock`) KAN-735에서 걷었다.
  *
  * `staleTime`은 함수로 넘긴다. 쿼리 라이브러리가 값을 물을 때마다(마운트, 창 포커스) 현재 시각으로
- * 다시 판정하므로 렌더에서 시계를 읽지 않고 타이머도 따로 두지 않는다. 킥오프 전에는 60초, 킥오프를
- * 넘기면 `Infinity`다. 예정 경기의 상세는 폴링되지 않아 화면을 켜 둔 채 킥오프를 넘기면 헤더가
+ * 다시 판정하므로 렌더에서 시계를 읽지 않고 타이머도 따로 두지 않는다. 값은 도메인의
+ * `matchBriefingStaleTime`이 정한다. 킥오프 전에는 60초, 킥오프를 넘기면 `Infinity`다. 예정 경기의 상세는 폴링되지 않아 화면을 켜 둔 채 킥오프를 넘기면 헤더가
  * SCHEDULED로 남는데, 시각도 같이 보므로 그때부터는 탭을 오가거나 창에 돌아와도 다시 받지 않는다.
  * 데이터 없이 실패한 쿼리는 낡은 것으로 쳐서 포커스 때 한 번 더 시도한다.
  *
@@ -55,10 +52,7 @@ export function useMatchBriefing(
     queryKey: matchBriefingKeys.match(host.id),
     queryFn: () => getMatchBriefing(host.id),
     enabled: isMatchBriefingEligible(host.status),
-    staleTime: () =>
-      isMatchBriefingPrematch(host, Date.now())
-        ? MATCH_BRIEFING_STALE_MS
-        : Infinity,
+    staleTime: () => matchBriefingStaleTime(host, Date.now()),
     refetchOnWindowFocus: true,
     retry: 0,
     throwOnError: false,
