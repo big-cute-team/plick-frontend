@@ -133,7 +133,7 @@ export function parseMatchBriefing(
 export interface MatchBriefingHost {
   id: number;
   status: string;
-  /** 킥오프 ISO. BE 경기 상세가 KST 오프셋으로 준다. 재조회를 멈출 시각으로만 쓴다 */
+  /** 킥오프 ISO. BE 경기 상세가 KST 오프셋으로 준다. 받은 값을 굳힐 시각으로만 쓴다 */
   kickoffAt: string;
 }
 
@@ -175,7 +175,7 @@ export function isMatchBriefingVisible(
 
 /**
  * 브리핑이 아직 바뀔 수 있는 경기인가. 상태가 예정이고 킥오프 시각 전일 때만 그렇다. 훅이 이 값으로
- * 60초 재조회를 켜고 끈다.
+ * 받은 브리핑을 60초 뒤 낡은 것으로 볼지(다시 받을 수 있다), 끝까지 그대로 쓸지 정한다.
  *
  * 서버 배치는 킥오프 전까지만 매일 다시 만들고 킥오프 뒤에는 만들지 않는다(KAN-734). 상태만 보지
  * 않고 시각도 보는 이유는 예정 경기의 상세가 폴링되지 않아서다. 화면을 켜 둔 채 킥오프를 넘기면
