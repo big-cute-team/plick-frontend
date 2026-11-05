@@ -6,8 +6,10 @@
  * 앱 폴더를 거치지 않고 바로 여기 둔다(ADR 0011 게이트 C). BE 응답 봉투 모양은
  * `@plick/core/match-briefings`가 들고 있고 화면은 이 타입만 본다.
  *
- * 서버가 유일한 신뢰 판정이다. 만료(`expiresAt`)와 킥오프는 서버가 정한 값이고 FE는 그 위에 표시
- * 가드만 얹는다. 클라이언트 현재 시각에 24시간을 더하거나 KST 자정으로 바꾸지 않는다.
+ * 서버가 유일한 신뢰 판정이다. READY를 주면 보이고 아니면 숨긴다. 처음엔 서버 만료(`expiresAt`)와
+ * 킥오프에 카드를 닫았는데 KAN-735에서 걷었다. 경기가 시작하거나 끝난 뒤에도 마지막 경기 전 요약이
+ * 남고, 언제 자료인지는 카드의 기준 시각("11월 7일 09:00 기준")이 말해 준다. FE가 얹는 가드는 경기
+ * id 일치와 취소·연기 제외 둘뿐이다.
  */
 
 /**
@@ -26,8 +28,6 @@ export interface MatchBriefing {
   generatedAt: string;
   /** 입력 자료를 조회한 기준 시각(UTC ISO). 화면 문구 "11월 4일 12:00 기준"의 출처 */
   dataAsOf: string;
-  /** 서버가 정한 만료 시각(UTC ISO). `min(dataAsOf + 24h, 생성 당시 킥오프)` */
-  expiresAt: string;
   points: MatchBriefingPoint[];
   cautions: string[];
 }
@@ -82,8 +82,12 @@ function clip(text: string, max: number): string {
  * 안 되므로 던지지 않는다.
  *
  * 거절하는 경우: 객체가 아님, `matchId`가 화면의 경기와 다름(늦게 도착한 다른 경기 응답이나 서버
- * 오류), 시각 셋 중 하나라도 파싱 실패, 핵심 문장이 하나도 없음. 문장과 주의사항은 표시 상한으로
- * 자른다. 출처 목록과 근거 id는 보지 않으므로 그쪽 모양이 어긋나도 브리핑은 그대로 통과한다.
+ * 오류), 생성 시각이나 자료 기준 시각 파싱 실패, 핵심 문장이 하나도 없음. 문장과 주의사항은 표시
+ * 상한으로 자른다.
+ *
+ * 화면이 안 쓰는 필드는 들여다보지 않는다. 출처 목록과 근거 id(KAN-731), 만료 시각 `expiresAt`
+ * (KAN-735)이 그렇다. BE는 계속 주지만 그쪽 모양이 어긋나거나 빠져도 브리핑은 그대로 통과한다.
+ * 끝난 경기의 `expiresAt`은 늘 과거다.
  *
  * @param raw BE `data.briefing`
  * @param matchId 화면의 경기 id. 숫자든 문자열이든 문자열로 맞춰 비교한다
@@ -96,9 +100,8 @@ export function parseMatchBriefing(
   if (!isNonEmptyString(raw.matchId) || raw.matchId !== String(matchId)) {
     return null;
   }
-  const { generatedAt, dataAsOf, expiresAt } = raw;
+  const { generatedAt, dataAsOf } = raw;
   if (!isValidIso(generatedAt) || !isValidIso(dataAsOf)) return null;
-  if (!isValidIso(expiresAt)) return null;
 
   const points: MatchBriefingPoint[] = [];
   if (Array.isArray(raw.points)) {
@@ -121,57 +124,93 @@ export function parseMatchBriefing(
     matchId: raw.matchId,
     generatedAt,
     dataAsOf,
-    expiresAt,
     points,
     cautions,
   };
 }
 
-/** 브리핑을 숨길지 판정하는 데 필요한 경기 헤더 조각. `MatchSummary`가 이 모양을 만족한다. */
+/** 브리핑 조회와 표시 판정에 필요한 경기 헤더 조각. `MatchSummary`가 이 모양을 만족한다. */
 export interface MatchBriefingHost {
   id: number;
   status: string;
-  /** 킥오프 ISO. BE 경기 상세가 KST 오프셋으로 준다 */
+  /** 킥오프 ISO. BE 경기 상세가 KST 오프셋으로 준다. 받은 값을 굳힐 시각으로만 쓴다 */
   kickoffAt: string;
 }
 
+/** 브리핑이 설 수 있는 경기 상태. 예정, 진행, 종료다. */
+const MATCH_BRIEFING_STATUSES: ReadonlySet<string> = new Set([
+  "SCHEDULED",
+  "LIVE",
+  "FINISHED",
+]);
+
 /**
- * 카드를 감출 시각(epoch ms). 서버 만료와 실제 킥오프 중 이른 쪽이다. 둘 중 하나라도 파싱이 안 되면
- * NaN이라 {@link isMatchBriefingVisible}이 숨기고 타이머도 걸리지 않는다.
+ * 이 상태의 경기에 브리핑을 물어봐도 되는가. 예정, 진행, 종료 경기만 그렇다. 취소와 연기 경기는
+ * 서버도 UNAVAILABLE을 주므로(KAN-732) 요청부터 보내지 않는다. 모르는 상태값도 묻지 않는다.
  *
- * @param briefing 검증된 브리핑
- * @param kickoffAt 경기 헤더의 킥오프 ISO
+ * @param status 경기 헤더의 상태(`MatchStatus`)
  */
-export function matchBriefingDeadline(
-  briefing: MatchBriefing,
-  kickoffAt: string,
-): number {
-  return Math.min(
-    new Date(briefing.expiresAt).getTime(),
-    new Date(kickoffAt).getTime(),
-  );
+export function isMatchBriefingEligible(status: string): boolean {
+  return MATCH_BRIEFING_STATUSES.has(status);
 }
 
 /**
  * 지금 이 경기 화면에 브리핑을 보여도 되는가. 서버가 유일한 신뢰 판정이고 이건 추가 표시 가드다.
  *
- * 숨기는 조건: 경기가 SCHEDULED가 아님(라이브, 종료, 연기, 취소), 브리핑의 경기 id가 다름, 서버
- * 만료 시각이나 킥오프에 도달, 시각 파싱 실패. KST 자정을 넘긴 것만으로는 숨기지 않는다. 전날
- * 유효 결과가 당일 재생성 실패 뒤에 남아 있어도 서버가 READY로 주면 원래 만료까지 그대로 보인다.
+ * 숨기는 조건은 둘이다. 경기가 취소나 연기로 바뀜(예정일 때 받아 둔 캐시가 남아 있을 수 있다),
+ * 브리핑의 경기 id가 다름. 서버 만료 시각과 킥오프로는 숨기지 않는다 (KAN-735). 진행 중이거나 끝난
+ * 경기에서도 마지막 경기 전 요약이 그대로 보인다.
  *
  * @param briefing 검증된 브리핑
- * @param host 경기 헤더(id, 상태, 킥오프)
- * @param now 비교 기준 시각(epoch ms). 테스트와 타이머가 고정값을 넣는다
+ * @param host 경기 헤더(id, 상태)
  */
 export function isMatchBriefingVisible(
   briefing: MatchBriefing,
-  host: MatchBriefingHost,
+  host: Pick<MatchBriefingHost, "id" | "status">,
+): boolean {
+  return (
+    isMatchBriefingEligible(host.status) && briefing.matchId === String(host.id)
+  );
+}
+
+/**
+ * 브리핑이 아직 바뀔 수 있는 경기인가. 상태가 예정이고 킥오프 시각 전일 때만 그렇다.
+ * {@link matchBriefingStaleTime}이 이 값으로 받은 브리핑을 60초 뒤 낡은 것으로 볼지(다시 받을 수
+ * 있다), 끝까지 그대로 쓸지 정한다.
+ *
+ * 서버 배치는 킥오프 전까지만 매일 다시 만들고 킥오프 뒤에는 만들지 않는다(KAN-734). 상태만 보지
+ * 않고 시각도 보는 이유는 예정 경기의 상세가 폴링되지 않아서다. 화면을 켜 둔 채 킥오프를 넘기면
+ * 헤더는 SCHEDULED로 남는다. 킥오프가 파싱되지 않으면 false다.
+ *
+ * @param host 경기 헤더(상태, 킥오프)
+ * @param now 비교 기준 시각(epoch ms)
+ */
+export function isMatchBriefingPrematch(
+  host: Pick<MatchBriefingHost, "status" | "kickoffAt">,
   now: number,
 ): boolean {
-  if (host.status !== "SCHEDULED") return false;
-  if (briefing.matchId !== String(host.id)) return false;
-  const deadline = matchBriefingDeadline(briefing, host.kickoffAt);
-  return Number.isFinite(deadline) && now < deadline;
+  return (
+    host.status === "SCHEDULED" && now < new Date(host.kickoffAt).getTime()
+  );
+}
+
+/** 킥오프 전 브리핑을 신선하게 보는 시간(ms). 이 안에는 탭을 오가거나 창에 돌아와도 다시 받지 않는다. */
+export const MATCH_BRIEFING_STALE_MS = 60_000;
+
+/**
+ * 받은 브리핑을 얼마 동안 신선하다고 볼지(ms). 쿼리 훅의 `staleTime`이 그대로 쓴다. 킥오프 전 예정
+ * 경기는 60초, 그 밖에는 `Infinity`라 한 번 받은 값을 끝까지 쓴다.
+ *
+ * @param host 경기 헤더(상태, 킥오프)
+ * @param now 비교 기준 시각(epoch ms)
+ */
+export function matchBriefingStaleTime(
+  host: Pick<MatchBriefingHost, "status" | "kickoffAt">,
+  now: number,
+): number {
+  return isMatchBriefingPrematch(host, now)
+    ? MATCH_BRIEFING_STALE_MS
+    : Infinity;
 }
 
 /**

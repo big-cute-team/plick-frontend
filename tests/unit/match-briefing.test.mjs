@@ -1,20 +1,24 @@
 /**
  * @file AI 경기 브리핑 도메인 테스트 (KAN-724). payload 검증(READY 모양, 문자열 id, 표시 상한,
- * 읽지 않는 출처 필드), 숨김 판정(만료 경계, 킥오프, 경기 상태, 경기 id 불일치), 자료 기준 문구를
- * 본다. 근거 목록은 KAN-731에서 걷어 출처와 근거 id는 화면 타입에 없다.
+ * 읽지 않는 출처와 만료 필드), 표시 판정(경기 상태, 경기 id 불일치, 만료와 킥오프 뒤 유지), 신선도
+ * 판정(킥오프 경계), 자료 기준 문구를 본다. 근거 목록은 KAN-731에서, 만료와 킥오프 숨김은
+ * KAN-735에서 걷어 출처와 근거 id, `expiresAt`은 화면 타입에 없다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  isMatchBriefingEligible,
+  isMatchBriefingPrematch,
   isMatchBriefingVisible,
+  MATCH_BRIEFING_STALE_MS,
   matchBriefingAsOfLabel,
-  matchBriefingDeadline,
+  matchBriefingStaleTime,
   parseMatchBriefing,
 } from "../../packages/domain/src/match-briefing.ts";
 
 /**
- * 티켓의 테스트용 가상 fixture. 시계는 이 범위에 고정한다. BE는 근거 id와 출처 목록을 계속 주므로
- * fixture에도 그대로 둔다.
+ * 티켓의 테스트용 가상 fixture. BE는 근거 id와 출처 목록, 만료 시각을 계속 주므로 fixture에도 그대로
+ * 둔다.
  */
 const FIXTURE = {
   matchId: "900002",
@@ -49,14 +53,13 @@ const host = (over = {}) => ({
 
 const at = (iso) => new Date(iso).getTime();
 
-test("티켓 fixture는 그대로 통과하고 출처와 근거 id는 화면 타입에 싣지 않는다", () => {
+test("티켓 fixture는 그대로 통과하고 출처, 근거 id, 만료 시각은 화면 타입에 싣지 않는다", () => {
   const briefing = parseMatchBriefing(FIXTURE, 900002);
   assert.ok(briefing);
   assert.deepEqual(briefing, {
     matchId: "900002",
     generatedAt: FIXTURE.generatedAt,
     dataAsOf: FIXTURE.dataAsOf,
-    expiresAt: FIXTURE.expiresAt,
     points: [{ text: FIXTURE.points[0].text }],
     cautions: [],
   });
@@ -76,7 +79,7 @@ test("객체가 아니거나 시각이 깨지거나 문장이 없으면 null이�
   assert.equal(parseMatchBriefing("READY", 900002), null);
   assert.equal(parseMatchBriefing([], 900002), null);
   assert.equal(
-    parseMatchBriefing({ ...FIXTURE, expiresAt: "not-a-date" }, 900002),
+    parseMatchBriefing({ ...FIXTURE, generatedAt: "not-a-date" }, 900002),
     null,
   );
   assert.equal(
@@ -134,48 +137,108 @@ test("문장 3개, 80자, 주의사항 1개 60자로 자른다", () => {
   assert.equal(briefing.cautions[0].length, 60);
 });
 
-test("만료 경계: 만료 시각 1ms 전까지 보이고 그 시각부터 숨긴다", () => {
-  const briefing = parseMatchBriefing(FIXTURE, 900002);
-  const expiry = at(FIXTURE.expiresAt);
-  assert.equal(isMatchBriefingVisible(briefing, host(), expiry - 1), true);
-  assert.equal(isMatchBriefingVisible(briefing, host(), expiry), false);
+test("만료 시각이 없거나 깨져 있어도 통과한다", () => {
+  for (const expiresAt of [undefined, null, "not-a-date", 0]) {
+    const briefing = parseMatchBriefing({ ...FIXTURE, expiresAt }, 900002);
+    assert.ok(briefing, String(expiresAt));
+    assert.equal("expiresAt" in briefing, false);
+  }
 });
 
-test("킥오프가 만료보다 이르면 킥오프에 숨긴다", () => {
-  const briefing = parseMatchBriefing(FIXTURE, 900002);
-  const h = host({ kickoffAt: "2026-11-04T21:00:00+09:00" });
-  const kickoff = at(h.kickoffAt);
-  assert.equal(matchBriefingDeadline(briefing, h.kickoffAt), kickoff);
-  assert.equal(isMatchBriefingVisible(briefing, h, kickoff - 1), true);
-  assert.equal(isMatchBriefingVisible(briefing, h, kickoff), false);
+test("예정, 진행, 종료 경기만 브리핑을 묻는다", () => {
+  for (const status of ["SCHEDULED", "LIVE", "FINISHED"]) {
+    assert.equal(isMatchBriefingEligible(status), true, status);
+  }
+  for (const status of ["POSTPONED", "CANCELLED", "ABANDONED", ""]) {
+    assert.equal(isMatchBriefingEligible(status), false, status);
+  }
 });
 
-test("KST 자정을 넘겨도 만료 전이면 그대로 보인다", () => {
+test("예정, 진행, 종료 경기에서 보이고 취소, 연기 경기에서는 숨긴다", () => {
   const briefing = parseMatchBriefing(FIXTURE, 900002);
-  /* 2026-11-05 00:30 KST = 11-04 15:30Z, 만료(11-05 03:00Z) 전 */
+  for (const status of ["SCHEDULED", "LIVE", "FINISHED"]) {
+    assert.equal(
+      isMatchBriefingVisible(briefing, host({ status })),
+      true,
+      status,
+    );
+  }
+  for (const status of ["POSTPONED", "CANCELLED"]) {
+    assert.equal(
+      isMatchBriefingVisible(briefing, host({ status })),
+      false,
+      status,
+    );
+  }
+});
+
+test("경기 id가 다르면 숨긴다", () => {
+  const briefing = parseMatchBriefing(FIXTURE, 900002);
+  assert.equal(isMatchBriefingVisible(briefing, host({ id: 900003 })), false);
   assert.equal(
-    isMatchBriefingVisible(briefing, host(), at("2026-11-04T15:30:00Z")),
+    isMatchBriefingVisible(briefing, host({ id: 900003, status: "FINISHED" })),
+    false,
+  );
+});
+
+test("서버 만료와 킥오프가 지난 경기에서도 보인다", () => {
+  /* 끝난 경기의 실제 모양. 만료는 생성 당시 킥오프라 늘 과거다 */
+  const briefing = parseMatchBriefing(
+    { ...FIXTURE, expiresAt: "2026-11-04T12:00:00Z" },
+    900002,
+  );
+  const past = { kickoffAt: "2026-11-04T21:00:00+09:00" };
+  for (const status of ["SCHEDULED", "LIVE", "FINISHED"]) {
+    assert.equal(
+      isMatchBriefingVisible(briefing, host({ ...past, status })),
+      true,
+      status,
+    );
+  }
+  /* 킥오프 시각이 깨져 있어도 표시 판정은 시각을 보지 않는다 */
+  assert.equal(
+    isMatchBriefingVisible(briefing, host({ kickoffAt: "TBD" })),
     true,
   );
 });
 
-test("SCHEDULED가 아니거나 경기 id가 다르거나 킥오프가 깨지면 숨긴다", () => {
-  const briefing = parseMatchBriefing(FIXTURE, 900002);
-  const now = at("2026-11-04T04:00:00Z");
+test("신선도 경계: 예정 경기의 킥오프 1ms 전까지만 킥오프 전이다", () => {
+  const h = host();
+  const kickoff = at(h.kickoffAt);
+  assert.equal(isMatchBriefingPrematch(h, kickoff - 1), true);
+  assert.equal(isMatchBriefingPrematch(h, kickoff), false);
+  assert.equal(isMatchBriefingPrematch(h, kickoff + 60_000), false);
+});
+
+test("예정이 아니거나 킥오프가 깨지면 킥오프 전이 아니다", () => {
+  const before = at("2026-11-04T04:00:00Z");
   for (const status of ["LIVE", "FINISHED", "POSTPONED", "CANCELLED"]) {
     assert.equal(
-      isMatchBriefingVisible(briefing, host({ status }), now),
+      isMatchBriefingPrematch(host({ status }), before),
       false,
+      status,
     );
   }
   assert.equal(
-    isMatchBriefingVisible(briefing, host({ id: 900003 }), now),
+    isMatchBriefingPrematch(host({ kickoffAt: "TBD" }), before),
     false,
   );
-  assert.equal(
-    isMatchBriefingVisible(briefing, host({ kickoffAt: "TBD" }), now),
-    false,
-  );
+});
+
+test("신선도: 킥오프 전 예정 경기만 60초, 그 밖에는 낡지 않는다", () => {
+  const h = host();
+  const kickoff = at(h.kickoffAt);
+  assert.equal(MATCH_BRIEFING_STALE_MS, 60_000);
+  assert.equal(matchBriefingStaleTime(h, kickoff - 1), MATCH_BRIEFING_STALE_MS);
+  /* 화면을 켜 둔 채 킥오프를 넘겨 헤더가 SCHEDULED로 남은 경우 */
+  assert.equal(matchBriefingStaleTime(h, kickoff), Infinity);
+  for (const status of ["LIVE", "FINISHED"]) {
+    assert.equal(
+      matchBriefingStaleTime(host({ status }), kickoff - 1),
+      Infinity,
+      status,
+    );
+  }
 });
 
 test("자료 기준 문구는 dataAsOf를 KST로 적는다", () => {
