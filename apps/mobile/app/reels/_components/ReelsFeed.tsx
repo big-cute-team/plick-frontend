@@ -5,12 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  REELS_AD_INTERVAL,
   interleaveReelAds,
+  reelAdInterval,
   reelIndexAt,
 } from "@plick/core/ads";
 import { ApiError } from "@plick/core/client";
 import { trackScreenViewed } from "@plick/core/events";
+import { AD_UNITS } from "@/_constants/ads";
 import {
   REELS_DOM_WINDOW,
   REELS_EMBED_FETCH_AHEAD,
@@ -136,11 +137,12 @@ export function ReelsFeed({
   const reels = data?.pages.flatMap((page) => page.items) ?? [];
   /* 8장마다 전면광고 슬라이드를 끼운다 (KAN-652). 캐러셀 인덱스는 전부 슬라이드 순번이고
      릴 순번이 필요한 곳(조회 기록 rank, 남은 장수)만 `reelIndexAt`으로 환산한다.
-     보던-릴 복귀 순번(`useViewState.reelsIndex`)도 슬라이드 순번이다 */
+     보던-릴 복귀 순번(`useViewState.reelsIndex`)도 슬라이드 순번이다.
+     광고 상자를 그릴 수 없는 모드(off, 단위 번호 없는 live)면 슬라이드도 끼우지 않는다 (KAN-730) */
   const adsMode = useAdsMode();
   const slides = interleaveReelAds(
     reels,
-    adsMode === "off" ? null : REELS_AD_INTERVAL,
+    reelAdInterval(adsMode, AD_UNITS.reel.slot),
   );
   /* 조회 기록의 진입 화면 (KAN-584). 주소로 정하면 릴을 넘기며 `/reels/{id}`로 바뀐 뒤부터
      탭 피드도 딥링크로 보이므로, 들어온 길을 아는 여기서 고정한다 */

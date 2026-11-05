@@ -1,6 +1,7 @@
 /**
  * @file `@plick/core/ads` 회귀 테스트 (KAN-652). 릴스 전면광고 끼워 넣기와 순번 환산,
- * 앱 셸 끄기, ads.txt 한 줄, 앱 셸에서 광고 요청을 멈추는 head 스크립트(KAN-632).
+ * 앱 셸 끄기, ads.txt 한 줄, 앱 셸에서 광고 요청을 멈추는 head 스크립트(KAN-632),
+ * 단위 번호 없는 live에서 자리와 릴스 슬라이드를 함께 접는 판정(KAN-730).
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +10,10 @@ import {
   adsPauseScript,
   adsTxt,
   interleaveReelAds,
+  isAdUnitDrawn,
   isAdsMode,
+  REELS_AD_INTERVAL,
+  reelAdInterval,
   reelIndexAt,
   resolveAdsMode,
 } from "../../packages/core/src/ads.ts";
@@ -61,6 +65,24 @@ test("앱 셸이면 off, 그 밖은 기본 모드", () => {
   assert.equal(resolveAdsMode("live", "browser"), "live");
   assert.equal(resolveAdsMode("placeholder", null), "placeholder");
   assert.equal(resolveAdsMode("placeholder", undefined), "placeholder");
+});
+
+test("광고 상자는 placeholder거나 live에 단위 번호가 있을 때만 그린다", () => {
+  assert.equal(isAdUnitDrawn("off", "123"), false);
+  assert.equal(isAdUnitDrawn("placeholder", ""), true);
+  assert.equal(isAdUnitDrawn("placeholder", "123"), true);
+  assert.equal(isAdUnitDrawn("live", ""), false);
+  assert.equal(isAdUnitDrawn("live", "123"), true);
+});
+
+test("릴스 광고 간격은 상자를 그릴 수 있을 때만 8이고 아니면 null이다", () => {
+  assert.equal(reelAdInterval("placeholder", ""), REELS_AD_INTERVAL);
+  assert.equal(reelAdInterval("live", "123"), REELS_AD_INTERVAL);
+  /* prod 승인 전: live인데 단위 번호가 비어 있다. 빈 전면광고 슬라이드가 끼면 안 된다 */
+  assert.equal(reelAdInterval("live", ""), null);
+  assert.equal(reelAdInterval("off", "123"), null);
+  const slides = interleaveReelAds(reels(20), reelAdInterval("live", ""));
+  assert.ok(slides.every((s) => s.kind === "reel"));
 });
 
 test("isAdsMode는 세 값만 통과시킨다", () => {
