@@ -55,7 +55,6 @@ export function resolveAdsMode(
   return kind === "plick_app" ? "off" : base;
 }
 
-/** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
 /**
  * 앱 셸에서 애드센스 광고 요청을 막는 head 인라인 스크립트 본문 (KAN-632).
  *
@@ -77,7 +76,37 @@ export function adsPauseScript(): string {
   );
 }
 
+/**
+ * 광고 자리에 실제로 상자를 그리나 (KAN-730). `AdSlot`의 판정이고, 자리 바깥에 껍데기를
+ * 두는 쪽(릴스 전면광고 슬라이드)도 같은 판정을 써야 빈 껍데기가 남지 않는다.
+ * - `off`: 안 그린다.
+ * - `placeholder`: 점선 상자를 그린다. 단위 번호가 없어도 된다.
+ * - `live`: 단위 번호가 있을 때만. 승인 전이라 번호가 비어 있으면 빈 칸을 남기지 않는다.
+ *
+ * @param mode 이번 요청의 광고 모드
+ * @param slot 그 자리의 애드센스 광고 단위 번호. 비어 있으면 아직 없는 것
+ */
+export function isAdUnitDrawn(mode: AdsMode, slot: string): boolean {
+  if (mode === "off") return false;
+  if (mode === "live") return slot !== "";
+  return true;
+}
+
+/** 릴스 몇 장마다 전면광고 슬라이드를 끼우나. 티켓이 8장이다. */
 export const REELS_AD_INTERVAL = 8;
+
+/**
+ * 릴스에 전면광고 슬라이드를 끼울 간격. 광고 상자를 그릴 수 있을 때만 `REELS_AD_INTERVAL`이고
+ * 아니면 `null`이라 `interleaveReelAds`가 릴만 감싼다 (KAN-730). 전에는 모드가 `off`만 아니면
+ * 끼웠는데, prod는 `live`에 단위 번호가 비어 있어 "광고" 라벨과 안내문만 남은 빈 슬라이드가
+ * 8장마다 나왔다.
+ *
+ * @param mode 이번 요청의 광고 모드
+ * @param slot 릴스 자리의 애드센스 광고 단위 번호
+ */
+export function reelAdInterval(mode: AdsMode, slot: string): number | null {
+  return isAdUnitDrawn(mode, slot) ? REELS_AD_INTERVAL : null;
+}
 
 /**
  * 릴스 피드의 슬라이드 하나. 릴이거나 광고다. 광고 슬라이드는 릴 사이에만 들어가고,
