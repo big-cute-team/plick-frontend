@@ -66,7 +66,7 @@ type Sheet =
  *
  * 투표와 여론 사이에 AI 경기 브리핑 카드(KAN-724)가 선다. 예정 경기에서 브라우저가 따로 받는
  * 값이라 서버 HTML에는 없고, 없거나 만료됐거나 킥오프가 지나면 자리 자체가 사라진다
- * (`useMatchBriefing`). 근거는 기본 접힘이라 여론 진입이 밀리지 않는다.
+ * (`useMatchBriefing`). 문장 몇 줄뿐인 짧은 카드라 여론 진입이 밀리지 않는다.
  *
  * @param header 경기 헤더(두 팀, 상태)
  * @param summary 예측 요약
@@ -169,7 +169,7 @@ export function PredictionTab({
 
       {briefing && (
         <div className="px-edge pt-3">
-          <MatchBriefingCard briefing={briefing} Link={Link} />
+          <MatchBriefingCard briefing={briefing} />
         </div>
       )}
 

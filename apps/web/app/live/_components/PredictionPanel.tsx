@@ -175,12 +175,7 @@ export function PredictionPanel({
       )}
 
       {briefing && (
-        <MatchBriefingCard
-          briefing={briefing}
-          size="lg"
-          Link={Link}
-          className="mt-4"
-        />
+        <MatchBriefingCard briefing={briefing} size="lg" className="mt-4" />
       )}
 
       {summary.status !== "UPCOMING" && (
