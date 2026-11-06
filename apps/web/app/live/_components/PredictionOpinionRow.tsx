@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime } from "@plick/domain/format";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@plick/domain/prediction";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { PREDICTION_DELETED_OPINION } from "@/_constants/predictions";
+import { useOutsideClick } from "@/_hooks/useOutsideClick";
 import {
   OpinionLikeButton,
   PredictionMoreActions,
@@ -26,10 +28,17 @@ import { PredictionReplies } from "./PredictionReplies";
  *
  * 행을 누르면 그 아래로 답글이 펼쳐진다(KAN-698, 시안 가이드 §5.6 "웹: 의견 행을 누르면 그
  * 아래로 펼친다"). 펼치면 본문 말줄임이 풀리고 `PredictionReplies`가 답글 목록과 입력줄을 그린다.
- * 안에 버튼이 있어 `<button>`으로 감쌀 수 없으니 `role=button`에 Enter·Space 처리다. 액션 줄과
- * 펼친 영역은 전파를 막아 그 안의 클릭이 행을 접지 않게 한다. 팝업은 포털인데 React 이벤트는
- * 포털 밖 조상으로도 올라오므로 같은 가드가 팝업 안의 클릭도 막는다. 열림 상태는 호출부가 든다
- * (한 번에 하나만 펼친다).
+ * 안에 버튼이 있어 `<button>`으로 감쌀 수 없으니 `role=button`에 Enter·Space 처리다. 열림 상태는
+ * 호출부가 든다(한 번에 하나만 펼친다).
+ *
+ * 액션 줄과 펼친 영역은 전파를 막아 그 안의 클릭이 행을 접지 않게 한다. 팝업은 포털인데 React
+ * 이벤트는 포털 밖 조상으로도 올라오므로 같은 가드가 팝업 안의 클릭도 막는다. 다만 액션 줄에서
+ * 막는 건 버튼과 팝업의 클릭뿐이다(KAN-737). `답글 [n]`은 행과 같은 토글을 부르는 버튼이고, 줄의
+ * 빈 자리(이벤트 대상이 줄 자신)도 행처럼 토글한다. 전에는 `답글`이 글자였고 줄 전체가 클릭을
+ * 삼켜, 포인터 커서가 뜨는데 눌러도 아무 일이 없었다.
+ *
+ * 펼친 행 밖을 누르면 접힌다(KAN-737, `useOutsideClick`). 다른 행을 누른 경우는 그 행의 토글이
+ * 먼저 돌아 펼친 의견이 바뀌어 있으므로 `onClose`는 자기가 아직 펼쳐져 있을 때만 접어야 한다.
  *
  * 답글이 남은 삭제 의견(`isDeleted`)은 본문 자리에 대체 문구만 남기고 픽 배지, 적중 여부, 액션
  * 줄을 뺀다(티켓 완료 조건). 그때 `pick`과 `result`는 null이다. 답글은 남아 있으니 펼치기는 된다.
@@ -40,7 +49,8 @@ import { PredictionReplies } from "./PredictionReplies";
  * @param teams 홈·원정 팀명(픽 라벨용)
  * @param myPick 내 픽. 답글 입력줄 안내가 원 의견 픽과 같은지로 갈린다
  * @param expanded 답글이 펼쳐져 있는가
- * @param onToggle 행을 눌렀을 때
+ * @param onToggle 행이나 `답글`을 눌렀을 때
+ * @param onClose 펼친 행 밖을 눌렀을 때. 이 행이 아직 펼쳐져 있을 때만 접는다
  */
 export function PredictionOpinionRow({
   opinion,
@@ -49,6 +59,7 @@ export function PredictionOpinionRow({
   myPick,
   expanded,
   onToggle,
+  onClose,
 }: {
   opinion: PredictionOpinion;
   matchId: number;
@@ -56,12 +67,16 @@ export function PredictionOpinionRow({
   myPick: PredictionPick | null;
   expanded: boolean;
   onToggle: () => void;
+  onClose: () => void;
 }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(rowRef, onClose, expanded);
   const verdict = predictionVerdictLabel(opinion.result);
   const favorite = opinion.author.favoriteTeam;
 
   return (
     <div
+      ref={rowRef}
       role="button"
       tabIndex={0}
       aria-expanded={expanded}
@@ -120,26 +135,37 @@ export function PredictionOpinionRow({
           >
             {opinion.opinion}
           </p>
-          {/* 액션 줄의 클릭은 행 토글로 올라가지 않는다. 포털 팝업 안의 클릭도 여기서 멈춘다 */}
+          {/* 버튼과 포털 팝업의 클릭은 여기서 멈추고, 줄의 빈 자리는 행처럼 토글한다 */}
           <div
             className="flex items-center gap-3.5 pt-2.25"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (e.target === e.currentTarget) onToggle();
+            }}
             onKeyDown={(e) => e.stopPropagation()}
           >
             <OpinionLikeButton opinion={opinion} matchId={matchId} />
-            <span className="flex items-baseline gap-0.75">
-              <span className="text-label text-text-3">답글</span>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={onToggle}
+              className="group focus-visible:outline-accent flex items-baseline gap-0.75 focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              <span className="text-label text-text-3 group-hover:text-text-strong transition-colors">
+                답글
+              </span>
               {opinion.replyCount > 0 && (
                 <span className="text-label text-danger-strong font-bold tabular-nums">
                   [{opinion.replyCount}]
                 </span>
               )}
-            </span>
-            <div className="flex-1" />
-            <PredictionMoreActions
-              target={{ kind: "opinion", id: opinion.id }}
-              author={opinion.author}
-            />
+            </button>
+            <div className="ml-auto flex items-center gap-3.5">
+              <PredictionMoreActions
+                target={{ kind: "opinion", id: opinion.id }}
+                author={opinion.author}
+              />
+            </div>
           </div>
         </>
       )}

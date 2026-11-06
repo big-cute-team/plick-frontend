@@ -47,7 +47,7 @@ function chipClass(on: boolean): string {
  * 실패라 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다.
  *
  * 의견 행을 누르면 그 아래로 답글이 펼쳐진다(KAN-698). 펼친 의견 id는 여기서 하나만 들어 다른
- * 행을 누르면 먼저 것이 접힌다. 시안의 웹 동선이 그렇다.
+ * 행을 누르면 먼저 것이 접힌다. 시안의 웹 동선이 그렇다. 행 밖을 누르면 접힌다(KAN-737).
  *
  * @param summary 예측 요약. 상태와 내 예측을 본다
  * @param teams 홈·원정 팀명(픽 라벨용)
@@ -199,6 +199,9 @@ export function PredictionOpinions({
               expanded={expandedId === opinion.id}
               onToggle={() =>
                 setExpandedId((id) => (id === opinion.id ? null : opinion.id))
+              }
+              onClose={() =>
+                setExpandedId((id) => (id === opinion.id ? null : id))
               }
             />
           ))}
