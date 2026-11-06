@@ -46,11 +46,14 @@ test("llms.txt는 브랜드, 팀 허브 6개, FAQ, 안내 페이지를 호스트
     "/faq",
     "/terms",
     "/privacy",
+    "/sitemap.xml",
   ]) {
     assert.ok(text.includes(`https://plick.co.kr${path}`), path);
   }
-  // 기사는 noindex라 사이트맵 링크로 전건을 안내하지 않는다 (KAN-652)
-  assert.doesNotMatch(text, /sitemap\.xml/);
+  // 기사는 다시 색인 대상이다 (KAN-738). noindex 안내는 릴 딥링크 줄에만 남는다
+  const noindexLines = text.split("\n").filter((l) => l.includes("noindex"));
+  assert.equal(noindexLines.length, 1);
+  assert.match(noindexLines[0], /\/reels\/\{id\}/);
 });
 
 test("모바일 llms.txt는 자기 URL을 쓰고 canonical이 데스크톱임을 적는다", () => {
