@@ -1,7 +1,9 @@
 /**
  * @file 사이트맵 재료 수집 테스트 (KAN-738). `fetch`를 stub해 기사 커서 페이징이 끝까지 걷는지,
  * 상한에서 자르는지, BE가 중간에 죽어도 모은 데까지 돌려주는지, 팀 여섯의 경기 id를 중복 없이
- * 모으고 한 팀이 실패해도 나머지가 남는지 본다. 둘 다 던지지 않는 게 계약이다.
+ * 모으고 한 팀이 실패해도 나머지가 남는지 본다. 둘 다 던지지 않는 게 계약이다. 끝에서는 두 앱
+ * `sitemap.ts`를 직접 불러 기사와 경기 URL이 실리고 릴 딥링크는 빠지는지, 깨진 발행 시각이
+ * lastModified 없이 나가는지, BE가 죽어도 정적 라우트는 나가는지 본다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -105,7 +107,10 @@ test("기사는 커서가 끝날 때까지 걸어 id와 발행 시각을 최신�
       articles.map((a) => a.id),
       ["1", "2", "3", "4", "5"],
     );
-    assert.equal(articles[0].publishedAt, card(1).publishedAt);
+    assert.equal(
+      articles[0].publishedAt.toISOString(),
+      new Date(card(1).publishedAt).toISOString(),
+    );
     assert.equal(s.calls.length, 3);
     assert.ok(s.calls.every((url) => url.includes("size=30")));
     assert.equal(s.logs.length, 0);
@@ -137,6 +142,23 @@ test("BE가 중간에 죽으면 던지지 않고 모은 데까지만 돌려준�
       ["1", "2"],
     );
     assert.ok(s.logs.some((line) => line.includes("기사 목록 로드 실패")));
+  } finally {
+    s.restore();
+  }
+});
+
+test("발행 시각을 날짜로 못 읽는 기사는 버리지 않고 시각만 null로 둔다", async () => {
+  const s = stub(() =>
+    ok({
+      items: [{ ...card(1), publishedAt: "어제" }, card(2)],
+      nextCursor: null,
+    }),
+  );
+  try {
+    const articles = await collectSitemapArticles();
+    assert.equal(articles.length, 2);
+    assert.equal(articles[0].publishedAt, null);
+    assert.ok(articles[1].publishedAt instanceof Date);
   } finally {
     s.restore();
   }
@@ -196,3 +218,64 @@ test("한 팀이 실패해도 나머지 팀 경기는 남고, 전부 실패하�
     all.restore();
   }
 });
+
+/** 기사 두 건(하나는 발행 시각이 깨짐)과 팀마다 경기 한 건을 주는 BE 흉내. */
+function siteBackend(url) {
+  if (url.pathname.endsWith("/fixtures")) {
+    return ok({ upcoming: [fixture(100)], results: [] });
+  }
+  return ok({
+    items: [card(1), { ...card(2), publishedAt: "어제" }],
+    nextCursor: null,
+  });
+}
+
+for (const app of ["web", "mobile"]) {
+  test(`${app} 사이트맵은 기사와 경기 상세를 싣고 릴 딥링크는 싣지 않는다`, async () => {
+    const { default: sitemap } = await import(
+      `../../apps/${app}/app/sitemap.ts`
+    );
+    const s = stub(siteBackend);
+    try {
+      const entries = await sitemap();
+      const paths = entries.map((entry) => new URL(entry.url).pathname);
+      for (const path of [
+        "/",
+        "/live",
+        "/debates",
+        "/articles/1",
+        "/articles/2",
+        "/live/matches/100",
+      ]) {
+        assert.ok(paths.includes(path), path);
+      }
+      assert.ok(!paths.some((path) => /^\/reels\/\d/.test(path)));
+      assert.ok(!paths.some((path) => path.startsWith("/me")));
+      assert.equal(new Set(paths).size, paths.length);
+
+      const byPath = Object.fromEntries(
+        entries.map((entry) => [new URL(entry.url).pathname, entry]),
+      );
+      assert.ok(byPath["/articles/1"].lastModified instanceof Date);
+      assert.equal("lastModified" in byPath["/articles/2"], false);
+      assert.equal("lastModified" in byPath["/live/matches/100"], false);
+    } finally {
+      s.restore();
+    }
+  });
+
+  test(`${app} 사이트맵은 BE가 죽어도 정적 라우트만으로 응답한다`, async () => {
+    const { default: sitemap } = await import(
+      `../../apps/${app}/app/sitemap.ts`
+    );
+    const s = stub(() => fail(502));
+    try {
+      const paths = (await sitemap()).map((e) => new URL(e.url).pathname);
+      assert.ok(paths.includes("/"));
+      assert.ok(paths.includes("/teams/liverpool"));
+      assert.ok(!paths.some((path) => path.startsWith("/articles/")));
+    } finally {
+      s.restore();
+    }
+  });
+}

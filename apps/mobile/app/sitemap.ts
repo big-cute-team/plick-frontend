@@ -84,10 +84,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/live/matches/${id}`,
       priority: 0.6,
     })),
-    // 기사 상세 (KAN-346, KAN-738) - lastModified는 발행 시각이다
+    // 기사 상세 (KAN-346, KAN-738) - lastModified는 발행 시각이고 못 읽는 값이면 뺀다
     ...articles.map((article) => ({
       url: `${SITE_URL}/articles/${article.id}`,
-      lastModified: new Date(article.publishedAt),
+      ...(article.publishedAt ? { lastModified: article.publishedAt } : {}),
       priority: 0.8,
     })),
   ];

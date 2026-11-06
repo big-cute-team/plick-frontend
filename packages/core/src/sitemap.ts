@@ -34,10 +34,14 @@ export const SITEMAP_MAX_ARTICLES = 45000;
  */
 export const SITEMAP_SPLIT_REVIEW_THRESHOLD = 5000;
 
-/** 사이트맵 기사 한 줄. `publishedAt`이 lastModified가 된다. */
+/**
+ * 사이트맵 기사 한 줄. `publishedAt`이 lastModified가 된다. 날짜로 못 읽는 값이면 null이고
+ * 앱은 그 기사의 lastModified만 뺀다. Invalid Date가 사이트맵 직렬화(`toISOString`)까지
+ * 가면 RangeError로 사이트맵 전체가 500이 되기 때문이다.
+ */
 export interface SitemapArticle {
   id: string;
-  publishedAt: string;
+  publishedAt: Date | null;
 }
 
 /**
@@ -58,7 +62,11 @@ export async function collectSitemapArticles(
     do {
       const page = await getArticles({ size: ARTICLES_MAX_PAGE_SIZE, cursor });
       for (const article of page.items) {
-        articles.push({ id: article.id, publishedAt: article.publishedAt });
+        const publishedAt = new Date(article.publishedAt);
+        articles.push({
+          id: article.id,
+          publishedAt: Number.isNaN(publishedAt.getTime()) ? null : publishedAt,
+        });
       }
       cursor = page.nextCursor;
     } while (cursor && articles.length < max);

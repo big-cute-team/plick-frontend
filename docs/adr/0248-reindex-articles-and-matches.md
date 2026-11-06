@@ -133,7 +133,7 @@ CloudFront가 한 시간 들고 있을 수 있다. 버린 이유는 배포 직�
 
 ## 검증
 
-`pnpm format:check`, `test:hooks`(40), `test:unit`(342, 새 테스트 6개 포함), `lint`, `check-types`, `build`가
+`pnpm format:check`, `test:hooks`(40), `test:unit`(347, 새 테스트 11개 포함), `lint`, `check-types`, `build`가
 통과했다. 빌드 라우트 표에서 `/sitemap.xml`이 두 앱 모두 ○(정적)에서 ƒ(요청마다)로 바뀌었다.
 
 새 단위 테스트(`tests/unit/sitemap-collect.test.mjs`)는 `fetch`를 stub해 여섯 가지를 본다. 커서가 끝날
@@ -169,6 +169,32 @@ BE를 부른 값이라 배포 환경(같은 VPC 안 내부 ALB)에서는 훨씬 
 
 검증이 끝난 뒤 `pnpm build`를 기본 환경으로 다시 돌려 로컬 `.next`를 되돌렸다. prod URL로 구운 산출물을
 남겨 두면 다음에 `next start` 계열 설정을 띄운 사람이 브라우저 프록시가 prod BE를 보는 빌드를 쓰게 된다.
+
+## 헤드리스 리뷰가 잡은 것
+
+`./scripts/review/pr-review.sh develop`은 CRITICAL 0, WARN 1, INFO 3이었다.
+
+WARN은 내가 놓친 구멍이었다. 사이트맵이 `lastModified: new Date(article.publishedAt)`로 발행 시각을 Date로
+바꾸는데, BE에서 날짜로 못 읽는 값이 한 건이라도 오면 Invalid Date가 된다. Invalid Date는 만들 때는 조용하고
+Next가 사이트맵을 XML로 직렬화하면서 `toISOString()`을 부르는 순간 RangeError를 던진다. 수집 함수는 "던지지
+않는다"를 계약으로 걸어 놓고 정작 그 값을 쓰는 자리가 try/catch 밖이었다. 기사 2,948건 중 한 건의 데이터
+결함이 사이트맵 전체 500으로 번지는 구조다. KAN-652 이전 코드도 똑같았으니 예전부터 있던 구멍을 그대로
+되살린 셈이다. 변환을 수집 함수 안으로 옮겼다. `SitemapArticle.publishedAt`을 `Date | null`로 바꿔 못 읽는
+값이면 null을 주고, 앱은 null이면 그 기사의 `lastModified`만 뺀다. 기사 자체를 버리지 않는 이유는 URL은
+멀쩡하기 때문이다.
+
+INFO 하나는 두 앱 `sitemap.ts`의 조립 부분에 테스트가 없다는 것이었다. 수집 함수만 테스트했고 "릴 딥링크가
+안 실린다", "경기에 lastModified가 없다"는 실측 표에만 있었다. 저장소에 앱 라우트를 직접 부르는 테스트
+방식이 이미 있어서(`register.mjs`가 `@/` alias를 풀어 준다) 같은 파일에 두 앱 사이트맵을 불러 보는 테스트
+넷을 더했다. 기사와 경기 URL이 실리는지, 릴 딥링크와 `/me`가 없는지, URL이 중복되지 않는지, 깨진 발행
+시각이 `lastModified` 없이 나가는지, BE가 전부 502여도 정적 라우트는 나가는지를 본다.
+
+나머지 둘은 고치지 않고 판단만 적는다. 모바일 사이트맵에도 기사 3,000건을 싣는 게 맞느냐는 지적은,
+모바일 기사의 canonical이 데스크톱 URL이라 색인 정본은 어차피 데스크톱이라는 점에서 일리가 있다. 다만
+구글의 별도 모바일 URL 패턴은 데스크톱의 `rel="alternate"`와 모바일의 `rel="canonical"`이 짝으로 확인돼야
+성립하고, 그러려면 크롤러가 모바일 URL도 받아 봐야 한다. KAN-346부터 KAN-652 전까지 모바일 사이트맵이
+기사를 실어 온 것도 그 이유라 예전 상태로 되돌렸다. 순차 99회 왕복의 지연은 위 검증 절에 적은 대로 BE
+사이트맵 전용 엔드포인트가 답이고 이번 범위 밖이다.
 
 ## 남은 것
 
