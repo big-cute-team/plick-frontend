@@ -52,7 +52,8 @@ export async function generateMetadata({
     return {
       title: reel.title,
       description,
-      // 색인 제외 (KAN-652) — 기사 상세와 같은 이유. 릴은 같은 요약을 세로로 보여줄 뿐이다
+      // 색인 제외 (KAN-652, KAN-738에서 유지). 릴은 기사와 같은 요약을 세로로 보여 주는 화면이라
+      // 색인 정본은 기사(`/articles/{id}`) 하나로 둔다. 링크는 따라가게 둔다
       robots: { index: false, follow: true },
       alternates: { canonical: `${WEB_SITE_URL}/reels/${reel.id}` },
       openGraph: {

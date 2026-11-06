@@ -23,10 +23,14 @@ import {
  * 답글 수에만), 오른쪽에 신고와 차단이다. 작은 글자 버튼은 세로 패딩으로 터치 목표를 넓힌다.
  *
  * 행을 누르면 의견 상세(답글) 화면으로 간다(KAN-698, 시안 가이드 §5.6 "앱: 의견을 누르면 의견
- * 상세 화면"). 안에 버튼이 있어 `<a>`로 감쌀 수 없으니 `role=button`에 라우터 push다. 하단 액션
- * 줄은 전파를 막아 하트나 신고를 눌렀을 때 화면이 넘어가지 않게 한다. 시트와 팝업은 포털인데
- * React 이벤트는 포털 밖 조상으로도 올라오므로 같은 가드가 그 안의 탭도 막는다. 경기 id를
+ * 상세 화면"). 안에 버튼이 있어 `<a>`로 감쌀 수 없으니 `role=button`에 라우터 push다. 경기 id를
  * 쿼리로 같이 보내 상세 화면이 403에서도 돌아갈 경기를 안다.
+ *
+ * 하단 액션 줄은 전파를 막아 하트나 신고를 눌렀을 때 화면이 넘어가지 않게 한다. 시트와 팝업은
+ * 포털인데 React 이벤트는 포털 밖 조상으로도 올라오므로 같은 가드가 그 안의 탭도 막는다. 다만
+ * 막는 건 버튼과 시트의 탭뿐이다(KAN-737). `답글 [n]`은 행과 같이 상세로 가는 버튼이고, 줄의 빈
+ * 자리(이벤트 대상이 줄 자신)도 행처럼 상세로 간다. 전에는 `답글 [n]`이 글자였고 줄 전체가 탭을
+ * 삼켜 눌러도 아무 일이 없었다.
  *
  * `detail`이면 의견 상세 화면 맨 위의 원 의견이다. 말줄임이 없고 행 자체가 버튼이 아니며 `답글
  * [n]`은 그 아래 머리글이 따로 그려 액션 줄에서 뺀다.
@@ -131,26 +135,34 @@ export function PredictionOpinionRow({
           >
             {opinion.opinion}
           </p>
-          {/* 액션 줄의 탭은 행 열기로 올라가지 않는다. 포털 시트 안의 탭도 여기서 멈춘다 */}
+          {/* 버튼과 포털 시트의 탭은 여기서 멈추고, 줄의 빈 자리는 행처럼 상세로 간다 */}
           <div
             className="flex items-center gap-3.5 pt-2.5"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (navigable && e.target === e.currentTarget) open();
+            }}
             onKeyDown={(e) => e.stopPropagation()}
           >
             <OpinionLikeButton opinion={opinion} matchId={matchId} />
             {!detail && opinion.replyCount > 0 && (
-              <span className="flex items-baseline gap-0.75">
+              <button
+                type="button"
+                onClick={open}
+                className="-my-3 flex items-baseline gap-0.75 py-3 active:opacity-60"
+              >
                 <span className="text-label text-text-3">답글</span>
                 <span className="text-label text-danger-strong font-bold tabular-nums">
                   [{opinion.replyCount}]
                 </span>
-              </span>
+              </button>
             )}
-            <div className="flex-1" />
-            <PredictionMoreActions
-              target={{ kind: "opinion", id: opinion.id }}
-              author={opinion.author}
-            />
+            <div className="ml-auto flex items-center gap-3.5">
+              <PredictionMoreActions
+                target={{ kind: "opinion", id: opinion.id }}
+                author={opinion.author}
+              />
+            </div>
           </div>
         </>
       )}
