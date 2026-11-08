@@ -126,6 +126,22 @@ export function copyrightNotice(
 }
 
 /**
+ * 서비스 버전의 단일 출처 (KAN-741). Semantic Versioning을 따르고 prod 배포 이력은
+ * 루트 `CHANGELOG.md`에 있다. 루트와 두 앱 `package.json`, CHANGELOG 맨 위 항목과
+ * 같아야 하며 `tests/unit/app-version.test.mjs`가 어긋남을 잡는다.
+ */
+export const APP_VERSION = "2.10.0";
+
+/**
+ * 화면 하단에 표시하는 버전 라벨 (KAN-741).
+ *
+ * @example appVersionLabel() // "해축이모 v2.10.0"
+ */
+export function appVersionLabel(): string {
+  return `${BRAND_NAME_KO} v${APP_VERSION}`;
+}
+
+/**
  * 앱 스토어 페이지 (KAN-711). 모바일 웹 앱 다운로드 팝업이 OS에 맞는 쪽으로 보낸다. 앱 셸
  * 저장소(plick-AppShell)의 `eas.json` App Store Connect ID와 `app.config.ts` 패키지명이 출처다.
  * 앱 셸이 바뀌면 여기도 같이 고친다.

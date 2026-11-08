@@ -11,8 +11,10 @@
  */
 
 import { createServer } from "node:http";
+import { APP_VERSION } from "@plick/domain/brand";
 import {
   Counter,
+  Gauge,
   Histogram,
   Registry,
   collectDefaultMetrics,
@@ -74,6 +76,7 @@ export function normalizePath(path: string): string {
  * - `plick_request_error_total`: Next `onRequestError`로 올라온 에러 수
  * - `plick_client_error_total`: 브라우저 에러 경계가 보고 라우트로 알려 온 에러 수
  *   (KAN-457). 경계 이름과 에러 이름만 라벨로 받는다.
+ * - `plick_build_info`: 값은 항상 1이고 `version` 라벨로 떠 있는 릴리스를 알린다 (KAN-741)
  *
  * 포트가 이미 쓰이고 있으면(dev 재시작 겹침 등) 경고만 남기고 앱은 그대로 뜬다.
  * 메트릭 때문에 서비스가 못 뜨는 일은 없어야 한다.
@@ -86,6 +89,13 @@ export function startMetricsServer(
   const registry = new Registry();
   registry.setDefaultLabels({ app: options.app });
   collectDefaultMetrics({ register: registry });
+
+  new Gauge({
+    name: "plick_build_info",
+    help: "떠 있는 릴리스 버전 (값은 항상 1)",
+    labelNames: ["version"] as const,
+    registers: [registry],
+  }).set({ version: APP_VERSION }, 1);
 
   const beRequests = new Counter({
     name: "plick_be_request_total",
