@@ -104,7 +104,7 @@ export function PostListItem({
           </ArticleLink>
         </Title>
         {post.commentCount > 0 && (
-          <span className="text-label-lg text-danger-strong shrink-0 font-black">
+          <span className="text-label-lg text-comment-count shrink-0 font-black">
             [{formatCount(post.commentCount)}]
           </span>
         )}
@@ -125,7 +125,7 @@ export function PostListItem({
         {formatCount(post.views)}
       </span>
       <span
-        className={`${POST_TABLE_CELL_LG} text-label text-accent text-center font-bold`}
+        className={`${POST_TABLE_CELL_LG} text-label text-like text-center font-bold`}
       >
         {formatCount(post.likeCount)}
       </span>

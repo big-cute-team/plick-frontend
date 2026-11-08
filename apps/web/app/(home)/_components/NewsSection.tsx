@@ -50,7 +50,7 @@ export async function NewsSection({ team }: { team: Filter }) {
       )}
       <div className="flex items-baseline gap-2.5 pb-1.5">
         <h2 className="text-body-lg text-text-strong font-black tracking-tight">
-          새로 올라온 이슈
+          <span aria-hidden>🎯</span> 새로 올라온 이슈
         </h2>
         <span className="text-caption-lg text-text-3">{renderedAt} 갱신</span>
         <div aria-hidden className="flex-1" />

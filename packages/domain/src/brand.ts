@@ -33,11 +33,14 @@ export const BRAND_FORMER_NAMES = ["플릭", "PLick"] as const;
 /** 로고 옆 태그라인 — 웹 상단 바. */
 export const BRAND_TAGLINE = "해외축구 이슈 모음";
 
-/** 서비스 한 줄 요약 — 루트 기본 title 뒷부분과 앱 manifest description이 같은 값이다. */
+/** 서비스 한 줄 요약 — 앱 manifest description이다. */
 export const BRAND_SUMMARY = "해외축구 이적 루머와 이슈 모음";
 
-/** 루트 기본 title — 브랜드 검색("해축이모")의 파란 제목 줄. */
-export const BRAND_TITLE = `${BRAND_NAME_KO} / ${BRAND_SUMMARY}`;
+/** 루트 기본 title (KAN-742). 홈과 전체 탭의 브라우저 탭 이름이자 웹 상단 바의 부제목이다. */
+export const BRAND_TITLE = "국내에서 가장 빠른 AI기반 실시간 뉴스 플랫폼";
+
+/** 태그라인까지 붙인 전체 제목 (KAN-742). 홈 공유 카드의 og:title, twitter:title이다. */
+export const BRAND_FULL_TITLE = `${BRAND_TAGLINE} : ${BRAND_TITLE}`;
 
 /** 하위 페이지 title 템플릿 — "릴스 | 해축이모"처럼 감싼다. */
 export const BRAND_TITLE_TEMPLATE = "%s | 해축이모";
@@ -62,14 +65,14 @@ export const BRAND_DESCRIPTION =
  */
 export const PAGE_DESCRIPTIONS = {
   reels:
-    "프리미어리그 이적 루머와 소식을 짧은 릴스로 넘겨보세요. 리버풀부터 맨시티까지 EPL 이적시장 소식을 스와이프로 빠르게 확인하세요.",
+    "프리미어리그 이적 루머와 소식을 짧은 릴스로 넘겨보세요. 리버풀부터 맨체스터 시티까지 EPL 이적시장 소식을 스와이프로 빠르게 확인하세요.",
   articles:
-    "프리미어리그 이적 기사 모아보기. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티 등 팀별 이적 루머와 오피셜 소식을 최신순으로 확인하세요.",
+    "프리미어리그 이적 기사 모아보기. 리버풀, 토트넘, 아스날, 맨체스터 유나이티드, 첼시, 맨체스터 시티 등 팀별 이적 루머와 오피셜 소식을 최신순으로 확인하세요.",
   debates:
     "VS에서 축구 밸런스게임과 승부예측에 참여하고 팬들의 여론과 시즌 랭킹을 확인하세요.",
   rankings:
     "해축이모 승부예측 시즌 랭킹. 적중률 높은 팬들의 예측 기록과 연속 적중, 내 순위를 확인하세요.",
-  live: "프리미어리그 빅6 라이브 스코어. 리버풀, 토트넘, 아스날, 맨유, 첼시, 맨시티의 경기 일정과 실시간 스코어, 라인업, 경기 스탯을 확인하세요.",
+  live: "프리미어리그 빅6 라이브 스코어. 리버풀, 토트넘, 아스날, 맨체스터 유나이티드, 첼시, 맨체스터 시티의 경기 일정과 실시간 스코어, 라인업, 경기 스탯을 확인하세요.",
   standings:
     "프리미어리그 순위표. 승점과 득실차, 챔피언스리그 진출권까지 EPL 20팀의 순위를 확인하세요.",
   login:

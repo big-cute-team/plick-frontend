@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CHAT_ENABLED } from "@plick/core/chat";
+import { LivePulse } from "@plick/ui/LivePulse";
 import { AppShell } from "@/_components/AppShell";
 import { SubTopBar } from "@/_components/SubTopBar";
 import { LiveChatPanel } from "@/live/_components/LiveChatPanel";
 
 /** 로그인해야 보이는 대화 지면이라 색인 가치가 없다. */
 export const metadata: Metadata = {
-  title: "채팅방",
+  title: "해외축구 LIVE",
   robots: { index: false, follow: false },
 };
 
@@ -24,7 +25,12 @@ export default function LiveChatPage() {
 
   return (
     <AppShell>
-      <SubTopBar title="채팅방" backHref="/live" backBehavior="back" />
+      <SubTopBar
+        title="해외축구 LIVE"
+        titleIcon={<LivePulse />}
+        backHref="/live"
+        backBehavior="back"
+      />
       <div className="flex min-h-0 flex-1 flex-col">
         <LiveChatPanel />
       </div>

@@ -46,7 +46,7 @@ export async function NewsSection({ team }: { team: Filter }) {
         />
       )}
       <h2 className="text-body-lg text-text-strong tracking-section px-edge pb-2 font-black">
-        지금 올라온 소식
+        <span aria-hidden>🎯</span> 지금 올라온 소식
       </h2>
       <NewsFeed initial={initial} initialTeam={team} />
     </section>

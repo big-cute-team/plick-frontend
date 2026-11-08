@@ -130,8 +130,18 @@ export function PredictionHomeCard({
           size === "lg" ? "gap-2.5 py-3.5" : "gap-3 py-2.5"
         }`}
       >
-        <span className="flex min-w-0 items-center justify-end gap-2">
-          <span className={`text-body-lg truncate font-bold ${strong}`}>
+        {/* 풀네임은 두 줄까지 (KAN-742). 잘리면 맨체스터 두 팀이 같은 글자로 보인다. 웹 카드는
+            폭이 좁아 엠블럼을 이름 위로 올린다 */}
+        <span
+          className={`flex min-w-0 items-center gap-2 ${
+            size === "lg" ? "flex-col-reverse" : "justify-end"
+          }`}
+        >
+          <span
+            className={`text-body-lg line-clamp-2 leading-tight font-bold break-keep ${
+              size === "lg" ? "text-center" : "text-right"
+            } ${strong}`}
+          >
             {teams.home}
           </span>
           <LiveCrest team={card.home} size={crest} decorative />
@@ -142,9 +152,17 @@ export function PredictionHomeCard({
         >
           vs
         </span>
-        <span className="flex min-w-0 items-center gap-2">
+        <span
+          className={`flex min-w-0 items-center gap-2 ${
+            size === "lg" ? "flex-col" : ""
+          }`}
+        >
           <LiveCrest team={card.away} size={crest} decorative />
-          <span className={`text-body-lg truncate font-bold ${strong}`}>
+          <span
+            className={`text-body-lg line-clamp-2 leading-tight font-bold break-keep ${
+              size === "lg" ? "text-center" : ""
+            } ${strong}`}
+          >
             {teams.away}
           </span>
         </span>

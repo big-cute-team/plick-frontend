@@ -21,9 +21,9 @@ const LoginPromptDialog = dynamic(
 );
 
 /**
- * 기사 세부 좋아요 버튼 (KAN-308). 본문 밑 액션 줄의 하트(18px) + 수(13.5/700).
- * 시안(KAN-567)대로 테두리 없는 텍스트 버튼이고, 누르면 하트와 숫자가 빨강으로
- * 찬다(빨강은 하트·댓글 수 같은 신호에만 쓰는 시안 규칙). 기본은 text-2다.
+ * 기사 세부 좋아요 버튼 (KAN-308, 색 KAN-742). 본문 밑 액션 줄의 하트(18px) + 수.
+ * 테두리 없는 텍스트 버튼이고 하트와 수는 핑크다. 누르기 전엔 빈 하트에 얇은 수,
+ * 누르면 찬 하트에 볼드 수다.
  *
  * 서버 컴포넌트인 `ArticleBody`에서 이 버튼만 클라 경계로 떼어 냈다 — 본문
  * 전체를 클라로 내리면 문단·관련 기사까지 번들에 실린다.
@@ -68,8 +68,8 @@ export function ArticleLikeButton({
         /* 이름에 보이는 수를 담는다. 눌린 상태는 aria-pressed가 읽는다 (KAN-670) */
         aria-label={`좋아요 ${formatCount(state.likeCount)}`}
         className={`${
-          state.liked ? "text-danger-strong" : "text-text-2"
-        } text-body flex items-center gap-1.5 font-bold active:opacity-60`}
+          state.liked ? "font-bold" : "font-light"
+        } text-like text-body flex items-center gap-1.5 active:opacity-60`}
       >
         <LikeIcon size={18} filled={state.liked} />
         {formatCount(state.likeCount)}

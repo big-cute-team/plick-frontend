@@ -19,7 +19,8 @@
 앱은 라이트 고정이다(`<html data-theme="light">`, KAN-567 리디자인). 테마 토글 UI는 없고 옛 다크
 팔레트는 `theme.css`의 `[data-theme="dark"]` 블록에 잠들어 있다. 화면은 라이트 기준으로만 만들되 색은
 토큰으로 쓴다. 라운드 토큰은 앱만 둥글고 웹은 `globals.css`가 0으로 덮어 각지다. 빨강(`danger`)은
-댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만 쓴다. 회색 글자 하한은 `text-4`(#767676)다.
+댓글 수, 새 글 `NEW`, BEST, VS, LIVE에만 쓴다. 하트와 좋아요 수는 핑크(`like`), 기사 제목 옆 댓글 수는
+밝은 빨강(`comment-count`), AI 표시는 보라(`ai`)다. 회색 글자 하한은 `text-4`(#767676)다.
 
 파일은 kebab-case, 컴포넌트는 PascalCase, 훅은 useXxx, 상수는 UPPER_SNAKE.
 

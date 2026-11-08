@@ -47,7 +47,7 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
           {article.title}
         </span>
         {article.commentCount > 0 && (
-          <span className="text-label-lg text-danger-strong shrink-0 font-black">
+          <span className="text-label-lg text-comment-count shrink-0 font-black">
             [{article.commentCount}]
           </span>
         )}

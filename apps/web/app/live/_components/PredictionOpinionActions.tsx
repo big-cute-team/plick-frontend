@@ -46,11 +46,7 @@ export function OpinionLikeButton({
         onClick={like.toggle}
         aria-pressed={opinion.liked}
         aria-label={`공감 ${formatCount(opinion.likeCount)}`}
-        className={`text-label focus-visible:outline-accent inline-flex items-center gap-1 font-bold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          opinion.liked
-            ? "text-danger-strong"
-            : "text-text-3 hover:text-danger-strong"
-        }`}
+        className="text-label text-like focus-visible:outline-accent inline-flex items-center gap-1 font-bold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         <HeartMiniIcon size={13} filled={opinion.liked} />
         {formatCount(opinion.likeCount)}

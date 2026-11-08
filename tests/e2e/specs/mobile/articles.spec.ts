@@ -24,7 +24,9 @@ test.describe("기사", () => {
     await expect(
       page.getByRole("main").getByRole("heading", { level: 1 }),
     ).toHaveText(title!);
-    await expect(page.getByRole("link", { name: "원문 보기" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "원문 기사 바로가기" }),
+    ).toBeVisible();
     /* 기사 좋아요와 댓글 좋아요가 같은 이름이라 첫 번째(기사)만 본다 */
     await expect(
       page.getByRole("main").getByRole("button", { name: "좋아요" }).first(),
@@ -77,7 +79,7 @@ test.describe("기사", () => {
   test("팀 필터를 눌러도 홈(팀 허브)에 머문다", async ({ page }) => {
     await page.goto("/");
     await mobileNewsFeed(page)
-      .getByRole("link", { name: "맨유", exact: true })
+      .getByRole("link", { name: "맨체스터 유나이티드", exact: true })
       .click();
     await expect(page).toHaveURL(/\/teams\/manchester-united$/);
     await expect(

@@ -8,7 +8,7 @@ import type { ReelCard } from "@plick/domain/types";
  * 릴 오른쪽 아래에 본문색 아이콘으로 겹쳐 선다(KAN-569에서 전 배치로 되돌렸고,
  * KAN-574에서 흰 아이콘과 그림자를 걷었다).
  *
- * 좋아요는 눌리면 하트와 수가 빨강으로 찬다 (KAN-308, 색은 KAN-567 톤). 토글 로직과
+ * 좋아요는 핑크다 (KAN-742). 누르기 전엔 빈 하트에 얇은 수, 누르면 찬 하트에 볼드 수다. 토글 로직과
  * 상태 반영은 부모가 {@link useReelLike}로 들고 있고 여기는 표시와 탭만 맡는다.
  * 비로그인 시트는 부모 층이 그린다. 레일에 필터나 transform이 걸리면 화면 전체
  * 오버레이의 기준 상자가 레일이 돼 시트가 레일만 덮는다.
@@ -37,6 +37,7 @@ export function ReelActionRail({
         icon={<LikeIcon size={34} filled={liked} />}
         label={formatCount(reel.likeCount)}
         onClick={onLike}
+        like
         active={liked}
         ariaLabel="좋아요"
         ariaPressed={liked}
@@ -59,7 +60,8 @@ export function ReelActionRail({
 /**
  * 액션 레일 버튼 하나 (아이콘 + 라벨). 밝은 바탕 위라 본문색이다 (KAN-574).
  *
- * @param active - 켜진 토글(눌린 좋아요)이면 아이콘과 수를 빨강으로
+ * @param like - 좋아요 버튼이면 아이콘과 수가 핑크다
+ * @param active - 눌린 좋아요면 수가 볼드, 아니면 얇다
  * @param ariaLabel - 라벨이 숫자뿐이라 스크린리더가 무슨 버튼인지 못 읽는 자리에 단다. 보이는 숫자를
  *   뒤에 붙여 이름에 담는다(음성 명령은 보이는 글자로 부른다, label-content-name-mismatch, KAN-670)
  * @param ariaPressed - 토글 버튼이면 눌린 상태
@@ -68,6 +70,7 @@ function RailAction({
   icon,
   label,
   onClick,
+  like,
   active,
   ariaLabel,
   ariaPressed,
@@ -75,6 +78,7 @@ function RailAction({
   icon: ReactNode;
   label: string;
   onClick?: () => void;
+  like?: boolean;
   active?: boolean;
   ariaLabel?: string;
   ariaPressed?: boolean;
@@ -86,11 +90,15 @@ function RailAction({
       aria-label={ariaLabel && `${ariaLabel} ${label}`}
       aria-pressed={ariaPressed}
       className={`${
-        active ? "text-danger-strong" : "text-text-strong"
+        like ? "text-like" : "text-text-strong"
       } flex flex-col items-center gap-1.25 active:opacity-60`}
     >
       {icon}
-      <span className="text-label font-bold">{label}</span>
+      <span
+        className={`text-label ${like && !active ? "font-light" : "font-bold"}`}
+      >
+        {label}
+      </span>
     </button>
   );
 }

@@ -56,6 +56,13 @@
   /* 경고(옐로 카드) */
   --plk-warn: #a86f00;
   --plk-confirmed: #7c3aed;
+  /* AI 표시 아이콘(반짝이) 전용 보라 (KAN-742) */
+  --plk-ai: #7424ff;
+  /* "실시간 AI 기사" 그라데이션의 끝색. 시작색은 --plk-ai다 (KAN-742) */
+  --plk-ai-pink: #ff2e93;
+  /* 기사 제목 옆 댓글 수 [N]의 밝은 빨강, 좋아요 하트와 수의 핑크 (KAN-742) */
+  --plk-comment-count: #ff3b30;
+  --plk-like: #ec4899;
 
   /* 투표 카드 (VoteCard) */
   --plk-vote-card: rgba(20, 25, 35, 0.06);
@@ -167,6 +174,10 @@
   --plk-info: #60a5fa;
   --plk-warn: #fbbf24;
   --plk-confirmed: #a78bfa;
+  --plk-ai: #a78bfa;
+  --plk-ai-pink: #f472b6;
+  --plk-comment-count: #ff6b63;
+  --plk-like: #f472b6;
 
   --plk-vote-card: rgba(148, 163, 184, 0.09);
   --plk-vote-track: rgba(148, 163, 184, 0.06);
@@ -222,6 +233,10 @@
   --color-info: var(--plk-info);
   --color-warn: var(--plk-warn);
   --color-confirmed: var(--plk-confirmed);
+  --color-ai: var(--plk-ai);
+  --color-ai-pink: var(--plk-ai-pink);
+  --color-comment-count: var(--plk-comment-count);
+  --color-like: var(--plk-like);
 
   --color-vote-card: var(--plk-vote-card);
   --color-vote-track: var(--plk-vote-track);

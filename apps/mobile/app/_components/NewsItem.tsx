@@ -88,22 +88,20 @@ export function NewsItem({
             </ArticleLink>
           </h3>
           {article.commentCount > 0 && (
-            <span className="text-body text-danger-strong shrink-0 font-bold">
+            <span className="text-body text-comment-count shrink-0 font-bold">
               [{formatCount(article.commentCount)}]
             </span>
           )}
+          {isNew && <NewBadge />}
         </div>
         {summary && (
           <p className="text-label text-text-3 mt-1 truncate">{summary}</p>
         )}
       </div>
       <div className="w-reporter flex shrink-0 flex-col items-end gap-0.75">
-        <div className="flex items-center gap-1">
-          <span className="text-caption text-text-4" suppressHydrationWarning>
-            {formatRelativeTime(article.publishedAt)}
-          </span>
-          {isNew && <NewBadge />}
-        </div>
+        <span className="text-caption text-text-4" suppressHydrationWarning>
+          {formatRelativeTime(article.publishedAt)}
+        </span>
         {article.reporter && (
           <span className="text-caption text-text-3 max-w-full truncate font-bold">
             {article.reporter.name}

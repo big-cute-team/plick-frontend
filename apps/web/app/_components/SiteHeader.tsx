@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND_TAGLINE } from "@plick/domain/brand";
+import { BRAND_TITLE } from "@plick/domain/brand";
 import { Logo } from "@plick/ui/Logo";
 import { NavLinks } from "./NavLinks";
 import { ProfileMenu } from "./ProfileMenu";
@@ -32,8 +32,8 @@ export function SiteHeader() {
         >
           <Logo height={40} />
         </Link>
-        <span className="text-caption-lg text-text-3 hidden tracking-tight sm:inline">
-          {BRAND_TAGLINE}
+        <span className="text-label-lg text-text hidden min-w-0 truncate tracking-tight sm:block">
+          {BRAND_TITLE}
         </span>
 
         <div aria-hidden className="flex-1" />

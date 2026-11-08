@@ -147,9 +147,7 @@ function ReplyLikeButton({
         onClick={like.toggle}
         aria-pressed={reply.liked}
         aria-label={`공감 ${formatCount(reply.likeCount)}`}
-        className={`${
-          reply.liked ? "text-danger-strong" : "text-text-3"
-        } text-label -my-3 flex items-center gap-1 py-3 font-bold tabular-nums active:opacity-60`}
+        className="text-like text-label -my-3 flex items-center gap-1 py-3 font-bold tabular-nums active:opacity-60"
       >
         <HeartMiniIcon size={13} filled={reply.liked} />
         {formatCount(reply.likeCount)}
