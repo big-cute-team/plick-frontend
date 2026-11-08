@@ -457,9 +457,7 @@ function CommentLikeButton({
         onClick={like.toggle}
         aria-pressed={comment.liked}
         aria-label={`좋아요 ${formatCount(comment.likeCount)}`}
-        className={`${
-          comment.liked ? "text-danger-strong" : "text-text-3"
-        } text-caption-lg flex items-center gap-1 font-bold active:opacity-60`}
+        className="text-like text-caption-lg flex items-center gap-1 font-bold active:opacity-60"
       >
         <HeartMiniIcon size={13} filled={comment.liked} />
         {formatCount(comment.likeCount)}

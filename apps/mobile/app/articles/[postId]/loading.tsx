@@ -30,6 +30,8 @@ export default function ArticleDetailLoading() {
           </div>
           {/* 기자와 시각, 조회 */}
           <div className="bg-elevate rounded-pill h-3.5 w-1/2" />
+          {/* 고정 부제목 */}
+          <div className="bg-elevate rounded-pill h-3.5 w-24" />
           {/* 본문 문단 */}
           <div className="flex flex-col gap-2.5">
             <div className="bg-elevate rounded-pill h-4 w-full" />

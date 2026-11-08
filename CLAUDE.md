@@ -108,6 +108,9 @@ CI(format:check, test:hooks, test:unit, lint, check-types, build)는 로컬에�
 
 `main`은 릴리스용이다. `develop`에서 `main`으로 병합하는 건 사용자가 직접 한다. 병합은 클로드가 하지 않는다.
 
+서비스 버전은 Semantic Versioning이고 단일 출처는 `@plick/domain/brand`의 `APP_VERSION`이다. 올릴 때는
+루트와 두 앱 `package.json`, `CHANGELOG.md` 맨 위 항목을 같이 고친다. 어긋나면 `pnpm test:unit`이 실패한다.
+
 `gh pr create`, `gh pr merge`, main·develop 직접 push와 commit, `git commit --no-verify`,
 `pnpm-lock.yaml`·`node_modules`·`.next` 편집은 권한 deny와 가드 훅이 도구 호출 시점에 막는다.
 차단되면 우회하지 않고 사용자에게 이유를 전한다.

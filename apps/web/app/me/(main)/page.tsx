@@ -137,7 +137,9 @@ export default async function MyPage({
         {initial && (
           <span className="text-label-lg text-text-3 ml-auto">
             댓글 {initial.counts.commentCount}, 좋아요{" "}
-            {initial.counts.likeCount}
+            <span className="text-like font-bold">
+              {initial.counts.likeCount}
+            </span>
           </span>
         )}
       </div>

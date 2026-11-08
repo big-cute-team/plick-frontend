@@ -23,6 +23,36 @@ function base({ size = 20, ...props }: IconProps) {
   };
 }
 
+/**
+ * AI 표시 반짝이 (KAN-742). 큰 별 하나와 작은 별 하나를 면으로 채운다. 시안 벡터가 없어
+ * 흔히 쓰는 꼴로 직접 그렸다. 색은 호출부가 `text-ai`로 주거나 `gradientId`로 보라-핑크 그라데이션을 쓴다.
+ *
+ * @param size - 렌더 크기(px)
+ * @param gradientId - 넘기면 이 id로 보라-핑크 그라데이션을 정의해 칠한다
+ */
+export const SparkleIcon = ({
+  gradientId,
+  ...p
+}: IconProps & { gradientId?: string }) => (
+  <svg
+    {...base(p)}
+    fill={gradientId ? `url(#${gradientId})` : "currentColor"}
+    stroke="none"
+    aria-hidden
+  >
+    {gradientId && (
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="var(--plk-ai)" />
+          <stop offset="1" stopColor="var(--plk-ai-pink)" />
+        </linearGradient>
+      </defs>
+    )}
+    <path d="M10.5 3.5l1.9 5.1a3 3 0 0 0 1.8 1.8l5.1 1.9-5.1 1.9a3 3 0 0 0-1.8 1.8l-1.9 5.1-1.9-5.1a3 3 0 0 0-1.8-1.8l-5.1-1.9 5.1-1.9a3 3 0 0 0 1.8-1.8z" />
+    <path d="M19 2l.7 1.9a1.2 1.2 0 0 0 .7.7l1.9.7-1.9.7a1.2 1.2 0 0 0-.7.7L19 8.6l-.7-1.9a1.2 1.2 0 0 0-.7-.7l-1.9-.7 1.9-.7a1.2 1.2 0 0 0 .7-.7z" />
+  </svg>
+);
+
 export const HomeIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M3 10.5 12 3l9 7.5" />

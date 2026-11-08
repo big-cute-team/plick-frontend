@@ -1,5 +1,8 @@
+import { APP_VERSION } from "@plick/domain/brand";
+
 /**
- * ALB 대상 그룹 헬스체크 경로 (KAN-334).
+ * ALB 대상 그룹 헬스체크 경로 (KAN-334). 응답의 `version`은 어느 릴리스가 떠 있는지
+ * 확인하는 용도다(KAN-741). ALB와 배포 훅은 상태 코드만 본다.
  *
  * ALB 헬스체크 기본값인 `/`를 그대로 쓰면 안 된다. `/`는 홈이라 서버 컴포넌트가
  * BE로 fetch를 나가는데, BE가 잠깐 흔들려 500이 나면 ALB는 그걸 "인스턴스가
@@ -11,5 +14,5 @@
  * `proxy.ts`의 matcher가 `api`를 제외하므로 토큰 갱신 미들웨어도 타지 않는다.
  */
 export function GET() {
-  return Response.json({ status: "ok" });
+  return Response.json({ status: "ok", version: APP_VERSION });
 }

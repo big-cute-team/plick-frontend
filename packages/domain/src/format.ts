@@ -445,7 +445,7 @@ export function formatRelativeTime(
 }
 
 /**
- * 발행 후 30분 안의 기사인가 (KAN-481) — 목록의 NEW 태그 판정. 창 길이는
+ * 발행 직후의 기사인가 (KAN-481) — 목록의 NEW 태그 판정. 창 길이는
  * `NEW_ARTICLE_WINDOW_MS`가 정한다.
  *
  * 미래 시각(서버·기기 시계 차이)도 방금 올라온 것으로 본다 — 음수 차이를 거르면

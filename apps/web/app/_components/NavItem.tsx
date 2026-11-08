@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { teamHubPath } from "@plick/domain/format";
+import { LivePulse } from "@plick/ui/LivePulse";
 import { FEED_SURFACE_BY_PATH } from "@/_constants/app";
 import { useFeedRefresh } from "@/_hooks/useFeedRefresh";
 import { useViewState } from "@/_stores/view-state";
 
 /**
  * 상단 바 탭 하나 (KAN-567, 시안 "상단 바" 둘째 줄) — 13.5px, 활성이면 700 제목색에
- * 2px 강조색 밑줄, 비활성이면 500 보조색이고 hover에 제목색. LIVE 탭은 빨간 점
- * 5px과 빨간 글자이고 활성 밑줄도 빨강이다(시안이 LIVE만 그렇게 그린다). 전에는
+ * 2px 강조색 밑줄, 비활성이면 500 보조색이고 hover에 제목색. LIVE 탭은 고리가 퍼지는
+ * 빨간 점(KAN-742)과 빨간 글자이고 활성 밑줄도 빨강이다(시안이 LIVE만 그렇게 그린다). 전에는
  * accent 필(pill)이었다.
  *
  * 홈 링크의 목적지는 고정 경로가 아니라 마지막으로 보던 팀 필터의 URL이다
@@ -64,7 +65,7 @@ export function NavItem({
         window.scrollTo({ top: 0 });
         void refreshFeed(FEED_SURFACE_BY_PATH[href]);
       }}
-      className={`text-body focus-visible:outline-accent flex h-9.5 shrink-0 items-center gap-1.25 border-b-2 px-3 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
+      className={`text-body focus-visible:outline-accent flex h-9.5 shrink-0 items-center gap-1.75 border-b-2 px-3 whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 ${
         live
           ? `text-danger-strong font-bold ${active ? "border-danger" : "border-transparent"}`
           : active
@@ -72,9 +73,7 @@ export function NavItem({
             : "text-text-3 hover:text-text-strong border-transparent font-medium"
       } ${className}`}
     >
-      {live && (
-        <span aria-hidden className="bg-danger size-1.25 rounded-full" />
-      )}
+      {live && <LivePulse className="size-1.75" />}
       {label}
     </Link>
   );

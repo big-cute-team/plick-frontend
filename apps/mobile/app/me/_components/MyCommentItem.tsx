@@ -28,7 +28,7 @@ export function MyCommentItem({ comment }: { comment: MyComment }) {
       </p>
 
       <div className="flex items-center gap-2.5 pt-1.75 pb-2">
-        <span className="text-danger-strong flex items-center gap-1">
+        <span className="text-like flex items-center gap-1">
           <HeartMiniIcon filled size={13} />
           <span className="text-caption-lg font-bold">
             {formatCount(comment.likeCount)}

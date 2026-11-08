@@ -8,6 +8,9 @@ import { TrendDeltaBadge } from "./TrendDeltaBadge";
 /** 이 순위까지는 번호를 accent로 세운다. 한눈에 상위권이 보이게 하는 장치다. */
 const TREND_HIGHLIGHT_RANK = 3;
 
+/** 번호와 이름을 빨간 볼드로 세우는 순위 (KAN-742). */
+const TREND_TOP_RANK = 1;
+
 /** 구단 줄 왼쪽 크레스트의 한 변 px. 웹 우측 레일에서 이름 자리를 가장 덜 먹는 크기다. */
 const TREND_CREST_SIZE = 26;
 
@@ -76,12 +79,17 @@ export function TrendingRow({
       ? storyPath(String(item.entityId))
       : code && teamHubPath(code);
   const large = size === "lg";
+  const top = item.rank === TREND_TOP_RANK;
 
   const body = (
     <>
       <span
         className={`${large ? "text-body-md" : "text-body"} w-3.5 shrink-0 font-black tabular-nums ${
-          item.rank <= TREND_HIGHLIGHT_RANK ? "text-accent" : "text-text-4"
+          top
+            ? "text-danger-strong"
+            : item.rank <= TREND_HIGHLIGHT_RANK
+              ? "text-accent"
+              : "text-text-4"
         }`}
       >
         {item.rank}
@@ -94,7 +102,13 @@ export function TrendingRow({
         />
       )}
       <span
-        className={`${large ? "text-body text-text-strong font-bold" : "text-label-lg text-text"} group-hover:text-accent min-w-0 flex-1 truncate`}
+        className={`${large ? "text-body" : "text-label-lg"} ${
+          top
+            ? "text-danger-strong font-bold"
+            : large
+              ? "text-text-strong font-bold"
+              : "text-text"
+        } group-hover:text-accent min-w-0 flex-1 truncate`}
       >
         {item.name}
       </span>

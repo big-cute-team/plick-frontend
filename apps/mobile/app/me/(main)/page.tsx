@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ApiError } from "@plick/core/client";
 import { getMyPredictions } from "@plick/core/predictions";
+import { appVersionLabel } from "@plick/domain/brand";
 import { TEAMS } from "@plick/domain/constants";
 import { AppShell } from "@/_components/AppShell";
 import { TabBar } from "@/_components/TabBar";
 import { TopBar } from "@/_components/TopBar";
-import { APP_VERSION_LABEL } from "@/_constants/me";
 import {
   getLikedArticles,
   getMyActivityCounts,
@@ -169,7 +169,7 @@ export default async function MyPage({
               </Link>
             ))}
           </div>
-          <p className="text-caption text-text-4">{APP_VERSION_LABEL}</p>
+          <p className="text-caption text-text-4">{appVersionLabel()}</p>
         </footer>
       </ActivityScrollArea>
 

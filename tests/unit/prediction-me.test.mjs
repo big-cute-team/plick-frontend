@@ -88,8 +88,8 @@ test("보조 줄은 연속, 최고 연속, 통산 기록", () => {
   );
 });
 
-test("팀 표기는 빅6면 레지스트리의 짧은 이름, 아니면 서버 이름", () => {
-  assert.equal(predictionTeamLabel(MUN), "맨유");
+test("팀 표기는 빅6면 레지스트리 이름, 아니면 서버 이름", () => {
+  assert.equal(predictionTeamLabel(MUN), "맨체스터 유나이티드");
   assert.equal(predictionTeamLabel(COV), "코번트리");
 });
 
@@ -101,11 +101,11 @@ test("기록 행 제목은 정산돼 스코어가 있을 때만 점수, 아니�
       status: "SETTLED",
       score: { home: 1, away: 2 },
     }),
-    "맨유 1 - 2 맨시티",
+    "맨체스터 유나이티드 1 - 2 맨체스터 시티",
   );
   assert.equal(
     myPredictionTitle({ home: MUN, away: COV, status: "OPEN", score: null }),
-    "맨유 vs 코번트리",
+    "맨체스터 유나이티드 vs 코번트리",
   );
   assert.equal(
     myPredictionTitle({
@@ -114,14 +114,14 @@ test("기록 행 제목은 정산돼 스코어가 있을 때만 점수, 아니�
       status: "VOID",
       score: null,
     }),
-    "맨유 vs 맨시티",
+    "맨체스터 유나이티드 vs 맨체스터 시티",
   );
 });
 
 test("둘째 줄은 내 예측과 픽", () => {
   assert.equal(
     myPredictionPickLine({ home: MUN, away: MCI, pick: "AWAY" }),
-    "내 예측 맨시티 승",
+    "내 예측 맨체스터 시티 승",
   );
   assert.equal(
     myPredictionPickLine({ home: MUN, away: MCI, pick: "DRAW" }),

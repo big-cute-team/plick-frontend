@@ -57,9 +57,7 @@ export function OpinionLikeButton({
         onClick={like.toggle}
         aria-pressed={opinion.liked}
         aria-label={`공감 ${formatCount(opinion.likeCount)}`}
-        className={`${
-          opinion.liked ? "text-danger-strong" : "text-text-3"
-        } text-label -my-3 flex items-center gap-1 py-3 font-bold tabular-nums active:opacity-60`}
+        className="text-like text-label -my-3 flex items-center gap-1 py-3 font-bold tabular-nums active:opacity-60"
       >
         <HeartMiniIcon size={13} filled={opinion.liked} />
         {formatCount(opinion.likeCount)}

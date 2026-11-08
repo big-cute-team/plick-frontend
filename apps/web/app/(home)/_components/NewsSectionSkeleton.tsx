@@ -10,7 +10,7 @@ export function NewsSectionSkeleton() {
   return (
     <section aria-hidden className="mt-8.5">
       <h2 className="text-body-lg text-text-strong pb-1.5 font-black tracking-tight">
-        새로 올라온 이슈
+        <span aria-hidden>🎯</span> 새로 올라온 이슈
       </h2>
       <div className="border-border flex h-8 animate-pulse items-center gap-3.75 border-b">
         {Array.from({ length: 8 }, (_, i) => (

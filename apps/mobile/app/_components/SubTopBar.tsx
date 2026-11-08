@@ -9,17 +9,20 @@ import { TopBarShell } from "./TopBarShell";
  * EditTopBar 등) 시안이 한 모양이라 하나로 모았다.
  *
  * @param title - 제목. 넘치면 말줄임한다
+ * @param titleIcon - 제목 앞에 붙는 표시
  * @param backHref - 뒤로 가기 목적지(히스토리가 없을 때의 폴백)
  * @param backBehavior - `"back"`이면 히스토리 back 우선(어디서든 들어오는 화면), 기본은 href 이동
  * @param trailing - 오른쪽 액션(공유·더보기 등). 아이콘 색은 text-3이다
  */
 export function SubTopBar({
   title,
+  titleIcon,
   backHref,
   backBehavior = "push",
   trailing,
 }: {
   title: string;
+  titleIcon?: ReactNode;
   backHref: string;
   backBehavior?: "push" | "back";
   trailing?: ReactNode;
@@ -30,8 +33,9 @@ export function SubTopBar({
       innerClassName="gap-3.5 !px-3.5"
     >
       <BackButton href={backHref} behavior={backBehavior} />
-      <h1 className="text-body text-text-strong min-w-0 flex-1 truncate font-bold">
-        {title}
+      <h1 className="text-body text-text-strong flex min-w-0 flex-1 items-center gap-2 font-bold">
+        {titleIcon}
+        <span className="min-w-0 truncate">{title}</span>
       </h1>
       {trailing}
     </TopBarShell>

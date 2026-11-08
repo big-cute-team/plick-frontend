@@ -29,7 +29,7 @@ export function SuggestedArticleCard({ article }: { article: ArticleCard }) {
         {article.title}
       </span>
       {article.commentCount > 0 && (
-        <span className="text-caption-lg text-danger-strong shrink-0 font-bold">
+        <span className="text-caption-lg text-comment-count shrink-0 font-bold">
           [{formatCount(article.commentCount)}]
         </span>
       )}
