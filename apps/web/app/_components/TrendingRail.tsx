@@ -75,7 +75,9 @@ export async function TrendingRail() {
     <section className="border-border-strong border px-3.5 py-3">
       <div className="border-border flex items-baseline justify-between border-b pb-2">
         <h3 className="text-body text-text-strong flex items-baseline gap-2 font-black">
-          실시간 급상승
+          <span>
+            <span aria-hidden>📈</span> 실시간 급상승
+          </span>
           {ranking?.type === "TEAM" && (
             <span className="text-caption text-text-4 font-semibold">
               구단 순위

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CHAT_ENABLED } from "@plick/core/chat";
+import { LivePulse } from "@plick/ui/LivePulse";
 
 /**
  * LIVE 목록 맨 위의 채팅방 배너 (시안 KAN-567, KAN-572 통합 방). 채운 면(radius 16)
@@ -19,7 +20,10 @@ export function ChatRoomBanner() {
         href="/live/chat"
         className="bg-elevate rounded-card flex items-center gap-2 p-3 active:opacity-80"
       >
-        <span className="text-body text-text-strong font-bold">채팅방</span>
+        <LivePulse />
+        <span className="text-body text-text-strong shrink-0 font-bold">
+          해외축구 LIVE
+        </span>
         <span className="text-caption-lg text-text-3 min-w-0 truncate">
           해축 팬들과 실시간 이야기
         </span>

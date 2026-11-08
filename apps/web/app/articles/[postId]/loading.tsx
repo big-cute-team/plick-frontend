@@ -31,8 +31,9 @@ export default function ArticleDetailLoading() {
                 <div className="bg-elevate h-8 w-2/3" />
               </div>
               {/* 기자 · 시각 · 조회 라인 */}
-              <div className="border-border mt-3.5 border-b pb-4">
+              <div className="mt-3.5 flex flex-col gap-2">
                 <div className="bg-elevate h-4 w-1/2" />
+                <div className="bg-elevate h-4 w-24" />
               </div>
               {/* 본문 문단 */}
               <div className="mt-5 flex flex-col gap-3.75">
@@ -47,7 +48,7 @@ export default function ArticleDetailLoading() {
                 <div className="bg-elevate h-4 w-20" />
               </div>
               {/* 좋아요·공유 액션 */}
-              <div className="border-border mt-5.5 flex items-center gap-5.5 border-t pt-5">
+              <div className="mt-5.5 flex items-center gap-5.5">
                 <div className="bg-elevate h-4 w-12" />
                 <div className="bg-elevate h-4 w-8" />
               </div>

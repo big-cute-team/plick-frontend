@@ -60,7 +60,7 @@ export function PredictionHomeTrack({
     <section ref={ref} aria-label="승부예측" className="px-edge pt-3">
       <div className="flex items-baseline gap-2 pb-1.5">
         <h2 className="text-body-md text-text-strong tracking-section font-black">
-          승부예측
+          <span aria-hidden>🔥</span> 승부예측
         </h2>
         <div className="flex-1" />
         <Link

@@ -5,6 +5,7 @@ import {
   matchBriefingAsOfLabel,
   type MatchBriefing,
 } from "@plick/domain/match-briefing";
+import { SparkleIcon } from "./icons";
 
 /**
  * AI 경기 브리핑 카드 (KAN-724). 예측 탭의 투표 아래, 여론 위에 선다. 위에서 아래로 제목과 자료
@@ -45,10 +46,11 @@ export function MatchBriefingCard({
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <h3
-          className={`text-text-strong min-w-0 font-bold ${
+          className={`text-text-strong flex min-w-0 items-center gap-1 font-bold ${
             large ? "text-body-md" : "text-body"
           }`}
         >
+          <SparkleIcon size={large ? 16 : 15} className="text-ai shrink-0" />
           {MATCH_BRIEFING_TITLE}
         </h3>
         <span className="text-caption text-text-3 ml-auto shrink-0 tabular-nums">

@@ -22,7 +22,8 @@ description: >-
 - 선: `border-border`(섹션) `border-border-soft`(목록 행) `border-border-table`(표 머리) `border-border-strong`(레일·테두리 버튼)
 - 글자: `text-text-strong`(제목) `text-text`(본문) `text-text-2` `text-text-3`(보조) `text-text-4`(메타, 회색 하한. 흰 배경 기준이라 회색 면 위에서는 `text-text-3`부터)
 - 강조: `text-accent`/`bg-accent`(딥 그린) `hover:text-accent-hover` `text-accent-bright`(어두운 면 위) `text-on-accent`
-  빨강은 댓글 수, 새 글 `N`, 하트, BEST, VS, LIVE에만. 글자는 `text-danger-strong`(4.5:1 대비, KAN-627),
+  하트와 좋아요 수는 핑크 `text-like`, 기사 제목 옆 댓글 수 `[N]`은 `text-comment-count`, AI 표시는 `text-ai`.
+  빨강은 그 밖의 댓글 수, 새 글 `NEW`, BEST, VS, LIVE에만. 글자는 `text-danger-strong`(4.5:1 대비, KAN-627),
   면·점·테두리는 `bg-danger`/`border-danger`. 경고 `text-warn`
 - 글자 크기(시안 px 그대로): `text-micro`(10) `text-micro-lg`(10.5) `text-caption`(11) `text-caption-lg`(11.5) `text-label`(12)
   `text-label-lg`(12.5) `text-body`(13.5) `text-body-md`(14) `text-body-lg`(15) `text-title`(17) `text-reel`(19) `text-hero`(21)
@@ -44,7 +45,7 @@ description: >-
 되살릴 여지를 남긴다. 폰트는 Noto Sans KR 셀프호스팅(`--font-noto`)이다.
 
 시안 규칙: 본문 카드에 테두리를 두르지 않는다. 기본 버튼은 테두리 없는 텍스트 버튼이고 등록·투표·보내기 같은
-확정 행동만 채운 면이다. 기능을 설명하는 안내 문구, 가운뎃점, 대시, 둥근 따옴표, 이모지를 쓰지 않는다.
+확정 행동만 채운 면이다. 기능을 설명하는 안내 문구, 가운뎃점, 대시, 둥근 따옴표, 이모지를 쓰지 않는다(홈 섹션 제목 앞의 이모지만 예외, KAN-742).
 확인이 필요한 행동은 팝업이 아니라 `BottomSheet`(radius 26)다. 프로필 이미지·아바타를 그리지 않는다.
 루머 단계 라벨과 기자 등급을 노출하지 않고 기자는 대표 한 명만, 댓글 수는 `제목 [96]`, 투표 이슈는 빨간 `VsMark`다.
 

@@ -35,7 +35,7 @@ export const TEAMS: Record<TeamCode, Team> = {
   },
   MUN: {
     code: "MUN",
-    name: "맨유",
+    name: "맨체스터 유나이티드",
     slug: "manchester-united",
     colorVar: "--plk-team-mun",
   },
@@ -47,7 +47,7 @@ export const TEAMS: Record<TeamCode, Team> = {
   },
   MCI: {
     code: "MCI",
-    name: "맨시티",
+    name: "맨체스터 시티",
     slug: "manchester-city",
     colorVar: "--plk-team-mci",
   },
@@ -194,10 +194,10 @@ export const COMMENT_REPORT_REASONS: {
 ];
 
 /**
- * 기사 목록에서 NEW 태그를 다는 발행 후 시간 창 (KAN-481). 30분 안에 올라온
- * 기사가 대상이다. 판정은 `isRecentlyPublished`(format)가 한다.
+ * 기사 목록에서 NEW 태그를 다는 발행 후 시간 창 (KAN-481, 12시간은 KAN-742). 12시간 안에
+ * 올라온 기사가 대상이다. 판정은 `isRecentlyPublished`(format)가 한다.
  */
-export const NEW_ARTICLE_WINDOW_MS = 30 * 60_000;
+export const NEW_ARTICLE_WINDOW_MS = 12 * 60 * 60_000;
 
 /**
  * 인물 구분 → 화면 라벨 (KAN-500). 칩과 프로필에서 선수는 라벨을 생략하고

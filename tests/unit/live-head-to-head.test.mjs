@@ -45,7 +45,7 @@ test("헤더의 두 팀은 짧은 표기로, 스코어는 세 조각으로 접�
     homeName: "아스날",
     homeGoals: 3,
     awayGoals: 2,
-    awayName: "맨시티",
+    awayName: "맨체스터 시티",
     result: "L",
   });
 });
@@ -71,7 +71,7 @@ test("헤더에 없는 팀명은 그대로 두고 안 치른 경기는 뺀다", 
     header,
   );
   assert.equal(games.length, 1);
-  assert.equal(games[0].homeName, "맨시티");
+  assert.equal(games[0].homeName, "맨체스터 시티");
   assert.equal(games[0].awayName, "울버햄튼 원더러스");
   assert.equal(games[0].result, "D");
 });

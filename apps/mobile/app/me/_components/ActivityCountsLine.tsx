@@ -24,7 +24,9 @@ export function ActivityCountsLine({
   return (
     <p className="text-label-lg text-text-3 mt-1.5">
       댓글 {data ? formatCount(data.commentCount) : "-"}, 좋아요{" "}
-      {data ? formatCount(data.likeCount) : "-"}
+      <span className="text-like font-bold">
+        {data ? formatCount(data.likeCount) : "-"}
+      </span>
     </p>
   );
 }

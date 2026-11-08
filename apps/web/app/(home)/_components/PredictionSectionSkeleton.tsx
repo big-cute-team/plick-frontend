@@ -6,7 +6,7 @@ export function PredictionSectionSkeleton() {
   return (
     <section aria-hidden className="pb-8.5">
       <h2 className="text-body-lg text-text-strong pb-2.75 font-black tracking-tight">
-        승부예측
+        <span aria-hidden>🔥</span> 승부예측
       </h2>
       <PredictionCardsSkeleton />
     </section>

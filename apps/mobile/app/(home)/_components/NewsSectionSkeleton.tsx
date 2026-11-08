@@ -9,7 +9,7 @@ export function NewsSectionSkeleton() {
   return (
     <section aria-hidden className="pt-5">
       <h2 className="text-body-lg text-text-strong tracking-section px-edge pb-2 font-black">
-        지금 올라온 소식
+        <span aria-hidden>🎯</span> 지금 올라온 소식
       </h2>
       <div className="px-edge flex animate-pulse gap-3 py-2.25">
         {Array.from({ length: 5 }, (_, i) => (

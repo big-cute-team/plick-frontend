@@ -39,12 +39,24 @@ export function HomeTrendTicker({
           ? teamHubPath(code)
           : null
         : storyPath(String(item.entityId));
+    /* 1등은 번호와 이름을 빨간 볼드로 세운다 (KAN-742) */
+    const top = item.rank === 1;
     const content = (
       <>
-        <span className="text-accent shrink-0 font-black tabular-nums">
+        <span
+          className={`shrink-0 font-black tabular-nums ${
+            top ? "text-danger-strong" : "text-accent"
+          }`}
+        >
           {item.rank}
         </span>
-        <span className="min-w-0 flex-1 truncate font-bold">{item.name}</span>
+        <span
+          className={`min-w-0 flex-1 truncate font-bold ${
+            top ? "text-danger-strong" : ""
+          }`}
+        >
+          {item.name}
+        </span>
         <TrendDeltaBadge item={item} />
       </>
     );
@@ -69,7 +81,7 @@ export function HomeTrendTicker({
       {items.length ? (
         <>
           <RotatingLine
-            label={type === "TEAM" ? "구단 순위" : "실검"}
+            label={type === "TEAM" ? "📈 구단 순위" : "📈 실검"}
             items={items}
             expanded={expanded}
             onToggle={() => setExpanded((value) => !value)}
@@ -95,7 +107,7 @@ export function HomeTrendTicker({
         </>
       ) : (
         <div className="bg-elevate rounded-card text-label text-text-3 flex h-12 items-center gap-3 px-3">
-          <span className="text-accent font-black">실검</span>
+          <span className="text-accent font-black">📈 실검</span>
           {isError
             ? "순위를 불러오지 못했어요"
             : data

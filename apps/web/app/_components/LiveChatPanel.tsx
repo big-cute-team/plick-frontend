@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { CHAT_MAX_MESSAGE_LENGTH } from "@plick/core/chat";
 import type { ChatMessage } from "@plick/domain/chat";
 import { formatChatTime } from "@plick/domain/format";
+import { LivePulse } from "@plick/ui/LivePulse";
 import { useAuth } from "@/_components/AuthProvider";
 import { CHAT_REJECT_MESSAGE } from "@/_constants/live";
 import { useLiveChat } from "@/_hooks/useLiveChat";
@@ -42,11 +43,14 @@ export function LiveChatPanel({ compact = false }: { compact?: boolean }) {
 
   return (
     <section
-      aria-label="채팅방"
+      aria-label="해외축구 LIVE"
       className="border-border-strong flex flex-col border"
     >
       <header className="border-border flex h-9.5 shrink-0 items-center border-b px-3.25">
-        <h2 className="text-body text-text-strong font-black">채팅방</h2>
+        <h2 className="text-body text-text-strong flex items-center gap-2 font-black">
+          <LivePulse />
+          해외축구 LIVE
+        </h2>
       </header>
       {!isLoggedIn && isSessionPending ? (
         /* 처음 온 사람은 화면이 뜬 뒤 게스트를 받아 온다 (KAN-667). 그동안 로그인 안내를 띄우면

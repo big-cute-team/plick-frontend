@@ -58,10 +58,8 @@ export function ArticleLikeButton({
         aria-pressed={state.liked}
         /* 이름에 보이는 수를 담는다. 눌린 상태는 aria-pressed가 읽는다 (KAN-670) */
         aria-label={`좋아요 ${formatCount(state.likeCount)}`}
-        className={`text-body-md focus-visible:outline-accent inline-flex items-center gap-1.5 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          state.liked
-            ? "text-danger-strong"
-            : "text-text-3 hover:text-danger-strong"
+        className={`text-body-md text-like focus-visible:outline-accent inline-flex items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 ${
+          state.liked ? "font-bold" : "font-light"
         }`}
       >
         <HeartMiniIcon size={17} filled={state.liked} />

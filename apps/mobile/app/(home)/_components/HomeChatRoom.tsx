@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { CHAT_ENABLED, chatMessageKey } from "@plick/core/chat";
 import type { ChatMessage } from "@plick/domain/chat";
+import { LivePulse } from "@plick/ui/LivePulse";
 import { useAuth } from "@/_components/AuthProvider";
 import { HOME_CHAT_ROWS, HOME_CHAT_WATCH_MARGIN } from "@/_constants/live";
 import { useLiveChat } from "@/_hooks/useLiveChat";
@@ -69,7 +70,10 @@ function ChatRoomCard() {
         className="bg-elevate rounded-card flex flex-col gap-2 p-3 active:opacity-80"
       >
         <span className="flex items-center gap-2">
-          <span className="text-body text-text-strong font-bold">채팅방</span>
+          <LivePulse />
+          <span className="text-body text-text-strong shrink-0 font-bold">
+            해외축구 LIVE
+          </span>
           <span className="text-caption-lg text-text-3 min-w-0 truncate">
             해축 팬들과 실시간 이야기
           </span>

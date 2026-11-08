@@ -1,4 +1,5 @@
 import { ArticleLink } from "@/_components/ArticleLink";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { TEAMS } from "@plick/domain/constants";
 import {
@@ -9,6 +10,7 @@ import {
   teamProfilePath,
 } from "@plick/domain/format";
 import type { ArticleCard, ArticleDetail, Debate } from "@plick/domain/types";
+import { AiArticleLabel } from "@plick/ui/AiArticleLabel";
 import { TeamCrest } from "@plick/ui/TeamCrest";
 import { VsMark } from "@plick/ui/VsMark";
 import { ArticleSourceLink } from "@/_components/ArticleSourceLink";
@@ -18,14 +20,20 @@ import { ArticleLikeButton } from "./ArticleLikeButton";
 import { ArticleShareButton } from "./ArticleShareButton";
 import { ReadEndSentinel } from "./ReadEndSentinel";
 
+/** 임베드는 본문 아래에서 브라우저가 받으므로 react-tweet을 초기 번들에서 뺀다 (KAN-742) */
+const TweetEmbed = dynamic(() =>
+  import("@/_components/TweetEmbed").then((m) => m.TweetEmbed),
+);
+
 /**
- * 기사 세부 본문 컬럼 (KAN-233, 시안 KAN-567 "기사 상세") — 빵부스러기, 제목, 기자
- * 줄, 대표 이미지, 본문 문단, 투표 카드, 태그 줄, 액션 줄, 관련 기사, 댓글.
+ * 기사 세부 본문 컬럼 (KAN-233, 시안 KAN-567 "기사 상세", 배치 KAN-742) — 빵부스러기, 제목,
+ * 기자 줄, 고정 부제목, 대표 이미지, 본문 문단, 투표 카드, 태그 줄, 액션 줄, 구분선,
+ * 원문 링크와 임베드, 관련 기사, 댓글.
  *
  * 시안: 맨 위에 "목록 / 엠블럼 팀명" 빵부스러기, 본문 폭은 780(`max-w-read`).
  * 투표 기사면 `VS`와 "투표 진행 중" 11.5/700 빨강, 제목 30/900, 기자 13/700과
- * 시각·조회 12.5, 밑선. 문단 16/1.78. 태그는 12.5 보조색이고 팀·인물 태그는
- * 700 링크, 오른쪽 끝에 "출처 원문 보기". 액션 줄은 윗선 아래 하트와 "공유".
+ * 오른쪽 끝 시각·조회 12.5, 그 밑 구분선과 고정 부제목. 문단 16/1.78. 태그는 12.5 보조색이고 팀·인물 태그는
+ * 700 링크. 액션 줄은 하트와 "공유".
  * 관련 기사 2열과 댓글은 본문 폭 밖 컬럼 전폭이다. 루머 단계 라벨(`PostBadges`),
  * 기자 등급·"외 N명"(`ReporterLine`), 알약 칩(`TagChips`)은 시안 규칙으로 뺐고
  * 기자는 대표 한 명만 표기한다. 시안의 "이전 기사·다음 기사"는 API가 없어
@@ -64,6 +72,10 @@ export function ArticleMain({
   // 긴 요약 하나가 본문의 전부다. 줄바꿈이 섞여 오면 문단으로 가른다
   const paragraphs = article.summary.split("\n").filter(Boolean);
   const lead = article.reporters[0] ?? null;
+  const sourceUrl =
+    lead?.sourceUrl ??
+    article.reporters.find((reporter) => reporter.sourceUrl)?.sourceUrl ??
+    null;
   const closed = article.contentType === "FINISH";
 
   return (
@@ -110,16 +122,26 @@ export function ArticleMain({
           {article.title}
         </h1>
 
-        <div className="border-border flex flex-wrap items-center gap-2.5 border-b pb-4">
-          {lead && (
-            <span className="text-body text-text font-bold">{lead.name}</span>
-          )}
-          <span className="text-label-lg text-text-3" suppressHydrationWarning>
-            {formatRelativeTime(article.publishedAt)}
-          </span>
-          <span className="text-label-lg text-text-3">
-            조회 {formatCount(article.views)}
-          </span>
+        <div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {lead && (
+              <span className="text-body text-text font-bold">
+                by {lead.name}
+              </span>
+            )}
+            <div className="ml-auto flex items-center gap-2.5">
+              <span
+                className="text-label-lg text-text-3"
+                suppressHydrationWarning
+              >
+                {formatRelativeTime(article.publishedAt)}
+              </span>
+              <span className="text-label-lg text-text-3">
+                조회 {formatCount(article.views)}
+              </span>
+            </div>
+          </div>
+          <AiArticleLabel className="border-border mt-3 border-t pt-3" />
         </div>
 
         {/* 대표 이미지 — 사진 null이면 미디어 없이 텍스트만 흐른다 */}
@@ -137,7 +159,7 @@ export function ArticleMain({
         )}
 
         {/* 본문 문단 */}
-        <div className="mt-5 flex flex-col gap-3.75">
+        <div className="mt-1.5 flex flex-col gap-3.75">
           {paragraphs.map((paragraph, i) => (
             <p
               key={i}
@@ -159,8 +181,7 @@ export function ArticleMain({
           />
         )}
 
-        {/* 태그 줄 (KAN-500) — 팀 태그는 팀 프로필, 인물 태그는 인물 프로필로
-            간다. 둘 다 없어도 오른쪽 원문 링크 때문에 줄은 남는다 */}
+        {/* 태그 줄 (KAN-500) — 팀 태그는 팀 프로필, 인물 태그는 인물 프로필로 간다 */}
         <div className="flex flex-wrap items-center gap-2 pt-5">
           {article.hashtags.map((tag) => {
             const href = hashtagHref(tag);
@@ -190,15 +211,6 @@ export function ArticleMain({
               #{figure.name}
             </Link>
           ))}
-          <div aria-hidden className="flex-1" />
-          {/* 기자가 여럿이면 기자별 원문 링크 팝오버, 한 명이면 대표 원문 직행 (KAN-365).
-              누르면 원문 클릭 이벤트가 나간다 (KAN-543) */}
-          <ArticleSourceLink
-            articleId={article.id}
-            label="출처 원문 보기"
-            sourceUrl={lead?.sourceUrl ?? null}
-            reporters={article.reporters}
-          />
         </div>
 
         {/* 본문 끝 표식 — 여기까지 내리면 읽기 종료 이벤트의 reachedEnd가 true (KAN-543).
@@ -206,13 +218,27 @@ export function ArticleMain({
         <ReadEndSentinel articleId={article.id} />
 
         {/* 액션 — 좋아요·공유 버튼만 클라 경계로 떼어 낸다. 본문은 서버 컴포넌트로 남는다 */}
-        <div className="border-border mt-5.5 flex items-center gap-5.5 border-t pt-5">
+        <div className="mt-5.5 flex items-center gap-5.5">
           <ArticleLikeButton
             articleId={article.id}
             initialCount={article.likeCount}
           />
           <ArticleShareButton articleId={article.id} />
         </div>
+
+        {/* 원문 (KAN-742) — 구분선 밑에 링크와 임베드. 사진을 자르지 않고 자연 높이로 세운다.
+            링크를 누르면 원문 클릭 이벤트가 나간다 (KAN-543) */}
+        {sourceUrl && (
+          <div className="border-border-strong mt-5 flex flex-col gap-3.5 border-t pt-5">
+            <ArticleSourceLink
+              articleId={article.id}
+              label="원문 기사 바로가기"
+              sourceUrl={sourceUrl}
+              reporters={article.reporters}
+            />
+            <TweetEmbed url={sourceUrl} />
+          </div>
+        )}
       </div>
 
       <section className="mt-8.5">
@@ -237,7 +263,7 @@ export function ArticleMain({
                     {item.title}
                   </span>
                   {item.commentCount > 0 && (
-                    <span className="text-label text-danger-strong shrink-0 font-bold">
+                    <span className="text-label text-comment-count shrink-0 font-bold">
                       [{formatCount(item.commentCount)}]
                     </span>
                   )}

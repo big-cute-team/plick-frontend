@@ -132,11 +132,7 @@ function ReplyLikeButton({
         onClick={like.toggle}
         aria-pressed={reply.liked}
         aria-label={`공감 ${formatCount(reply.likeCount)}`}
-        className={`text-label focus-visible:outline-accent inline-flex items-center gap-1 font-bold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          reply.liked
-            ? "text-danger-strong"
-            : "text-text-3 hover:text-danger-strong"
-        }`}
+        className="text-label text-like focus-visible:outline-accent inline-flex items-center gap-1 font-bold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         <HeartMiniIcon size={12} filled={reply.liked} />
         {formatCount(reply.likeCount)}
