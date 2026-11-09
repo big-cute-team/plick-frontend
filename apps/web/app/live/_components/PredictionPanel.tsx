@@ -59,8 +59,8 @@ type Dialog =
  * 합치고 결장자를 접어 뒀는데, 브리핑이 들어오자 한 탭이 너무 길어져 KAN-729에서 프리뷰를 다시
  * `PreviewPanel`로 뗐다. 이 탭은 요약이 있는 경기에만 서므로(`matchTabsFor`) `summary`는 null이 아니다.
  *
- * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. UPCOMING은 열림 시각만, OPEN 예측
- * 전은 `?%` 바와 그 바로 아래 `투표하기` 버튼, 잠금 지면이다. 바의 칸을 눌러도 그 픽이 골라진 작성
+ * 상태별 표시와 로그인 분기, 마감 409 처리는 모바일과 같다. 킥오프 전이면 전부 OPEN이고(BE KAN-743)
+ * OPEN 예측 전은 `?%` 바와 그 바로 아래 `투표하기` 버튼, 잠금 지면이다. 바의 칸을 눌러도 그 픽이 골라진 작성
  * 팝업이 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로 밀렸다). 예측 뒤는 실제
  * 비율과 내 예측 상자(수정, 취소), LOCKED 이후는 읽기 전용이다. 정산된 경기는 상태 줄 오른쪽에 랭킹
  * 페이지로 가는 `랭킹 >` 링크가 선다(KAN-701).
@@ -154,17 +154,15 @@ export function PredictionPanel({
           {formatPredictionCount(summary.totalCount)}
         </span>
       </div>
-      {summary.status !== "UPCOMING" && (
-        <PredictionBar
-          home={header.home}
-          away={header.away}
-          distribution={summary.distribution}
-          myPick={mine?.pick ?? null}
-          totalCount={summary.totalCount}
-          size="lg"
-          onPick={votable ? (pick) => openCompose(false, pick) : undefined}
-        />
-      )}
+      <PredictionBar
+        home={header.home}
+        away={header.away}
+        distribution={summary.distribution}
+        myPick={mine?.pick ?? null}
+        totalCount={summary.totalCount}
+        size="lg"
+        onPick={votable ? (pick) => openCompose(false, pick) : undefined}
+      />
       {votable && (
         <button
           type="button"
@@ -179,15 +177,13 @@ export function PredictionPanel({
         <MatchBriefingCard briefing={briefing} size="lg" className="mt-4" />
       )}
 
-      {summary.status !== "UPCOMING" && (
-        <PredictionOpinions
-          summary={summary}
-          teams={teams}
-          onCompose={() => openCompose(false)}
-          onEdit={() => openCompose(true)}
-          onCancel={() => setDialog({ kind: "cancel" })}
-        />
-      )}
+      <PredictionOpinions
+        summary={summary}
+        teams={teams}
+        onCompose={() => openCompose(false)}
+        onEdit={() => openCompose(true)}
+        onCancel={() => setDialog({ kind: "cancel" })}
+      />
 
       {dialog?.kind === "compose" && (
         <PredictionComposerDialog

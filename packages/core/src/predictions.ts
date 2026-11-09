@@ -63,7 +63,8 @@ const RANKING_REVALIDATE_SECONDS = 600;
 export interface PredictionSummaryResponse {
   matchId: number;
   status: PredictionStatus;
-  opensAt: string;
+  /** 항상 null이다(BE KAN-743). 다음 계약 개정 때 필드가 빠지므로 도메인으로 옮기지 않는다 */
+  opensAt?: string | null;
   closesAt: string | null;
   revealed: boolean;
   totalCount: number | null;
@@ -171,6 +172,8 @@ interface PredictionRankingResponse {
     hits: number;
     rate: number;
     streak: number;
+    /** 정산 5경기 미만 단(BE KAN-745). 옛 BE에는 없다 */
+    provisional?: boolean;
   }[];
   me: {
     rank: number | null;
@@ -180,6 +183,7 @@ interface PredictionRankingResponse {
     streak: number;
     qualified: boolean;
     remaining: number;
+    provisional?: boolean;
   } | null;
   nextCursor: string | null;
 }
@@ -296,7 +300,6 @@ export function toPredictionSummary(
   return {
     matchId: r.matchId,
     status: r.status,
-    opensAt: r.opensAt,
     closesAt: r.closesAt,
     revealed: r.revealed,
     totalCount: r.totalCount,
@@ -491,9 +494,10 @@ export async function getPredictionReplies(
 /**
  * 홈 승부예측 카드 목록을 가져온다 (`GET /predictions/home`).
  *
- * 오늘부터 7일 안에 킥오프하는 OPEN 경기 전부가 온다. BE는 로그인 사용자의 마이팀 경기를 앞으로
- * 당기는데 FE가 킥오프 순으로 다시 세운다(`sortPredictionCardsByKickoff`, KAN-714). OPEN 경기가
- * 하나도 없으면 가장 최근 SETTLED 경기 하나가 온다. 빈 배열이면 섹션을 그리지 않는다.
+ * 지금부터 7일 안에 킥오프하는 OPEN 경기 전부가 오고, 3개가 안 되면 그 뒤 경기를 당겨 최소 3개를
+ * 채운다(BE KAN-743. 전에는 휴식기에 최근 SETTLED 경기 하나만 왔다). 그래서 휴식기에는 2주 뒤 경기가
+ * 선다. BE는 로그인 사용자의 마이팀 경기를 앞으로 당기는데 FE가 킥오프 순으로 다시 세운다
+ * (`sortPredictionCardsByKickoff`, KAN-714). 시즌이 끝나 남은 경기가 없으면 빈 배열이고 섹션이 빈 문구를 둔다.
  *
  * @param accessToken 서버에서 부를 때만 - `myPick`·`revealed`와 마이팀 정렬이 그 유저 기준이다
  */
@@ -511,7 +515,9 @@ export async function getPredictionHome({
 /**
  * 시즌 랭킹 한 페이지를 가져온다 (`GET /predictions/rankings`).
  *
- * 정산 1경기 이상인 사용자만 오른다(BE KAN-701 후속, 전에는 5경기). `me`는 첫 페이지에서 쓰고 비로그인이면 null이다.
+ * 정산 1경기 이상인 사용자만 오른다(BE KAN-701 후속, 전에는 5경기). 정산 5경기 이상 단이 위, 미만 단
+ * (`provisional`)이 아래고 단 안은 적중 수, 적중률 순이다(BE KAN-745). `me`는 첫 페이지에서 쓰고
+ * 비로그인이면 null이다.
  *
  * @param scope 시즌(`2026`) 또는 `ALL`. 비우면 쿼리를 붙이지 않아 BE가 이번 시즌으로 고른다(KAN-701).
  *   FE가 연도를 박아 두면 시즌이 바뀔 때 코드를 고쳐야 해서 응답의 `scope`로 시즌을 읽는다
@@ -551,6 +557,7 @@ export async function getPredictionRankings({
         rate: row.rate,
         streak: row.streak,
       },
+      provisional: row.provisional ?? false,
     })),
     me: page.me && {
       rank: page.me.rank,
@@ -562,6 +569,7 @@ export async function getPredictionRankings({
       },
       qualified: page.me.qualified,
       remaining: page.me.remaining,
+      provisional: page.me.provisional ?? false,
     },
     nextCursor: page.nextCursor,
   };
@@ -663,7 +671,10 @@ function toPredictionHomeCard(
   };
 }
 
-/** VS 전용 커서 목록. 홈과 조회 범위가 달라 실패 시 홈 목록으로 대체하지 않는다. */
+/**
+ * VS 전용 커서 목록. 홈과 조회 범위가 달라 실패 시 홈 목록으로 대체하지 않는다. 참여 기간 제한이 없어져
+ * (BE KAN-743) OPEN 묶음에 남은 시즌 경기가 전부 들어오므로 수백 건이고, 커서로 20건씩 받는다.
+ */
 export async function getPredictionFeed(cursor: string | null = null): Promise<{
   items: PredictionHomeCard[];
   nextCursor: string | null;

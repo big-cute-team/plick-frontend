@@ -1,12 +1,11 @@
 /**
- * @file 승부예측 탭 표기 헬퍼 테스트 (KAN-696). 상태 줄 다섯 갈래, 픽 라벨, 열림 시각 표기,
+ * @file 승부예측 탭 표기 헬퍼 테스트 (KAN-696). 상태 줄 네 갈래(UPCOMING은 KAN-747에서 걷었다), 픽 라벨,
  * 임시 저장 값 되살리기(옛 포맷과 깨진 값은 버림)를 본다. 의견 목록의 픽 필터 순서와 빈 상태
  * 문구(KAN-697)도 여기 둔다.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  formatPredictionOpensAt,
   parsePredictionDraft,
   predictionFilterPicks,
   predictionOpinionsEmptyText,
@@ -24,23 +23,8 @@ test("픽 라벨은 홈·원정이 팀명 승, 무승부는 그대로", () => {
   assert.equal(predictionPickLabel("AWAY", teams), "맨시티 승");
 });
 
-test("열림 시각은 요일 없이 월일과 24시간 시각", () => {
-  assert.equal(
-    formatPredictionOpensAt("2026-09-14T22:30:00+09:00"),
-    "9월 14일 22:30 열림",
-  );
-  assert.equal(
-    formatPredictionOpensAt("2026-09-14T15:00:00Z"),
-    "9월 15일 00:00 열림",
-  );
-});
-
-test("상태 줄: UPCOMING 열림 시각, OPEN 없음, LOCKED 마감, VOID 취소", () => {
-  const base = { opensAt: "2026-09-14T22:30:00+09:00", outcome: null };
-  assert.equal(
-    predictionStatusLine({ ...base, status: "UPCOMING" }, teams),
-    "9월 14일 22:30 열림",
-  );
+test("상태 줄: OPEN 없음, LOCKED 마감, VOID 취소", () => {
+  const base = { outcome: null };
   assert.equal(predictionStatusLine({ ...base, status: "OPEN" }, teams), null);
   assert.equal(
     predictionStatusLine({ ...base, status: "LOCKED" }, teams),
@@ -54,10 +38,7 @@ test("상태 줄: UPCOMING 열림 시각, OPEN 없음, LOCKED 마감, VOID 취�
 
 test("상태 줄: SETTLED는 스코어와 이긴 쪽, 정산 정보가 없으면 결과 확정", () => {
   const settled = (outcome) =>
-    predictionStatusLine(
-      { status: "SETTLED", opensAt: "2026-09-14T22:30:00+09:00", outcome },
-      teams,
-    );
+    predictionStatusLine({ status: "SETTLED", outcome }, teams);
   assert.equal(
     settled({ result: "AWAY", homeGoals: 1, awayGoals: 2, hitRate: 55 }),
     "결과 1 - 2 맨시티 승",

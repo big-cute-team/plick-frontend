@@ -95,7 +95,7 @@ test("내 순위는 자격이 있으면 n위, 아니면 랭킹", () => {
   assert.equal(predictionRankLabel(null), "랭킹");
 });
 
-test("예측 탭 경로와 열림 시각 없는 상태 줄", () => {
+test("예측 탭 경로와 홈 카드 상태 줄", () => {
   assert.equal(
     matchPredictionPath(1208345),
     "/live/matches/1208345?tab=prediction",
@@ -109,10 +109,22 @@ test("예측 탭 경로와 열림 시각 없는 상태 줄", () => {
   );
   assert.equal(
     predictionStatusLine(
-      { status: "UPCOMING", outcome: null },
+      { status: "OPEN", outcome: null },
       { home: "맨유", away: "맨시티" },
     ),
     null,
+  );
+});
+
+test("휴식기에 당겨 온 2주 뒤 경기는 월일과 시각으로 적는다 (KAN-747)", () => {
+  const now = new Date("2026-11-09T12:00:00+09:00");
+  assert.equal(
+    predictionKickoffLabel("2026-11-21T21:30:00+09:00", now),
+    "11월 21일 21:30",
+  );
+  assert.equal(
+    predictionKickoffLabel("2026-11-22T00:00:00+09:00", now),
+    "11월 22일 00:00",
   );
 });
 
