@@ -113,7 +113,8 @@ const toNull = () => null;
  * @returns 성공이면 `revealed: true`가 된 요약(분포·참여 수 공개). 실패면 BE 에러 code·message.
  *   픽이 아니면 400 `PREDICTION_INVALID_PICK`, 길이는 400 `PREDICTION_OPINION_LENGTH`,
  *   금칙어는 400 `PREDICTION_OPINION_BLOCKED`, 게스트는 403 `AUTH_GUEST_FORBIDDEN`,
- *   UPCOMING은 409 `PREDICTION_NOT_OPEN`, 킥오프가 지났으면 409 `PREDICTION_CLOSED`
+ *   킥오프가 지났으면 409 `PREDICTION_CLOSED`. 409 `PREDICTION_NOT_OPEN`은 참여 기간 제한이 없어져
+ *   (BE KAN-743) 더는 오지 않고 code만 남아 있다
  */
 export async function upsertPrediction(
   matchId: number,

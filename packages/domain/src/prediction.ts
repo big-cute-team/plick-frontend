@@ -16,18 +16,14 @@ import type { CommentReportReason, LikeState, TeamCode } from "./types";
 
 /**
  * 경기 하나의 예측 상태. 저장하지 않고 일정과 정산 기록으로 그때그때 계산한 값이다.
- * - UPCOMING: 킥오프 7일 전보다 이르다. 쓰기 불가, 분포와 의견 비공개
- * - OPEN: 킥오프 7일 전부터 킥오프까지. 등록, 수정, 취소가 된다
+ * - OPEN: 일정에 있고 킥오프 전. 등록, 수정, 취소가 된다
  * - LOCKED: 킥오프 뒤, 정산 전. 모두 공개
  * - SETTLED: 정산 완료. 적중 여부까지 공개
  * - VOID: 취소, 중단, 몰수. 적중 기록에서 뺀다. 연기(POSTPONED)는 VOID가 아니다
+ *
+ * 킥오프 7일 전보다 이른 경기를 가리키던 UPCOMING은 BE가 참여 기간 제한을 없애면서 사라졌다(KAN-743).
  */
-export type PredictionStatus =
-  | "UPCOMING"
-  | "OPEN"
-  | "LOCKED"
-  | "SETTLED"
-  | "VOID";
+export type PredictionStatus = "OPEN" | "LOCKED" | "SETTLED" | "VOID";
 
 /** 승무패 픽이자 정산된 경기 결과. */
 export type PredictionPick = "HOME" | "DRAW" | "AWAY";
@@ -81,13 +77,12 @@ export interface MyPrediction {
  * 예측 요약(`GET /matches/{id}/prediction`). 예측 탭 상단과 프리뷰 묶음이 쓴다.
  *
  * `revealed`가 false면 `totalCount`와 `distribution`이 null이다. OPEN에서 내가
- * 아직 예측하지 않았거나 UPCOMING일 때이고, 화면은 숫자를 만들지 않고 `?%`로 그린다.
+ * 아직 예측하지 않았을 때이고, 화면은 숫자를 만들지 않고 `?%`로 그린다.
  * 서버가 막는 값이라 FE 블러만으로 가리지 않는다.
  */
 export interface PredictionSummary {
   matchId: number;
   status: PredictionStatus;
-  opensAt: string;
   /** 마감(킥오프) 시각. 화면에 남은 시간은 표시하지 않지만 계약에 남아 있다 */
   closesAt: string | null;
   revealed: boolean;
@@ -208,24 +203,31 @@ export interface PredictionHomeCard {
   outcome: PredictionOutcome | null;
 }
 
-/** 시즌 랭킹 한 행. 정산 1경기 이상만 오른다(BE KAN-701 후속, 전에는 5경기). */
+/**
+ * 시즌 랭킹 한 행. 정산 1경기 이상만 오른다(BE KAN-701 후속, 전에는 5경기). 목록은 정산 5경기 이상 단이
+ * 위, 미만 단(`provisional: true`)이 아래고 단 안은 적중 수, 적중률 순이다(BE KAN-745).
+ */
 export interface PredictionRankRow {
   rank: number;
   userId: number;
   nickname: string | null;
   favoriteTeam: TeamCode | null;
   record: PredictionRecord;
+  /** 정산 5경기 미만 단인가. 필드가 없는 옛 BE 응답은 false로 접는다 */
+  provisional: boolean;
 }
 
 /**
  * 랭킹의 내 줄. `qualified: false`면 `rank`가 null이고 `remaining`이 정산까지 남은 경기 수다. 기준이
  * 1경기라 `remaining`은 최대 1이고 화면은 순위 칸을 비우고 "첫 경기 결과가 나오면 랭킹에 올라요"로 안내한다.
+ * `provisional`은 목록 행과 같은 뜻이다(정산 5경기 미만 단).
  */
 export interface MyPredictionRank {
   rank: number | null;
   record: PredictionRecord;
   qualified: boolean;
   remaining: number;
+  provisional: boolean;
 }
 
 /** 시즌 랭킹 한 페이지(`GET /predictions/rankings`). 비로그인은 `me`가 null. */
@@ -535,28 +537,6 @@ export function predictionPercentOf(
 }
 
 /**
- * 예측이 열리는 시각 표기(`9월 14일 22:30 열림`). UPCOMING 상태 줄이다. 라이브의
- * `kickoffDateLabel`은 요일을 붙이는데 시안 상태 줄은 요일이 없어 따로 만든다.
- *
- * @param opensAt 요약의 `opensAt`(ISO, KST 오프셋)
- * @example formatPredictionOpensAt("2026-09-14T22:30:00+09:00") // "9월 14일 22:30 열림"
- */
-export function formatPredictionOpensAt(opensAt: string): string {
-  const parts = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(new Date(opensAt));
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-  const hour = get("hour") === "24" ? "00" : get("hour");
-  return `${get("month")}월 ${get("day")}일 ${hour}:${get("minute")} 열림`;
-}
-
-/**
  * 예측 탭 상단 상태 줄(시안 가이드 §4). OPEN은 상태 줄이 없어 null이다.
  * SETTLED는 스코어와 이긴 쪽(`결과 1 - 2 맨시티 승`, 무승부면 `결과 1 - 1 무승부`)이고,
  * 정산 정보가 아직 없으면 `결과 확정`만 적는다.
@@ -565,15 +545,10 @@ export function formatPredictionOpensAt(opensAt: string): string {
  * @param teams 홈·원정 팀명
  */
 export function predictionStatusLine(
-  summary: Pick<PredictionSummary, "status" | "outcome"> & {
-    /** 열림 시각. 홈 카드처럼 UPCOMING이 오지 않는 자리는 비워도 된다 */
-    opensAt?: string;
-  },
+  summary: Pick<PredictionSummary, "status" | "outcome">,
   teams: { home: string; away: string },
 ): string | null {
   switch (summary.status) {
-    case "UPCOMING":
-      return summary.opensAt ? formatPredictionOpensAt(summary.opensAt) : null;
     case "OPEN":
       return null;
     case "LOCKED":
@@ -981,13 +956,18 @@ export function predictionMyRankCell(
 
 /**
  * 내 순위 줄의 안내. 자격 미달이면 "첫 경기 결과가 나오면 랭킹에 올라요"(BE KAN-701 후속 문구. 기준이
- * 1경기라 `remaining`은 최대 1이다), 자격은 됐는데 순위가 null이면 집계 중, 순위가 있으면 안내가 없다.
- * BE가 기준을 다시 올려 `remaining`이 2 이상으로 오면 남은 경기 수를 적는다.
+ * 1경기라 `remaining`은 최대 1이다), 자격은 됐는데 순위가 null이면 집계 중이다. BE가 기준을 다시 올려
+ * `remaining`이 2 이상으로 오면 남은 경기 수를 적는다.
+ *
+ * 순위가 있어도 정산 5경기 미만 단(`provisional`)이면 위 단으로 올라가는 조건을 적는다(KAN-747). 내 줄은
+ * 목록 밖에 따로 서서 단 구분 줄이 닿지 않으니, 숫자만 보면 5경기 이상인 사람들 사이의 순위로 읽힌다.
+ * 위 단에 있으면 안내가 없다.
  *
  * @param me 랭킹 응답의 `me`
  */
 export function predictionRankingNotice(
-  me: Pick<MyPredictionRank, "rank" | "qualified" | "remaining">,
+  me: Pick<MyPredictionRank, "rank" | "qualified" | "remaining"> &
+    Partial<Pick<MyPredictionRank, "provisional">>,
 ): string | null {
   if (!me.qualified) {
     return me.remaining > 1
@@ -995,14 +975,40 @@ export function predictionRankingNotice(
       : "첫 경기 결과가 나오면 랭킹에 올라요";
   }
   if (me.rank === null) return "순위를 집계하고 있어요";
+  if (me.provisional) {
+    return `정산 ${PREDICTION_RATE_MIN_SETTLED}경기를 채우면 위 구간으로 올라가요`;
+  }
   return null;
 }
 
 /**
+ * 랭킹 표에서 정산 5경기 미만 단이 시작하는 자리의 구분 줄 문구(KAN-747). 기준은 퍼센트 표본 하한과 같은
+ * 값이라 그 상수로 적는다. BE가 단 기준을 따로 움직이면 같이 갈라야 한다.
+ */
+export const PREDICTION_RANKING_PROVISIONAL_LABEL = `정산 ${PREDICTION_RATE_MIN_SETTLED}경기 미만`;
+
+/**
+ * 이 행 위에 단 구분 줄을 그릴지(KAN-747). BE가 5경기 이상 단을 먼저, 미만 단을 뒤에 주므로 미만 단의 첫
+ * 행 하나만 참이다. 무한 스크롤로 이어 붙인 목록 전체에서 보니 경계가 페이지 사이에 걸려도 한 번만 선다.
+ * 위 단이 비어 첫 행부터 미만 단이면 표 맨 위에 선다. 적중률 칸이 왜 `-`인지 거기서 읽힌다.
+ *
+ * @param rows 지금까지 받은 랭킹 행 전체
+ * @param index 볼 행의 자리
+ */
+export function isPredictionProvisionalStart(
+  rows: readonly Pick<PredictionRankRow, "provisional">[],
+  index: number,
+): boolean {
+  const row = rows[index];
+  if (!row?.provisional) return false;
+  return index === 0 || !rows[index - 1]!.provisional;
+}
+
+/**
  * 랭킹 표의 적중률 칸. 표본 하한({@link PREDICTION_RATE_MIN_SETTLED}) 전은 `-`다. 자격이 1경기가 되면서
- * 1전 1적중 100%가 상위권 근처에 여럿 서는데, 순위는 BE의 보정 점수라 표본이 큰 사람 아래에 온다. 그 옆에
- * 100%를 그대로 적으면 순위가 틀린 것처럼 보여서 `formatPredictionRecord`와 같은 선에서 가린다. 적중
- * 칸(`1/1`)은 그대로라 실제 기록은 읽힌다.
+ * 1전 1적중 100%인 행이 여럿 생기는데, 이들은 정산 5경기 미만 단이라 5경기 이상인 사람 아래에 온다(BE
+ * KAN-745). 그 옆에 100%를 그대로 적으면 순위가 틀린 것처럼 보여서 `formatPredictionRecord`와 같은
+ * 선에서 가린다. 적중 칸(`1/1`)은 그대로라 실제 기록은 읽힌다.
  *
  * @param record 랭킹 행이나 내 줄의 기록
  * @example predictionRankingRateCell({ settled: 1, hits: 1, rate: 100 }) // "-"

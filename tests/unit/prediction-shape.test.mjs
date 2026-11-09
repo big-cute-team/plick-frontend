@@ -14,7 +14,7 @@ test("요약은 비공개면 분포와 참여 수가 null로, 내 예측은 id�
   const locked = toPredictionSummary({
     matchId: 1,
     status: "OPEN",
-    opensAt: "2026-09-14T22:30:00+09:00",
+    opensAt: null,
     closesAt: "2026-09-21T22:30:00+09:00",
     revealed: false,
     totalCount: null,
@@ -24,11 +24,12 @@ test("요약은 비공개면 분포와 참여 수가 null로, 내 예측은 id�
   });
   assert.equal(locked.distribution, null);
   assert.equal(locked.myPrediction, null);
+  /* 항상 null로 오는 열림 시각은 도메인으로 옮기지 않는다 (KAN-747) */
+  assert.equal("opensAt" in locked, false);
 
   const mine = toPredictionSummary({
     matchId: 1,
     status: "SETTLED",
-    opensAt: "2026-09-14T22:30:00+09:00",
     closesAt: null,
     revealed: true,
     totalCount: 1284,
