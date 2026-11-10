@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@plick/core/client";
 import { syncDebateVote } from "@plick/core/debate-sync";
 import { debateKeys } from "@plick/core/debateKeys";
+import { forgetVoteCounts } from "@plick/core/feed-recent-edits";
 import type { Debate, DebateVoteState, VoteOption } from "@plick/domain/types";
 import { useAuth } from "@/_components/AuthProvider";
 import { sessionUnavailableError } from "@/_apis/guest-session";
@@ -89,6 +90,8 @@ export function useDebateVote({
     onError: (e, _option, previous) => {
       if (previous) {
         apply(previous);
+        /* 되돌린 집계는 피드 응답보다 옛 값일 수 있어 기억에서 지운다 (KAN-748) */
+        forgetVoteCounts(debate.id);
         onRollback?.();
       }
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {

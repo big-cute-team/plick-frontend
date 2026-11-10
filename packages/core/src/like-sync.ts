@@ -16,11 +16,21 @@ import type { LikeState } from "@plick/domain/types";
 import { activityKeys } from "./activityKeys";
 import { setMyArticleState } from "./article-state-cache";
 import { articleKeys } from "./articleKeys";
+import { rememberLikeCount } from "./feed-recent-edits";
 import { reelKeys } from "./reelKeys";
 
 /** 피드 페이지의 최소 모양 — 기사·릴 카드가 공통으로 가진 부분만 본다. */
 interface FeedPageLike {
   items: { id: string }[];
+}
+
+/** 무한 목록 캐시(`pages` 배열을 든 것)인가 */
+function isInfiniteFeed(data: unknown): data is InfiniteData<FeedPageLike> {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    Array.isArray((data as { pages?: unknown }).pages)
+  );
 }
 
 /**
@@ -36,6 +46,9 @@ interface FeedPageLike {
  * 개수는 목록에 없는 기사를 눌렀을 수도 있어 캐시로 못 맞추고 stale로만
  * 표시한다. 활동 화면에 다시 들어올 때 새로 센다.
  *
+ * 적은 수는 `feed-recent-edits`에도 기억해 둔다 (KAN-748). 누르기 전에 나간 릴스 피드 조회가
+ * 늦게 돌아와 이 수를 덮지 않게 하려는 것이다.
+ *
  * @param queryClient 앱의 QueryClient
  * @param articleId 기사(릴) id — 릴스와 기사가 같은 `articleSummaryId` 체계다
  * @param next 확정된 좋아요 상태
@@ -45,23 +58,29 @@ export function syncLikeIntoFeeds(
   articleId: string,
   next: LikeState,
 ): void {
-  const patch = (data: InfiniteData<FeedPageLike> | undefined) =>
-    data && {
+  const patchItems = (items: { id: string }[]) =>
+    items.map((item) => (item.id === articleId ? { ...item, ...next } : item));
+
+  /* 상위 키 아래에는 무한 목록이 아닌 엔트리도 산다. 경기 뉴스는 카드 배열이고 기사 상세
+     (웹 릴 세부 패널의 기자 목록)는 객체 하나다. 모양을 보고 카드가 든 것만 고친다. 무한 목록으로
+     단정하고 `pages`를 돌면 그 엔트리에서 예외가 나 좋아요가 통째로 무산된다 (KAN-748) */
+  const patch = (data: unknown) => {
+    if (Array.isArray(data)) return patchItems(data);
+    if (!isInfiniteFeed(data)) return data;
+    return {
       ...data,
-      pages: data.pages.map((page) => ({
-        ...page,
-        items: page.items.map((item) =>
-          item.id === articleId ? { ...item, ...next } : item,
-        ),
-      })),
+      pages: data.pages.map((page) =>
+        Array.isArray(page?.items)
+          ? { ...page, items: patchItems(page.items) }
+          : page,
+      ),
     };
+  };
 
   for (const key of [articleKeys.all, reelKeys.all, activityKeys.likes()]) {
-    queryClient.setQueriesData<InfiniteData<FeedPageLike>>(
-      { queryKey: key },
-      patch,
-    );
+    queryClient.setQueriesData<unknown>({ queryKey: key }, patch);
   }
+  rememberLikeCount(articleId, next.likeCount);
   /* 화면들이 하트를 그리는 원본은 이제 내 상태 캐시다(KAN-664). 카드의 `liked`는 익명
      응답이라 늘 false지만, 마이페이지 목록처럼 토큰으로 받은 화면이 아직 읽어서 함께 둔다 */
   setMyArticleState(queryClient, articleId, { liked: next.liked });

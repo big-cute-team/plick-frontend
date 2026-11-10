@@ -74,7 +74,7 @@ export async function gateRequest(
  * @param page 대상 페이지
  */
 export async function holdServerActions(page: Page): Promise<void> {
-  await page.route(/\/articles\/\d+$/, (route) => {
+  await page.route(/\/(articles|reels)\/\d+$/, (route) => {
     const request = route.request();
     if (request.method() === "POST" && request.headers()["next-action"]) {
       return;
@@ -106,6 +106,31 @@ export async function recordPressed(
       (el) =>
         (el as HTMLElement & { pressedHistory?: string[] }).pressedHistory ??
         [],
+    );
+}
+
+/**
+ * 요소의 글자가 바뀔 때마다 적는다. 좋아요 수가 올랐다가 잠깐 내려가는 흔들림을 잡는다.
+ *
+ * @param element 지켜볼 요소
+ * @returns 지금까지의 글자 목록을 돌려주는 함수. 첫 항목은 지켜보기 시작할 때의 글자다
+ */
+export async function recordText(
+  element: Locator,
+): Promise<() => Promise<string[]>> {
+  await element.evaluate((el) => {
+    const read = () => (el.textContent ?? "").trim();
+    const history = [read()];
+    new MutationObserver(() => {
+      const now = read();
+      if (now !== history[history.length - 1]) history.push(now);
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+    (el as HTMLElement & { textHistory?: string[] }).textHistory = history;
+  });
+  return () =>
+    element.evaluate(
+      (el) =>
+        (el as HTMLElement & { textHistory?: string[] }).textHistory ?? [],
     );
 }
 
