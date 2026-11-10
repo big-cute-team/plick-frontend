@@ -128,7 +128,7 @@ export function usePredictionHome(
  * @param matchId 경기 id
  * @param sort 정렬
  * @param pick 픽 필터. 전체면 null
- * @param enabled UPCOMING처럼 의견 자리가 없는 상태에서는 끈다
+ * @param enabled 의견 자리를 그리지 않을 때 끈다. 지금은 두 앱 모두 항상 켠다
  */
 export function usePredictionOpinions(
   matchId: number,

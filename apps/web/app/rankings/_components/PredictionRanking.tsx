@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { Fragment } from "react";
 import { TEAMS } from "@plick/domain/constants";
 import {
+  PREDICTION_RANKING_PROVISIONAL_LABEL,
   formatPredictionHits,
+  isPredictionProvisionalStart,
   isPredictionTopRank,
   predictionMyRankCell,
   predictionRankingNotice,
@@ -57,6 +60,10 @@ function alignClass(index: number): string {
  * 버튼이 재시도 문구로 바뀐다. 첫 페이지 실패는 다시 시도 버튼이다. 정산된 사람이 아직 없으면 머리글 아래
  * 빈 문구만 둔다. 자격이 정산 1경기라(BE KAN-701 후속) 목록이 길어지는데 한 페이지 50행 무한 스크롤이라
  * 한 번에 그리지 않는다. 적중률 칸은 정산 5경기 전이면 `-`다(`predictionRankingRateCell`).
+ *
+ * 목록은 정산 5경기 이상 단이 위, 미만 단이 아래다(BE KAN-745, `provisional`). 미만 단이 시작하는 행 위에
+ * 회색 면의 구분 줄(`정산 5경기 미만`)을 한 번 둔다(KAN-747). 위 단이 비면 머리글 바로 아래에 선다. 내가
+ * 미만 단이면 내 순위 줄 아래에 위 단으로 올라가는 조건이 붙는다.
  *
  * 내 순위 줄은 첫 페이지의 `me`로 그린다. 비로그인은 `me: null`이라 줄이 없다. 자격 미달
  * (`qualified: false`)은 순위 칸이 `-`고 줄 아래 `첫 경기 결과가 나오면 랭킹에 올라요`가 붙는다. 자격은
@@ -153,8 +160,13 @@ export function PredictionRanking() {
               </div>
               {rows.length > 0 && (
                 <div role="rowgroup">
-                  {rows.map((row) => (
-                    <RankRow key={`${row.rank}-${row.userId}`} row={row} />
+                  {rows.map((row, i) => (
+                    <Fragment key={`${row.rank}-${row.userId}`}>
+                      {isPredictionProvisionalStart(rows, i) && (
+                        <ProvisionalDivider />
+                      )}
+                      <RankRow row={row} />
+                    </Fragment>
                   ))}
                 </div>
               )}
@@ -215,6 +227,24 @@ function RankingLock({ isGuest }: { isGuest: boolean }) {
           ? PREDICTION_RANKING_LOCK_LINK_LABEL
           : PREDICTION_RANKING_LOCK_LOGIN_LABEL}
       </Link>
+    </div>
+  );
+}
+
+/**
+ * 정산 5경기 미만 단이 시작하는 자리의 구분 줄. 표 안이라 한 칸짜리 행으로 두어 보조기술이 행 사이에서
+ * 읽는다.
+ */
+function ProvisionalDivider() {
+  return (
+    <div role="row" className="bg-elevate flex h-8 items-center px-2 sm:px-3">
+      <span
+        role="cell"
+        aria-colspan={PREDICTION_RANKING_COLUMNS.length}
+        className="text-label text-text-3 font-bold"
+      >
+        {PREDICTION_RANKING_PROVISIONAL_LABEL}
+      </span>
     </div>
   );
 }

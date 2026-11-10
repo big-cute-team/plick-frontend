@@ -10,7 +10,7 @@
  * | login | 401 `AUTH_REQUIRED` | 로그인 시트·팝업. 로그인 뒤 같은 픽으로 작성 재개 |
  * | link-account | 403 `AUTH_GUEST_FORBIDDEN` | 로그인이 아니라 "계정 연동 후 예측할 수 있어요" 안내와 연동하기 |
  * | closed | 409 `PREDICTION_CLOSED` | 토스트 "방금 마감됐어요" 뒤 요약 재조회. 시트는 닫는다 |
- * | not-open | 409 `PREDICTION_NOT_OPEN` | 아직 UPCOMING. 요약 재조회로 상태 줄을 맞춘다 |
+ * | not-open | 409 `PREDICTION_NOT_OPEN` | BE KAN-743 뒤로는 오지 않고 code만 남았다. 받으면 요약을 다시 받는다 |
  * | locked | 403 `PREDICTION_LOCKED` | OPEN에서 예측 전. 공감·답글·의견 상세 대신 작성 유도 |
  * | not-available | 404 `PREDICTION_NOT_AVAILABLE` | 빅6 밖 경기. 예측 탭·묶음을 만들지 않는다 |
  * | not-found | 404 `PREDICTION_NOT_FOUND`, `PREDICTION_REPLY_NOT_FOUND` | 지워진 글. 목록을 다시 받는다 |

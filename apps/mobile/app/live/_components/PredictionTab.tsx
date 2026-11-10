@@ -56,9 +56,9 @@ type Sheet =
  * 셋을 접어 뒀는데, 브리핑이 들어오자 한 탭이 너무 길어져 KAN-729에서 프리뷰를 다시 `PreviewTab`으로
  * 뗐다. 이 탭은 요약이 있는 경기에만 서므로(`matchTabsFor`) `summary`는 null이 아니다.
  *
- * 투표의 상태별 표시는 전과 같다(§4 표). UPCOMING은 열림 시각만 보이고 바와 작성, 의견이 없다.
- * OPEN에서 예측 전이면 바는 `?%` 균등이고 바 바로 아래 `투표하기` 버튼이 서며, 바의 칸을 눌러도
- * 그 픽이 골라진 작성 시트가 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로
+ * 투표의 상태별 표시는 전과 같다(§4 표). 킥오프 전이면 전부 OPEN이다(BE KAN-743이 참여 기간 제한을
+ * 없애 열림 시각만 보이던 UPCOMING이 사라졌다). OPEN에서 예측 전이면 바는 `?%` 균등이고 바 바로 아래
+ * `투표하기` 버튼이 서며, 바의 칸을 눌러도 그 픽이 골라진 작성 시트가 열린다 (KAN-710. 전에는 버튼이 여론 머리글에 있어 프리뷰 아래로
  * 밀렸다). 의견 자리는 잠금 지면이라 거기서도 작성이 열린다. 예측 뒤에는 실제 비율에 내 픽 체크,
  * 내 예측 상자(수정, 취소)가 서고 바는 읽기 전용이다. LOCKED 이후는 바와 상자만 읽기 전용이다.
  * 게스트도 작성 시트를 열고(KAN-705) 제출 성공 뒤에만 연동 안내를 띄운다. 정산된 경기는 상태 줄
@@ -147,16 +147,14 @@ export function PredictionTab({
             {formatPredictionCount(summary.totalCount)}
           </span>
         </div>
-        {summary.status !== "UPCOMING" && (
-          <PredictionBar
-            home={header.home}
-            away={header.away}
-            distribution={summary.distribution}
-            myPick={mine?.pick ?? null}
-            totalCount={summary.totalCount}
-            onPick={votable ? (pick) => openCompose(false, pick) : undefined}
-          />
-        )}
+        <PredictionBar
+          home={header.home}
+          away={header.away}
+          distribution={summary.distribution}
+          myPick={mine?.pick ?? null}
+          totalCount={summary.totalCount}
+          onPick={votable ? (pick) => openCompose(false, pick) : undefined}
+        />
         {votable && (
           <button
             type="button"
@@ -174,17 +172,13 @@ export function PredictionTab({
         </div>
       )}
 
-      {summary.status !== "UPCOMING" ? (
-        <PredictionOpinions
-          summary={summary}
-          teams={teams}
-          onCompose={() => openCompose(false)}
-          onEdit={() => openCompose(true)}
-          onCancel={() => setSheet({ kind: "cancel" })}
-        />
-      ) : (
-        <div className="pb-4" />
-      )}
+      <PredictionOpinions
+        summary={summary}
+        teams={teams}
+        onCompose={() => openCompose(false)}
+        onEdit={() => openCompose(true)}
+        onCancel={() => setSheet({ kind: "cancel" })}
+      />
 
       {sheet?.kind === "compose" && (
         <PredictionComposerSheet

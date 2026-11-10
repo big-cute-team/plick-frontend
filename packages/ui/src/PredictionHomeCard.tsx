@@ -168,24 +168,20 @@ export function PredictionHomeCard({
         </span>
       </div>
 
-      {card.status !== "UPCOMING" && (
-        <PredictionBar
-          home={card.home}
-          away={card.away}
-          distribution={card.distribution}
-          myPick={card.myPick}
-          totalCount={card.totalCount}
-          onAccent={accent}
-        />
-      )}
+      <PredictionBar
+        home={card.home}
+        away={card.away}
+        distribution={card.distribution}
+        myPick={card.myPick}
+        totalCount={card.totalCount}
+        onAccent={accent}
+      />
 
-      {card.status !== "UPCOMING" && (
-        <OpinionTeaser
-          locked={!card.revealed}
-          opinions={card.opinions}
-          tone={tone}
-        />
-      )}
+      <OpinionTeaser
+        locked={!card.revealed}
+        opinions={card.opinions}
+        tone={tone}
+      />
 
       <p
         className={`text-label mt-auto flex items-center tabular-nums ${muted} ${
