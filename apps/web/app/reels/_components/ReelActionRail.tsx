@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatCount } from "@plick/domain/format";
 import type { ReelCard } from "@plick/domain/types";
+import { EarlyClickButton } from "@plick/ui/EarlyClickButton";
 import {
   ChatIcon,
   ChevronDownIcon,
@@ -121,14 +122,13 @@ function RailAction({
   ariaLabel?: string;
   ariaPressed?: boolean;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={ariaLabel && `${ariaLabel} ${label}`}
-      aria-pressed={ariaPressed}
-      className={`${like ? "text-like" : "text-text"} group flex flex-col items-center gap-1.25`}
-    >
+  const shared = {
+    "aria-label": ariaLabel && `${ariaLabel} ${label}`,
+    "aria-pressed": ariaPressed,
+    className: `${like ? "text-like" : "text-text"} group flex flex-col items-center gap-1.25`,
+  };
+  const body = (
+    <>
       <span
         className={`bg-avatar group-hover:bg-chip group-focus-visible:outline-accent grid size-12 place-items-center rounded-full transition-colors group-focus-visible:outline-2 group-focus-visible:outline-offset-2`}
       >
@@ -139,6 +139,17 @@ function RailAction({
       >
         {label}
       </span>
+    </>
+  );
+
+  /* 좋아요는 화면이 뜨자마자 누르는 버튼이라 하이드레이션 전 클릭도 살린다 (KAN-750) */
+  return like && onClick ? (
+    <EarlyClickButton onPress={onClick} {...shared}>
+      {body}
+    </EarlyClickButton>
+  ) : (
+    <button type="button" onClick={onClick} {...shared}>
+      {body}
     </button>
   );
 }

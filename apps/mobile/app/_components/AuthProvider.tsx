@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  startTransition,
   useLayoutEffect,
   useRef,
   useState,
@@ -77,8 +78,10 @@ interface Auth {
  * 서버 렌더와 하이드레이션은 세션을 **모르는** 상태(`undefined`)로 그린다. 서버는 쿠키를 읽지
  * 않기로 했고, 브라우저가 쿠키를 읽은 값으로 그리면 서버 HTML과 달라져 하이드레이션 불일치가
  * 난다. 그래서 둘 다 같은 "모름"으로 그리고, `useLayoutEffect`에서 표식 쿠키를 읽어 state로
- * 올린다. 레이아웃 이펙트는 브라우저가 첫 프레임을 그리기 전에 돌고 그 안의 setState는 동기
- * 재렌더를 일으키므로, 사용자는 "모름" 상태를 한 프레임도 보지 않는다. `<head>` 동기
+ * 올린다. 화면을 옮길 때는 레이아웃 이펙트 안의 setState가 동기 재렌더를 일으켜 옛 세션으로
+ * 그린 프레임이 없다. 하이드레이션 직후의 첫 반영만은 트랜지션이다 (KAN-750). 그때는 서버 HTML이
+ * 이미 "모름"으로 그려져 있어 새로 보이는 상태가 없고, 급한 갱신은 아직 하이드레이션 안 된
+ * 페이지 경계를 클라 렌더로 떨어뜨린다. `<head>` 동기
  * 스크립트로 `<html>`에 값을 박는 방법도 생각했는데, 하이드레이션 첫 패스는 어차피 서버
  * 스냅샷으로 그려야 해서 이득이 없었다.
  *
@@ -121,6 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [issueFailed, setIssueFailed] = useState(false);
   /* 날아가는 중인 `ensureSession`. 한가할 때의 발급과 탭이 겹쳐도 뒤처리(캐시 채우기, 이벤트)는 한 번이다 */
   const pending = useRef<Promise<boolean> | null>(null);
+  /* 쿠키를 처음 읽는 중인가(하이드레이션 직후). 아래 레이아웃 이펙트가 한 번 쓰고 내린다 */
+  const firstRead = useRef(true);
 
   useLayoutEffect(() => {
     const kind = readSessionKind();
@@ -128,8 +133,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearRecentArticleStateEdits();
       queryClient.removeQueries({ queryKey: articleStateKeys.all });
     }
-    setSessionKind(kind);
-    setIssueFailed(false);
+    const apply = () => {
+      setSessionKind(kind);
+      setIssueFailed(false);
+    };
+    /* 하이드레이션 직후의 첫 반영만 트랜지션으로 낸다 (KAN-750). 이 시점에는 `loading.tsx`가 만든
+       페이지 경계가 아직 하이드레이션 전이다. 급한 갱신으로 컨텍스트를 바꾸면 React가 그 경계의
+       서버 HTML을 버리고 클라에서 새로 그린다. 트랜지션이면 경계를 먼저 하이드레이션하고 나서
+       반영한다. 화면을 옮길 때(로그인·로그아웃 뒤)는 전처럼 바로 반영한다 */
+    if (firstRead.current) {
+      firstRead.current = false;
+      startTransition(apply);
+    } else {
+      apply();
+    }
   }, [pathname, queryClient]);
 
   const ensureSession = useCallback(() => {

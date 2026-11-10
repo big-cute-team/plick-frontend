@@ -68,6 +68,24 @@ export async function gateRequest(
 }
 
 /**
+ * 앱 스크립트를 `release`를 부를 때까지 받지 못하게 한다 (KAN-750). 그동안 화면은 서버가 보낸
+ * HTML만 그려져 있고 버튼에는 클릭 처리기가 없다. 하이드레이션 전에 누른 클릭이 살아남는지 볼 때 쓴다.
+ *
+ * @param page 대상 페이지
+ * @returns 붙잡은 스크립트를 풀어 주는 함수
+ */
+export function holdAppScripts(page: Page): Promise<() => void> {
+  return gateRequest(page, /\/_next\/static\/.+\.js(\?|$)/);
+}
+
+/** 버튼에 React가 붙었는가(하이드레이션됐는가). React가 DOM 노드에 다는 속성으로 본다 */
+export function isHydrated(button: Locator): Promise<boolean> {
+  return button.evaluate((el) =>
+    Object.keys(el).some((key) => key.startsWith("__reactProps")),
+  );
+}
+
+/**
  * 이 화면의 서버 액션(POST + `next-action` 헤더)을 붙잡아 BE에 닿지 않게 한다. 응답을 주지
  * 않아 뮤테이션은 진행 중으로 남고, 화면은 낙관적 값을 그린 채로 있다.
  *

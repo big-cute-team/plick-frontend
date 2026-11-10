@@ -7,6 +7,7 @@ import {
   isDebateClosed,
 } from "@plick/domain/format";
 import type { Debate, VoteOption } from "@plick/domain/types";
+import { EarlyClickButton } from "./EarlyClickButton";
 
 /**
  * 선택지 한 쪽의 트랙 색 (KAN-567 시안 "투표 카드"). A는 딥 그린, B는 밝은 그린이다.
@@ -44,6 +45,8 @@ const SIDE_STYLE: Record<
  * @param onVote - 트랙 탭 시 호출. 없으면 표시 전용(리스트 카드)으로 그린다.
  * @param isPending - 투표 요청 진행 중 — 트랙 탭을 막는다.
  * @param size - 기사·릴 세부와 투표 탭 진행 중은 md, 마감 행과 MY 투표 탭은 sm.
+ * @param earlyClick - 하이드레이션 전에 누른 표도 살린다 (KAN-750, `EarlyClickButton`). 트랙을
+ *   폼으로 감싸므로 다른 폼 안에 든 카드(의견 창)에서는 켜지 않는다.
  */
 export function VoteCard({
   debate,
@@ -51,12 +54,14 @@ export function VoteCard({
   onVote,
   isPending = false,
   size = "md",
+  earlyClick = false,
 }: {
   debate: Debate;
   closed?: boolean;
   onVote?: (option: VoteOption) => void;
   isPending?: boolean;
   size?: "md" | "sm";
+  earlyClick?: boolean;
 }) {
   /* closesAt 경과 마감. 마감은 시간상 단조라(서버 렌더가 마감이면 더 늦은
      하이드레이션도 마감) 초기값을 렌더 시점 판정으로 둬도 하이드레이션이
@@ -136,6 +141,7 @@ export function VoteCard({
             size={size}
             onVote={interactive ? () => onVote?.(option) : undefined}
             locked={isPending || debate.myVote === option}
+            earlyClick={earlyClick}
           />
         ))}
       </div>
@@ -169,6 +175,7 @@ function VoteTrack({
   size,
   onVote,
   locked,
+  earlyClick,
 }: {
   option: VoteOption;
   label: string;
@@ -180,6 +187,7 @@ function VoteTrack({
   size: "md" | "sm";
   onVote?: () => void;
   locked: boolean;
+  earlyClick: boolean;
 }) {
   const style = SIDE_STYLE[option];
   const md = size === "md";
@@ -194,16 +202,9 @@ function VoteTrack({
       : md
         ? "h-10"
         : "h-9";
-  const Tag = onVote ? "button" : "div";
-
-  return (
-    <Tag
-      type={onVote ? "button" : undefined}
-      onClick={onVote}
-      disabled={onVote ? locked : undefined}
-      aria-pressed={onVote ? mine : undefined}
-      className={`rounded-tile bg-vote-track relative flex w-full items-center gap-2 overflow-hidden text-left transition-[height] duration-[800ms] ease-out ${height} ${md ? "px-3.25" : "px-3"} ${onVote ? "cursor-pointer" : ""}`}
-    >
+  const className = `rounded-tile bg-vote-track relative flex w-full items-center gap-2 overflow-hidden text-left transition-[height] duration-[800ms] ease-out ${height} ${md ? "px-3.25" : "px-3"} ${onVote ? "cursor-pointer" : ""}`;
+  const body = (
+    <>
       <span
         aria-hidden
         className={`absolute inset-y-0 left-0 transition-[width,background-color] duration-[800ms] ease-out ${
@@ -240,6 +241,28 @@ function VoteTrack({
           {pct}%
         </span>
       )}
-    </Tag>
+    </>
+  );
+
+  if (!onVote) return <div className={className}>{body}</div>;
+  return earlyClick ? (
+    <EarlyClickButton
+      onPress={onVote}
+      disabled={locked}
+      aria-pressed={mine}
+      className={className}
+    >
+      {body}
+    </EarlyClickButton>
+  ) : (
+    <button
+      type="button"
+      onClick={onVote}
+      disabled={locked}
+      aria-pressed={mine}
+      className={className}
+    >
+      {body}
+    </button>
   );
 }
