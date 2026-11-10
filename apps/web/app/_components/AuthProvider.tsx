@@ -12,6 +12,7 @@ import {
 import { usePathname } from "next/navigation";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_ARTICLE_STATE } from "@plick/core/article-state-batch";
+import { clearRecentArticleStateEdits } from "@plick/core/article-state-cache";
 import { syncArticleStateMemoOwner } from "@plick/core/article-state-memo";
 import { articleStateKeys } from "@plick/core/articleStateKeys";
 import { requestGuestSession } from "@/_apis/guest-session";
@@ -125,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useLayoutEffect(() => {
     const kind = readSessionKind();
     if (syncArticleStateMemoOwner(kind)) {
+      clearRecentArticleStateEdits();
       queryClient.removeQueries({ queryKey: articleStateKeys.all });
     }
     setSessionKind(kind);
@@ -140,10 +142,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIssueFailed(true);
         return false;
       }
+      /* 다른 탭이 먼저 만든 세션이면(`existing`) 기억의 주인만 맞춘다. 여기는 세션이 없던 자리라
+         캐시에 든 내 상태는 발급을 기다리던 좋아요·투표가 낙관적으로 적은 값뿐이다. 비우면 그 값이
+         화면에서 빠졌다가 응답 뒤에 다시 찬다(KAN-748). 그 엔트리는 무효로 표시돼 있어 세션이
+         켜지면 다시 묻고, 방금 누른 필드는 응답에 안 덮인다(`loadMyArticleState`) */
       if (result === "issued") adoptFreshGuest(queryClient, kind);
-      else if (syncArticleStateMemoOwner(kind)) {
-        queryClient.removeQueries({ queryKey: articleStateKeys.all });
-      }
+      else syncArticleStateMemoOwner(kind);
       setSessionKind(kind);
       if (result === "issued") {
         window.dispatchEvent(new Event(GUEST_ISSUED_EVENT));
@@ -171,6 +175,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const onPageShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
       const kind = readSessionKind();
+      /* 떠나 있던 사이 다른 기기에서 바꿨을 수 있어 통째로 다시 묻는다. 이 탭이 떠나기 전에 누른
+         기록이 그 응답을 덮지 않게 같이 지운다 (KAN-748) */
+      clearRecentArticleStateEdits();
       if (syncArticleStateMemoOwner(kind)) {
         queryClient.removeQueries({ queryKey: articleStateKeys.all });
       } else {
@@ -204,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 /**
  * 방금 받은 게스트로 세션을 넘긴다 (KAN-667). 새 게스트는 누른 기사가 없으므로 아직 값이 없는 내 기사
  * 상태 캐시를 "안 누름"으로 채운다. `staleTime`이 무한이라 채운 캐시는 다시 묻지 않는다. 발급을
- * 기다리던 좋아요가 낙관적으로 적어 둔 값은 이미 들어 있어 건드리지 않는다. 브라우저 기억의 주인도
+ * 기다리던 좋아요가 낙관적으로 적어 둔 값은 이미 들어 있어 값은 건드리지 않는다. 브라우저 기억의 주인도
  * 새 게스트로 바꾼다. 세션이 없던 자리라 지울 기억이 없으니 캐시를 비우지 않는다.
  *
  * @param queryClient 앱 쿼리 클라이언트
@@ -215,9 +222,13 @@ function adoptFreshGuest(queryClient: QueryClient, kind: SessionKind): void {
   for (const query of queryClient
     .getQueryCache()
     .findAll({ queryKey: articleStateKeys.all })) {
-    if (query.state.data === undefined) {
-      queryClient.setQueryData(query.queryKey, DEFAULT_ARTICLE_STATE);
-    }
+    /* 낙관적으로 적어 둔 엔트리는 "모르는 필드가 있다"는 무효 표시가 붙어 있다(`setMyArticleState`).
+       새 게스트는 누른 게 없어 나머지 필드가 "안 누름"으로 맞으니, 같은 값을 다시 적어 표시를 걷는다.
+       걷지 않으면 세션이 켜지는 순간 그 기사를 한 번 더 묻는다 (KAN-748) */
+    queryClient.setQueryData(
+      query.queryKey,
+      query.state.data ?? DEFAULT_ARTICLE_STATE,
+    );
   }
 }
 

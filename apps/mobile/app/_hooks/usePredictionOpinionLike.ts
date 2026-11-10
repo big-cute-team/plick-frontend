@@ -43,6 +43,17 @@ export function usePredictionOpinionLike(
         : result;
     },
     state: { liked: opinion.liked, likeCount: opinion.likeCount },
+    /* 의견 목록과 상세는 `staleTime`이 0이라 들어오거나 창에 돌아올 때마다 다시 받는다. 그 조회가
+       도는 중에 누르면 누르기 전 상태가 돌아와 하트를 덮으므로 먼저 취소한다 (KAN-748) */
+    beforeChange: () =>
+      Promise.all([
+        queryClient.cancelQueries({
+          queryKey: predictionKeys.opinionsOf(matchId),
+        }),
+        queryClient.cancelQueries({
+          queryKey: predictionKeys.opinion(opinion.id),
+        }),
+      ]),
     onChange: (next) => {
       queryClient.setQueriesData<
         InfiniteData<PredictionOpinionPage, string | null>

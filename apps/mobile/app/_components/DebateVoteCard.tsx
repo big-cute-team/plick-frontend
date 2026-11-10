@@ -3,7 +3,10 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { setMyArticleState } from "@plick/core/article-states";
+import {
+  refreshMyArticleState,
+  setMyArticleState,
+} from "@plick/core/article-state-cache";
 import type { Debate } from "@plick/domain/types";
 import { VoteCard } from "@plick/ui/VoteCard";
 import { VOTE_LOGIN_PROMPT } from "@/_constants/debates";
@@ -86,6 +89,9 @@ export function DebateVoteCard({
       onChange: ({ myVote: next }) => {
         setMyArticleState(queryClient, articleId, { vote: next });
       },
+      /* 되돌린 내 표는 누를 때 화면이 보여 주던 값이라, 내 상태 조회가 끝나기 전에 눌렀다면
+         서버와 다를 수 있다. 서버에 다시 묻는다 (KAN-748) */
+      onRollback: () => refreshMyArticleState(queryClient, articleId, ["vote"]),
     });
 
   return (

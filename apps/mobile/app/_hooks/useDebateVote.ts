@@ -29,15 +29,19 @@ import { voteDebate } from "@/_services/debate-actions";
  * @param onChange 낙관적 갱신·서버 확정·롤백 때마다 새 집계로 호출된다.
  *   호출부가 원본(캐시나 state)에 그대로 반영한다. 원본이 쿼리 캐시뿐이면
  *   (릴 세부) 생략해도 된다 — 캐시는 훅이 직접 맞춘다.
+ * @param onRollback 실패해 되돌린 직후에 부른다. 되돌린 내 표를 서버에 다시 확인할 때 쓴다
+ *   (KAN-748, `useLikeToggle`과 같다)
  */
 export function useDebateVote({
   debate,
   onChange,
   onFirstVote,
+  onRollback,
 }: {
   debate: Debate;
   onChange?: (next: DebateVoteState) => void;
   onFirstVote?: () => void;
+  onRollback?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { ensureSession } = useAuth();
@@ -83,7 +87,10 @@ export function useDebateVote({
       void queryClient.invalidateQueries({ queryKey: debateKeys.list() });
     },
     onError: (e, _option, previous) => {
-      if (previous) apply(previous);
+      if (previous) {
+        apply(previous);
+        onRollback?.();
+      }
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {
         setNeedsLogin(true);
         return;

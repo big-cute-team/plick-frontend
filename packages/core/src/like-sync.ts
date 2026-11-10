@@ -14,7 +14,7 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { LikeState } from "@plick/domain/types";
 import { activityKeys } from "./activityKeys";
-import { setMyArticleState } from "./article-states";
+import { setMyArticleState } from "./article-state-cache";
 import { articleKeys } from "./articleKeys";
 import { reelKeys } from "./reelKeys";
 
