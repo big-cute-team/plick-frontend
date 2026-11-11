@@ -1,6 +1,12 @@
 import { test, expect } from "../../fixtures/failure";
 import { activeReel, reelTitle } from "../../fixtures/locators";
 import { swipeUp } from "../../fixtures/gestures";
+import {
+  hasSession,
+  holdServerActions,
+  recordText,
+  reloadHolding,
+} from "../../fixtures/optimistic";
 
 /** 릴스 피드. 진입하면 첫 릴 URL로 붙고, 넘기면 URL의 id가 바뀌고, 제목을 누르면 세부 시트가 뜬다 */
 test.describe("릴스", () => {
@@ -63,5 +69,37 @@ test.describe("릴스", () => {
       await dialog.getByRole("button", { name: "닫기" }).last().click();
       await expect(dialog).toBeHidden();
     });
+  });
+
+  /* KAN-748 회귀. 서버 액션은 붙잡아 BE에 보내지 않아 dev에 좋아요가 남지 않는다 */
+  test("피드를 다시 받는 중에 눌러도 좋아요 수가 안 내려간다", async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.E2E_TARGET === "prod",
+      "게스트 세션을 받아야 해서 읽기 전용 대상에서는 돌지 않는다",
+    );
+    await page.goto("/reels");
+    await expect(page).toHaveURL(/\/reels\/\d+$/);
+    await expect.poll(() => hasSession(page)).toBe(true);
+
+    /* 시계를 앞당겨 씨앗을 묵게 만든다. 다시 열면 피드를 다시 받는다. 그 응답(누르기 전 수)을
+       받아 두고 누른 뒤에 돌려준다 */
+    await page.clock.setSystemTime(Date.now() + 31 * 60 * 1000);
+    await holdServerActions(page);
+    const feed = await reloadHolding(page, /\/api\/v1\/reels/);
+    await feed.fetched;
+
+    const like = activeReel(page).getByRole("button", { name: "좋아요" });
+    const history = await recordText(like);
+    await like.click();
+    await expect(like).toHaveAttribute("aria-pressed", "true");
+
+    await feed.released;
+    /* 돌아온 응답이 화면에 반영될 틈을 준다. 내려갔다면 이 사이에 기록된다 */
+    await page.waitForTimeout(500);
+    const counts = await history();
+    expect(counts.length, `좋아요 수 변화 ${counts.join(" > ")}`).toBe(2);
+    expect(counts[1]).not.toBe(counts[0]);
   });
 });

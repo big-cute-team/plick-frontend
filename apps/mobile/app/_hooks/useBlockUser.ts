@@ -50,7 +50,8 @@ export function useBlockUser() {
     },
     onSuccess: (blockedUserId: number) => {
       qc.setQueriesData<InfiniteData<CommentPage, string | null>>(
-        { queryKey: commentKeys.all },
+        /* 댓글 수 캐시(숫자)는 같은 상위 키 아래라 목록 키로만 훑는다 (KAN-748) */
+        { queryKey: commentKeys.lists() },
         (data) =>
           data && {
             ...data,

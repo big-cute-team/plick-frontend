@@ -3,6 +3,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { InitialReelFeed } from "@plick/domain/types";
 import { ApiError } from "@plick/core/client";
+import { loadFeedKeepingRecentEdits } from "@plick/core/feed-recent-edits";
 import { reelKeys } from "@plick/core/reelKeys";
 import { getReels, getReelsFrom } from "@plick/core/reels";
 import { FEED_FRESH_MS, FEED_MAX_RETRIES } from "@/_constants/feed";
@@ -27,9 +28,12 @@ export function useReelsFeed(initial?: InitialReelFeed, anchorId?: string) {
     queryKey: anchorId ? reelKeys.anchor(anchorId) : reelKeys.feed(),
     /* 커서가 없는 요청이 곧 첫 페이지다 — 앵커 모드는 그 첫 페이지만 딥링크로 받는다 */
     queryFn: ({ pageParam }) =>
-      pageParam === null && anchorId
-        ? getReelsFrom(anchorId)
-        : getReels({ cursor: pageParam }),
+      /* 방금 누른 좋아요 수와 투표 집계는 응답 위에 덮어 지킨다 (KAN-748) */
+      loadFeedKeepingRecentEdits(() =>
+        pageParam === null && anchorId
+          ? getReelsFrom(anchorId)
+          : getReels({ cursor: pageParam }),
+      ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     initialData: initial

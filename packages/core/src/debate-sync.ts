@@ -19,6 +19,7 @@ import type {
   ReelFeedPage,
 } from "@plick/domain/types";
 import { debateKeys } from "./debateKeys";
+import { rememberVoteCounts } from "./feed-recent-edits";
 import { reelKeys } from "./reelKeys";
 
 /**
@@ -27,6 +28,9 @@ import { reelKeys } from "./reelKeys";
  * 릴스는 피드·앵커 등 엔트리가 여럿이라 도메인 상위 키로 한 번에 훑는다. 기사별
  * 토론도 기사마다 키가 달라 상위 키(`debateKeys.articles`)로 훑고 토론 id로 고른다.
  * 아직 안 받은 캐시는 없어서 그냥 지나간다.
+ *
+ * 적은 집계는 `feed-recent-edits`에도 기억해 둔다 (KAN-748). 릴스 피드는 투표할 때 조회를
+ * 취소하지 않아, 누르기 전에 나간 조회가 늦게 돌아와 이 집계를 덮을 수 있다.
  *
  * @param queryClient 앱의 QueryClient
  * @param debateId 토론 id
@@ -66,4 +70,6 @@ export function syncDebateVote(
     (debate) =>
       debate && debate.id === debateId ? { ...debate, ...next } : debate,
   );
+
+  rememberVoteCounts(debateId, next);
 }
