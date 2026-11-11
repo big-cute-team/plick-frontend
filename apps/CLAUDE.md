@@ -29,6 +29,19 @@
 주석은 JSDoc 블록 주석으로 쓴다. 선언 위에 이중 슬래시(`//`) 블록은 금지다. props와 인자는 `@param`,
 예시는 `@example`로 단다. 표현식 내부처럼 JSDoc이 불가능한 자리의 제약 설명만 인라인 `//`로 허용한다.
 
+## 하이드레이션과 캐시 쓰기
+
+루트 레이아웃의 제공자가 하이드레이션 직후 브라우저 값(쿠키, UA)으로 상태를 올릴 때는 `startTransition`으로
+낸다. 급한 갱신으로 컨텍스트를 바꾸면 `loading.tsx` 아래 페이지가 서버 HTML을 버리고 클라에서 새로 그려진다
+([ADR 0252](../docs/adr/0252-pre-hydration-click-replay.md)). 개발 모드에서는 재현되지 않는다.
+
+화면이 뜨자마자 누르는 버튼(좋아요, 투표)은 `@plick/ui/EarlyClickButton`을 쓴다. 하이드레이션 전의 클릭을
+살린다. 폼으로 감싸므로 다른 폼 안에서는 쓰지 않는다.
+
+상위 쿼리 키로 `setQueriesData`를 훑을 때는 그 키 아래 엔트리의 모양이 모두 같은지 확인한다. 무한 목록으로
+단정했다가 객체나 숫자 엔트리에서 예외가 나 좋아요가 무산된 적이 있다
+([ADR 0251](../docs/adr/0251-optimistic-like-vote-race-on-open.md)).
+
 ## 절대경로 import (`@/`)
 
 각 앱 `tsconfig.json`에 `@/* → ./app/*` alias가 있다(`baseUrl: "."`).

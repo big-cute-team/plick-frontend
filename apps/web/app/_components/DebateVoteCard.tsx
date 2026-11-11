@@ -93,6 +93,7 @@ export function DebateVoteCard({
         onVote={vote}
         isPending={isPending}
         size={size}
+        earlyClick
       />
       {showOpinion && !needsLogin && (
         <DebateOpinionDialog

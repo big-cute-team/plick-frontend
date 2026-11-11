@@ -4,7 +4,9 @@ import { mobileNewsFeed } from "../../fixtures/locators";
 import {
   gateRequest,
   hasSession,
+  holdAppScripts,
   holdServerActions,
+  isHydrated,
   recordPressed,
   reloadHolding,
 } from "../../fixtures/optimistic";
@@ -191,6 +193,41 @@ test.describe("기사", () => {
     await expect.poll(() => hasSession(page)).toBe(true);
     await page.waitForTimeout(500);
     expect(await history(), "aria-pressed 변화").toEqual(["false", "true"]);
+  });
+
+  /* KAN-750 회귀. 스크립트를 붙잡아 서버 HTML만 그려진 화면에서 누른다 */
+  test("스크립트가 붙기 전에 누른 좋아요도 붙은 뒤에 반영된다", async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.E2E_TARGET === "prod",
+      "게스트 세션을 받아야 해서 읽기 전용 대상에서는 돌지 않는다",
+    );
+    await page.goto("/");
+    await expect.poll(() => hasSession(page)).toBe(true);
+    const href = await mobileNewsFeed(page)
+      .getByRole("article")
+      .first()
+      .getByRole("heading", { level: 3 })
+      .getByRole("link")
+      .getAttribute("href");
+    expect(href, "첫 기사 주소").toMatch(/^\/articles\/\d+$/);
+
+    await holdServerActions(page);
+    const releaseScripts = await holdAppScripts(page);
+    /* 주소로 바로 연다. 목록에서 눌러 들어가면 서버 HTML 없이 브라우저가 그린다 */
+    await page.goto(href!, { waitUntil: "domcontentloaded" });
+
+    const like = page
+      .getByRole("main")
+      .getByRole("button", { name: "좋아요" })
+      .first();
+    await like.click();
+    expect(await isHydrated(like), "누를 때는 아직 붙기 전").toBe(false);
+    await expect(like).toHaveAttribute("aria-pressed", "false");
+
+    releaseScripts();
+    await expect(like).toHaveAttribute("aria-pressed", "true");
   });
 
   test("옛 기사 목록 주소는 홈으로 옮겨진다", async ({ page }) => {

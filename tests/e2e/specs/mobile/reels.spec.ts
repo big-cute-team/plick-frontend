@@ -3,7 +3,9 @@ import { activeReel, reelTitle } from "../../fixtures/locators";
 import { swipeUp } from "../../fixtures/gestures";
 import {
   hasSession,
+  holdAppScripts,
   holdServerActions,
+  isHydrated,
   recordText,
   reloadHolding,
 } from "../../fixtures/optimistic";
@@ -101,5 +103,29 @@ test.describe("릴스", () => {
     const counts = await history();
     expect(counts.length, `좋아요 수 변화 ${counts.join(" > ")}`).toBe(2);
     expect(counts[1]).not.toBe(counts[0]);
+  });
+
+  /* KAN-750 회귀. 스크립트를 붙잡아 서버 HTML만 그려진 화면에서 누른다 */
+  test("스크립트가 붙기 전에 누른 좋아요도 붙은 뒤에 반영된다", async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.E2E_TARGET === "prod",
+      "게스트 세션을 받아야 해서 읽기 전용 대상에서는 돌지 않는다",
+    );
+    await page.goto("/reels");
+    await expect.poll(() => hasSession(page)).toBe(true);
+
+    await holdServerActions(page);
+    const releaseScripts = await holdAppScripts(page);
+    await page.goto("/reels", { waitUntil: "domcontentloaded" });
+
+    const like = activeReel(page).getByRole("button", { name: "좋아요" });
+    await like.click();
+    expect(await isHydrated(like), "누를 때는 아직 붙기 전").toBe(false);
+    await expect(like).toHaveAttribute("aria-pressed", "false");
+
+    releaseScripts();
+    await expect(like).toHaveAttribute("aria-pressed", "true");
   });
 });
