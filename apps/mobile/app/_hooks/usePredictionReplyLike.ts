@@ -33,6 +33,11 @@ export function usePredictionReplyLike(
         : result;
     },
     state: { liked: reply.liked, likeCount: reply.likeCount },
+    /* 답글 목록을 다시 받는 중이면 취소한다 (KAN-748, `usePredictionOpinionLike`와 같은 이유) */
+    beforeChange: () =>
+      queryClient.cancelQueries({
+        queryKey: predictionKeys.replies(predictionId),
+      }),
     onChange: (next) => {
       queryClient.setQueryData<
         InfiniteData<PredictionReplyPage, string | null>

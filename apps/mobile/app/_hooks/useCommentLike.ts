@@ -34,6 +34,10 @@ export function useCommentLike(articleId: string, comment: ArticleComment) {
     toggle: (liked) =>
       liked ? likeComment(comment.id) : unlikeComment(comment.id),
     state: { liked: comment.liked, likeCount: comment.likeCount },
+    /* 목록을 다시 받는 중이면 취소한다 (KAN-748). 누르기 전에 나간 조회가 누르기 전 상태를 싣고
+       돌아와 방금 누른 하트를 덮지 않게. 확정 값은 응답이 준다 */
+    beforeChange: () =>
+      queryClient.cancelQueries({ queryKey: commentKeys.list(articleId) }),
     onChange: (next) => {
       queryClient.setQueryData<InfiniteData<CommentPage, string | null>>(
         commentKeys.list(articleId),

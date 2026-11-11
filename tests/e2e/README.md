@@ -59,6 +59,10 @@ explore 스텝은 `goto: scope: click: fill: press: swipe wait: snap find: url p
 
 읽기와 이동만 한다. 좋아요·투표·댓글은 dev DB에 남고 로그인이 필요해서 테스트 로그인 엔드포인트가 생길 때까지 넣지 않는다.
 
+쓰기 화면의 낙관적 갱신은 `fixtures/optimistic.ts`로 본다(KAN-748). 서버 액션을 붙잡아 BE에 보내지 않으므로
+dev DB에 남는 게 없다. 늦출 조회 응답은 먼저 받아 두고 누른 뒤에 돌려줘 경합을 매번 같은 순서로 만든다.
+하이드레이션 전 클릭은 `holdAppScripts`로 앱 스크립트를 붙잡아 서버 HTML만 그려진 화면에서 누르고 풀어 준다(KAN-750).
+
 셀렉터는 `getByRole`과 접근성 이름만 쓴다. CSS 클래스와 `nth`는 쓰지 않는다. 이름이 없는 랜드마크는
 `fixtures/locators.ts`에 한 번만 좁히고, 앱에 `aria-label`을 붙이는 게 맞으면 앱 쪽을 고친다.
 

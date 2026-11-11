@@ -1,5 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshMyArticleState } from "@plick/core/article-state-cache";
+import { forgetLikeCount } from "@plick/core/feed-recent-edits";
 import type { LikeState } from "@plick/domain/types";
 import { useLikeToggle } from "@/_hooks/useLikeToggle";
 import { likeArticle, unlikeArticle } from "@/_services/article-likes";
@@ -17,20 +20,34 @@ import { likeArticle, unlikeArticle } from "@/_services/article-likes";
  * @param articleId 기사(릴) id — 릴스와 기사가 같은 `articleSummaryId` 체계다
  * @param state 지금 보고 있는 좋아요 상태(원본에서 읽은 값)
  * @param onChange 새 상태를 원본(캐시나 state)에 반영하는 콜백
+ * @param beforeChange 낙관적 값을 적기 직전에 기다릴 일. 원본이 목록 캐시인 화면이 그 목록의
+ *   진행 중 조회를 취소할 때 쓴다(`useLikeToggle`)
  */
 export function useArticleLike({
   articleId,
   state,
   onChange,
+  beforeChange,
 }: {
   articleId: string;
   state: LikeState;
   onChange: (next: LikeState) => void;
+  beforeChange?: () => Promise<unknown>;
 }) {
+  const queryClient = useQueryClient();
+
   return useLikeToggle({
     toggle: (liked) =>
       liked ? likeArticle(articleId) : unlikeArticle(articleId),
     state,
     onChange,
+    beforeChange,
+    /* 되돌린 값은 누를 때 화면이 보여 주던 값이라, 내 상태 조회가 끝나기 전에 눌렀다면 서버와
+       다를 수 있다. 서버에 다시 묻는다 (KAN-748). 되돌린 수는 피드 응답보다 옛 값일 수 있어
+       기억에서 지운다 */
+    onRollback: () => {
+      refreshMyArticleState(queryClient, articleId, ["liked"]);
+      forgetLikeCount(articleId);
+    },
   });
 }

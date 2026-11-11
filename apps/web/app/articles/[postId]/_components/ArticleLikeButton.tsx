@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { syncLikeIntoFeeds } from "@plick/core/like-sync";
 import { formatCount } from "@plick/domain/format";
 import type { LikeState } from "@plick/domain/types";
+import { EarlyClickButton } from "@plick/ui/EarlyClickButton";
 import { HeartMiniIcon } from "@plick/ui/icons";
 import { LoginPromptDialog } from "@/_components/LoginPromptDialog";
 import { LIKE_LOGIN_PROMPT } from "@/_constants/likes";
@@ -52,9 +53,8 @@ export function ArticleLikeButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={like.toggle}
+      <EarlyClickButton
+        onPress={like.toggle}
         aria-pressed={state.liked}
         /* 이름에 보이는 수를 담는다. 눌린 상태는 aria-pressed가 읽는다 (KAN-670) */
         aria-label={`좋아요 ${formatCount(state.likeCount)}`}
@@ -64,7 +64,7 @@ export function ArticleLikeButton({
       >
         <HeartMiniIcon size={17} filled={state.liked} />
         {formatCount(state.likeCount)}
-      </button>
+      </EarlyClickButton>
 
       {like.needsLogin && (
         <LoginPromptDialog

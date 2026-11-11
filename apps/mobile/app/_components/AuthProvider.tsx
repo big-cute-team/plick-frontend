@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  startTransition,
   useLayoutEffect,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
 import { usePathname } from "next/navigation";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_ARTICLE_STATE } from "@plick/core/article-state-batch";
+import { clearRecentArticleStateEdits } from "@plick/core/article-state-cache";
 import { syncArticleStateMemoOwner } from "@plick/core/article-state-memo";
 import { articleStateKeys } from "@plick/core/articleStateKeys";
 import { requestGuestSession } from "@/_apis/guest-session";
@@ -76,8 +78,10 @@ interface Auth {
  * 서버 렌더와 하이드레이션은 세션을 **모르는** 상태(`undefined`)로 그린다. 서버는 쿠키를 읽지
  * 않기로 했고, 브라우저가 쿠키를 읽은 값으로 그리면 서버 HTML과 달라져 하이드레이션 불일치가
  * 난다. 그래서 둘 다 같은 "모름"으로 그리고, `useLayoutEffect`에서 표식 쿠키를 읽어 state로
- * 올린다. 레이아웃 이펙트는 브라우저가 첫 프레임을 그리기 전에 돌고 그 안의 setState는 동기
- * 재렌더를 일으키므로, 사용자는 "모름" 상태를 한 프레임도 보지 않는다. `<head>` 동기
+ * 올린다. 화면을 옮길 때는 레이아웃 이펙트 안의 setState가 동기 재렌더를 일으켜 옛 세션으로
+ * 그린 프레임이 없다. 하이드레이션 직후의 첫 반영만은 트랜지션이다 (KAN-750). 그때는 서버 HTML이
+ * 이미 "모름"으로 그려져 있어 새로 보이는 상태가 없고, 급한 갱신은 아직 하이드레이션 안 된
+ * 페이지 경계를 클라 렌더로 떨어뜨린다. `<head>` 동기
  * 스크립트로 `<html>`에 값을 박는 방법도 생각했는데, 하이드레이션 첫 패스는 어차피 서버
  * 스냅샷으로 그려야 해서 이득이 없었다.
  *
@@ -120,14 +124,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [issueFailed, setIssueFailed] = useState(false);
   /* 날아가는 중인 `ensureSession`. 한가할 때의 발급과 탭이 겹쳐도 뒤처리(캐시 채우기, 이벤트)는 한 번이다 */
   const pending = useRef<Promise<boolean> | null>(null);
+  /* 쿠키를 처음 읽는 중인가(하이드레이션 직후). 아래 레이아웃 이펙트가 한 번 쓰고 내린다 */
+  const firstRead = useRef(true);
 
   useLayoutEffect(() => {
     const kind = readSessionKind();
     if (syncArticleStateMemoOwner(kind)) {
+      clearRecentArticleStateEdits();
       queryClient.removeQueries({ queryKey: articleStateKeys.all });
     }
-    setSessionKind(kind);
-    setIssueFailed(false);
+    const apply = () => {
+      setSessionKind(kind);
+      setIssueFailed(false);
+    };
+    /* 하이드레이션 직후의 첫 반영만 트랜지션으로 낸다 (KAN-750). 이 시점에는 `loading.tsx`가 만든
+       페이지 경계가 아직 하이드레이션 전이다. 급한 갱신으로 컨텍스트를 바꾸면 React가 그 경계의
+       서버 HTML을 버리고 클라에서 새로 그린다. 트랜지션이면 경계를 먼저 하이드레이션하고 나서
+       반영한다. 화면을 옮길 때(로그인·로그아웃 뒤)는 전처럼 바로 반영한다 */
+    if (firstRead.current) {
+      firstRead.current = false;
+      startTransition(apply);
+    } else {
+      apply();
+    }
   }, [pathname, queryClient]);
 
   const ensureSession = useCallback(() => {
@@ -139,10 +158,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIssueFailed(true);
         return false;
       }
+      /* 다른 탭이 먼저 만든 세션이면(`existing`) 기억의 주인만 맞춘다. 여기는 세션이 없던 자리라
+         캐시에 든 내 상태는 발급을 기다리던 좋아요·투표가 낙관적으로 적은 값뿐이다. 비우면 그 값이
+         화면에서 빠졌다가 응답 뒤에 다시 찬다(KAN-748). 그 엔트리는 무효로 표시돼 있어 세션이
+         켜지면 다시 묻고, 방금 누른 필드는 응답에 안 덮인다(`loadMyArticleState`) */
       if (result === "issued") adoptFreshGuest(queryClient, kind);
-      else if (syncArticleStateMemoOwner(kind)) {
-        queryClient.removeQueries({ queryKey: articleStateKeys.all });
-      }
+      else syncArticleStateMemoOwner(kind);
       setSessionKind(kind);
       if (result === "issued") {
         window.dispatchEvent(new Event(GUEST_ISSUED_EVENT));
@@ -170,6 +191,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const onPageShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
       const kind = readSessionKind();
+      /* 떠나 있던 사이 다른 기기에서 바꿨을 수 있어 통째로 다시 묻는다. 이 탭이 떠나기 전에 누른
+         기록이 그 응답을 덮지 않게 같이 지운다 (KAN-748) */
+      clearRecentArticleStateEdits();
       if (syncArticleStateMemoOwner(kind)) {
         queryClient.removeQueries({ queryKey: articleStateKeys.all });
       } else {
@@ -203,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 /**
  * 방금 받은 게스트로 세션을 넘긴다 (KAN-665). 새 게스트는 누른 기사가 없으므로 아직 값이 없는 내 기사
  * 상태 캐시를 "안 누름"으로 채운다. `staleTime`이 무한이라 채운 캐시는 다시 묻지 않는다. 발급을
- * 기다리던 좋아요가 낙관적으로 적어 둔 값은 이미 들어 있어 건드리지 않는다. 브라우저 기억의 주인도
+ * 기다리던 좋아요가 낙관적으로 적어 둔 값은 이미 들어 있어 값은 건드리지 않는다. 브라우저 기억의 주인도
  * 새 게스트로 바꾼다. 세션이 없던 자리라 지울 기억이 없으니 캐시를 비우지 않는다.
  *
  * @param queryClient 앱 쿼리 클라이언트
@@ -214,9 +238,13 @@ function adoptFreshGuest(queryClient: QueryClient, kind: SessionKind): void {
   for (const query of queryClient
     .getQueryCache()
     .findAll({ queryKey: articleStateKeys.all })) {
-    if (query.state.data === undefined) {
-      queryClient.setQueryData(query.queryKey, DEFAULT_ARTICLE_STATE);
-    }
+    /* 낙관적으로 적어 둔 엔트리는 "모르는 필드가 있다"는 무효 표시가 붙어 있다(`setMyArticleState`).
+       새 게스트는 누른 게 없어 나머지 필드가 "안 누름"으로 맞으니, 같은 값을 다시 적어 표시를 걷는다.
+       걷지 않으면 세션이 켜지는 순간 그 기사를 한 번 더 묻는다 (KAN-748) */
+    queryClient.setQueryData(
+      query.queryKey,
+      query.state.data ?? DEFAULT_ARTICLE_STATE,
+    );
   }
 }
 

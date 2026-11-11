@@ -2,6 +2,7 @@
 
 import { ArticleLink } from "@/_components/ArticleLink";
 import { useQueryClient } from "@tanstack/react-query";
+import { activityKeys } from "@plick/core/activityKeys";
 import { syncLikeIntoFeeds } from "@plick/core/like-sync";
 import { TEAMS } from "@plick/domain/constants";
 import { formatRelativeTime } from "@plick/domain/format";
@@ -31,6 +32,10 @@ export function LikedArticleRow({ article }: { article: ArticleCard }) {
     articleId: article.id,
     state: { liked: article.liked, likeCount: article.likeCount },
     onChange: (next) => syncLikeIntoFeeds(queryClient, article.id, next),
+    /* 목록을 다시 받는 중이면 취소한다 (KAN-748). 마운트 직후의 재조회가 누르기 전 상태를 싣고
+       돌아오면 방금 끈 행이 되살아난다 */
+    beforeChange: () =>
+      queryClient.cancelQueries({ queryKey: activityKeys.likes() }),
   });
 
   return (

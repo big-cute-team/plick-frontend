@@ -12,12 +12,9 @@
  * 모아 한 번에 보낸다(`article-state-batch.ts`). BE 상한(60개)을 넘으면 나눠서 동시에 보낸다.
  */
 
-import type { QueryClient } from "@tanstack/react-query";
 import type { ArticleState, VoteOption } from "@plick/domain/types";
 import { chunkArticleIds } from "./article-state-batch";
 import { apiFetch } from "./client";
-import { articleStateKeys } from "./articleStateKeys";
-import { writeArticleStateMemo } from "./article-state-memo";
 
 interface ArticleStateResponse {
   articleSummaryId: number;
@@ -53,27 +50,4 @@ export async function getArticleStates(
         { liked: s.liked, vote: s.vote },
       ]),
   );
-}
-
-/**
- * 누른 직후 내 상태를 캐시와 기억에 적는다.
- *
- * BE 안내대로 누른 뒤에는 다시 묻지 않는다. 좋아요는 등록·취소가 성공하면 그 상태가 맞고,
- * 투표는 응답에 `myVote`가 온다. 캐시에 아직 없는 기사는 만들지 않는다. 한쪽 필드만 알고
- * 나머지(예: 좋아요만 눌렀을 때의 투표)는 모르기 때문이다. 그 기사는 화면에 뜰 때 새로 묻는다.
- *
- * @param queryClient 앱의 QueryClient
- * @param articleId 기사 id
- * @param patch 바뀐 필드
- */
-export function setMyArticleState(
-  queryClient: QueryClient,
-  articleId: string,
-  patch: Partial<ArticleState>,
-): void {
-  queryClient.setQueryData<ArticleState>(
-    articleStateKeys.byId(articleId),
-    (current) => current && { ...current, ...patch },
-  );
-  writeArticleStateMemo(articleId, patch);
 }

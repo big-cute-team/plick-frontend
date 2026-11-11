@@ -47,19 +47,30 @@ import { sessionUnavailableError } from "@/_apis/guest-session";
  * 남겨 화면이 무반응이었다 — 모달은 좋아요 한 번에 과하다는 판단은 유지하되,
  * 지나가는 한 줄로는 실패를 알린다.
  *
+ * 낙관적 값을 적기 전에 `beforeChange`를 기다린다 (KAN-748). 원본이 목록 캐시인 화면(댓글,
+ * 예측 의견·답글)은 여기서 그 목록의 진행 중 조회를 취소한다. 누르기 전에 나간 조회는 누르기 전
+ * 상태를 싣고 돌아와 낙관적 값을 덮고, 액션이 먼저 끝났으면 확정 값까지 덮어 하트가 빈 채로
+ * 남는다. 토론 투표가 KAN-681에서 같은 이유로 넣은 취소다. 되돌린 뒤에는 `onRollback`을 부른다.
+ *
  * @param toggle 누른 뒤 부를 서버 액션. 켤 때 true, 끌 때 false로 호출된다
  * @param state 지금 보고 있는 좋아요 상태(원본에서 읽은 값)
  * @param onChange 낙관적 갱신·서버 확정·롤백 때마다 새 상태로 호출된다.
  *   호출부가 원본(캐시나 state)에 그대로 반영한다
+ * @param beforeChange 낙관적 값을 적기 직전에 기다릴 일. 원본 캐시의 진행 중 조회를 취소한다
+ * @param onRollback 실패해 되돌린 직후에 부른다. 되돌린 값을 서버에 다시 확인할 때 쓴다
  */
 export function useLikeToggle({
   toggle,
   state,
   onChange,
+  beforeChange,
+  onRollback,
 }: {
   toggle: (liked: boolean) => Promise<ToggleLikeResult>;
   state: LikeState;
   onChange: (next: LikeState) => void;
+  beforeChange?: () => Promise<unknown>;
+  onRollback?: () => void;
 }) {
   const { ensureSession } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
@@ -75,8 +86,9 @@ export function useLikeToggle({
     },
     retry: (failureCount, error) => failureCount < 1 && isServiceBusy(error),
     retryDelay: SERVICE_BUSY_RETRY_DELAY_MS,
-    onMutate: (liked) => {
+    onMutate: async (liked) => {
       const previous = state;
+      if (beforeChange) await beforeChange();
       onChange({
         liked,
         // BE 카운트가 0인데 liked만 true인 어긋난 데이터가 와도 음수로 안 내려간다
@@ -86,7 +98,10 @@ export function useLikeToggle({
     },
     onSuccess: (likeCount, liked) => onChange({ liked, likeCount }),
     onError: (e, _liked, previous) => {
-      if (previous) onChange(previous);
+      if (previous) {
+        onChange(previous);
+        onRollback?.();
+      }
       /* 그 밖의 실패 안내는 전역 안전망(토스트)이 맡는다 (KAN-447) */
       if (e instanceof ApiError && e.code === "AUTH_REQUIRED") {
         setNeedsLogin(true);
